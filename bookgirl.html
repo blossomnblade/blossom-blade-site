@@ -1,60 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Choose Her Vibe — Blossom N Blade</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Book Girl</title>
   <style>
-    body{margin:0;background:#0d0d0d;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center;padding:34px}
-    h1{margin:0 0 10px;font-size:2rem;letter-spacing:.04em}
-    p.sub{opacity:.85;margin:0 0 18px}
-    .grid{display:grid;gap:16px;grid-template-columns:1fr;max-width:980px;margin:16px auto}
-    @media(min-width:820px){.grid{grid-template-columns:repeat(3,1fr)}}
-    a.card{display:block;color:inherit;text-decoration:none; border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;background:#141414;transition:transform .2s, box-shadow .2s}
-    a.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.45)}
-    .thumb{aspect-ratio:16/10;background:#222 center/cover no-repeat}
-    .content{padding:14px}
-    .name{color:#ff4da6;font-weight:700;margin:0 0 6px}
-    .desc{opacity:.9;margin:0}
-    .actions{margin-top:16px}
-    .btn{appearance:none;border:1px solid #fff;color:#fff;background:transparent;border-radius:999px;padding:10px 16px;text-decoration:none}
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background: linear-gradient(to bottom, #fdf6f0, #f0e1d6);
+      color: #3e2e2e;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #b45f5f;
+    }
+    p {
+      max-width: 600px;
+      margin: auto;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+    .buttons {
+      margin-top: 30px;
+    }
+    button {
+      background-color: #b45f5f;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #8e4949;
+    }
+    img {
+      max-width: 90%;
+      height: auto;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
-  <h1>Choose Her Vibe</h1>
-  <p class="sub">Soft smiles, sly thoughts. Pick how you want her tonight.</p>
+  <h1>The Book Girl 📚✨</h1>
+  <p>
+    She’s soft smiles and sharper wit than you expect.  
+    Lace under her sweater, and a novel always half-read.  
+    She knows when to blush… and when to lean in closer.  
+  </p>
 
-  <div class="grid">
-    <!-- Girl Next Door / Library Loft -->
-    <a class="card" href="bgirl-nextdoor.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Girl Next Door — Library Loft</p>
-        <p class="desc">Warm sweater. Blushes easy. Reads you like a book.</p>
-      </div>
-    </a>
+  <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e" alt="Book Girl">
 
-    <!-- Biker Muse / Garage -->
-    <a class="card" href="bgirl-biker.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1517879288527-682ff596b8d0?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Biker Muse — Parking Garage</p>
-        <p class="desc">Gloves on. Helmet off. Smirks when you stare.</p>
-      </div>
-    </a>
-
-    <!-- Hoodie Inked / Gothic Room -->
-    <a class="card" href="bgirl-hoodie.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1515468381879-40d0ded81016?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Hoodie Inked — Velvet Room</p>
-        <p class="desc">Tattooed poetry. Sweet voice, wicked curiosity.</p>
-      </div>
-    </a>
-  </div>
-
-  <div class="actions">
-    <a href="index.html" class="btn">Back</a>
+  <div class="buttons">
+    <button onclick="window.location.href='index.html'">Back to Start</button>
+    <button onclick="alert('Her sweet voice will greet you soon...')">Enter Chat</button>
   </div>
 </body>
 </html>

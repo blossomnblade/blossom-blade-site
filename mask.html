@@ -1,73 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose His Mask</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0d0d0d;
-            color: #fff;
-            text-align: center;
-            padding: 50px;
-        }
-        h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        .mask-option {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 15px;
-            display: inline-block;
-            width: 250px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .mask-option:hover {
-            transform: scale(1.05);
-            border-color: #ff4da6;
-        }
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-        img {
-            max-width: 100%;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Choose His Mask</title>
+  <style>
+    body{margin:0;background:#0d0d0d;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center;padding:34px}
+    h1{margin:0 0 10px;font-size:2rem;letter-spacing:.04em}
+    p.sub{opacity:.85;margin:0 0 18px}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr;max-width:980px;margin:16px auto}
+    @media(min-width:820px){.grid{grid-template-columns:repeat(3,1fr)}}
+    .card{position:relative;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;background:#141414;transition:transform .2s, box-shadow .2s}
+    .card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.45)}
+    .thumb{aspect-ratio:16/10;background:#222 url('https://via.placeholder.com/640x400/202020/FFFFFF?text=Loading...') center/cover no-repeat}
+    .content{padding:14px}
+    .name{color:#ff4da6;font-weight:700;margin:0 0 6px}
+    .desc{opacity:.9;margin:0}
+    a.card{display:block;color:inherit;text-decoration:none}
+    .actions{margin-top:16px}
+    .btn{appearance:none;border:1px solid #fff;color:#fff;background:transparent;border-radius:999px;padding:10px 16px;text-decoration:none}
+  </style>
 </head>
 <body>
-    <h1>Choose His Mask</h1>
+  <h1>Choose His Mask</h1>
+  <p class="sub">Pick the energy you want tonight. He’s protective, leads, and listens.</p>
 
-    <div class="mask-option">
-        <a href="garage.html">
-            <img src="https://via.placeholder.com/250x150/333333/FFFFFF?text=Biker+Garage" alt="Biker Garage">
-            <h2>Biker</h2>
-            <p>Leather jacket. Roaring engines. A shadow in the parking garage.</p>
-        </a>
-    </div>
+  <div class="grid">
+    <!-- Biker / Parking Garage -->
+    <a class="card" href="garage.html">
+      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1502872364588-894d7d6ddfab?auto=format&fit=crop&w=1200&q=70');"></div>
+      <div class="content">
+        <p class="name">Helmet — Parking Garage</p>
+        <p class="desc">Silent strength. Leather & engine heat.</p>
+      </div>
+    </a>
 
-    <div class="mask-option">
-        <a href="woods.html">
-            <img src="https://via.placeholder.com/250x150/222222/FFFFFF?text=Dark+Woods" alt="Dark Woods">
-            <h2>Ghost</h2>
-            <p>Silent. Watching from the trees. The woods hold his secrets.</p>
-        </a>
-    </div>
+    <!-- Ghostface / Woods -->
+    <a class="card" href="woods.html">
+      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=70');"></div>
+      <div class="content">
+        <p class="name">Ghostface — Woods</p>
+        <p class="desc">Close shadows. You set the pace.</p>
+      </div>
+    </a>
 
-    <div class="mask-option">
-        <a href="bedroom.html">
-            <img src="https://via.placeholder.com/250x150/111111/FFFFFF?text=Dom+Bedroom" alt="Dom Bedroom">
-            <h2>Skull</h2>
-            <p>Commanding presence. A private room where you call the shots.</p>
-        </a>
-    </div>
+    <!-- Skull / Bedroom -->
+    <a class="card" href="bedroom.html">
+      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1504704911898-68304a7d2807?auto=format&fit=crop&w=1200&q=70');"></div>
+      <div class="content">
+        <p class="name">Skull — Bedroom</p>
+        <p class="desc">Dominant vibe, respectful boundaries.</p>
+      </div>
+    </a>
+  </div>
 
+  <div class="actions">
+    <a href="room.html" class="btn">Back</a>
+  </div>
 </body>
 </html>

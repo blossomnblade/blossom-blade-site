@@ -1,82 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blossom & Blade</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blossom N Blade</title>
+
+  <!-- Free Google Fonts (safe to use) -->
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Crimson+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #1e1b1f;
-      color: #f0e6f6;
-      font-family: 'Georgia', serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-image: url('https://i.imgur.com/gW4FSzP.jpg'); /* gothic backdrop */
-      background-size: cover;
-      background-position: center;
+    :root{
+      --ink:#0a0a0a;
+      --veil:rgba(0,0,0,.55);
+      --rose:#b11756;
+      --rose-2:#e04a7a;
+      --text:#f3ecec;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Crimson Pro", serif;
+      color:var(--text);
+      background:#000;
+      /* TODO: swap this URL for your trimmed bedroom image when ready */
+      background-image:url("https://i.pinimg.com/originals/74/c0/13/74c0132e96a4e1f888b0b9a1818fa736.jpg");
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
     }
 
-    .container {
-      background-color: rgba(0, 0, 0, 0.7);
-      border-radius: 20px;
-      padding: 40px;
-      text-align: center;
-      box-shadow: 0 0 20px #a2006d;
-      width: 90%;
-      max-width: 500px;
+    /* dark veil over bg */
+    .veil{
+      min-height:100dvh;
+      background:linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.5)) , var(--veil);
+      display:flex;align-items:center;justify-content:center;
+      padding:24px;
     }
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
+    .card{
+      width:min(960px,100%);
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(10,10,10,.6);
+      backdrop-filter:saturate(120%) blur(4px);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.6);
     }
 
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 30px;
+    header{
+      padding:28px 22px 8px;
+      text-align:center;
+    }
+    h1{
+      font-family:"Marcellus", serif;
+      letter-spacing:.06em;
+      font-weight:400;
+      margin:0 0 6px;
+      font-size:clamp(28px,5.4vw,56px);
+      text-transform:uppercase;
+    }
+    .tag{
+      opacity:.9;
+      font-size:clamp(14px,2.8vw,18px);
     }
 
-    .buttons {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
+    /* choices row */
+    .choices{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+      padding:18px;
+    }
+    @media (min-width:720px){
+      .choices{ grid-template-columns:1fr 1fr; }
     }
 
-    .buttons a {
-      text-decoration: none;
-      background-color: #a2006d;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 12px;
-      font-size: 1rem;
-      margin: 10px;
-      transition: background-color 0.3s ease;
+    .choice{
+      position:relative;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      overflow:hidden;
+      background:#111;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .choice:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,255,255,.22);
+      box-shadow:0 10px 28px rgba(0,0,0,.5);
+    }
+    .choice-inner{
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:120px;
+    }
+    .choice h2{
+      font-family:"Marcellus", serif;
+      font-weight:400;
+      letter-spacing:.04em;
+      margin:0;
+      font-size:clamp(20px,3.6vw,26px);
+    }
+    .choice p{
+      margin:0;
+      opacity:.9;
+      font-size:clamp(14px,2.8vw,16px);
+      line-height:1.4;
     }
 
-    .buttons a:hover {
-      background-color: #d44da7;
+    /* footer/notes */
+    .notes{
+      padding:10px 22px 22px;
+      text-align:center;
+      opacity:.9;
+      font-size:14px;
     }
 
-    @media screen and (max-width: 600px) {
-      .buttons {
-        flex-direction: column;
-      }
+    /* Primary CTA bar */
+    .cta{
+      display:flex;justify-content:center;gap:12px;
+      padding:12px 18px 24px;
+      flex-wrap:wrap;
     }
+    .btn{
+      appearance:none;border:none;cursor:pointer;
+      padding:12px 18px;border-radius:999px;
+      font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+      font-size:13px;
+    }
+    .btn-primary{
+      background:linear-gradient(90deg, var(--rose), var(--rose-2));
+      color:white;
+      box-shadow:0 6px 18px rgba(177,23,86,.35);
+    }
+    .btn-ghost{
+      background:transparent;color:var(--text);
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    /* AGE GATE */
+    .age-gate{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.88);
+      display:flex;align-items:center;justify-content:center;
+      padding:24px;z-index:50;
+    }
+    .age-card{
+      width:min(520px,100%);
+      background:#101010;border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;padding:22px;
+      text-align:center;
+      box-shadow:0 24px 50px rgba(0,0,0,.7);
+    }
+    .age-card h3{
+      font-family:"Marcellus", serif;
+      margin:4px 0 8px;font-size:28px;font-weight:400;letter-spacing:.04em
+    }
+    .age-card p{opacity:.9;margin:0 0 14px}
+    .age-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+    .age-actions button{min-width:120px}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Welcome to Blossom & Blade</h1>
-    <p>Choose your path to begin your experience:</p>
-    <div class="buttons">
-      <a href="#">🌹 Book Girl</a>
-      <a href="#">🖤 Masked Guy</a>
+
+  <!-- AGE GATE -->
+  <div class="age-gate" id="ageGate" role="dialog" aria-modal="true">
+    <div class="age-card">
+      <h3>Adults Only</h3>
+      <p>You must confirm you're 18+ to continue.</p>
+      <div class="age-actions">
+        <button class="btn btn-primary" id="ageYes">I’m 18+</button>
+        <button class="btn btn-ghost" id="ageNo">Leave</button>
+      </div>
     </div>
   </div>
+
+  <div class="veil">
+    <main class="card">
+      <header>
+        <h1>Blossom N Blade</h1>
+        <div class="tag">Two paths. One desire. Choose your fate.</div>
+      </header>
+
+      <section class="choices">
+        <!-- Book Girl -->
+        <article class="choice" data-path="book_girl">
+          <div class="choice-inner">
+            <h2>Book Girl</h2>
+            <p>Soft voice. Sharp mind. Poetry that burns slow.</p>
+          </div>
+        </article>
+
+        <!-- Masked Guy (we’ll pick his mask on the next screen/paywall) -->
+        <article class="choice" data-path="masked_guy">
+          <div class="choice-inner">
+            <h2>Masked Guy</h2>
+            <p>Low voice. Leather & silence. Choose his mask after you enter.</p>
+          </div>
+        </article>
+      </section>
+
+      <div class="cta">
+        <button class="btn btn-primary" id="continueBtn">Continue</button>
+        <button class="btn btn-ghost" onclick="location.href='mailto:blossomnblade1@gmail.com'">Contact</button>
+      </div>
+
+      <div class="notes">
+        <small>By continuing you agree you’re 18+ and accept our future Terms & Privacy. Access requires purchase.</small>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // AGE GATE
+    const gate = document.getElementById('ageGate');
+    document.getElementById('ageYes').onclick = () => {
+      localStorage.setItem('bxb_age_ok','1');
+      gate.style.display = 'none';
+    };
+    document.getElementById('ageNo').onclick = () => {
+      window.location.href = 'https://www.google.com';
+    };
+    // If they've confirmed before, don’t show again
+    if (localStorage.getItem('bxb_age_ok') === '1') { gate.style.display = 'none'; }
+
+    // CHOICES
+    let selectedPath = localStorage.getItem('bxb_path') || 'book_girl';
+    const cards = document.querySelectorAll('.choice');
+    const continueBtn = document.getElementById('continueBtn');
+
+    function selectCard(el){
+      cards.forEach(c => c.style.borderColor='rgba(255,255,255,.08)');
+      el.style.borderColor = 'rgba(255,255,255,.35)';
+      selectedPath = el.dataset.path;
+      localStorage.setItem('bxb_path', selectedPath);
+    }
+    cards.forEach(c => {
+      c.addEventListener('click', () => selectCard(c));
+      // Pre-select first time
+      if (c.dataset.path === selectedPath) selectCard(c);
+    });
+
+    // Continue -> Paywall (we’ll wire Stripe later)
+    continueBtn.addEventListener('click', () => {
+      // Later we can branch: book girl pay vs masked guy pay
+      window.location.href = '/pay.html';
+    });
+  </script>
 </body>
 </html>

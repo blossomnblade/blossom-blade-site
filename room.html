@@ -47,6 +47,37 @@
     <p>Leather & silence. You’ll choose his mask next.</p>
     <p>This is your private room. Visuals + AI chat come next.</p>
     <a href="index.html" class="btn btn-back">Back to Start</a>
-    <a href="mask.html" class="btn btn-enter">Enter Chat</a>
+    <a href="mask.html" class="btn btn-enter">Enter Chat</a><style>
+    .shimmer-btn {
+        position: relative;
+        display: inline-block;
+        padding: 10px 20px;
+        color: white;
+        border: 1px solid #ff4da6;
+        border-radius: 8px;
+        text-decoration: none;
+        overflow: hidden;
+        background: linear-gradient(90deg, #ff4da6, #ff1a8c, #ff4da6);
+        background-size: 200%;
+        animation: shimmer 3s infinite linear;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .shimmer-btn:hover {
+        transform: scale(1.05);
+    }
+
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+</style>
+
+<div style="margin-top: 20px; text-align: center;">
+    <a href="https://blossom-blade-site.vercel.app" class="shimmer-btn">
+        Refer a Friend
+    </a>
+</div>
+
 </body>
 </html>

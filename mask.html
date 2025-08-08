@@ -1,88 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Choose Your Mask</title>
-  <style>
-    body {
-      background-color: #0d0d0d;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      margin-top: 30px;
-      font-size: 2rem;
-      letter-spacing: 2px;
-    }
-    .mask-container {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 50px;
-      flex-wrap: wrap;
-    }
-    .mask {
-      background-color: #1a1a1a;
-      padding: 20px;
-      border-radius: 10px;
-      width: 220px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .mask:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #ff0055;
-    }
-    .mask img {
-      max-width: 100%;
-      border-radius: 5px;
-    }
-    .mask h2 {
-      margin: 15px 0 5px;
-      font-size: 1.4rem;
-      color: #ff0055;
-    }
-    .mask p {
-      font-size: 0.9rem;
-      color: #ccc;
-    }
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose His Mask</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d0d0d;
+            color: #fff;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .mask-option {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px;
+            display: inline-block;
+            width: 250px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .mask-option:hover {
+            transform: scale(1.05);
+            border-color: #ff4da6;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Choose Your Mask</h1>
+    <h1>Choose His Mask</h1>
 
-  <div class="mask-container">
-    <a href="room.html?mask=ghostface">
-      <div class="mask">
-        <img src="https://upload.wikimedia.org/wikipedia/en/3/3e/Ghostface-movie-mask.jpg" alt="Ghostface">
-        <h2>Ghostface</h2>
-        <p>Mysterious and unpredictable. The woods are his domain.</p>
-      </div>
-    </a>
+    <div class="mask-option">
+        <a href="garage.html">
+            <img src="https://via.placeholder.com/250x150/333333/FFFFFF?text=Biker+Garage" alt="Biker Garage">
+            <h2>Biker</h2>
+            <p>Leather jacket. Roaring engines. A shadow in the parking garage.</p>
+        </a>
+    </div>
 
-    <a href="room.html?mask=skull">
-      <div class="mask">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Sugar_skull_mask.jpg/320px-Sugar_skull_mask.jpg" alt="Skull Mask">
-        <h2>Skull</h2>
-        <p>Dominant but protective. The bedroom is his arena.</p>
-      </div>
-    </a>
+    <div class="mask-option">
+        <a href="woods.html">
+            <img src="https://via.placeholder.com/250x150/222222/FFFFFF?text=Dark+Woods" alt="Dark Woods">
+            <h2>Ghost</h2>
+            <p>Silent. Watching from the trees. The woods hold his secrets.</p>
+        </a>
+    </div>
 
-    <a href="room.html?mask=helmet">
-      <div class="mask">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Motorcycle_helmet_full-face.jpg/320px-Motorcycle_helmet_full-face.jpg" alt="Motorcycle Helmet">
-        <h2>Helmet</h2>
-        <p>Silent strength. The dark parking garage is his home.</p>
-      </div>
-    </a>
-  </div>
+    <div class="mask-option">
+        <a href="bedroom.html">
+            <img src="https://via.placeholder.com/250x150/111111/FFFFFF?text=Dom+Bedroom" alt="Dom Bedroom">
+            <h2>Skull</h2>
+            <p>Commanding presence. A private room where you call the shots.</p>
+        </a>
+    </div>
+
 </body>
 </html>

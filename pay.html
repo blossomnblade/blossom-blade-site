@@ -1,0 +1,43 @@
+<!-- Choices -->
+<section class="choices">
+  <article class="choice" data-path="book_girl">
+    <div class="choice-inner">
+      <h2>Book Girl</h2>
+      <p>Soft voice. Sharp mind. Poetry that burns slow.</p>
+    </div>
+  </article>
+
+  <article class="choice" data-path="masked_guy">
+    <div class="choice-inner">
+      <h2>Masked Guy</h2>
+      <p>Low voice. Leather & silence. Choose his mask after you enter.</p>
+    </div>
+  </article>
+</section>
+
+<div class="cta">
+  <button class="btn btn-primary" id="continueBtn">Continue</button>
+  <button class="btn btn-ghost" onclick="location.href='mailto:blossomnblade1@gmail.com'">Contact</button>
+</div>
+
+<script>
+  // selection handling
+  let selectedPath = localStorage.getItem('bxb_path') || 'book_girl';
+  const cards = document.querySelectorAll('.choice');
+  const continueBtn = document.getElementById('continueBtn');
+
+  function selectCard(el){
+    cards.forEach(c => c.style.borderColor='rgba(255,255,255,.08)');
+    el.style.borderColor='rgba(255,255,255,.35)';
+    selectedPath = el.dataset.path;
+    localStorage.setItem('bxb_path', selectedPath);
+  }
+  cards.forEach(c=>{
+    c.addEventListener('click',()=>selectCard(c));
+    if(c.dataset.path===selectedPath) selectCard(c);
+  });
+
+  continueBtn.addEventListener('click', ()=>{
+    window.location.href='/pay.html';
+  });
+</script>

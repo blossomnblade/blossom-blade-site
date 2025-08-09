@@ -41,36 +41,18 @@
 
   <a href="#" class="btn" id="paybtn">Pay Now</a>
 
-<script>
-  // Route after payment (demo for now).
-  // Reads what they picked on the landing page.
-  const path =<a href="#" class="btn" id="paybtn">Pay Now</a>
+<a href="#" class="btn" id="paybtn">Pay Now</a>
 
 <script>
-  const path = localStorage.getItem('bxb_path') || 'book_girl';
-  document.getElementById('paybtn').onclick = (e) => {
-    e.preventDefault();
-    if (path === 'masked_guy') {
-      location.href = 'mask.html';
-    } else {
-      location.href = 'bookgirl.html';   // <-- change was here
-    }
-  };
+    // Route after payment (demo for now)
+    // Reads what they picked on the landing page.
+    const path = localStorage.getItem('bxb_path') || 'book_girl';
+    document.getElementById('paybtn').onclick = (e) => {
+        e.preventDefault();
+        if (path === 'masked_guy') {
+            location.href = 'mask.html';
+        } else {
+            location.href = 'bookgirl.html';
+        }
+    };
 </script>
-
-
-  document.getElementById('paybtn').onclick = (e) => {
-    e.preventDefault();
-    if (path === 'masked_guy') {
-      location.href = 'mask.html';
-    } else {
-      location.href = 'room.html';
-    }
-  };
-</script>
-
-
-
-
-</body>
-</html>

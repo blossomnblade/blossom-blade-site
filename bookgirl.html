@@ -1,68 +1,76 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Book Girl</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library Loft — Book Girl</title>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Georgia', serif;
-      background: linear-gradient(to bottom, #fdf6f0, #f0e1d6);
-      color: #3e2e2e;
-      text-align: center;
-      padding: 40px;
+    :root{
+      --slate:#2B2E34; --panel:#1b2330; --ink:#EDEFF4;
+      --pink:#FF6FA8; --chip:#222b38;
     }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #b45f5f;
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--slate);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    a{color:inherit;text-decoration:none}
+
+    /* Header */
+    .bxb-header{background:var(--slate);color:var(--ink);border-bottom:1px solid #39404B}
+    .bxb-wrap{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:16px}
+    .bxb-brand{display:flex;align-items:center;gap:12px}
+    .bxb-brand img{height:40px;width:auto;filter:drop-shadow(0 0 10px rgba(255,111,168,.55))}
+    .bxb-name{font-weight:700;letter-spacing:.3px;font-size:18px;opacity:.95}
+    .bxb-nav{margin-left:auto;display:flex;gap:10px}
+    .bxb-link{padding:8px 12px;border-radius:999px;background:var(--chip);border:1px solid #2f3640}
+    .bxb-link:hover{border-color:var(--pink);box-shadow:0 0 0 2px rgba(255,111,168,.18) inset}
+    .bxb-cta{background:var(--pink);color:#111;border-color:var(--pink);font-weight:600}
+
+    /* Hero */
+    .hero{
+      min-height:55vh;
+      background:url('images/hoodie_girl.jpg') center/cover no-repeat;
+      display:flex;align-items:flex-end;
+      border-bottom:1px solid #39404B;
     }
-    p {
-      max-width: 600px;
-      margin: auto;
-      font-size: 1.2rem;
-      line-height: 1.6;
+    .lead{
+      background:linear-gradient(0deg,rgba(0,0,0,.65),rgba(0,0,0,.1));
+      padding:20px;
+      width:100%;
     }
-    .buttons {
-      margin-top: 30px;
-    }
-    button {
-      background-color: #b45f5f;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      margin: 10px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background-color: #8e4949;
-    }
-    img {
-      max-width: 90%;
-      height: auto;
-      border-radius: 12px;
-      margin-top: 20px;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-    }
+    .lead h1{margin:0 0 10px;font-size:32px}
+    .lead p{margin:0;font-size:16px;max-width:600px;line-height:1.4}
+    .actions{margin-top:12px;display:flex;gap:12px}
+    .btn{padding:8px 14px;border-radius:999px;border:1px solid var(--pink);background:var(--pink);color:#111;font-weight:600}
+    .btn.alt{background:transparent;color:var(--ink)}
   </style>
 </head>
 <body>
-  <h1>The Book Girl 📚✨</h1>
-  <p>
-    She’s soft smiles and sharper wit than you expect.  
-    Lace under her sweater, and a novel always half-read.  
-    She knows when to blush… and when to lean in closer.  
-  </p>
+  <!-- Header -->
+  <header class="bxb-header">
+    <div class="bxb-wrap">
+      <a class="bxb-brand" href="index.html">
+        <img src="images/logo.jpg" alt="Blossom n Blade logo">
+        <span class="bxb-name">Blossom n Blade</span>
+      </a>
+      <nav class="bxb-nav">
+        <a class="bxb-link" href="index.html">Home</a>
+        <a class="bxb-link" href="mask.html">Masked Guy</a>
+        <a class="bxb-link bxb-cta" href="pay.html">Enter Chat</a>
+      </nav>
+    </div>
+  </header>
 
-  <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e" alt="Book Girl">
-
-  <div class="buttons">
-    <button onclick="window.location.href='index.html'">Back to Start</button>
-    <button onclick="alert('Her sweet voice will greet you soon...')">Enter Chat</button>
-  </div>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="lead">
+      <h1>Library Loft</h1>
+      <p>A mug warms her hands. She looks up with a shy smile that lingers one heartbeat too long. 
+      “You can sit closer… if you like.”</p>
+      <div class="actions">
+        <a class="btn alt" href="index.html">Back</a>
+        <a class="btn" href="pay.html">Enter Chat</a>
+      </div>
+      <small>Face reveal becomes a choice after you enter.</small>
+    </div>
+  </section>
 </body>
 </html>

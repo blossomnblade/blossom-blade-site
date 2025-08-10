@@ -3,12 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Choose — Library Loft</title>
+  <title>Choose — Book Girl</title>
   <style>
-    :root{
-      --slate:#2B2E34; --panel:#1b2330; --ink:#EDEFF4;
-      --pink:#FF6FA8; --chip:#222b38;
-    }
+    :root{ --slate:#2B2E34; --panel:#1b2330; --ink:#EDEFF4; --pink:#FF6FA8; --chip:#222b38; }
     *{box-sizing:border-box}
     body{margin:0;background:var(--slate);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
     a{color:inherit;text-decoration:none}
@@ -26,11 +23,9 @@
 
     /* Cards */
     .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    h1{margin:4px 0 16px}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-    .card{
-      background:var(--panel);border-radius:16px;overflow:hidden;
-      box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s ease;
-    }
+    .card{background:var(--panel);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s}
     .card:hover{transform:translateY(-3px)}
     .card img{width:100%;height:280px;object-fit:cover}
     .card-body{padding:14px}
@@ -59,21 +54,33 @@
   <main class="wrap">
     <h1>Choose Your Mood</h1>
     <div class="grid">
+      <!-- Hoodie Girl -->
       <div class="card">
-        <img src="images/gnd_sunglasses.jpg" alt="Girl Next Door - Sunglasses">
+        <img src="images/hoodie_girl.jpg" alt="Hoodie Girl">
         <div class="card-body">
-          <h2>Sassy Mystery</h2>
-          <p>Glasses on, playful and teasing. She’s daring you to guess her eyes.</p>
-          <a class="btn" href="bgirl-nextdoor.html">Enter</a>
+          <h2>Hoodie Cozy</h2>
+          <p>Soft hoodie, softer voice. Warm, close, and a little mischievous.</p>
+          <a class="btn" href="bgirl-hoodie.html">Enter</a>
         </div>
       </div>
 
+      <!-- Biker Girl -->
       <div class="card">
-        <img src="images/gnd_no_glasses.jpg" alt="Girl Next Door - No Glasses">
+        <img src="images/biker_girl.jpg" alt="Biker Girl">
         <div class="card-body">
-          <h2>Crystal Clear</h2>
-          <p>Glasses off, sky-blue eyes locked on you. She’s letting you in.</p>
-          <a class="btn" href="room.html">Enter</a>
+          <h2>Blonde Biker</h2>
+          <p>Leather, purr of the engine, visor down. Earn the reveal.</p>
+          <a class="btn" href="bgirl-biker.html">Enter</a>
+        </div>
+      </div>
+
+      <!-- Girl Next Door -->
+      <div class="card">
+        <img src="images/gnd_sunglasses.jpg" alt="Girl Next Door">
+        <div class="card-body">
+          <h2>Girl Next Door</h2>
+          <p>Glasses on, playful and teasing. She’s daring you to guess her eyes.</p>
+          <a class="btn" href="bgirl-nextdoor.html">Enter</a>
         </div>
       </div>
     </div>

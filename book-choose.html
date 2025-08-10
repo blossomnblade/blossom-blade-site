@@ -1,57 +1,82 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Choose Her Vibe — Blossom N Blade</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Choose — Library Loft</title>
   <style>
-    body{margin:0;background:#0d0d0d;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center;padding:34px}
-    h1{margin:0 0 10px;font-size:2rem;letter-spacing:.04em}
-    p.sub{opacity:.85;margin:0 0 18px}
-    .grid{display:grid;gap:16px;grid-template-columns:1fr;max-width:980px;margin:16px auto}
-    @media(min-width:820px){.grid{grid-template-columns:repeat(3,1fr)}}
-    a.card{display:block;color:inherit;text-decoration:none;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;background:#141414;transition:transform .2s,box-shadow .2s}
-    a.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.45)}
-    .thumb{aspect-ratio:16/10;background:#222 center/cover no-repeat}
-    .content{padding:14px}
-    .name{color:#ff4da6;font-weight:700;margin:0 0 6px}
-    .desc{opacity:.9;margin:0}
-    .actions{margin-top:16px}
-    .btn{appearance:none;border:1px solid #fff;color:#fff;background:transparent;border-radius:999px;padding:10px 16px;text-decoration:none}
+    :root{
+      --slate:#2B2E34; --panel:#1b2330; --ink:#EDEFF4;
+      --pink:#FF6FA8; --chip:#222b38;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--slate);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    a{color:inherit;text-decoration:none}
+
+    /* Header */
+    .bxb-header{background:var(--slate);color:var(--ink);border-bottom:1px solid #39404B}
+    .bxb-wrap{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:16px}
+    .bxb-brand{display:flex;align-items:center;gap:12px}
+    .bxb-brand img{height:40px;width:auto;filter:drop-shadow(0 0 10px rgba(255,111,168,.55))}
+    .bxb-name{font-weight:700;letter-spacing:.3px;font-size:18px;opacity:.95}
+    .bxb-nav{margin-left:auto;display:flex;gap:10px}
+    .bxb-link{padding:8px 12px;border-radius:999px;background:var(--chip);border:1px solid #2f3640}
+    .bxb-link:hover{border-color:var(--pink);box-shadow:0 0 0 2px rgba(255,111,168,.18) inset}
+    .bxb-cta{background:var(--pink);color:#111;border-color:var(--pink);font-weight:600}
+
+    /* Cards */
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+    .card{
+      background:var(--panel);border-radius:16px;overflow:hidden;
+      box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s ease;
+    }
+    .card:hover{transform:translateY(-3px)}
+    .card img{width:100%;height:280px;object-fit:cover}
+    .card-body{padding:14px}
+    .card h2{margin:0 0 6px;font-size:20px}
+    .card p{margin:0 0 10px;color:#b8c0cc}
+    .btn{display:inline-block;padding:8px 14px;border-radius:999px;background:var(--pink);color:#111;font-weight:600;border:none}
   </style>
 </head>
 <body>
-  <h1>Choose Her Vibe</h1>
-  <p class="sub">Soft smiles, sly thoughts. Pick how you want her tonight.</p>
+  <!-- Header -->
+  <header class="bxb-header">
+    <div class="bxb-wrap">
+      <a class="bxb-brand" href="index.html">
+        <img src="images/logo.jpg" alt="Blossom n Blade logo">
+        <span class="bxb-name">Blossom n Blade</span>
+      </a>
+      <nav class="bxb-nav">
+        <a class="bxb-link" href="index.html">Home</a>
+        <a class="bxb-link" href="mask.html">Masked Guy</a>
+        <a class="bxb-link bxb-cta" href="pay.html">Enter Chat</a>
+      </nav>
+    </div>
+  </header>
 
-  <div class="grid">
-    <a class="card" href="bgirl-nextdoor.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Girl Next Door — Library Loft</p>
-        <p class="desc">Warm sweater. Blushes easy. Reads you like a book.</p>
+  <!-- Page content -->
+  <main class="wrap">
+    <h1>Choose Your Mood</h1>
+    <div class="grid">
+      <div class="card">
+        <img src="images/gnd_sunglasses.jpg" alt="Girl Next Door - Sunglasses">
+        <div class="card-body">
+          <h2>Sassy Mystery</h2>
+          <p>Glasses on, playful and teasing. She’s daring you to guess her eyes.</p>
+          <a class="btn" href="bgirl-nextdoor.html">Enter</a>
+        </div>
       </div>
-    </a>
 
-    <a class="card" href="bgirl-biker.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1517879288527-682ff596b8d0?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Biker Muse — Parking Garage</p>
-        <p class="desc">Gloves on. Helmet off. Smirks when you stare.</p>
+      <div class="card">
+        <img src="images/gnd_no_glasses.jpg" alt="Girl Next Door - No Glasses">
+        <div class="card-body">
+          <h2>Crystal Clear</h2>
+          <p>Glasses off, sky-blue eyes locked on you. She’s letting you in.</p>
+          <a class="btn" href="room.html">Enter</a>
+        </div>
       </div>
-    </a>
-
-    <a class="card" href="bgirl-hoodie.html">
-      <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1515468381879-40d0ded81016?auto=format&fit=crop&w=1200&q=70');"></div>
-      <div class="content">
-        <p class="name">Hoodie Inked — Velvet Room</p>
-        <p class="desc">Tattooed poetry. Sweet voice, wicked curiosity.</p>
-      </div>
-    </a>
-  </div>
-
-  <div class="actions">
-    <a href="index.html" class="btn">Back</a>
-  </div>
+    </div>
+  </main>
 </body>
 </html>

@@ -5,7 +5,47 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bedroom — Blossom N Blade</title>
   <style>
-    body{
+    body{<!-- ===== Blossom n Blade: Global Header ===== -->
+<style>
+  :root{
+    --slate:#2B2E34;
+    --plum:#5A1B4E;
+    --pink:#FF6FA8;
+    --ink:#EDEFF4;
+    --chip:#1F232A;
+  }
+  .bxb-header{background:var(--slate); color:var(--ink); border-bottom:1px solid #39404B;}
+  .bxb-wrap{max-width:1100px; margin:0 auto; padding:12px 18px; display:flex; align-items:center; gap:16px;}
+  .bxb-brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;}
+  .bxb-brand img{height:40px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(255,111,168,.55));}
+  .bxb-name{font-weight:700; letter-spacing:.3px; font-size:18px; opacity:.95}
+  .bxb-nav{margin-left:auto; display:flex; gap:10px; align-items:center;}
+  .bxb-link{display:inline-block; padding:8px 12px; border-radius:999px; background:var(--chip); border:1px solid #2f3640; color:var(--ink); text-decoration:none;}
+  .bxb-link:hover{border-color:var(--pink); box-shadow:0 0 0 2px rgba(255,111,168,.18) inset;}
+  .bxb-cta{background:var(--pink); color:#111; border-color:var(--pink); font-weight:600;}
+  @media (max-width:720px){
+    .bxb-name{display:none;}
+    .bxb-nav{gap:8px;}
+    .bxb-link{padding:8px 10px; font-size:14px;}
+  }
+</style>
+
+<header class="bxb-header">
+  <div class="bxb-wrap">
+    <a class="bxb-brand" href="index.html">
+      <img src="images/logo.jpg" alt="Blossom n Blade logo">
+      <span class="bxb-name">Blossom n Blade</span>
+    </a>
+    <nav class="bxb-nav">
+      <a class="bxb-link" href="index.html">Home</a>
+      <a class="bxb-link" href="book-choose.html">Book Girl</a>
+      <a class="bxb-link" href="mask.html">Masked Guy</a>
+      <a class="bxb-link bxb-cta" href="pay.html">Enter Chat</a>
+    </nav>
+  </div>
+</header>
+<!-- ===== /Header ===== -->
+ 
       background: url('https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1600&q=80')
                  no-repeat center center/cover;
       color:#fff; text-align:center; font-family: Arial, sans-serif;

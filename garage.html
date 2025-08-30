@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dylan Rydes — PG-13 Room</title>
-  <meta name="description" content="Dylan Rydes — biker boy • motel garage. PG-13 room with natural, considerate conversation." />
+  <title>Dylan Vale — PG-13 Room</title>
+  <meta name="description" content="Dylan Vale — biker boy • motel garage. PG-13 room with natural, considerate conversation." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -35,7 +35,7 @@
     <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-      <div style="font-weight:700">Dylan Rydes</div>
+      <div style="font-weight:700">Dylan Vale</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
   </header>
@@ -45,7 +45,7 @@
       <!-- Character info -->
       <section class="card">
         <div class="tabbar">
-          <span class="tab">Dylan</span>
+          <span class="tab">Dylan Vale</span>
           <span class="tab">Biker Boy</span>
           <span class="tab">Blue Eyes • Tattoos</span>
         </div>
@@ -81,7 +81,6 @@
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
 
-    // natural openers
     const openers = [
       "Blue neon and cheap coffee. Sit on the counter, pretty thing.",
       "You like the jacket? Looks better on you."
@@ -106,11 +105,9 @@
     }
     function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
 
-    // seed
     openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    // cadence for considerate questions
     setInterval(() => {
       if (qIndex >= caringQuestions.length) qIndex = 0;
       reply(caringQuestions[qIndex++], 0);

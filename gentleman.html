@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Gentleman — PG-13 Room</title>
-  <meta name="description" content="The Gentleman — penthouse or town car; elegant, powerful, undone only for her. PG-13 room." />
+  <meta name="description" content="Gentleman — elegant, powerful, undone only for her. Christian Grey-ish with validation and control. PG-13 room." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -12,7 +12,6 @@
     main{max-width:1100px;margin:22px auto;padding:0 16px}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
     .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
-    /* Gentleman accent — deep charcoal */
     .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#2f2f3a}
     .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#2f2f3a;color:#fff;border:1px solid rgba(255,255,255,.18)}
     .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#2f2f3a;border:1px solid rgba(255,255,255,.18)}
@@ -52,17 +51,17 @@
         <div class="hero"><span style="font-size:12px;">Add image: <code>images/gentleman.jpg</code></span></div>
         <div class="panel">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Elegant & unraveled—for you</div>
+            <div style="font-weight:700;">Elegant & controlled</div>
             <span class="chip">Poised • attentive • precise</span>
           </div>
-          <p style="opacity:.95;margin:10px 0 0;">Come in. Shoes off—let me take your coat, and the weight you’re carrying.</p>
+          <p style="opacity:.95;margin:10px 0 0;">Shoes off. I’ll take your coat—and the weight you’ve been carrying.</p>
         </div>
       </section>
 
       <section class="card chat">
         <div class="tabbar">
           <span class="tab">PG-13 Room</span>
-          <span class="tab">Elegant • Attentive • Grounding</span>
+          <span class="tab">Confident • Validating</span>
         </div>
         <div id="chat" class="chatlog"></div>
         <div class="compose">
@@ -81,8 +80,9 @@
     const send=document.getElementById('send');
 
     const openers=[
-      "I had the driver wait. You don’t rush after a long day.",
-      "I listen first. Start anywhere."
+      "I anticipated you’d come. That’s why the fire’s lit.",
+      "I pay attention—your eyes tell me more than your words.",
+      "Start anywhere. I’ll listen, and I’ll tell you what I hear."
     ];
     const caringQuestions=[
       "How was your day—really?",
@@ -99,12 +99,12 @@
       const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
       b.textContent=text;row.appendChild(b);chat.appendChild(row);chat.scrollTop=chat.scrollHeight;
     }
-    function reply(t,d=600){setTimeout(()=>bubble('him',t),d);}
+    function reply(t,d=2000){setTimeout(()=>bubble('him',t),d);} // slower, deliberate
 
     openers.forEach(t=>bubble('him',t));
-    setTimeout(()=>bubble('him',bait),1800);
+    setTimeout(()=>bubble('him',bait),4000);
 
-    setInterval(()=>{ if(qIndex>=caringQuestions.length) qIndex=0; reply(caringQuestions[qIndex++],0); },25000);
+    setInterval(()=>{ if(qIndex>=caringQuestions.length) qIndex=0; reply(caringQuestions[qIndex++],0); },35000);
 
     function earnNickname(){
       if(!nickname && shares>=1) nickname="darling mind";
@@ -112,9 +112,9 @@
     }
 
     function respond(){
-      reply("I appreciate your honesty.");
+      reply("I considered that. You’re right.");
       earnNickname();
-      setTimeout(()=>{ const n=nickname?` ${nickname}`:""; bubble('him',`Careful there${n}. 😉`); },1400);
+      setTimeout(()=>{ const n=nickname?` ${nickname}`:""; bubble('him',`Careful there${n}. 😉`); },2500);
     }
 
     send.onclick=()=>{const t=msg.value.trim();if(!t)return;bubble('you',t);msg.value="";shares++;respond();};

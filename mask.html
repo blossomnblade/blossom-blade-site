@@ -3,145 +3,148 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Choose Your Companion</title>
-  <meta name="description" content="Women-safe fantasy chat. PG-13 landing for Blade, Grayson, Dylan." />
+  <title>Grayson Kincaid — PG-13 Room</title>
+  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room with natural conversation." />
   <style>
     *{box-sizing:border-box}
-    body{
-      margin:0; color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    }
-    header{
-      position:sticky; top:0;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 16px;
-      background:rgba(0,0,0,.75);
-      border-bottom:1px solid rgba(255,255,255,.15);
-      backdrop-filter:saturate(120%) blur(6px);
-      z-index:50;
-    }
-    main{max-width:1100px; margin:24px auto; padding:0 16px;}
-    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
-
-    .card{
-      display:block; color:inherit; text-decoration:none;
-      border:1px solid rgba(255,255,255,.15); border-radius:14px; overflow:hidden;
-      background:rgba(0,0,0,.7);
-    }
-    .tabbar{
-      display:flex; gap:8px; padding:8px 10px; align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.15);
-    }
-    .tab{
-      font-size:12px; padding:6px 10px; border-radius:6px;
-      font-weight:600; background:#2b2b2b; color:#fff;
-      border:1px solid rgba(255,255,255,.18);
-    }
-    .btn{
-      padding:10px 12px; border-radius:8px; border:none;
-      background:#2b2b2b; color:#fff; cursor:pointer; text-align:center;
-      display:inline-block; font-size:14px; font-weight:600;
-    }
-    .chip{
-      font-size:11px; padding:4px 8px; border-radius:999px;
-      background:#2b2b2b; font-weight:500; border:1px solid rgba(255,255,255,.18);
-    }
-    .badge{font-size:11px; opacity:.85}
-
-    /* accents per character */
-    .blade   .tab, .blade .btn, .blade .chip   { background:#245c40; }   /* forest green */
-    .grayson .tab, .grayson .btn, .grayson .chip { background:#7a1021; } /* crimson */
-    .dylan   .tab, .dylan .btn, .dylan .chip   { background:#224a66; }   /* steel blue */
-
-    footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
+    body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
+    header{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);backdrop-filter:saturate(120%) blur(6px)}
+    main{max-width:1100px;margin:22px auto;padding:0 16px}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+    .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
+    .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#7a1021}
+    .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#7a1021;color:#fff;border:1px solid rgba(255,255,255,.18)}
+    .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#7a1021;border:1px solid rgba(255,255,255,.18)}
+    .btn{padding:10px 12px;border-radius:8px;border:none;background:#7a1021;color:#fff;font-weight:600;cursor:pointer}
+    .panel{padding:12px 12px 14px}
+    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
+    .chat{display:flex;flex-direction:column;min-height:60vh}
+    .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
+    .row{display:flex;margin:0 0 8px}
+    .bubble{max-width:80%;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15)}
+    .him{background:rgba(255,255,255,.08)}
+    .you{background:#fff;color:#000;margin-left:auto}
+    .compose{display:flex;gap:8px;padding:12px}
+    .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
+    footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
+    a.back{color:#fff;text-decoration:none;opacity:.9}
   </style>
 </head>
 <body>
-
   <header>
+    <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px; width:auto;" />
-      <div style="font-weight:700">Blossom &amp; Blade</div>
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
+      <div style="font-weight:700">Grayson Kincaid</div>
     </div>
-    <div style="font-size:12px;opacity:.8">
-      PG-13 with subscription • Explicit talk unlocked with coins
-    </div>
+    <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
   </header>
 
   <main>
-    <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;">Choose Your Companion</h1>
-    <p style="opacity:.9;margin:0 0 18px;">PG-13 by default. No visuals. Words, warmth, and foreplay-vibes only.</p>
-
-    <div class="grid">
-
-      <!-- Blade -->
-      <a href="woods.html" class="card blade">
-        <div class="tabbar">
-          <span class="tab">Blade</span>
-          <span class="tab">Ghostface Woods</span>
-          <span class="tab">Chase Fantasy</span>
-        </div>
-        <div style="aspect-ratio:4/3;"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Blade Monroe</div>
-            <span class="chip">Masked hunter</span>
-          </div>
-          <div class="badge">Chase • protective predator energy</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I’m exactly where you want me.</p>
-          <span class="btn">Enter Blade’s Room</span>
-        </div>
-      </a>
-
-      <!-- Grayson -->
-      <a href="mask.html" class="card grayson">
+    <div class="layout">
+      <section class="card">
         <div class="tabbar">
           <span class="tab">Grayson</span>
           <span class="tab">Viking Dom</span>
           <span class="tab">Balaclava (COD)</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
-        <div style="padding:12px 12px 14px;">
+        <div class="hero"></div>
+        <div class="panel">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Grayson Kincaid</div>
-            <span class="chip">Red-lit ritual</span>
+            <div style="font-weight:700;">Red-lit ritual</div>
+            <span class="chip">Commanding • adoring</span>
           </div>
-          <div class="badge">Commanding • adoring • praise &amp; rules</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Kneel? Not yet—we start with your smile.</p>
-          <span class="btn">Enter Grayson’s Room</span>
+          <p style="opacity:.95;margin:10px 0 0;">The balaclava stays on—until you ask nicely.</p>
         </div>
-      </a>
+      </section>
 
-      <!-- Dylan -->
-      <a href="garage.html" class="card dylan">
+      <section class="card chat">
         <div class="tabbar">
-          <span class="tab">Dylan</span>
-          <span class="tab">Biker Boy</span>
-          <span class="tab">Blue Eyes • Tattoos</span>
+          <span class="tab">PG-13 Room</span>
+          <span class="tab">Safe • Flirty • Reassuring</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Dylan Rydes</div>
-            <span class="chip">Motel Garage</span>
-          </div>
-          <div class="badge">Sweet trouble • leather-soft talk</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter, pretty thing—jacket off, guard down.</p>
-          <span class="btn">Enter Dylan’s Room</span>
+        <div id="chat" class="chatlog"></div>
+        <div class="compose">
+          <input id="msg" class="input" placeholder="Say something sweet…" />
+          <button id="send" class="btn">Send</button>
         </div>
-      </a>
-
-    </div>
-
-    <div style="margin-top:18px;padding:10px 12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;font-size:12px;opacity:.9;">
-      Coming soon: Rockstar • Cowboy • Gentleman (we’ll repurpose the “book girl” pages).
+      </section>
     </div>
   </main>
 
-  <footer>
-    $1 of every subscription goes to this month’s Domestic Violence charity.
-  </footer>
+  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
+  <script>
+    const chat = document.getElementById('chat');
+    const msg  = document.getElementById('msg');
+    const send = document.getElementById('send');
+
+    // Natural openers (no nickname explanation)
+    const openers = [
+      "Kneel? Not yet. We’ll start with your smile.",
+      "The balaclava stays on—for now."
+    ];
+    // Gentle, considerate questions he asks over time
+    const caringQuestions = [
+      "How was your day—really?",
+      "If I cook for you, what do you feel like?",
+      "Tell me one good thing that happened today.",
+      "What’s your ideal slow Sunday?"
+    ];
+    const bait = "What did you just say?";
+
+    let nickname = "";
+    let shares = 0;
+    let qIndex = 0;
+
+    function bubble(who, text){
+      const row = document.createElement('div');
+      row.className = 'row';
+      const b = document.createElement('div');
+      b.className = 'bubble ' + (who === 'you' ? 'you' : 'him');
+      b.textContent = text;
+      row.appendChild(b);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
+
+    // Seed lines + playful bait
+    openers.forEach(t => bubble('him', t));
+    setTimeout(()=> bubble('him', bait), 1800);
+
+    // Ask a caring question every ~25s
+    setInterval(() => {
+      if (qIndex >= caringQuestions.length) qIndex = 0;
+      reply(caringQuestions[qIndex++], 0);
+    }, 25000);
+
+    function earnNickname(){
+      if (!nickname && shares >= 1) nickname = "little flame";
+      if (!nickname && shares >= 2) nickname = "bright heart";
+    }
+
+    function respondToUser(){
+      reply("Mm. I’m listening.");
+      earnNickname();
+      setTimeout(()=>{
+        const name = nickname ? ` ${nickname}` : "";
+        bubble('him', `Careful there${name}. 😉`);
+      }, 1400);
+    }
+
+    send.onclick = () => {
+      const t = msg.value.trim(); if(!t) return;
+      bubble('you', t); msg.value=""; shares++;
+      respondToUser();
+    };
+    msg.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){
+        const t = msg.value.trim(); if(!t) return;
+        bubble('you', t); msg.value=""; shares++;
+        respondToUser();
+      }
+    });
+  </script>
 </body>
 </html>

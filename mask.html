@@ -2,68 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Grayson Kincaid — PG-13 Room</title>
-  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room." />
+  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room with conversation starters." />
   <style>
     *{box-sizing:border-box}
     body{
-      margin:0; color:#fff;
+      margin:0;color:#fff;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
     }
     header{
-      position:sticky; top:0; z-index:50;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 16px; background:rgba(0,0,0,.75);
+      position:sticky;top:0;z-index:50;
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 16px;background:rgba(0,0,0,.75);
       border-bottom:1px solid rgba(255,255,255,.15);
       backdrop-filter:saturate(120%) blur(6px);
     }
-    main{max-width:1100px; margin:22px auto; padding:0 16px;}
-    .layout{display:grid; grid-template-columns:300px 1fr; gap:16px;}
-    .card{
-      border:1px solid rgba(255,255,255,.15); border-radius:14px; overflow:hidden;
-      background:rgba(0,0,0,.70);
-    }
-    .tabbar{
-      display:flex; gap:8px; padding:8px 10px; align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.15);
-      background:#7a1021; /* Grayson solid */
-    }
-    .tab{
-      font-size:12px; padding:6px 10px; border-radius:6px;
-      font-weight:600; background:#7a1021; color:#fff; border:1px solid rgba(255,255,255,.18);
-    }
-    .chip{
-      font-size:11px; padding:4px 8px; border-radius:999px; background:#7a1021; border:1px solid rgba(255,255,255,.18);
-    }
-    .btn{
-      padding:10px 12px; border-radius:8px; border:none; background:#7a1021; color:#fff; font-weight:600; cursor:pointer;
-    }
-    .panel{padding:12px 12px 14px;}
-    .hero{aspect-ratio:4/3; background:rgba(255,255,255,.04);}
-    .chat{display:flex; flex-direction:column; min-height:60vh;}
-    .chatlog{flex:1; overflow:auto; padding:12px 12px 0;}
-    .row{display:flex; margin:0 0 8px;}
-    .bubble{
-      max-width:80%; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
-    }
-    .him{background:rgba(255,255,255,.08);}
-    .you{background:#fff; color:#000; margin-left:auto;}
-    .compose{display:flex; gap:8px; padding:12px;}
-    .input{
-      flex:1; background:#111; border:1px solid rgba(255,255,255,.18); border-radius:10px; color:#fff; padding:10px; outline:none;
-    }
-    footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
-    a.back{color:#fff; text-decoration:none; opacity:.9;}
+    main{max-width:1100px;margin:22px auto;padding:0 16px;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+    .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
+    .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#7a1021}
+    .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#7a1021;color:#fff;border:1px solid rgba(255,255,255,.18)}
+    .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#7a1021;border:1px solid rgba(255,255,255,.18)}
+    .btn{padding:10px 12px;border-radius:8px;border:none;background:#7a1021;color:#fff;font-weight:600;cursor:pointer}
+    .panel{padding:12px 12px 14px}
+    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
+    .chat{display:flex;flex-direction:column;min-height:60vh}
+    .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
+    .row{display:flex;margin:0 0 8px}
+    .bubble{max-width:80%;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15)}
+    .him{background:rgba(255,255,255,.08)}
+    .you{background:#fff;color:#000;margin-left:auto}
+    .compose{display:flex;gap:8px;padding:12px}
+    .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
+    .helpers{display:flex;flex-direction:column;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35)}
+    .helper-title{font-size:12px;opacity:.9;margin-bottom:2px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .hchip{font-size:12px;padding:6px 10px;border-radius:999px;background:#242424;border:1px solid rgba(255,255,255,.15);cursor:pointer}
+    footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
+    a.back{color:#fff;text-decoration:none;opacity:.9}
   </style>
 </head>
 <body>
-
   <header>
     <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px; width:auto;" />
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
       <div style="font-weight:700">Grayson Kincaid</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
@@ -84,7 +69,7 @@
             <div style="font-weight:700;">Red-lit ritual</div>
             <span class="chip">Commanding • adoring</span>
           </div>
-          <p style="opacity:.95; margin:10px 0 0;">The balaclava stays on—until you ask nicely.</p>
+          <p style="opacity:.95;margin:10px 0 0;">The balaclava stays on—until you ask nicely.</p>
         </div>
       </section>
 
@@ -94,7 +79,17 @@
           <span class="tab">PG-13 Room</span>
           <span class="tab">Safe • Flirty • Reassuring</span>
         </div>
+
+        <!-- Conversation Starters -->
+        <div class="helpers">
+          <div class="helper-title">Need a prompt? Try one:</div>
+          <div class="chips" id="chips">
+            <!-- buttons created by JS -->
+          </div>
+        </div>
+
         <div id="chat" class="chatlog"></div>
+
         <div class="compose">
           <input id="msg" class="input" placeholder="Say something sweet…" />
           <button id="send" class="btn">Send</button>
@@ -111,6 +106,7 @@
     const chat = document.getElementById('chat');
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
+    const chipsWrap = document.getElementById('chips');
 
     const lines = [
       "Pet names cost nothing here, little flame.",
@@ -118,6 +114,18 @@
       "The balaclava stays on—for now."
     ];
     const bait = "What did you just say?";
+
+    const starters = [
+      { text: "If I cook for you, what do you feel like?", nickname:"chef"},
+      { text: "How was your day—really?", nickname:"brave heart"},
+      { text: "Should I wear the hoodie or the dress?", nickname:"trouble"},
+      { text: "Tell me one good thing that happened today.", nickname:"bright spot"},
+      { text: "What’s your ideal slow Sunday?", nickname:"lazy star"}
+    ];
+
+    let nickname = "";
+    let lastStarter = null;
+    let sharedSomething = false;
 
     function bubble(who, text){
       const row = document.createElement('div');
@@ -130,17 +138,69 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-    // Seed
+    function reply(text) {
+      setTimeout(()=> bubble('him', text), 600);
+    }
+
+    // Seed openers and bait
     lines.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    send.onclick = () => {
-      const text = msg.value.trim();
+    // Build helper chips
+    starters.forEach(s => {
+      const el = document.createElement('button');
+      el.className = 'hchip';
+      el.type = 'button';
+      el.textContent = s.text;
+      el.onclick = () => {
+        lastStarter = s;
+        sendMessage(s.text); // auto-send to keep it easy
+      };
+      chipsWrap.appendChild(el);
+    });
+
+    function grantNicknameIfReady(){
+      if (!nickname && (sharedSomething || lastStarter)) {
+        nickname = (lastStarter && lastStarter.nickname) ? lastStarter.nickname : "sweetheart";
+      }
+    }
+
+    function sendMessage(textFromButton){
+      const text = (textFromButton || msg.value || "").trim();
       if(!text) return;
       bubble('you', text);
-      msg.value = '';
-      setTimeout(()=> bubble('him', "Good. Slow down—I want to hear every word."), 600);
-    };
+      msg.value = "";
+
+      // He answers like a companion first
+      if (lastStarter && lastStarter.text === "If I cook for you, what do you feel like?") {
+        reply("Start with something warm—tell me your favorite comfort food.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "How was your day—really?") {
+        reply("I’m listening. Slow, or all at once—your call.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "Should I wear the hoodie or the dress?") {
+        reply("Hoodie for the tease, dress for the damage. Your move.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "Tell me one good thing that happened today.") {
+        reply("Good. Hold onto that for me.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "What’s your ideal slow Sunday?") {
+        reply("Coffee, praise, and you not rushing a single thing.");
+        sharedSomething = true;
+      } else {
+        reply("Mm. I like that.");
+      }
+
+      // Then a playful check with smirk and earned nickname
+      grantNicknameIfReady();
+      setTimeout(()=>{
+        const name = nickname ? ` ${nickname}` : "";
+        bubble('him', `Careful there${name}. 😉`);
+      }, 1400);
+    }
+
+    send.onclick = () => sendMessage();
+    msg.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
   </script>
 </body>
 </html>

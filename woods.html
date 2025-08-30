@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blade Monroe — PG-13 Room</title>
-  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with considerate conversation flow." />
+  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with natural, considerate conversation." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -42,6 +42,7 @@
 
   <main>
     <div class="layout">
+      <!-- Character info -->
       <section class="card">
         <div class="tabbar">
           <span class="tab">Blade</span>
@@ -58,6 +59,7 @@
         </div>
       </section>
 
+      <!-- Chat -->
       <section class="card chat">
         <div class="tabbar">
           <span class="tab">PG-13 Room</span>
@@ -79,11 +81,13 @@
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
 
+    // natural openers
     const openers = [
       "You found the trail. Brave girl.",
       "No need to look over your shoulder—I’m right where you want me.",
       "Tell me your safe word, even if we never need it."
     ];
+    // considerate questions he asks over time (no prompts shown to her)
     const caringQuestions = [
       "How was your day—really?",
       "If I cook for you, what do you feel like?",
@@ -102,12 +106,14 @@
       b.textContent = text; row.appendChild(b); chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
-    function reply(t, d=600){ setTimeout(()=> bubble('him', t), d); }
+    function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
 
+    // seed
     openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    let askTimer = setInterval(() => {
+    // cadence for considerate questions
+    setInterval(() => {
       if (qIndex >= caringQuestions.length) qIndex = 0;
       reply(caringQuestions[qIndex++], 0);
     }, 25000);
@@ -117,7 +123,7 @@
       if (!nickname && shares >= 2) nickname = "runner";
     }
 
-    function respondToUser(t){
+    function respondToUser(){
       reply("I like that. Keep going.");
       earnNickname();
       setTimeout(()=>{
@@ -128,10 +134,15 @@
 
     send.onclick = () => {
       const t = msg.value.trim(); if(!t) return;
-      bubble('you', t); msg.value=""; shares++; respondToUser(t);
+      bubble('you', t); msg.value=""; shares++;
+      respondToUser();
     };
     msg.addEventListener('keydown', e=>{
-      if(e.key==='Enter'){ const t=msg.value.trim(); if(!t) return; bubble('you', t); msg.value=""; shares++; respondToUser(t); }
+      if(e.key==='Enter'){
+        const t = msg.value.trim(); if(!t) return;
+        bubble('you', t); msg.value=""; shares++;
+        respondToUser();
+      }
     });
   </script>
 </body>

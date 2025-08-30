@@ -38,4 +38,120 @@
       <div style="font-weight:700">Grayson Kincaid</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
-  </
+  </header>
+
+  <main>
+    <div class="layout">
+      <section class="card">
+        <div class="tabbar">
+          <span class="tab">Grayson Kincaid</span>
+          <span class="tab">Viking Dom</span>
+          <span class="tab">Balaclava (COD)</span>
+        </div>
+        <div class="hero"></div>
+        <div class="panel">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">Red-lit ritual</div>
+            <span class="chip">Commanding • adoring</span>
+          </div>
+          <p style="opacity:.95;margin:10px 0 0;">Kneel? Not yet—we start with your smile.</p>
+        </div>
+      </section>
+
+      <section class="card chat">
+        <div class="tabbar">
+          <span class="tab">PG-13 Room</span>
+          <span class="tab">Safe • Flirty • Reassuring</span>
+        </div>
+        <div id="chat" class="chatlog"></div>
+        <div class="compose">
+          <input id="msg" class="input" placeholder="Say something sweet…" />
+          <button id="send" class="btn">Send</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const msg  = document.getElementById('msg');
+    const send = document.getElementById('send');
+
+    const openers = [
+      "The balaclava stays on—for now.",
+      "We’ll write rules later. For now, talk to me."
+    ];
+    const caringQuestions = [
+      "How was your day—really?",
+      "If I cook for you, what do you feel like?",
+      "Tell me one good thing that happened today.",
+      "What’s your ideal slow Sunday?"
+    ];
+    const bait = "What did you just say?";
+
+    let nickname = "";
+    let shares = 0;
+    let qIndex = 0;
+
+    function bubble(who, text){
+      const row = document.createElement('div'); row.className = 'row';
+      const b = document.createElement('div'); b.className = 'bubble ' + (who === 'you' ? 'you' : 'him');
+      b.textContent = text; row.appendChild(b); chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function reply(text, delay=900){ setTimeout(()=> bubble('him', text), delay); } // a hair slower than Blade
+
+    // --- Brother detection (Blade) ---
+    function brotherCheck(){
+      try{
+        if (localStorage.getItem('seen_blade') === '1'){
+          reply("My brother told me you like to run. I prefer you kneel.", 1600);
+        }
+      }catch(e){}
+    }
+
+    // seed
+    openers.forEach(t => bubble('him', t));
+    setTimeout(()=> bubble('him', bait), 2000);
+    // mark this brother as seen
+    try{ localStorage.setItem('seen_grayson','1'); }catch(e){}
+    // check for other brother
+    setTimeout(brotherCheck, 2800);
+
+    // caring cadence (don’t rush her)
+    setInterval(() => {
+      if (qIndex >= caringQuestions.length) qIndex = 0;
+      reply(caringQuestions[qIndex++], 0);
+    }, 28000);
+
+    function earnNickname(){
+      if (!nickname && shares >= 1) nickname = "little flame";
+      if (!nickname && shares >= 2) nickname = "bright heart";
+    }
+
+    function respondToUser(){
+      reply("Mm. I’m listening.");
+      earnNickname();
+      setTimeout(()=>{
+        const name = nickname ? ` ${nickname}` : "";
+        bubble('him', `Careful there${name}. 😉`);
+      }, 1600);
+    }
+
+    send.onclick = () => {
+      const t = msg.value.trim(); if(!t) return;
+      bubble('you', t); msg.value=""; shares++;
+      respondToUser();
+    };
+    msg.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){
+        const t = msg.value.trim(); if(!t) return;
+        bubble('you', t); msg.value=""; shares++;
+        respondToUser();
+      }
+    });
+  </script>
+</body>
+</html>

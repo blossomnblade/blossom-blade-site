@@ -2,24 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Grayson Kincaid — PG-13 Room</title>
-  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room with conversation starters." />
+  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room with considerate conversation flow." />
   <style>
     *{box-sizing:border-box}
-    body{
-      margin:0;color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    }
-    header{
-      position:sticky;top:0;z-index:50;
-      display:flex;justify-content:space-between;align-items:center;
-      padding:14px 16px;background:rgba(0,0,0,.75);
-      border-bottom:1px solid rgba(255,255,255,.15);
-      backdrop-filter:saturate(120%) blur(6px);
-    }
-    main{max-width:1100px;margin:22px auto;padding:0 16px;}
+    body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
+    header{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);backdrop-filter:saturate(120%) blur(6px)}
+    main{max-width:1100px;margin:22px auto;padding:0 16px}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
     .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
     .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#7a1021}
@@ -36,10 +26,6 @@
     .you{background:#fff;color:#000;margin-left:auto}
     .compose{display:flex;gap:8px;padding:12px}
     .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
-    .helpers{display:flex;flex-direction:column;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35)}
-    .helper-title{font-size:12px;opacity:.9;margin-bottom:2px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .hchip{font-size:12px;padding:6px 10px;border-radius:999px;background:#242424;border:1px solid rgba(255,255,255,.15);cursor:pointer}
     footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
     a.back{color:#fff;text-decoration:none;opacity:.9}
   </style>
@@ -56,7 +42,6 @@
 
   <main>
     <div class="layout">
-      <!-- Character Card -->
       <section class="card">
         <div class="tabbar">
           <span class="tab">Grayson</span>
@@ -73,23 +58,12 @@
         </div>
       </section>
 
-      <!-- Chat Panel -->
       <section class="card chat">
         <div class="tabbar">
           <span class="tab">PG-13 Room</span>
           <span class="tab">Safe • Flirty • Reassuring</span>
         </div>
-
-        <!-- Conversation Starters -->
-        <div class="helpers">
-          <div class="helper-title">Need a prompt? Try one:</div>
-          <div class="chips" id="chips">
-            <!-- buttons created by JS -->
-          </div>
-        </div>
-
         <div id="chat" class="chatlog"></div>
-
         <div class="compose">
           <input id="msg" class="input" placeholder="Say something sweet…" />
           <button id="send" class="btn">Send</button>
@@ -98,109 +72,78 @@
     </div>
   </main>
 
-  <footer>
-    $1 of every subscription goes to this month’s Domestic Violence charity.
-  </footer>
+  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
   <script>
     const chat = document.getElementById('chat');
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
-    const chipsWrap = document.getElementById('chips');
 
-    const lines = [
+    // opening lines + periodic considerate questions
+    const openers = [
       "Pet names cost nothing here, little flame.",
       "Kneel? Not yet. We’ll start with your smile.",
       "The balaclava stays on—for now."
     ];
+    const caringQuestions = [
+      "How was your day—really?",
+      "If I cook for you, what do you feel like?",
+      "Tell me one good thing that happened today.",
+      "What’s your ideal slow Sunday?"
+    ];
     const bait = "What did you just say?";
 
-    const starters = [
-      { text: "If I cook for you, what do you feel like?", nickname:"chef"},
-      { text: "How was your day—really?", nickname:"brave heart"},
-      { text: "Should I wear the hoodie or the dress?", nickname:"trouble"},
-      { text: "Tell me one good thing that happened today.", nickname:"bright spot"},
-      { text: "What’s your ideal slow Sunday?", nickname:"lazy star"}
-    ];
-
-    let nickname = "";
-    let lastStarter = null;
-    let sharedSomething = false;
+    let nickname = ""; // earned after she shares
+    let shares = 0;
+    let qIndex = 0;
 
     function bubble(who, text){
-      const row = document.createElement('div');
-      row.className = 'row';
-      const b = document.createElement('div');
-      b.className = 'bubble ' + (who === 'you' ? 'you' : 'him');
-      b.textContent = text;
-      row.appendChild(b);
-      chat.appendChild(row);
+      const row = document.createElement('div'); row.className = 'row';
+      const b = document.createElement('div'); b.className = 'bubble ' + (who==='you'?'you':'him');
+      b.textContent = text; row.appendChild(b); chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
+    function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
 
-    function reply(text) {
-      setTimeout(()=> bubble('him', text), 600);
-    }
-
-    // Seed openers and bait
-    lines.forEach(t => bubble('him', t));
+    // Seed openers and first bait
+    openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    // Build helper chips
-    starters.forEach(s => {
-      const el = document.createElement('button');
-      el.className = 'hchip';
-      el.type = 'button';
-      el.textContent = s.text;
-      el.onclick = () => {
-        lastStarter = s;
-        sendMessage(s.text); // auto-send to keep it easy
-      };
-      chipsWrap.appendChild(el);
-    });
-
-    function grantNicknameIfReady(){
-      if (!nickname && (sharedSomething || lastStarter)) {
-        nickname = (lastStarter && lastStarter.nickname) ? lastStarter.nickname : "sweetheart";
+    // Gentle cadence: Grayson asks a considerate question every ~25s if chat is quiet
+    let askTimer = setInterval(() => {
+      if (qIndex < caringQuestions.length) {
+        reply(caringQuestions[qIndex++], 0);
+      } else {
+        // loop softly
+        qIndex = 0;
+        reply(caringQuestions[qIndex++], 0);
       }
+    }, 25000);
+
+    function earnNickname(){
+      if (!nickname && shares >= 1) nickname = "little flame";
+      if (!nickname && shares >= 2) nickname = "bright heart";
     }
 
-    function sendMessage(textFromButton){
-      const text = (textFromButton || msg.value || "").trim();
-      if(!text) return;
-      bubble('you', text);
-      msg.value = "";
-
-      // He answers like a companion first
-      if (lastStarter && lastStarter.text === "If I cook for you, what do you feel like?") {
-        reply("Start with something warm—tell me your favorite comfort food.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "How was your day—really?") {
-        reply("I’m listening. Slow, or all at once—your call.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "Should I wear the hoodie or the dress?") {
-        reply("Hoodie for the tease, dress for the damage. Your move.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "Tell me one good thing that happened today.") {
-        reply("Good. Hold onto that for me.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "What’s your ideal slow Sunday?") {
-        reply("Coffee, praise, and you not rushing a single thing.");
-        sharedSomething = true;
-      } else {
-        reply("Mm. I like that.");
-      }
-
-      // Then a playful check with smirk and earned nickname
-      grantNicknameIfReady();
+    function respondToUser(text){
+      // Companion response first
+      reply("Mm. I’m listening.");
+      // Playful check with smirk and earned nickname
+      earnNickname();
       setTimeout(()=>{
         const name = nickname ? ` ${nickname}` : "";
         bubble('him', `Careful there${name}. 😉`);
       }, 1400);
     }
 
-    send.onclick = () => sendMessage();
-    msg.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+    send.onclick = () => {
+      const t = msg.value.trim(); if(!t) return;
+      bubble('you', t); msg.value = ""; shares++;
+      respondToUser(t);
+    };
+    msg.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ const t = msg.value.trim(); if(!t) return; bubble('you', t); msg.value=""; shares++; respondToUser(t); }
+    });
   </script>
 </body>
 </html>

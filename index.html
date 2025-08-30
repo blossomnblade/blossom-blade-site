@@ -1,4 +1,41 @@
 <body style="margin:0;background:#0b0b0d;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
+  <!-- simple styles (kept inline for easy paste/replace) -->
+  <style>
+    .card {
+      display:block;
+      color:inherit;
+      text-decoration:none;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      overflow:hidden;
+      background:url('images/gothic-bg.jpg') center/cover no-repeat;
+      position:relative;
+    }
+    .scrim { background: rgba(0,0,0,.58); }
+    .tabbar {
+      display:flex; gap:8px; padding:8px 10px;
+      align-items:center; border-bottom:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.28));
+    }
+    .tab {
+      font-size:12px; padding:6px 9px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.35);
+      display:inline-flex; align-items:center; gap:6px; opacity:.95;
+    }
+    .btn {
+      padding:10px 12px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+      text-align:center; display:inline-block; font-size:14px;
+    }
+    .badge { font-size:11px; opacity:.82 }
+    /* per-character accent shades */
+    .blade   .tab, .blade .btn   { box-shadow: inset 0 0 0 9999px rgba(56, 187, 120, .10); border-color: rgba(56,187,120,.35); }
+    .grayson .tab, .grayson .btn { box-shadow: inset 0 0 0 9999px rgba(220, 20, 60,  .12); border-color: rgba(220,20,60,.40);  }
+    .dylan   .tab, .dylan .btn   { box-shadow: inset 0 0 0 9999px rgba(70, 130, 180, .12); border-color: rgba(70,130,180,.40);  }
+    .chip { font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.35); }
+  </style>
+
   <header style="position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.6);backdrop-filter:saturate(120%) blur(6px);border-bottom:1px solid rgba(255,255,255,.08);">
     <div style="font-weight:700">Blossom & Blade</div>
     <div style="font-size:12px;opacity:.75">Women-Safe Fantasy Chat • PG-13</div>
@@ -9,41 +46,73 @@
     <p style="opacity:.8;margin:0 0 18px;">PG-13 by default. No visuals. Words, warmth, and foreplay-vibes only.</p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+
       <!-- Blade -->
-      <a href="woods.html" style="display:block;background:url('images/gothic-bg.jpg') center/cover no-repeat;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);">
-          <span style="opacity:.9;font-size:12px;">Blade Monroe • Ghostface Woods</span>
+      <a href="woods.html" class="card blade">
+        <!-- personalized tabbar (accent green) -->
+        <div class="tabbar scrim">
+          <span class="tab">Blade</span>
+          <span class="tab">Ghostface Woods</span>
+          <span class="tab">Chase Fantasy</span>
         </div>
-        <div style="padding:12px 12px 14px;background:rgba(0,0,0,.55);">
-          <div style="font-weight:700;">Blade Monroe</div>
-          <div style="font-size:12px;opacity:.75;">Masked hunter • chase fantasy</div>
-          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Protective predator energy; he plays the distance and the catch.</p>
+
+        <!-- hero area (kept for height balance) -->
+        <div style="aspect-ratio:4/3;" class="scrim"></div>
+
+        <!-- content with accent button -->
+        <div class="scrim" style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">Blade Monroe</div>
+            <span class="chip">Masked hunter</span>
+          </div>
+          <div class="badge">Chase • protective predator energy</div>
+          <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I’m exactly where you want me.</p>
+          <span class="btn">Enter Blade’s Room</span>
         </div>
       </a>
 
       <!-- Grayson -->
-      <a href="mask.html" style="display:block;background:url('images/gothic-bg.jpg') center/cover no-repeat;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);">
-          <span style="opacity:.9;font-size:12px;">Grayson Kincaid • Red-lit Room</span>
+      <a href="mask.html" class="card grayson">
+        <div class="tabbar scrim">
+          <span class="tab">Grayson</span>
+          <span class="tab">Viking Dom</span>
+          <span class="tab">Balaclava (COD)</span>
         </div>
-        <div style="padding:12px 12px 14px;background:rgba(0,0,0,.55);">
-          <div style="font-weight:700;">Grayson Kincaid</div>
-          <div style="font-size:12px;opacity:.75;">Viking Dom • balaclava (COD mask)</div>
-          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Commanding, adoring; ritual, praise, and rules that make you feel safe.</p>
+
+        <div style="aspect-ratio:4/3;" class="scrim"></div>
+
+        <div class="scrim" style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">Grayson Kincaid</div>
+            <span class="chip">Red-lit ritual</span>
+          </div>
+          <div class="badge">Commanding • adoring • praise & rules</div>
+          <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">Pet names cost nothing here, little flame. Kneel? Not yet—we start with your smile.</p>
+          <span class="btn">Enter Grayson’s Room</span>
         </div>
       </a>
 
       <!-- Dylan -->
-      <a href="garage.html" style="display:block;background:url('images/gothic-bg.jpg') center/cover no-repeat;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);">
-          <span style="opacity:.9;font-size:12px;">Dylan Rydes • Motel Garage</span>
+      <a href="garage.html" class="card dylan">
+        <div class="tabbar scrim">
+          <span class="tab">Dylan</span>
+          <span class="tab">Biker Boy</span>
+          <span class="tab">Blue Eyes • Tattoos</span>
         </div>
-        <div style="padding:12px 12px 14px;background:rgba(0,0,0,.55);">
-          <div style="font-weight:700;">Dylan Rydes</div>
-          <div style="font-size:12px;opacity:.75;">Biker boy • blue eyes • tattoos</div>
-          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Sweet trouble and leather-soft talk. Jacket off, guard down.</p>
+
+        <div style="aspect-ratio:4/3;" class="scrim"></div>
+
+        <div class="scrim" style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">Dylan Rydes</div>
+            <span class="chip">Motel Garage</span>
+          </div>
+          <div class="badge">Sweet trouble • leather-soft talk</div>
+          <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter, pretty thing—jacket off, guard down.</p>
+          <span class="btn">Enter Dylan’s Room</span>
         </div>
       </a>
+
     </div>
 
     <div style="margin-top:18px;padding:10px 12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;font-size:12px;opacity:.85;">

@@ -1,92 +1,123 @@
-<body style="margin:0;background:#0b0b0d;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
-  <!-- simple styles (kept inline for easy paste/replace) -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade — Choose Your Companion</title>
+  <meta name="description" content="Women-safe fantasy chat. PG-13 landing for Blade, Grayson, Dylan." />
   <style>
-    .card {
-      display:block;
-      color:inherit;
-      text-decoration:none;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:14px;
-      overflow:hidden;
+    :root{
+      --bg1:#0b0b0d;  /* near black */
+      --bg2:#1a1114;  /* plum from logo */
+      --scrim: rgba(26,17,20,.72);       /* plum overlay panels */
+      --tabbar: rgba(26,17,20,.82);      /* darker plum for tabs */
+      --chip: rgba(26,17,20,.55);
+      --btn: rgba(26,17,20,.65);
+      --bd: rgba(255,255,255,.10);
+      --bdSoft: rgba(255,255,255,.18);
+      --bdLine: rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:#fff;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
+    }
+    header{
+      position:sticky; top:0;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 16px; background:rgba(26,17,20,.9);
+      border-bottom:1px solid var(--bdLine);
+      backdrop-filter:saturate(120%) blur(6px);
+      z-index:50;
+    }
+    main{max-width:1100px; margin:24px auto; padding:0 16px;}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
+
+    /* Card */
+    .card{
+      display:block; color:inherit; text-decoration:none;
+      border:1px solid var(--bd); border-radius:14px; overflow:hidden;
       background:url('images/gothic-bg.jpg') center/cover no-repeat;
       position:relative;
     }
-    .scrim { background: rgba(0,0,0,.58); }
-    .tabbar {
-      display:flex; gap:8px; padding:8px 10px;
-      align-items:center; border-bottom:1px solid rgba(255,255,255,.08);
-      background:linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.28));
+    .tabbar{
+      display:flex; gap:8px; padding:8px 10px; align-items:center;
+      border-bottom:1px solid var(--bdLine); background:var(--tabbar);
     }
-    .tab {
+    .tab{
       font-size:12px; padding:6px 9px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.35);
+      border:1px solid var(--bdSoft); background:var(--chip);
       display:inline-flex; align-items:center; gap:6px; opacity:.95;
     }
-    .btn {
-      padding:10px 12px; border-radius:10px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
-      text-align:center; display:inline-block; font-size:14px;
+    .scrim{background:var(--scrim);}
+    .chip{
+      font-size:11px; padding:4px 8px; border-radius:999px;
+      border:1px solid var(--bdSoft); background:var(--chip);
     }
-    .badge { font-size:11px; opacity:.82 }
-    /* per-character accent shades */
-    .blade   .tab, .blade .btn   { box-shadow: inset 0 0 0 9999px rgba(56, 187, 120, .10); border-color: rgba(56,187,120,.35); }
-    .grayson .tab, .grayson .btn { box-shadow: inset 0 0 0 9999px rgba(220, 20, 60,  .12); border-color: rgba(220,20,60,.40);  }
-    .dylan   .tab, .dylan .btn   { box-shadow: inset 0 0 0 9999px rgba(70, 130, 180, .12); border-color: rgba(70,130,180,.40);  }
-    .chip { font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.35); }
-  </style>
+    .badge{font-size:11px; opacity:.82}
+    .btn{
+      padding:10px 12px; border-radius:10px; border:1px solid var(--bdSoft);
+      background:var(--btn); color:#fff; cursor:pointer; text-align:center;
+      display:inline-block; font-size:14px;
+    }
+    /* Subtle per-character accent on borders */
+    .blade   .tab, .blade .btn   { border-color: rgba(56,187,120,.35); }   /* green */
+    .grayson .tab, .grayson .btn { border-color: rgba(220,20,60,.40); }    /* crimson */
+    .dylan   .tab, .dylan .btn   { border-color: rgba(70,130,180,.40); }   /* steel blue */
 
-  <header style="position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.6);backdrop-filter:saturate(120%) blur(6px);border-bottom:1px solid rgba(255,255,255,.08);">
-    <div style="font-weight:700">Blossom & Blade</div>
+    footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.75; border-top:1px solid var(--bdLine);}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px; width:auto;" />
+      <div style="font-weight:700">Blossom &amp; Blade</div>
+    </div>
     <div style="font-size:12px;opacity:.75">Women-Safe Fantasy Chat • PG-13</div>
   </header>
 
-  <main style="max-width:1100px;margin:24px auto;padding:0 16px;">
+  <main>
     <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;">Choose Your Companion</h1>
     <p style="opacity:.8;margin:0 0 18px;">PG-13 by default. No visuals. Words, warmth, and foreplay-vibes only.</p>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+    <div class="grid">
 
       <!-- Blade -->
       <a href="woods.html" class="card blade">
-        <!-- personalized tabbar (accent green) -->
-        <div class="tabbar scrim">
+        <div class="tabbar">
           <span class="tab">Blade</span>
           <span class="tab">Ghostface Woods</span>
           <span class="tab">Chase Fantasy</span>
         </div>
-
-        <!-- hero area (kept for height balance) -->
-        <div style="aspect-ratio:4/3;" class="scrim"></div>
-
-        <!-- content with accent button -->
+        <div class="scrim" style="aspect-ratio:4/3;"></div>
         <div class="scrim" style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Blade Monroe</div>
             <span class="chip">Masked hunter</span>
           </div>
           <div class="badge">Chase • protective predator energy</div>
-          <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I’m exactly where you want me.</p>
+          <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I'm exactly where you want me.</p>
           <span class="btn">Enter Blade’s Room</span>
         </div>
       </a>
 
       <!-- Grayson -->
       <a href="mask.html" class="card grayson">
-        <div class="tabbar scrim">
+        <div class="tabbar">
           <span class="tab">Grayson</span>
           <span class="tab">Viking Dom</span>
           <span class="tab">Balaclava (COD)</span>
         </div>
-
-        <div style="aspect-ratio:4/3;" class="scrim"></div>
-
+        <div class="scrim" style="aspect-ratio:4/3;"></div>
         <div class="scrim" style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Grayson Kincaid</div>
             <span class="chip">Red-lit ritual</span>
           </div>
-          <div class="badge">Commanding • adoring • praise & rules</div>
+          <div class="badge">Commanding • adoring • praise &amp; rules</div>
           <p style="font-size:14px;opacity:.9;margin:10px 0 12px;">Pet names cost nothing here, little flame. Kneel? Not yet—we start with your smile.</p>
           <span class="btn">Enter Grayson’s Room</span>
         </div>
@@ -94,14 +125,12 @@
 
       <!-- Dylan -->
       <a href="garage.html" class="card dylan">
-        <div class="tabbar scrim">
+        <div class="tabbar">
           <span class="tab">Dylan</span>
           <span class="tab">Biker Boy</span>
           <span class="tab">Blue Eyes • Tattoos</span>
         </div>
-
-        <div style="aspect-ratio:4/3;" class="scrim"></div>
-
+        <div class="scrim" style="aspect-ratio:4/3;"></div>
         <div class="scrim" style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Dylan Rydes</div>
@@ -120,7 +149,9 @@
     </div>
   </main>
 
-  <footer style="padding:18px 16px;text-align:center;font-size:12px;opacity:.75;border-top:1px solid rgba(255,255,255,.08);">
+  <footer>
     $1 of every subscription goes to this month’s Domestic Violence charity.
   </footer>
+
 </body>
+</html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Choose Your Companion</title>
-  <meta name="description" content="Women-safe fantasy chat. PG-13 landing for Blade, Grayson, Dylan." />
+  <meta name="description" content="Women-safe fantasy chat. PG-13 landing for Blade, Grayson, Dylan, Rockstar, Cowboy, Gentleman." />
   <style>
     *{box-sizing:border-box}
     body{
@@ -21,7 +21,7 @@
       backdrop-filter:saturate(120%) blur(6px);
       z-index:50;
     }
-    main{max-width:1100px; margin:24px auto; padding:0 16px;}
+    main{max-width:1150px; margin:24px auto; padding:0 16px;}
     .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
 
     .card{
@@ -50,9 +50,12 @@
     .badge{font-size:11px; opacity:.85}
 
     /* accents per character */
-    .blade   .tab, .blade .btn, .blade .chip   { background:#245c40; }   /* forest green */
-    .grayson .tab, .grayson .btn, .grayson .chip { background:#7a1021; } /* crimson */
-    .dylan   .tab, .dylan .btn, .dylan .chip   { background:#224a66; }   /* steel blue */
+    .blade   .tab, .blade .btn, .blade .chip      { background:#245c40; }   /* forest green */
+    .grayson .tab, .grayson .btn, .grayson .chip  { background:#7a1021; }   /* crimson */
+    .dylan   .tab, .dylan .btn, .dylan .chip      { background:#224a66; }   /* steel blue */
+    .rockstar .tab, .rockstar .btn, .rockstar .chip { background:#4b2a6b; } /* royal violet */
+    .cowboy  .tab, .cowboy .btn, .cowboy .chip    { background:#6b3e1e; }   /* saddle brown */
+    .gentleman .tab, .gentleman .btn, .gentleman .chip { background:#2f2f3a; } /* deep charcoal */
 
     footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
   </style>
@@ -132,10 +135,67 @@
         </div>
       </a>
 
+      <!-- Rockstar -->
+      <a href="rockstar.html" class="card rockstar">
+        <div class="tabbar">
+          <span class="tab">Rockstar</span>
+          <span class="tab">Backstage</span>
+          <span class="tab">Tour Bus</span>
+        </div>
+        <div style="aspect-ratio:4/3;"></div>
+        <div style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">The Rockstar</div>
+            <span class="chip">Eye contact • velvet voice</span>
+          </div>
+          <div class="badge">Sensual • confident • attentive</div>
+          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Come closer. I want to see what your eyes do when I say your name.</p>
+          <span class="btn">Enter Rockstar’s Room</span>
+        </div>
+      </a>
+
+      <!-- Cowboy -->
+      <a href="cowboy.html" class="card cowboy">
+        <div class="tabbar">
+          <span class="tab">Cowboy</span>
+          <span class="tab">Barn Loft</span>
+          <span class="tab">Country Kitchen</span>
+        </div>
+        <div style="aspect-ratio:4/3;"></div>
+        <div style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">The Cowboy</div>
+            <span class="chip">Slow drawl • steady hands</span>
+          </div>
+          <div class="badge">Gentle • protective • warm</div>
+          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Darlin’, you look tired. Sit a spell—let me pour you somethin’ warm.</p>
+          <span class="btn">Enter Cowboy’s Room</span>
+        </div>
+      </a>
+
+      <!-- Gentleman -->
+      <a href="gentleman.html" class="card gentleman">
+        <div class="tabbar">
+          <span class="tab">Gentleman</span>
+          <span class="tab">Penthouse</span>
+          <span class="tab">Town Car</span>
+        </div>
+        <div style="aspect-ratio:4/3;"></div>
+        <div style="padding:12px 12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-weight:700;">The Gentleman</div>
+            <span class="chip">Poised • attentive • precise</span>
+          </div>
+          <div class="badge">Elegant • attentive • grounding</div>
+          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Come in. Shoes off—let me take your coat, and the weight you’re carrying.</p>
+          <span class="btn">Enter Gentleman’s Room</span>
+        </div>
+      </a>
+
     </div>
 
     <div style="margin-top:18px;padding:10px 12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;font-size:12px;opacity:.9;">
-      Coming soon: Rockstar • Cowboy • Gentleman (we’ll repurpose the “book girl” pages).
+      Coming soon: Aftercare & alternate rooms (dirty rooms unlock with coins).
     </div>
   </main>
 

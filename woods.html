@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blade Monroe — PG-13 Room</title>
-  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with natural, considerate conversation." />
+  <title>Blade Kincaid — PG-13 Room</title>
+  <meta name="description" content="Blade Kincaid — masked hunter • Ghostface Woods. PG-13 room with natural, considerate conversation." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -35,7 +35,7 @@
     <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-      <div style="font-weight:700">Blade Monroe</div>
+      <div style="font-weight:700">Blade Kincaid</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
   </header>
@@ -45,7 +45,7 @@
       <!-- Character info -->
       <section class="card">
         <div class="tabbar">
-          <span class="tab">Blade</span>
+          <span class="tab">Blade Kincaid</span>
           <span class="tab">Ghostface Woods</span>
           <span class="tab">Chase Fantasy</span>
         </div>
@@ -87,7 +87,6 @@
       "No need to look over your shoulder—I’m right where you want me.",
       "Tell me your safe word, even if we never need it."
     ];
-    // considerate questions he asks over time (no prompts shown to her)
     const caringQuestions = [
       "How was your day—really?",
       "If I cook for you, what do you feel like?",
@@ -108,9 +107,22 @@
     }
     function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
 
+    // --- Brother detection (Grayson) ---
+    function brotherCheck(){
+      try{
+        if(localStorage.getItem('seen_grayson') === '1'){
+          reply("You’ve been in my brother’s red-lit room, haven’t you? You still carry his rules in your eyes.", 1400);
+        }
+      }catch(e){}
+    }
+
     // seed
     openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
+    // mark this brother as seen
+    try{ localStorage.setItem('seen_blade','1'); }catch(e){}
+    // check for the other brother
+    setTimeout(brotherCheck, 2400);
 
     // cadence for considerate questions
     setInterval(() => {

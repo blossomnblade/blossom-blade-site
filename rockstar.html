@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Rockstar — PG-13 Room</title>
-  <meta name="description" content="Rockstar — backstage or tour bus. PG-13 room with sensual, confident eye-contact energy." />
+  <title>Silas Lennox — PG-13 Room</title>
+  <meta name="description" content="Silas Lennox — backstage or tour bus. PG-13 room with sensual, confident eye-contact energy." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -12,13 +12,12 @@
     main{max-width:1100px;margin:22px auto;padding:0 16px}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
     .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
-    /* Rockstar accent — royal violet */
     .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#4b2a6b}
     .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#4b2a6b;color:#fff;border:1px solid rgba(255,255,255,.18)}
     .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#4b2a6b;border:1px solid rgba(255,255,255,.18)}
     .btn{padding:10px 12px;border-radius:8px;border:none;background:#4b2a6b;color:#fff;font-weight:600;cursor:pointer}
     .panel{padding:12px 12px 14px}
-    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
+    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;opacity:.8}
     .chat{display:flex;flex-direction:column;min-height:60vh}
     .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
     .row{display:flex;margin:0 0 8px}
@@ -36,7 +35,7 @@
     <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-      <div style="font-weight:700">The Rockstar</div>
+      <div style="font-weight:700">Silas Lennox</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
   </header>
@@ -46,14 +45,11 @@
       <!-- Character info -->
       <section class="card">
         <div class="tabbar">
-          <span class="tab">Rockstar</span>
+          <span class="tab">Silas Lennox</span>
           <span class="tab">Backstage</span>
           <span class="tab">Tour Bus</span>
         </div>
-        <!-- Placeholder — swap when you have his image -->
-        <div class="hero" style="display:flex;align-items:center;justify-content:center;opacity:.8;">
-          <span style="font-size:12px;">Add image: <code>images/rockstar.jpg</code></span>
-        </div>
+        <div class="hero"><span style="font-size:12px;">Add image: <code>images/rockstar.jpg</code></span></div>
         <div class="panel">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Velvet-voiced trouble</div>
@@ -85,13 +81,11 @@
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
 
-    // Openers — sensual, confident, eye-contact energy (no nickname explanation)
     const openers = [
       "Backstage is loud. Look at me, not the noise.",
       "Closer. That’s it—hold my eyes.",
       "Tell me the song you play when the lights are off."
     ];
-    // Gentle, considerate questions he asks over time
     const caringQuestions = [
       "How was your day—really?",
       "If I cook for you, what do you feel like?",
@@ -112,17 +106,14 @@
     }
     function reply(text, delay=600){ setTimeout(()=> bubble('him', text), delay); }
 
-    // seed lines
     openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    // Ask a caring question every ~25s
     setInterval(() => {
       if (qIndex >= caringQuestions.length) qIndex = 0;
       reply(caringQuestions[qIndex++], 0);
     }, 25000);
 
-    // Nicknames are earned naturally as she shares
     function earnNickname(){
       if (!nickname && shares >= 1) nickname = "starlight";
       if (!nickname && shares >= 2) nickname = "songbird";

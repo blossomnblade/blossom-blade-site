@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blade Monroe — PG-13 Room</title>
-  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with conversation starters." />
+  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with considerate conversation flow." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -26,10 +26,6 @@
     .you{background:#fff;color:#000;margin-left:auto}
     .compose{display:flex;gap:8px;padding:12px}
     .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
-    .helpers{display:flex;flex-direction:column;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35)}
-    .helper-title{font-size:12px;opacity:.9;margin-bottom:2px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .hchip{font-size:12px;padding:6px 10px;border-radius:999px;background:#242424;border:1px solid rgba(255,255,255,.15);cursor:pointer}
     footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
     a.back{color:#fff;text-decoration:none;opacity:.9}
   </style>
@@ -67,14 +63,7 @@
           <span class="tab">PG-13 Room</span>
           <span class="tab">Flirty • Teasing • Safe</span>
         </div>
-
-        <div class="helpers">
-          <div class="helper-title">Need a prompt? Try one:</div>
-          <div class="chips" id="chips"></div>
-        </div>
-
         <div id="chat" class="chatlog"></div>
-
         <div class="compose">
           <input id="msg" class="input" placeholder="Say something sweet…" />
           <button id="send" class="btn">Send</button>
@@ -89,89 +78,61 @@
     const chat = document.getElementById('chat');
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
-    const chipsWrap = document.getElementById('chips');
 
-    const lines = [
+    const openers = [
       "You found the trail. Brave girl.",
       "No need to look over your shoulder—I’m right where you want me.",
       "Tell me your safe word, even if we never need it."
     ];
+    const caringQuestions = [
+      "How was your day—really?",
+      "If I cook for you, what do you feel like?",
+      "Tell me one good thing that happened today.",
+      "What’s your ideal slow Sunday?"
+    ];
     const bait = "What did you just say?";
 
-    const starters = [
-      { text: "If I cook for you, what do you feel like?", nickname:"wildflower"},
-      { text: "How was your day—really?", nickname:"brave girl"},
-      { text: "Should I wear the hoodie or the dress?", nickname:"runner"},
-      { text: "Tell me one good thing that happened today.", nickname:"bright trail"},
-      { text: "What’s your ideal slow Sunday?", nickname:"sunrise"}
-    ];
-
     let nickname = "";
-    let lastStarter = null;
-    let sharedSomething = false;
+    let shares = 0;
+    let qIndex = 0;
 
     function bubble(who, text){
-      const row = document.createElement('div');
-      row.className = 'row';
-      const b = document.createElement('div');
-      b.className = 'bubble ' + (who === 'you' ? 'you' : 'him');
-      b.textContent = text;
-      row.appendChild(b);
-      chat.appendChild(row);
+      const row = document.createElement('div'); row.className='row';
+      const b = document.createElement('div'); b.className='bubble ' + (who==='you'?'you':'him');
+      b.textContent = text; row.appendChild(b); chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
-    function reply(text){ setTimeout(()=> bubble('him', text), 600); }
+    function reply(t, d=600){ setTimeout(()=> bubble('him', t), d); }
 
-    lines.forEach(t => bubble('him', t));
+    openers.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    starters.forEach(s => {
-      const el = document.createElement('button');
-      el.className = 'hchip'; el.type = 'button'; el.textContent = s.text;
-      el.onclick = () => { lastStarter = s; sendMessage(s.text); };
-      chipsWrap.appendChild(el);
-    });
+    let askTimer = setInterval(() => {
+      if (qIndex >= caringQuestions.length) qIndex = 0;
+      reply(caringQuestions[qIndex++], 0);
+    }, 25000);
 
-    function grantNicknameIfReady(){
-      if (!nickname && (sharedSomething || lastStarter)) {
-        nickname = (lastStarter && lastStarter.nickname) ? lastStarter.nickname : "sweetheart";
-      }
+    function earnNickname(){
+      if (!nickname && shares >= 1) nickname = "wildflower";
+      if (!nickname && shares >= 2) nickname = "runner";
     }
 
-    function sendMessage(textFromButton){
-      const text = (textFromButton || msg.value || "").trim();
-      if(!text) return;
-      bubble('you', text);
-      msg.value = "";
-
-      if (lastStarter && lastStarter.text === "If I cook for you, what do you feel like?") {
-        reply("Something warm. Surprise me, but keep it simple.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "How was your day—really?") {
-        reply("Breathe. Tell me the best and the worst of it.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "Should I wear the hoodie or the dress?") {
-        reply("Run first, then dress. I’ll catch you either way.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "Tell me one good thing that happened today.") {
-        reply("Good. Keep that close, I’ll keep closer.");
-        sharedSomething = true;
-      } else if (lastStarter && lastStarter.text === "What’s your ideal slow Sunday?") {
-        reply("Coffee on the porch. My hoodie on you. No hurry.");
-        sharedSomething = true;
-      } else {
-        reply("I like that. Keep going.");
-      }
-
-      grantNicknameIfReady();
-      setTimeout(()=> {
+    function respondToUser(t){
+      reply("I like that. Keep going.");
+      earnNickname();
+      setTimeout(()=>{
         const name = nickname ? ` ${nickname}` : "";
         bubble('him', `Careful there${name}. 😉`);
       }, 1400);
     }
 
-    send.onclick = () => sendMessage();
-    msg.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+    send.onclick = () => {
+      const t = msg.value.trim(); if(!t) return;
+      bubble('you', t); msg.value=""; shares++; respondToUser(t);
+    };
+    msg.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ const t=msg.value.trim(); if(!t) return; bubble('you', t); msg.value=""; shares++; respondToUser(t); }
+    });
   </script>
 </body>
 </html>

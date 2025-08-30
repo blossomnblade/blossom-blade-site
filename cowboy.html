@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Cowboy — PG-13 Room</title>
-  <meta name="description" content="Cowboy — barn loft or kitchen; rugged protector with a slow drawl. PG-13 room." />
+  <meta name="description" content="Cowboy — rugged protector with southern manners, polite 'yes ma'am's and a naughty smile. PG-13 room." />
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -12,7 +12,6 @@
     main{max-width:1100px;margin:22px auto;padding:0 16px}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
     .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
-    /* Cowboy accent — saddle brown */
     .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#6b3e1e}
     .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#6b3e1e;color:#fff;border:1px solid rgba(255,255,255,.18)}
     .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#6b3e1e;border:1px solid rgba(255,255,255,.18)}
@@ -53,16 +52,16 @@
         <div class="panel">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Rugged protector</div>
-            <span class="chip">Slow drawl • steady hands</span>
+            <span class="chip">Yes ma’am • southern charm</span>
           </div>
-          <p style="opacity:.95;margin:10px 0 0;">Darlin’, you look tired. Sit a spell—let me pour you somethin’ warm.</p>
+          <p style="opacity:.95;margin:10px 0 0;">Darlin’, yes ma’am… you look tired. Sit a spell—let me take care of you. Don’t mind if my smile misbehaves.</p>
         </div>
       </section>
 
       <section class="card chat">
         <div class="tabbar">
           <span class="tab">PG-13 Room</span>
-          <span class="tab">Gentle • Protective • Warm</span>
+          <span class="tab">Manners • Naughty side</span>
         </div>
         <div id="chat" class="chatlog"></div>
         <div class="compose">
@@ -76,46 +75,46 @@
   <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
   <script>
-    const chat = document.getElementById('chat');
-    const msg  = document.getElementById('msg');
-    const send = document.getElementById('send');
+    const chat=document.getElementById('chat');
+    const msg=document.getElementById('msg');
+    const send=document.getElementById('send');
 
-    const openers = [
-      "Boots off, hat on the hook. You come first under this roof.",
-      "Tell me what you need and I’ll see to it."
+    const openers=[
+      "Yes ma’am, boots off, hat on the hook.",
+      "Sit yourself down, darlin’. I’ll pour you somethin’ warm.",
+      "Careful now—my smile’s made for sin."
     ];
-    const caringQuestions = [
-      "How was your day—really?",
-      "If I cook for you, what do you feel like?",
+    const caringQuestions=[
+      "How was your day—honest now?",
+      "If I cook for you, ma’am, what do you feel like?",
       "Tell me one good thing that happened today.",
       "What’s your ideal slow Sunday?"
     ];
-    const bait = "What did you just say?";
+    const bait="What did you just say?";
 
-    let nickname = "";
-    let shares = 0, qIndex = 0;
+    let nickname="", shares=0, qIndex=0;
 
-    function bubble(who, text){
+    function bubble(who,text){
       const row=document.createElement('div');row.className='row';
       const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
       b.textContent=text;row.appendChild(b);chat.appendChild(row);chat.scrollTop=chat.scrollHeight;
     }
-    function reply(t,d=600){setTimeout(()=>bubble('him',t),d);}
+    function reply(t,d=1500){setTimeout(()=>bubble('him',t),d);} // slower pacing
 
     openers.forEach(t=>bubble('him',t));
-    setTimeout(()=>bubble('him',bait),1800);
+    setTimeout(()=>bubble('him',bait),3000);
 
-    setInterval(()=>{ if(qIndex>=caringQuestions.length) qIndex=0; reply(caringQuestions[qIndex++],0); },25000);
+    setInterval(()=>{ if(qIndex>=caringQuestions.length) qIndex=0; reply(caringQuestions[qIndex++],0); },30000);
 
     function earnNickname(){
       if(!nickname && shares>=1) nickname="sweet pea";
-      if(!nickname && shares>=2) nickname="heartland";
+      if(!nickname && shares>=2) nickname="trouble";
     }
 
     function respond(){
-      reply("That’s it. I’m right here.");
+      reply("Yes ma’am, I heard you.");
       earnNickname();
-      setTimeout(()=>{ const n=nickname?` ${nickname}`:""; bubble('him',`Careful there${n}. 😉`); },1400);
+      setTimeout(()=>{ const n=nickname?` ${nickname}`:""; bubble('him',`Careful there${n}. 😉`); },2000);
     }
 
     send.onclick=()=>{const t=msg.value.trim();if(!t)return;bubble('you',t);msg.value="";shares++;respond();};

@@ -1,118 +1,57 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom n Blade — Choose Your Path</title>
-  <style>
-    :root{ --slate:#2B2E34; --panel:#1b2330; --ink:#EDEFF4; --pink:#FF6FA8; --chip:#222b38; }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--slate);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-    a{color:inherit;text-decoration:none}
-
-    /* Header */
-    .bxb-header{background:var(--slate);color:var(--ink);border-bottom:1px solid #39404B}
-    .bxb-wrap{max-width:1100px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:16px}
-    .bxb-brand{display:flex;align-items:center;gap:12px}
-    .bxb-brand img{height:40px;width:auto;filter:drop-shadow(0 0 10px rgba(255,111,168,.55))}
-    .bxb-name{font-weight:700;letter-spacing:.3px;font-size:18px;opacity:.95}
-    .bxb-nav{margin-left:auto;display:flex;gap:10px}
-    .bxb-link{padding:8px 12px;border-radius:999px;background:var(--chip);border:1px solid #2f3640}
-    .bxb-link:hover{border-color:var(--pink);box-shadow:0 0 0 2px rgba(255,111,168,.18) inset}
-    .bxb-cta{background:var(--pink);color:#111;border-color:var(--pink);font-weight:600}
-
-    /* Page */
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .hero{
-      min-height:46vh;border-radius:16px;overflow:hidden;margin-top:14px;
-      background:
-        linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.45)),
-        url('images/placeholder_hero.jpg') center/cover no-repeat;
-      display:flex;align-items:flex-end;padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    .hero h1{margin:0 0 6px 0;font-size:40px;line-height:1.1}
-    .hero p{margin:0;color:#f3f6fbcc;max-width:60ch}
-
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:18px}
-    .card{background:var(--panel);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s}
-    .card:hover{transform:translateY(-3px)}
-    .card img{width:100%;height:240px;object-fit:cover}
-    .card-body{padding:14px}
-    .card h2{margin:0 0 6px;font-size:22px}
-    .card p{margin:0 0 10px;color:#b8c0cc}
-    .btn{display:inline-block;padding:8px 14px;border-radius:999px;background:var(--pink);color:#111;font-weight:600;border:none}
-  </style>
-</head>
-<body>
-  <!-- Header -->
-  <header class="bxb-header">
-    <div class="bxb-wrap">
-      <a class="bxb-brand" href="index.html">
-        <img src="images/logo.jpg" alt="Blossom n Blade logo">
-        <span class="bxb-name">Blossom n Blade</span>
-      </a>
-      <nav class="bxb-nav">
-        <a class="bxb-link" href="mask.html">Masked Guy</a>
-        <a class="bxb-link bxb-cta" href="pay.html">Enter Chat</a>
-      </nav>
-    </div>
+<body style="margin:0;background:#0b0b0d;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
+  <header style="position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.6);backdrop-filter:saturate(120%) blur(6px);border-bottom:1px solid rgba(255,255,255,.08);">
+    <div style="font-weight:700">Blossom & Blade</div>
+    <div style="font-size:12px;opacity:.75">Women-Safe Fantasy Chat • PG-13</div>
   </header>
 
-  <!-- Content -->
-  <main class="wrap">
-    <section class="hero">
-      <div>
-        <h1>Choose Your Path</h1>
-        <p>Two energies. Two doors. Pick one… we’ll meet you inside.</p>
-      </div>
-    </section>
+  <main style="max-width:1100px;margin:24px auto;padding:0 16px;">
+    <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;">Choose Your Companion</h1>
+    <p style="opacity:.8;margin:0 0 18px;">PG-13 by default. No visuals. Words, warmth, and foreplay-vibes only.</p>
 
-    <section class="grid">
-      <!-- Book Girl -->
-      <div class="card">
-        <img src="images/hoodie_girl.jpg" alt="Book Girl">
-        <div class="card-body">
-          <h2>Book Girl</h2>
-          <p>Library loft, hoodie nights, and a sly smile. Three moods to explore.</p>
-          <a class="btn" href="book-choose.html" onclick="localStorage.setItem('bxb_path','book_girl')">Enter</a>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <!-- Blade -->
+      <a href="woods.html" style="display:block;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
+        <div style="aspect-ratio:4/3;background:#151518;display:flex;align-items:center;justify-content:center;">
+          <span style="opacity:.6;font-size:12px;">Blade Monroe • Ghostface Woods</span>
         </div>
-      </div>
+        <div style="padding:12px 12px 14px;">
+          <div style="font-weight:700;">Blade Monroe</div>
+          <div style="font-size:12px;opacity:.75;">Masked hunter • chase fantasy</div>
+          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Protective predator energy; he plays the distance and the catch.</p>
+        </div>
+      </a>
 
-      <!-- Masked Guy -->
-      <div class="card">
-        <img src="images/masked_guy.jpg" alt="Masked Guy">
-        <div class="card-body">
-          <h2>Masked Guy</h2>
-          <p>Leather jacket, low voice. Garage, woods, or bedroom—your move.</p>
-          <a class="btn" href="mask.html" onclick="localStorage.setItem('bxb_path','masked_guy')">Enter</a>
+      <!-- Grayson -->
+      <a href="mask.html" style="display:block;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
+        <div style="aspect-ratio:4/3;background:#151518;display:flex;align-items:center;justify-content:center;">
+          <span style="opacity:.6;font-size:12px;">Grayson Kincaid • Red-lit Room</span>
         </div>
-      </div>
-    </section>
-  </main><!-- ===== Global Footer ===== -->
-<style>
-  .bxb-footer{background:#1b2330;border-top:1px solid #39404B;color:#EDEFF4}
-  .bxb-footwrap{max-width:1100px;margin:0 auto;padding:18px}
-  .bxb-footgrid{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-  .bxb-footlinks{display:flex;gap:14px;flex-wrap:wrap}
-  .bxb-footlinks a{color:#b8c0cc;text-decoration:none;padding:6px 8px;border-radius:10px;background:#222b38;border:1px solid #2f3640}
-  .bxb-footlinks a:hover{border-color:#FF6FA8;box-shadow:0 0 0 2px rgba(255,111,168,.18) inset;color:#EDEFF4}
-  .bxb-copy{color:#aeb7c5;font-size:14px}
-</style>
-<footer class="bxb-footer">
-  <div class="bxb-footwrap">
-    <div class="bxb-footgrid">
-      <div class="bxb-copy">© Blossom n Blade</div>
-      <nav class="bxb-footlinks">
-        <a href="index.html">Home</a>
-        <a href="book-choose.html">Book Girl</a>
-        <a href="mask.html">Masked Guy</a>
-        <a href="pay.html">Pricing</a>
-      </nav>
+        <div style="padding:12px 12px 14px;">
+          <div style="font-weight:700;">Grayson Kincaid</div>
+          <div style="font-size:12px;opacity:.75;">Viking Dom • balaclava (COD mask)</div>
+          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Commanding, adoring; ritual, praise, and rules that make you feel safe.</p>
+        </div>
+      </a>
+
+      <!-- Dylan -->
+      <a href="garage.html" style="display:block;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;">
+        <div style="aspect-ratio:4/3;background:#151518;display:flex;align-items:center;justify-content:center;">
+          <span style="opacity:.6;font-size:12px;">Dylan Rydes • Motel Garage</span>
+        </div>
+        <div style="padding:12px 12px 14px;">
+          <div style="font-weight:700;">Dylan Rydes</div>
+          <div style="font-size:12px;opacity:.75;">Biker boy • blue eyes • tattoos</div>
+          <p style="font-size:14px;opacity:.85;margin:8px 0 0;">Sweet trouble and leather-soft talk. Jacket off, guard down.</p>
+        </div>
+      </a>
     </div>
-  </div>
-</footer>
-<!-- ===== /Global Footer ===== -->
 
+    <div style="margin-top:18px;padding:10px 12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;font-size:12px;opacity:.85;">
+      Coming soon: Rockstar • Cowboy • Gentleman (we’ll repurpose the “book girl” pages).
+    </div>
+  </main>
+
+  <footer style="padding:18px 16px;text-align:center;font-size:12px;opacity:.75;border-top:1px solid rgba(255,255,255,.08);">
+    $1 of every subscription goes to this month’s Domestic Violence charity.
+  </footer>
 </body>
-</html>

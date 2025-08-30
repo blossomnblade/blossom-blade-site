@@ -2,95 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dylan Rydes — PG-13 Room</title>
-  <meta name="description" content="Dylan Rydes — biker boy • motel garage. PG-13 room." />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blade Monroe — PG-13 Room</title>
+  <meta name="description" content="Blade Monroe — masked hunter • Ghostface Woods. PG-13 room with conversation starters." />
   <style>
     *{box-sizing:border-box}
-    body{
-      margin:0; color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    }
-    header{
-      position:sticky; top:0; z-index:50;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 16px; background:rgba(0,0,0,.75);
-      border-bottom:1px solid rgba(255,255,255,.15);
-      backdrop-filter:saturate(120%) blur(6px);
-    }
-    main{max-width:1100px; margin:22px auto; padding:0 16px;}
-    .layout{display:grid; grid-template-columns:300px 1fr; gap:16px;}
-    .card{
-      border:1px solid rgba(255,255,255,.15); border-radius:14px; overflow:hidden;
-      background:rgba(0,0,0,.70);
-    }
-    .tabbar{
-      display:flex; gap:8px; padding:8px 10px; align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.15);
-      background:#224a66; /* Dylan solid */
-    }
-    .tab{
-      font-size:12px; padding:6px 10px; border-radius:6px;
-      font-weight:600; background:#224a66; color:#fff; border:1px solid rgba(255,255,255,.18);
-    }
-    .chip{
-      font-size:11px; padding:4px 8px; border-radius:999px; background:#224a66; border:1px solid rgba(255,255,255,.18);
-    }
-    .btn{
-      padding:10px 12px; border-radius:8px; border:none; background:#224a66; color:#fff; font-weight:600; cursor:pointer;
-    }
-    .panel{padding:12px 12px 14px;}
-    .hero{aspect-ratio:4/3; background:rgba(255,255,255,.04);}
-    .chat{display:flex; flex-direction:column; min-height:60vh;}
-    .chatlog{flex:1; overflow:auto; padding:12px 12px 0;}
-    .row{display:flex; margin:0 0 8px;}
-    .bubble{max-width:80%; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15);}
-    .him{background:rgba(255,255,255,.08);}
-    .you{background:#fff; color:#000; margin-left:auto;}
-    .compose{display:flex; gap:8px; padding:12px;}
-    .input{flex:1; background:#111; border:1px solid rgba(255,255,255,.18); border-radius:10px; color:#fff; padding:10px; outline:none;}
-    footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
-    a.back{color:#fff; text-decoration:none; opacity:.9;}
+    body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
+    header{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);backdrop-filter:saturate(120%) blur(6px)}
+    main{max-width:1100px;margin:22px auto;padding:0 16px}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+    .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
+    .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#245c40}
+    .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#245c40;color:#fff;border:1px solid rgba(255,255,255,.18)}
+    .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#245c40;border:1px solid rgba(255,255,255,.18)}
+    .btn{padding:10px 12px;border-radius:8px;border:none;background:#245c40;color:#fff;font-weight:600;cursor:pointer}
+    .panel{padding:12px 12px 14px}
+    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
+    .chat{display:flex;flex-direction:column;min-height:60vh}
+    .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
+    .row{display:flex;margin:0 0 8px}
+    .bubble{max-width:80%;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15)}
+    .him{background:rgba(255,255,255,.08)}
+    .you{background:#fff;color:#000;margin-left:auto}
+    .compose{display:flex;gap:8px;padding:12px}
+    .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
+    .helpers{display:flex;flex-direction:column;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35)}
+    .helper-title{font-size:12px;opacity:.9;margin-bottom:2px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .hchip{font-size:12px;padding:6px 10px;border-radius:999px;background:#242424;border:1px solid rgba(255,255,255,.15);cursor:pointer}
+    footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
+    a.back{color:#fff;text-decoration:none;opacity:.9}
   </style>
 </head>
 <body>
-
   <header>
     <a href="index.html" class="back">← All Characters</a>
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px; width:auto;" />
-      <div style="font-weight:700">Dylan Rydes</div>
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
+      <div style="font-weight:700">Blade Monroe</div>
     </div>
     <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
   </header>
 
   <main>
     <div class="layout">
-      <!-- Character Card -->
       <section class="card">
         <div class="tabbar">
-          <span class="tab">Dylan</span>
-          <span class="tab">Biker Boy</span>
-          <span class="tab">Blue Eyes • Tattoos</span>
+          <span class="tab">Blade</span>
+          <span class="tab">Ghostface Woods</span>
+          <span class="tab">Chase Fantasy</span>
         </div>
         <div class="hero"></div>
         <div class="panel">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Motel Garage</div>
-            <span class="chip">Leather-soft talk</span>
+            <div style="font-weight:700;">Masked hunter</div>
+            <span class="chip">Protective predator</span>
           </div>
-          <p style="opacity:.95; margin:10px 0 0;">You like the jacket? Looks better on you.</p>
+          <p style="opacity:.95;margin:10px 0 0;">You found the trail. Brave girl. No need to look over your shoulder—I’m right where you want me.</p>
         </div>
       </section>
 
-      <!-- Chat Panel -->
       <section class="card chat">
         <div class="tabbar">
           <span class="tab">PG-13 Room</span>
-          <span class="tab">Flirty • Sweet trouble</span>
+          <span class="tab">Flirty • Teasing • Safe</span>
         </div>
+
+        <div class="helpers">
+          <div class="helper-title">Need a prompt? Try one:</div>
+          <div class="chips" id="chips"></div>
+        </div>
+
         <div id="chat" class="chatlog"></div>
+
         <div class="compose">
           <input id="msg" class="input" placeholder="Say something sweet…" />
           <button id="send" class="btn">Send</button>
@@ -99,20 +83,32 @@
     </div>
   </main>
 
-  <footer>
-    $1 of every subscription goes to this month’s Domestic Violence charity.
-  </footer>
+  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
   <script>
     const chat = document.getElementById('chat');
     const msg  = document.getElementById('msg');
     const send = document.getElementById('send');
+    const chipsWrap = document.getElementById('chips');
 
     const lines = [
-      "Blue neon and cheap coffee. Sit on the counter, pretty thing.",
-      "You like the jacket? Looks better on you."
+      "You found the trail. Brave girl.",
+      "No need to look over your shoulder—I’m right where you want me.",
+      "Tell me your safe word, even if we never need it."
     ];
     const bait = "What did you just say?";
+
+    const starters = [
+      { text: "If I cook for you, what do you feel like?", nickname:"wildflower"},
+      { text: "How was your day—really?", nickname:"brave girl"},
+      { text: "Should I wear the hoodie or the dress?", nickname:"runner"},
+      { text: "Tell me one good thing that happened today.", nickname:"bright trail"},
+      { text: "What’s your ideal slow Sunday?", nickname:"sunrise"}
+    ];
+
+    let nickname = "";
+    let lastStarter = null;
+    let sharedSomething = false;
 
     function bubble(who, text){
       const row = document.createElement('div');
@@ -124,17 +120,58 @@
       chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
+    function reply(text){ setTimeout(()=> bubble('him', text), 600); }
 
     lines.forEach(t => bubble('him', t));
     setTimeout(()=> bubble('him', bait), 1800);
 
-    send.onclick = () => {
-      const text = msg.value.trim();
+    starters.forEach(s => {
+      const el = document.createElement('button');
+      el.className = 'hchip'; el.type = 'button'; el.textContent = s.text;
+      el.onclick = () => { lastStarter = s; sendMessage(s.text); };
+      chipsWrap.appendChild(el);
+    });
+
+    function grantNicknameIfReady(){
+      if (!nickname && (sharedSomething || lastStarter)) {
+        nickname = (lastStarter && lastStarter.nickname) ? lastStarter.nickname : "sweetheart";
+      }
+    }
+
+    function sendMessage(textFromButton){
+      const text = (textFromButton || msg.value || "").trim();
       if(!text) return;
       bubble('you', text);
-      msg.value = '';
-      setTimeout(()=> bubble('him', "Hey, stay with me. We’ll take it slow."), 600);
-    };
+      msg.value = "";
+
+      if (lastStarter && lastStarter.text === "If I cook for you, what do you feel like?") {
+        reply("Something warm. Surprise me, but keep it simple.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "How was your day—really?") {
+        reply("Breathe. Tell me the best and the worst of it.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "Should I wear the hoodie or the dress?") {
+        reply("Run first, then dress. I’ll catch you either way.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "Tell me one good thing that happened today.") {
+        reply("Good. Keep that close, I’ll keep closer.");
+        sharedSomething = true;
+      } else if (lastStarter && lastStarter.text === "What’s your ideal slow Sunday?") {
+        reply("Coffee on the porch. My hoodie on you. No hurry.");
+        sharedSomething = true;
+      } else {
+        reply("I like that. Keep going.");
+      }
+
+      grantNicknameIfReady();
+      setTimeout(()=> {
+        const name = nickname ? ` ${nickname}` : "";
+        bubble('him', `Careful there${name}. 😉`);
+      }, 1400);
+    }
+
+    send.onclick = () => sendMessage();
+    msg.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
   </script>
 </body>
 </html>

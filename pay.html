@@ -4,112 +4,140 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Subscribe</title>
-  <meta name="description" content="Choose a Day Pass or Monthly Pass for Blossom & Blade. Subscriptions = foreplay & companionship. Coins = explicit escalation. $1 to DV charity." />
+  <meta name="description" content="Choose a pass and start your PG-13 fantasy chat. Coins unlock explicit rooms. $1 to Domestic Violence charity." />
   <style>
     *{box-sizing:border-box}
-    body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
-    header{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);backdrop-filter:saturate(120%) blur(6px)}
-    main{max-width:1100px;margin:22px auto;padding:0 16px}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
-    .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
-    .head{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;justify-content:space-between;align-items:center}
-    .title{font-weight:800}
-    .sub{font-size:12px;opacity:.9}
-    .body{padding:12px}
-    .price{font-size:28px;font-weight:800;margin:6px 0}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .select, .input{background:#111;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:10px;outline:none}
-    .btn{padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#2b2b2b;color:#fff;font-weight:800;cursor:pointer}
-    .btn.primary{background:#245c40}      /* accent green */
-    .btn.secondary{background:#2f2f3a}    /* charcoal */
-    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#2b2b2b;border:1px solid rgba(255,255,255,.18)}
-    .note{font-size:12px;opacity:.9;margin-top:8px}
-    .hr{height:1px;background:rgba(255,255,255,.15);margin:12px 0}
-    footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.85;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
-    a{color:#fff;text-decoration:none}
+    body{
+      margin:0; color:#fff;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+    }
+    header{
+      position:sticky; top:0; z-index:20;
+      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:12px 14px; background:rgba(0,0,0,.75);
+      border-bottom:1px solid rgba(255,255,255,.15); backdrop-filter:blur(6px);
+    }
+    main{max-width:980px; margin:20px auto; padding:0 14px 40px;}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+    .card{
+      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
+      background:rgba(0,0,0,.7);
+    }
+    .head{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.12); font-weight:800;}
+    .body{padding:14px;}
+    .price{font-size:28px; font-weight:800; letter-spacing:.2px; margin:4px 0 8px;}
+    .sub{opacity:.9; font-size:12px; margin-top:6px}
+    ul{padding-left:18px; margin:8px 0 0}
+    li{margin:4px 0}
+    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
+      padding:11px 14px; border-radius:10px; font-weight:700; color:#fff;
+      background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
+    }
+    .muted{opacity:.85; font-size:12px}
+    .notice{margin:14px 0; padding:10px 12px; border:1px dashed rgba(255,255,255,.25); border-radius:12px; background:rgba(0,0,0,.55)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .chip{font-size:12px; padding:5px 8px; border-radius:999px; background:#2b2b2b; border:1px solid rgba(255,255,255,.18)}
+    .danger{opacity:.9; font-size:12px; color:#ffd6d6}
+    footer{padding:18px 14px; text-align:center; font-size:12px; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15)}
+    .accent{color:#d9b3ff}
+    .col{display:flex; flex-direction:column; gap:8px}
+    .disabled{opacity:.6; cursor:not-allowed}
   </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="back">← Back to Characters</a>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-    <div style="font-weight:700">Blossom &amp; Blade</div>
+  <div class="row">
+    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;" />
+      <strong>Blossom &amp; Blade</strong>
+    </a>
+    <span class="chip">Transparent pricing</span>
   </div>
-  <div class="sub">PG-13 with subscription • Explicit talk unlocked with coins • <span style="white-space:nowrap;">$1 from every subscription goes to DV charity</span></div>
+  <div class="muted">PG-13 with subscription • Explicit talk unlocked with coins • $1 of every subscription goes to this month’s DV charity</div>
 </header>
 
 <main>
-  <h1 style="margin:6px 0 12px;font-size:24px;font-weight:800;">Choose your access</h1>
-  <p style="margin:0 0 18px;opacity:.95;">Subscriptions = <strong>foreplay &amp; companionship</strong>. Coins = <strong>explicit escalation</strong>.</p>
+  <h1 style="margin:6px 0 2px;">Choose Your Access</h1>
+  <p class="muted" id="who"></p>
 
-  <div class="grid">
-    <!-- Day Pass -->
-    <section class="card">
-      <div class="head">
-        <div class="title">Day Pass</div>
-        <span class="pill">Best for a test drive</span>
-      </div>
-      <div class="body">
-        <div class="price">$5.99</div>
-        <div class="sub">Unlocks <strong>one</strong> man for 24 hours (PG-13 chat).</div>
-        <div class="hr"></div>
-
-        <label for="day-man" style="font-size:14px;opacity:.95;">Choose your man:</label>
-        <div class="row" style="margin-top:6px;">
-          <select id="day-man" class="select">
-            <option value="woods.html">Blade Kincaid — Ghostface Woods</option>
-            <option value="mask.html">Grayson Kincaid — Viking Dom</option>
-            <option value="garage.html">Dylan Vale — Biker Boy</option>
-            <option value="rockstar.html">Silas Lennox — Rockstar</option>
-            <option value="cowboy.html">Jesse Granger — Cowboy</option>
-            <option value="gentleman.html">Cassian Blackwell — Gentleman</option>
-          </select>
-          <button id="buy-day" class="btn primary">Continue (Demo)</button>
-        </div>
-
-        <div class="note">$1 of this subscription goes to this month’s Domestic Violence charity.</div>
-      </div>
-    </section>
-
-    <!-- Monthly -->
-    <section class="card">
-      <div class="head">
-        <div class="title">Monthly Pass</div>
-        <span class="pill">Best value</span>
-      </div>
-      <div class="body">
-        <div class="price">$10.99</div>
-        <div class="sub">Unlocks <strong>all 6 men</strong> for 30 days (PG-13 chat).</div>
-        <div class="hr"></div>
-
-        <div class="row">
-          <button id="buy-month" class="btn secondary">Continue (Demo)</button>
-        </div>
-
-        <div class="note">$1 of this subscription goes to this month’s Domestic Violence charity.</div>
-      </div>
-    </section>
+  <div class="notice">
+    <strong>Simple rules</strong>: <span class="accent">Subscription = foreplay / companionship (PG-13)</span>.  
+    <span class="accent">Coins = explicit escalation</span> in alternate rooms. No visuals, words only. Aftercare included.
   </div>
 
-  <!-- Coins info -->
-  <section class="card" style="margin-top:16px;">
-    <div class="head">
-      <div class="title">Coins</div>
-      <span class="pill">Explicit escalation</span>
-    </div>
-    <div class="body">
-      <p style="margin:0 10px 8px 0;opacity:.95;">Coins unlock the Dirty Rooms (explicit). Buy them anytime:</p>
-      <div class="row">
-        <span class="pill">$5 = 25 coins</span>
-        <span class="pill">$10 = 60 coins</span>
-        <span class="pill">$20 = 150 coins</span>
+  <div class="grid" style="margin-top:10px;">
+
+    <!-- Day Pass -->
+    <div class="card">
+      <div class="head">Day Pass — per character</div>
+      <div class="body">
+        <div class="price">$5.99</div>
+        <div class="sub">24 hours access to <span id="charName">this character</span>. PG-13 vibe with flirty innuendo.</div>
+        <ul>
+          <li>One character for a day</li>
+          <li>Warm conversation, one line at a time</li>
+          <li>Innuendo allowed (still PG-13)</li>
+        </ul>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="buyDay">Start Day Pass</button>
+          <span class="muted">Reset chat so it feels like a fresh meet.</span>
+        </div>
       </div>
-      <div class="note" style="margin-top:10px;">Subscriptions = foreplay &amp; companionship • Coins = explicit escalation.</div>
     </div>
-  </section>
+
+    <!-- Monthly -->
+    <div class="card">
+      <div class="head">Monthly — all six men</div>
+      <div class="body">
+        <div class="price">$10.99</div>
+        <div class="sub">Unlimited PG-13 across <em>all</em> companions. Slow-build intimacy + suggestive heat.</div>
+        <ul>
+          <li>Access to all 6 characters</li>
+          <li>Remembers your vibe per room</li>
+          <li>Best value for exploring</li>
+        </ul>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="buyMonth">Start Monthly</button>
+          <span class="muted">Cancel anytime. $1 goes to DV charity.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coins -->
+    <div class="card">
+      <div class="head">Coins — unlock explicit rooms</div>
+      <div class="body">
+        <div class="sub">Use coins to enter the “dirty room” when you’re ready. No pressure.</div>
+        <ul>
+          <li>5 coins — $1</li>
+          <li>25 coins — $5</li>
+          <li>60 coins — $10</li>
+          <li>150 coins — $20</li>
+        </ul>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn disabled" disabled>Coin Shop (coming soon)</button>
+          <span class="muted">Explicit talk stays locked until coins are enabled.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notice">
+    <strong>Privacy & pacing</strong>: He speaks one line, then waits. We keep it respectful, women-safe, and grounded.  
+    After purchase we refresh the room so it feels natural—no factory scripts.
+  </div>
+
+  <div class="danger">
+    Developer note: this page is in <em>test mode</em>. The buttons below simulate a successful purchase so you can try the flow now.
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <button class="btn" id="simulateDay">Simulate Day Pass</button>
+    <button class="btn" id="simulateMonth">Simulate Monthly</button>
+  </div>
 </main>
 
 <footer>
@@ -117,44 +145,54 @@
 </footer>
 
 <script>
-  // --- Pre-select man if pay.html?man=woods.html etc.
-  (function(){
+  // --- read which room sent us here
+  const params = new URLSearchParams(location.search);
+  const manPage = (params.get('man') || 'index.html').replace(/^\//,'');
+  // map filename to a friendly name
+  const nameMap = {
+    "woods.html":"Blade Kincaid",
+    "mask.html":"Grayson Kincaid",
+    "garage.html":"Dylan Vale",
+    "rockstar.html":"Silas Lennox",
+    "cowboy.html":"Jesse Granger",
+    "gentleman.html":"Cassian Blackwell"
+  };
+  const charName = nameMap[manPage] || "your companion";
+  document.getElementById('who').textContent = `You’re checking out: ${charName}`;
+  document.getElementById('charName').textContent = charName;
+
+  // --- helpers
+  function markSubscriber(level){
+    // level: 'day' or 'month'
+    // mark as subscriber for stage-based chat
+    localStorage.setItem('bb_subscriber','1');
+    if(level === 'month'){ localStorage.setItem('bb_month','1'); }
+
+    // clear any old thread memory so it feels like a new “meet”
     try{
-      const params=new URLSearchParams(location.search);
-      const man=params.get('man');
-      if(man){
-        const sel=document.getElementById('day-man');
-        if(sel){
-          for(const opt of sel.options){ if(opt.value===man){ sel.value=man; break; } }
-        }
-      }
+      const keyGuess = 'bb_thread_' + (manPage.split('.')[0] || 'room');
+      localStorage.removeItem(keyGuess);
     }catch(e){}
-  })();
 
-  // DEMO ONLY — simulate access without real payments.
-  // In production, Stripe will handle checkout & you’ll set these after success.
-
-  function setSub(plan, hours) {
-    try {
-      const now = Date.now();
-      const exp = now + hours*60*60*1000;
-      localStorage.setItem('bb_subscribed', 'true');
-      localStorage.setItem('bb_plan', plan);            // 'day' or 'month'
-      localStorage.setItem('bb_expires_at', String(exp));
-    } catch(e){}
+    // send her back to the room; subscriber stage will kick in
+    const dest = manPage + '?stage=subscriber';
+    location.href = dest;
   }
 
-  document.getElementById('buy-day').addEventListener('click', ()=>{
-    const url = document.getElementById('day-man').value;
-    setSub('day', 24); // 24 hours
-    try { localStorage.setItem('bb_day_choice', url); } catch(e){}
-    window.location.href = url; // simulate success → go to chosen room
-  });
+  // --- live checkout (future): call your server to create a Stripe Checkout Session then redirect.
+  async function startCheckout(kind){
+    // placeholder: when we integrate Stripe, we’ll POST to /api/checkout
+    // and redirect to the returned URL.
+    alert("Live checkout coming soon. Using simulator for now.");
+  }
 
-  document.getElementById('buy-month').addEventListener('click', ()=>{
-    setSub('month', 24*30); // ~30 days
-    window.location.href = 'index.html'; // simulate success → back to index (all unlocked conceptually)
-  });
+  // Buttons
+  document.getElementById('buyDay').addEventListener('click', ()=> startCheckout('day'));
+  document.getElementById('buyMonth').addEventListener('click', ()=> startCheckout('month'));
+
+  // Simulators (let you test today)
+  document.getElementById('simulateDay').addEventListener('click', ()=> markSubscriber('day'));
+  document.getElementById('simulateMonth').addEventListener('click', ()=> markSubscriber('month'));
 </script>
 
 </body>

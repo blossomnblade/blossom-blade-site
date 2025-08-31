@@ -42,7 +42,7 @@
       box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
     }
     .me{align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him{align-self:flex-start; background:rgba(122,16,33,.24)} /* crimson accent */
+    .him{align-self:flex-start; background:rgba(122,16,33,.24)} /* crimson */
     .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
     .composer{
       display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
@@ -55,6 +55,10 @@
     button{
       padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
       background:#7a1021; color:#fff; font-weight:700; cursor:pointer;
+    }
+    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
+      padding:10px 12px; border-radius:8px; font-weight:700; color:#fff;
+      background:#7a1021; border:1px solid rgba(255,255,255,.18);
     }
   </style>
 </head>
@@ -107,4 +111,100 @@
         <li>150 coins — $20</li>
       </ul>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="pay.html?man=coins" class="btn" style="padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#7a1021;color:#fff;text-decoration:none;font-weight:700;">Open Coin Shop</
+        <a href="pay.html?man=coins" class="btn">Open Coin Shop</a>
+        <button id="coinClose" class="btn" style="background:#2b2b2b;">Maybe later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- stage badge
+  (function(){
+    const isSub = localStorage.getItem('bb_subscriber') === '1';
+    const el = document.getElementById('stageBadge');
+    if (el) el.textContent = isSub ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+  })();
+
+  // --- coin modal control
+  (function(){
+    const modal = document.getElementById('coinModal');
+    const close = document.getElementById('coinClose');
+    if (close) close.addEventListener('click', ()=> modal.style.display='none');
+    window.showCoinModal = ()=> { if(modal) modal.style.display='flex'; };
+  })();
+
+  function getStage(){
+    const p = new URLSearchParams(location.search).get("stage");
+    if (p) return p;
+    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
+  }
+
+  const man = document.body.getAttribute("data-man") || "grayson";
+  const chat   = document.getElementById("chat");
+  const typing = document.getElementById("typing");
+  const form   = document.getElementById("composer");
+  const input  = document.getElementById("input");
+  const sendBtn= document.getElementById("send");
+
+  const conversation = [];
+
+  function bubble(text, who){
+    const div = document.createElement("div");
+    div.className = "bubble " + (who === "me" ? "me" : "him");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
+
+  async function askLLM(userText){
+    conversation.push({ role: "user", content: userText });
+
+    setTyping(true);
+    try{
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
+      });
+      const data = await res.json();
+      const reply = data?.reply || "Use your words. Slowly.";
+      await new Promise(r=>setTimeout(r, 550 + Math.random()*500));
+      bubble(reply, "him");
+      conversation.push({ role: "assistant", content: reply });
+
+      if (data?.suggestCoin && typeof window.showCoinModal === 'function') {
+        setTimeout(()=> window.showCoinModal(), 400);
+      }
+    }catch(e){
+      bubble("Signal flickered. Speak again, little flame.", "him");
+    }finally{
+      setTyping(false);
+      input.disabled = false; sendBtn.disabled = false; input.focus();
+    }
+  }
+
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    bubble(text, "me");
+    input.value = "";
+    input.disabled = true; sendBtn.disabled = true;
+
+    const explicitHints = /(explicit|uncensored|NSFW|filthy|hard|raw|nasty|describe|details|graphic|porn|dirty talk|choke|spank|deep|oral|thrust|ride|suck|lick|moan)/i;
+    if (explicitHints.test(text) && typeof window.showCoinModal === 'function') {
+      setTimeout(()=> window.showCoinModal(), 300);
+    }
+
+    askLLM(text);
+  });
+
+  // Soft openers (calm, commanding, adoring)
+  bubble("The mask stays. Your smile does the work.", "him");
+  setTimeout(()=>bubble("Speak. I’ll set the pace—slow and kind.", "him"), 700);
+</script>
+
+</body>
+</html>

@@ -1,9 +1,4 @@
-// /api/chat.js  (Vercel serverless function)
-import OpenAI from "openai";
-
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Persona prompts (one voice per man)
+// /api/chat.js  — Vercel serverless function (no SDK needed)
 const PERSONAS = {
   blade: `You are Blade Kincaid, masked hunter (chase fantasy). Protective, teasing, low words.
 Rules: one short line then WAIT for her reply. Stay PG-13 (foreplay vibe ok, no explicit acts). Warm, safe tone.`,
@@ -20,26 +15,42 @@ Rules: one short line then WAIT. PG-13 only.`
 };
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
+    // Support both Node/Edge body shapes on Vercel
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : (req.body || (await req.json?.()) || {});
     const { messages = [], man = "blade" } = body;
+
     const persona = PERSONAS[man] || PERSONAS.blade;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.8,
-      messages: [
-        { role: "system", content: persona },
-        { role: "system", content: "Reply in under 22 words. One line, then stop and wait for her." },
-        ...messages
-      ]
+    const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0.8,
+        messages: [
+          { role: "system", content: persona },
+          { role: "system", content: "Reply in under 22 words. One line, then stop and wait for her." },
+          ...messages
+        ]
+      })
     });
 
-    res.status(200).json({ reply: response.choices?.[0]?.message?.content || "Mmh. Tell me more." });
+    const data = await apiRes.json();
+    const reply = data?.choices?.[0]?.message?.content || "Mmh. Tell me more.";
+    return res.status(200).json({ reply });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "chat_failed" });
+    console.error("chat error", e);
+    return res.status(500).json({ error: "chat_failed" });
   }
 }

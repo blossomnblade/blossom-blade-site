@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blade Kincaid — PG-13 Room</title>
-  <meta name="description" content="Blade Kincaid — masked hunter, chase fantasy. PG-13 room with slow-burn pacing, stage badge, and coin cue." />
+  <meta name="description" content="Blade Kincaid — masked hunter, chase fantasy. Sidebar portrait + slow-burn chat with stage badge and coin cue." />
   <style>
     *{box-sizing:border-box}
     body{
@@ -18,16 +18,42 @@
     }
     header .meta{font-size:12px; opacity:.9; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
     #stageBadge{
-      font-size:12px; opacity:.95;
-      background:rgba(255,255,255,.1);
-      border:1px solid rgba(255,255,255,.2);
-      padding:4px 8px; border-radius:999px;
+      font-size:12px; opacity:.95; background:rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.2); padding:4px 8px; border-radius:999px;
     }
-    main{max-width:980px; margin:18px auto; padding:0 14px;}
+
+    main{max-width:1100px; margin:18px auto; padding:0 14px;}
     .room{
+      display:grid; grid-template-columns: 280px 1fr; gap:0;
       border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
       background:rgba(0,0,0,.6);
     }
+
+    /* --- Sidebar portrait --- */
+    .side{
+      position:relative; background:rgba(0,0,0,.45);
+      border-right:1px solid rgba(255,255,255,.12);
+      display:flex; align-items:stretch; justify-content:center; overflow:hidden;
+    }
+    .portrait{
+      width:100%; height:100%; object-fit:cover; opacity:.96; 
+      transform:translateX(0);
+      animation: drift 8s ease-in-out infinite;
+      filter:saturate(1.02) contrast(1.02);
+    }
+    @keyframes drift{
+      0% { transform: translateX(-6px); }
+      50%{ transform: translateX(6px); }
+      100%{transform: translateX(-6px); }
+    }
+    .sideOverlay{
+      position:absolute; inset:0;
+      background:linear-gradient(0deg, rgba(0,0,0,.35), transparent 35%, transparent 75%, rgba(0,0,0,.35));
+      pointer-events:none;
+    }
+
+    /* --- Chat area --- */
+    .chatwrap{display:flex; flex-direction:column; min-height:62vh;}
     .roomhead{
       padding:12px 14px; background:linear-gradient(180deg,#0f1512,transparent);
       border-bottom:1px solid rgba(255,255,255,.12);
@@ -35,8 +61,8 @@
     .name{font-weight:800; letter-spacing:.2px}
     .small{font-size:12px; opacity:.9}
     .chat{
-      height:60vh; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
-      background:radial-gradient(1200px 500px at 20% 20%, rgba(36,92,64,.15), transparent 60%);
+      flex:1; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
+      background:radial-gradient(1200px 520px at 25% 20%, rgba(36,92,64,.15), transparent 60%);
     }
     .bubble{
       max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
@@ -59,6 +85,14 @@
       background:#245c40; color:#fff; font-weight:700; cursor:pointer;
     }
     .smallnote{font-size:12px; opacity:.9}
+
+    /* small screens: stack portrait above chat */
+    @media (max-width: 760px){
+      .room{ grid-template-columns: 1fr; }
+      .side{ height:260px; }
+      .chat{ min-height:360px; }
+    }
+
     .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
       padding:10px 12px; border-radius:8px; font-weight:700; color:#fff;
       background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
@@ -82,18 +116,27 @@
 
 <main>
   <div class="room">
-    <div class="roomhead">
-      <div class="name">Blade Kincaid</div>
-      <div class="small">Masked hunter • Chase fantasy • Protective &amp; teasing</div>
-    </div>
+    <!-- Sidebar portrait -->
+    <aside class="side">
+      <img id="portrait" class="portrait" src="images/blade_tease.jpg" alt="Blade Kincaid portrait" />
+      <div class="sideOverlay"></div>
+    </aside>
 
-    <div id="chat" class="chat" aria-live="polite"></div>
-    <div id="typing" class="typing">Blade is typing…</div>
+    <!-- Chat column -->
+    <section class="chatwrap">
+      <div class="roomhead">
+        <div class="name">Blade Kincaid</div>
+        <div class="small">Masked hunter • Chase fantasy • Protective &amp; teasing</div>
+      </div>
 
-    <form id="composer" class="composer">
-      <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off" />
-      <button id="send" type="submit">Send</button>
-    </form>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <div id="typing" class="typing">Blade is typing…</div>
+
+      <form id="composer" class="composer">
+        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off" />
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
   </div>
 
   <p class="smallnote" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.</p>
@@ -120,11 +163,20 @@
 </div>
 
 <script>
-  // --- stage badge
+  // --- stage badge + portrait swap
+  function getStage(){
+    const p = new URLSearchParams(location.search).get("stage");
+    if (p) return p;
+    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
+  }
   (function(){
-    const isSub = localStorage.getItem('bb_subscriber') === '1';
-    const el = document.getElementById('stageBadge');
-    if (el) el.textContent = isSub ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+    const stage = getStage();
+    const badge = document.getElementById('stageBadge');
+    if (badge) badge.textContent = (stage === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+    const portrait = document.getElementById('portrait');
+    if (portrait){
+      portrait.src = stage === 'subscriber' ? 'images/blade_sub.jpg' : 'images/blade_tease.jpg';
+    }
   })();
 
   // --- coin modal control
@@ -135,19 +187,12 @@
     window.showCoinModal = ()=> { if(modal) modal.style.display='flex'; };
   })();
 
-  function getStage(){
-    const p = new URLSearchParams(location.search).get("stage");
-    if (p) return p;
-    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
-  }
-
   const man = document.body.getAttribute("data-man") || "blade";
   const chat   = document.getElementById("chat");
   const typing = document.getElementById("typing");
   const form   = document.getElementById("composer");
   const input  = document.getElementById("input");
   const sendBtn= document.getElementById("send");
-
   const conversation = [];
 
   function bubble(text, who){
@@ -171,7 +216,7 @@
       });
       const data = await res.json();
       const reply = data?.reply || "Tell me again—slowly.";
-      await new Promise(r=>setTimeout(r, 550 + Math.random()*500));
+      await new Promise(r=>setTimeout(r, 560 + Math.random()*500));
       bubble(reply, "him");
       conversation.push({ role: "assistant", content: reply });
 
@@ -179,7 +224,7 @@
         setTimeout(()=> window.showCoinModal(), 400);
       }
     }catch(e){
-      bubble("Storm’s loud. Say it once more, wildflower.", "him");
+      bubble("Branches creaked—say it once more, wildflower.", "him");
     }finally{
       setTyping(false);
       input.disabled = false; sendBtn.disabled = false; input.focus();
@@ -194,7 +239,7 @@
     input.value = "";
     input.disabled = true; sendBtn.disabled = true;
 
-    // Gentle client-side hint detection
+    // gentle client-side hint detection
     const explicitHints = /(explicit|uncensored|NSFW|filthy|hard|raw|nasty|describe|details|graphic|porn|dirty talk|choke|spank|deep|oral|thrust|ride|suck|lick|moan)/i;
     if (explicitHints.test(text) && typeof window.showCoinModal === 'function') {
       setTimeout(()=> window.showCoinModal(), 300);
@@ -203,7 +248,7 @@
     askLLM(text);
   });
 
-  // Soft openers (deranged-but-protective vibe; PG-13)
+  // Soft openers (deranged-but-protective; still PG-13)
   bubble("You found me in the dark. Good instincts.", "him");
   setTimeout(()=>bubble("Tell me what you want—make me chase it.", "him"), 700);
 </script>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blade Kincaid — PG-13 Room</title>
-  <meta name="description" content="Blade Kincaid — masked hunter, chase fantasy. PG-13 room with slow-burn pacing, coin cue, and stage badge." />
+  <meta name="description" content="Blade Kincaid — masked hunter, chase fantasy. PG-13 room with slow-burn pacing, stage badge, and coin cue." />
   <style>
     *{box-sizing:border-box}
     body{
@@ -44,4 +44,169 @@
       box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
     }
     .me{align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him{align-self:flex-start; background:rgba(
+    .him{align-self:flex-start; background:rgba(36,92,64,.22)} /* forest green */
+    .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
+    .composer{
+      display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.55);
+    }
+    input[type="text"]{
+      flex:1; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06); color:#fff; outline:none;
+    }
+    button{
+      padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:#245c40; color:#fff; font-weight:700; cursor:pointer;
+    }
+    .smallnote{font-size:12px; opacity:.9}
+    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
+      padding:10px 12px; border-radius:8px; font-weight:700; color:#fff;
+      background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
+    }
+  </style>
+</head>
+
+<body data-man="blade">
+<header>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;" />
+      <strong>Blossom &amp; Blade</strong>
+    </a>
+  </div>
+  <div class="meta">
+    <span id="stageBadge">Visitor — PG-13 tease</span>
+    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
+  </div>
+</header>
+
+<main>
+  <div class="room">
+    <div class="roomhead">
+      <div class="name">Blade Kincaid</div>
+      <div class="small">Masked hunter • Chase fantasy • Protective &amp; teasing</div>
+    </div>
+
+    <div id="chat" class="chat" aria-live="polite"></div>
+    <div id="typing" class="typing">Blade is typing…</div>
+
+    <form id="composer" class="composer">
+      <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off" />
+      <button id="send" type="submit">Send</button>
+    </form>
+  </div>
+
+  <p class="smallnote" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.</p>
+</main>
+
+<!-- Coin modal -->
+<div id="coinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:1000;">
+  <div style="max-width:520px;width:92%;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden;">
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:800;">Unlock Explicit Room?</div>
+    <div style="padding:14px;">
+      <p style="margin:0 0 10px;opacity:.95;">Sounds like you’re ready to turn the heat up. The explicit room unlocks with coins.</p>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>5 coins — $1</li>
+        <li>25 coins — $5</li>
+        <li>60 coins — $10</li>
+        <li>150 coins — $20</li>
+      </ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="pay.html?man=coins" class="btn">Open Coin Shop</a>
+        <button id="coinClose" class="btn" style="background:#2b2b2b;">Maybe later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- stage badge
+  (function(){
+    const isSub = localStorage.getItem('bb_subscriber') === '1';
+    const el = document.getElementById('stageBadge');
+    if (el) el.textContent = isSub ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+  })();
+
+  // --- coin modal control
+  (function(){
+    const modal = document.getElementById('coinModal');
+    const close = document.getElementById('coinClose');
+    if (close) close.addEventListener('click', ()=> modal.style.display='none');
+    window.showCoinModal = ()=> { if(modal) modal.style.display='flex'; };
+  })();
+
+  function getStage(){
+    const p = new URLSearchParams(location.search).get("stage");
+    if (p) return p;
+    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
+  }
+
+  const man = document.body.getAttribute("data-man") || "blade";
+  const chat   = document.getElementById("chat");
+  const typing = document.getElementById("typing");
+  const form   = document.getElementById("composer");
+  const input  = document.getElementById("input");
+  const sendBtn= document.getElementById("send");
+
+  const conversation = [];
+
+  function bubble(text, who){
+    const div = document.createElement("div");
+    div.className = "bubble " + (who === "me" ? "me" : "him");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
+
+  async function askLLM(userText){
+    conversation.push({ role: "user", content: userText });
+
+    setTyping(true);
+    try{
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
+      });
+      const data = await res.json();
+      const reply = data?.reply || "Tell me again—slowly.";
+      await new Promise(r=>setTimeout(r, 550 + Math.random()*500));
+      bubble(reply, "him");
+      conversation.push({ role: "assistant", content: reply });
+
+      if (data?.suggestCoin && typeof window.showCoinModal === 'function') {
+        setTimeout(()=> window.showCoinModal(), 400);
+      }
+    }catch(e){
+      bubble("Storm’s loud. Say it once more, wildflower.", "him");
+    }finally{
+      setTyping(false);
+      input.disabled = false; sendBtn.disabled = false; input.focus();
+    }
+  }
+
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    bubble(text, "me");
+    input.value = "";
+    input.disabled = true; sendBtn.disabled = true;
+
+    // Gentle client-side hint detection
+    const explicitHints = /(explicit|uncensored|NSFW|filthy|hard|raw|nasty|describe|details|graphic|porn|dirty talk|choke|spank|deep|oral|thrust|ride|suck|lick|moan)/i;
+    if (explicitHints.test(text) && typeof window.showCoinModal === 'function') {
+      setTimeout(()=> window.showCoinModal(), 300);
+    }
+
+    askLLM(text);
+  });
+
+  // Soft openers (deranged-but-protective vibe; PG-13)
+  bubble("You found me in the dark. Good instincts.", "him");
+  setTimeout(()=>bubble("Tell me what you want—make me chase it.", "him"), 700);
+</script>
+
+</body>
+</html>

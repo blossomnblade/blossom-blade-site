@@ -38,7 +38,7 @@
       font-weight:600; background:#2b2b2b; color:#fff;
       border:1px solid rgba(255,255,255,.18);
     }
-    .btn, .btn2{
+    .btn{
       padding:10px 12px; border-radius:8px; border:none;
       background:#2b2b2b; color:#fff; cursor:pointer; text-align:center;
       display:inline-block; font-size:14px; font-weight:600; text-decoration:none;
@@ -46,13 +46,14 @@
     .chip{font-size:11px; padding:4px 8px; border-radius:999px; background:#2b2b2b; font-weight:500; border:1px solid rgba(255,255,255,.18);}
     .badge{font-size:11px; opacity:.85}
     .rowbtn{display:flex; gap:8px; flex-wrap:wrap;}
+    .hero{aspect-ratio:4/3; background:rgba(255,255,255,.04);}
 
     /* accents per character */
-    .blade   .tab, .blade .btn, .blade .chip      { background:#245c40; }   /* forest green */
-    .grayson .tab, .grayson .btn, .grayson .chip  { background:#7a1021; }   /* crimson */
-    .dylan   .tab, .dylan .btn, .dylan .chip      { background:#224a66; }   /* steel blue */
-    .rockstar .tab, .rockstar .btn, .rockstar .chip { background:#4b2a6b; } /* royal violet */
-    .cowboy  .tab, .cowboy .btn, .cowboy .chip    { background:#6b3e1e; }   /* saddle brown */
+    .blade   .tab, .blade .btn, .blade .chip        { background:#245c40; }   /* forest green */
+    .grayson .tab, .grayson .btn, .grayson .chip    { background:#7a1021; }   /* crimson */
+    .dylan   .tab, .dylan .btn, .dylan .chip        { background:#224a66; }   /* steel blue */
+    .rockstar .tab, .rockstar .btn, .rockstar .chip { background:#4b2a6b; }   /* royal violet */
+    .cowboy  .tab, .cowboy .btn, .cowboy .chip      { background:#6b3e1e; }   /* saddle brown */
     .gentleman .tab, .gentleman .btn, .gentleman .chip { background:#2f2f3a; } /* deep charcoal */
 
     footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
@@ -84,7 +85,7 @@
           <span class="tab">Ghostface Woods</span>
           <span class="tab">Chase Fantasy</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Blade Kincaid</div>
@@ -105,7 +106,7 @@
           <span class="tab">Viking Dom</span>
           <span class="tab">Balaclava (COD)</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Grayson Kincaid</div>
@@ -126,14 +127,14 @@
           <span class="tab">Biker Boy</span>
           <span class="tab">Blue Eyes • Tattoos</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Dylan Vale</div>
             <span class="chip">Motel Garage</span>
           </div>
           <div class="badge">Sweet trouble • leather-soft talk</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter, pretty thing—jacket off, guard down.</p>
+          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter—jacket off, guard down.</p>
           <div class="rowbtn">
             <a href="pay.html?man=garage.html" class="btn">Enter (Subscribe)</a>
           </div>
@@ -147,7 +148,7 @@
           <span class="tab">Rockstar</span>
           <span class="tab">Backstage • Tour Bus</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Silas Lennox</div>
@@ -168,14 +169,14 @@
           <span class="tab">Cowboy</span>
           <span class="tab">Barn Loft • Kitchen</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Jesse Granger</div>
             <span class="chip">Yes ma’am • southern charm</span>
           </div>
           <div class="badge">Polite • protective • sinful smile</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Darlin’, yes ma’am… you sit a spell. Don’t mind if my smile misbehaves.</p>
+          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Darlin’, yes ma’am… sit a spell. Don’t mind if my smile misbehaves.</p>
           <div class="rowbtn">
             <a href="pay.html?man=cowboy.html" class="btn">Enter (Subscribe)</a>
           </div>
@@ -189,7 +190,7 @@
           <span class="tab">Gentleman</span>
           <span class="tab">Penthouse • Town Car</span>
         </div>
-        <div style="aspect-ratio:4/3;"></div>
+        <div class="hero"></div>
         <div style="padding:12px 12px 14px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-weight:700;">Cassian Blackwell</div>

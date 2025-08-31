@@ -4,166 +4,155 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Jesse Granger — PG-13 Room</title>
-  <meta name="description" content="Jesse Granger — southern manners with a naughty smile. PG-13 room with slow, considerate pacing."/>
+  <meta name="description" content="Jesse Granger — cowboy, barn loft or kitchen. PG-13 conversation with polite, protective charm."/>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
-    header{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);backdrop-filter:saturate(120%) blur(6px)}
-    main{max-width:1100px;margin:22px auto;padding:0 16px}
-    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
-    .card{border:1px solid rgba(255,255,255,.15);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.70)}
-    .tabbar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid rgba(255,255,255,.15);background:#6b3e1e}
-    .tab{font-size:12px;padding:6px 10px;border-radius:6px;font-weight:600;background:#6b3e1e;color:#fff;border:1px solid rgba(255,255,255,.18)}
-    .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#6b3e1e;border:1px solid rgba(255,255,255,.18)}
-    .btn{padding:10px 12px;border-radius:8px;border:none;background:#6b3e1e;color:#fff;font-weight:600;cursor:pointer}
-    .panel{padding:12px 12px 14px}
-    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
-    .chat{display:flex;flex-direction:column;min-height:60vh}
-    .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
-    .row{display:flex;margin:0 0 8px}
-    .bubble{max-width:80%;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15)}
-    .him{background:rgba(255,255,255,.08)}
-    .you{background:#fff;color:#000;margin-left:auto}
-    .compose{display:flex;gap:8px;padding:12px}
-    .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
-    footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
-    a.back{color:#fff;text-decoration:none;opacity:.9}
-
-    /* Typing indicator */
-    .typing-row { display:none; margin:0 0 8px; }
-    .typing-row .bubble { max-width:80%; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); }
-    .typing-dots { display:inline-flex; align-items:center; gap:4px; }
-    .typing-dot { width:6px; height:6px; border-radius:50%; background:#fff; opacity:.25; }
-    @keyframes bbblink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
-    .typing-dot:nth-child(1){ animation:bbblink 1.2s infinite; }
-    .typing-dot:nth-child(2){ animation:bbblink 1.2s .2s infinite; }
-    .typing-dot:nth-child(3){ animation:bbblink 1.2s .4s infinite; }
+    body{
+      margin:0; color:#e9eef0; background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    header{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:rgba(0,0,0,.75); border-bottom:1px solid rgba(255,255,255,.15);
+      padding:12px 14px; position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
+    }
+    header .meta{font-size:12px; opacity:.9}
+    main{max-width:980px; margin:18px auto; padding:0 14px;}
+    .room{
+      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
+      background:rgba(0,0,0,.6);
+    }
+    .roomhead{
+      padding:12px 14px; background:linear-gradient(180deg,#1a130c,transparent);
+      border-bottom:1px solid rgba(255,255,255,.12);
+    }
+    .name{font-weight:800; letter-spacing:.2px}
+    .chat{
+      height:60vh; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
+      background:radial-gradient(1200px 500px at 70% 25%, rgba(107,62,30,.22), transparent 60%);
+    }
+    .bubble{
+      max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
+      border:1px solid rgba(255,255,255,.18); backdrop-filter:saturate(120%);
+      box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
+    }
+    .me{align-self:flex-end; background:rgba(255,255,255,.08)}
+    .him{align-self:flex-start; background:rgba(107,62,30,.24)} /* Jesse accent: saddle brown */
+    .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
+    .composer{
+      display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.55);
+    }
+    input[type="text"]{
+      flex:1; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06); color:#fff; outline:none;
+    }
+    button{
+      padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:#6b3e1e; color:#fff; font-weight:700; cursor:pointer;
+    }
+    .small{font-size:12px; opacity:.9}
   </style>
-
-  <!-- Subscription Gate -->
-  <script>
-    (function(){
-      function active(){
-        try{
-          const on = localStorage.getItem('bb_subscribed')==='true';
-          const exp = Number(localStorage.getItem('bb_expires_at')||0);
-          return on && Date.now()<exp;
-        }catch(e){return false;}
-      }
-      if(!active()){
-        location.replace('pay.html?man=' + encodeURIComponent('cowboy.html'));
-      }
-    })();
-  </script>
 </head>
-<body>
+
+<!-- tells the API which persona to use -->
+<body data-man="jesse">
+
 <header>
-  <a href="index.html" class="back">← All Characters</a>
   <div style="display:flex;align-items:center;gap:10px;">
-    <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto"/>
-    <div style="font-weight:700">Jesse Granger</div>
+    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;"/>
+      <strong>Blossom &amp; Blade</strong>
+    </a>
   </div>
-  <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
+  <div class="meta">PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</div>
 </header>
 
 <main>
-  <div class="layout">
-    <section class="card">
-      <div class="tabbar">
-        <span class="tab">Jesse Granger</span>
-        <span class="tab">Barn Loft</span>
-        <span class="tab">Country Kitchen</span>
-      </div>
-      <div class="hero"></div>
-      <div class="panel">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div style="font-weight:700;">Rugged protector</div>
-          <span class="chip">Yes ma’am • southern charm</span>
-        </div>
-        <p style="opacity:.95;margin:10px 0 0;">Darlin’, yes ma’am… you look tired. Sit a spell—let me take care of you. Don’t mind if my smile misbehaves.</p>
-      </div>
-    </section>
+  <div class="room">
+    <div class="roomhead">
+      <div class="name">Jesse Granger</div>
+      <div class="small">Barn loft • Kitchen • “Yes, ma’am” manners • Protective</div>
+    </div>
 
-    <section class="card chat">
-      <div class="tabbar">
-        <span class="tab">PG-13 Room</span>
-        <span class="tab">Manners • Naughty side</span>
-      </div>
-      <div id="chat" class="chatlog"></div>
-      <div class="compose">
-        <input id="msg" class="input" placeholder="Say something sweet…"/>
-        <button id="send" class="btn">Send</button>
-      </div>
-    </section>
+    <div id="chat" class="chat" aria-live="polite"></div>
+    <div id="typing" class="typing">Jesse is typing…</div>
+
+    <form id="composer" class="composer">
+      <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
+      <button id="send" type="submit">Send</button>
+    </form>
   </div>
+
+  <p class="small" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Base rooms stay PG-13; subscriber stage allows suggestive heat (still PG-13).</p>
 </main>
 
-<footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
-
 <script>
-  const chat=document.getElementById('chat');
-  const msg=document.getElementById('msg');
-  const send=document.getElementById('send');
-
-  function bubble(who,text){
-    const row=document.createElement('div');row.className='row';
-    const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
-    b.textContent=text;row.appendChild(b);chat.appendChild(row);
-    chat.scrollTop=chat.scrollHeight;
+  // --- stage logic (visitor vs subscriber)
+  function getStage(){
+    const p = new URLSearchParams(location.search).get("stage");
+    if (p) return p; // allows ?stage=subscriber for quick testing
+    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
   }
 
-  // Typing dots
-  let typingRow;
-  (function(){
-    typingRow=document.createElement('div'); typingRow.className='row typing-row';
-    const b=document.createElement('div'); b.className='bubble him';
-    const dots=document.createElement('span'); dots.className='typing-dots';
-    dots.innerHTML='<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-    b.appendChild(dots); typingRow.appendChild(b); chat.appendChild(typingRow);
-  })();
-  function showTyping(){typingRow.style.display='flex';}
-  function hideTyping(){typingRow.style.display='none';}
-  function reply(text,delay=1500){ showTyping(); setTimeout(()=>{ hideTyping(); bubble('him',text); },delay); } // slower
+  const man = document.body.getAttribute("data-man") || "jesse";
+  const chat   = document.getElementById("chat");
+  const typing = document.getElementById("typing");
+  const form   = document.getElementById("composer");
+  const input  = document.getElementById("input");
+  const sendBtn= document.getElementById("send");
 
-  const openers=[
-    "Yes ma’am, boots off, hat on the hook.",
-    "Sit yourself down, darlin’. I’ll pour you somethin’ warm."
-  ];
-  const caringQuestions=[
-    "How was your day—honest now?",
-    "If I cook for you, ma’am, what do you feel like?",
-    "Tell me one good thing that happened today.",
-    "What’s your ideal slow Sunday?"
-  ];
-  let qIndex=0, shares=0, nickname="";
+  // Running memory so replies connect
+  const conversation = [];
 
-  openers.forEach(t=>bubble('him',t));
-  setTimeout(()=>reply("What did you just say?", 1000),1200);
+  function bubble(text, who){
+    const div = document.createElement("div");
+    div.className = "bubble " + (who === "me" ? "me" : "him");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
 
-  function earnNickname(){
-    if(!nickname && shares>=1) nickname="sweet pea";
-    if(!nickname && shares>=2) nickname="trouble";
+  async function askLLM(userText){
+    conversation.push({ role: "user", content: userText });
+
+    setTyping(true);
+    try{
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
+      });
+      const data = await res.json();
+      const reply = (data && data.reply) ? data.reply : "Yes, ma’am. Say that again.";
+      // human pause
+      await new Promise(r=>setTimeout(r, 560 + Math.random()*500));
+      bubble(reply, "him");
+      conversation.push({ role: "assistant", content: reply });
+    }catch(e){
+      bubble("Wind kicked up—mind sayin’ that once more?", "him");
+    }finally{
+      setTyping(false);
+      input.disabled = false; sendBtn.disabled = false; input.focus();
+    }
   }
 
-  function nextQuestion(){
-    if(qIndex>=caringQuestions.length) qIndex=0;
-    reply(caringQuestions[qIndex++],1400);
-  }
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    bubble(text, "me");
+    input.value = "";
+    // enforce “one line, then wait”
+    input.disabled = true; sendBtn.disabled = true;
+    askLLM(text);
+  });
 
-  function respond(){
-    reply("Yes ma’am, I heard you.",1200);
-    earnNickname();
-    setTimeout(()=>{ const n=nickname?` ${nickname}`:""; reply(`Careful there${n}. 😉`, 1000); },2200);
-    setTimeout(nextQuestion, 3600);
-  }
-
-  function handleSend(){
-    const t=msg.value.trim(); if(!t) return;
-    bubble('you',t); msg.value=""; shares++;
-    respond();
-  }
-  send.onclick=handleSend;
-  msg.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSend(); });
+  // --- soft openers in his voice
+  bubble("Evenin’, darlin’. Boots off—kitchen light’s warm.", "him");
+  setTimeout(()=>bubble("Tell me what you’re hungry for, nice and slow. Yes, ma’am.", "him"), 700);
 </script>
+
 </body>
 </html>

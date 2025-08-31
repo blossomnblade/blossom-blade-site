@@ -1,0 +1,8 @@
+{
+  "name": "blossom-blade-site",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "openai": "^4.57.0"
+  }
+}

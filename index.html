@@ -19,9 +19,7 @@
       background:rgba(0,0,0,.75);
       border-bottom:1px solid rgba(255,255,255,.15);
       backdrop-filter:saturate(120%) blur(6px);
-      z-index:50;
-      gap:12px;
-      flex-wrap:wrap;
+      z-index:50; gap:12px; flex-wrap:wrap;
     }
     main{max-width:1150px; margin:24px auto; padding:0 16px;}
     .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
@@ -40,16 +38,14 @@
       font-weight:600; background:#2b2b2b; color:#fff;
       border:1px solid rgba(255,255,255,.18);
     }
-    .btn{
+    .btn, .btn2{
       padding:10px 12px; border-radius:8px; border:none;
       background:#2b2b2b; color:#fff; cursor:pointer; text-align:center;
-      display:inline-block; font-size:14px; font-weight:600;
+      display:inline-block; font-size:14px; font-weight:600; text-decoration:none;
     }
-    .chip{
-      font-size:11px; padding:4px 8px; border-radius:999px;
-      background:#2b2b2b; font-weight:500; border:1px solid rgba(255,255,255,.18);
-    }
+    .chip{font-size:11px; padding:4px 8px; border-radius:999px; background:#2b2b2b; font-weight:500; border:1px solid rgba(255,255,255,.18);}
     .badge{font-size:11px; opacity:.85}
+    .rowbtn{display:flex; gap:8px; flex-wrap:wrap;}
 
     /* accents per character */
     .blade   .tab, .blade .btn, .blade .chip      { background:#245c40; }   /* forest green */
@@ -82,7 +78,7 @@
     <div class="grid">
 
       <!-- Blade Kincaid -->
-      <a href="woods.html" class="card blade">
+      <div class="card blade">
         <div class="tabbar">
           <span class="tab">Blade Kincaid</span>
           <span class="tab">Ghostface Woods</span>
@@ -96,12 +92,14 @@
           </div>
           <div class="badge">Chase • protective predator energy</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I’m exactly where you want me.</p>
-          <span class="btn">Enter Blade’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=woods.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
       <!-- Grayson Kincaid -->
-      <a href="mask.html" class="card grayson">
+      <div class="card grayson">
         <div class="tabbar">
           <span class="tab">Grayson Kincaid</span>
           <span class="tab">Viking Dom</span>
@@ -115,12 +113,14 @@
           </div>
           <div class="badge">Commanding • adoring • praise &amp; rules</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Kneel? Not yet—we start with your smile.</p>
-          <span class="btn">Enter Grayson’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=mask.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
       <!-- Dylan Vale -->
-      <a href="garage.html" class="card dylan">
+      <div class="card dylan">
         <div class="tabbar">
           <span class="tab">Dylan Vale</span>
           <span class="tab">Biker Boy</span>
@@ -134,12 +134,14 @@
           </div>
           <div class="badge">Sweet trouble • leather-soft talk</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter, pretty thing—jacket off, guard down.</p>
-          <span class="btn">Enter Dylan’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=garage.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
       <!-- Silas Lennox -->
-      <a href="rockstar.html" class="card rockstar">
+      <div class="card rockstar">
         <div class="tabbar">
           <span class="tab">Silas Lennox</span>
           <span class="tab">Rockstar</span>
@@ -153,12 +155,14 @@
           </div>
           <div class="badge">Sensual • confident • attentive</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Come closer. I want to see what your eyes do when I say your name.</p>
-          <span class="btn">Enter Silas’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=rockstar.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
       <!-- Jesse Granger -->
-      <a href="cowboy.html" class="card cowboy">
+      <div class="card cowboy">
         <div class="tabbar">
           <span class="tab">Jesse Granger</span>
           <span class="tab">Cowboy</span>
@@ -172,12 +176,14 @@
           </div>
           <div class="badge">Polite • protective • sinful smile</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Darlin’, yes ma’am… you sit a spell. Don’t mind if my smile misbehaves.</p>
-          <span class="btn">Enter Jesse’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=cowboy.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
       <!-- Cassian Blackwell -->
-      <a href="gentleman.html" class="card gentleman">
+      <div class="card gentleman">
         <div class="tabbar">
           <span class="tab">Cassian Blackwell</span>
           <span class="tab">Gentleman</span>
@@ -191,9 +197,11 @@
           </div>
           <div class="badge">Elegant • validating • confident</div>
           <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Shoes off. I’ll take your coat—and the weight you’ve been carrying.</p>
-          <span class="btn">Enter Cassian’s Room</span>
+          <div class="rowbtn">
+            <a href="pay.html?man=gentleman.html" class="btn">Enter (Subscribe)</a>
+          </div>
         </div>
-      </a>
+      </div>
 
     </div>
 

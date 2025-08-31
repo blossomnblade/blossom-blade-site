@@ -23,11 +23,11 @@
     .btn{padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#2b2b2b;color:#fff;font-weight:800;cursor:pointer}
     .btn.primary{background:#245c40}      /* accent green */
     .btn.secondary{background:#2f2f3a}    /* charcoal */
+    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#2b2b2b;border:1px solid rgba(255,255,255,.18)}
     .note{font-size:12px;opacity:.9;margin-top:8px}
     .hr{height:1px;background:rgba(255,255,255,.15);margin:12px 0}
     footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.85;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
     a{color:#fff;text-decoration:none}
-    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#2b2b2b;border:1px solid rgba(255,255,255,.18)}
   </style>
 </head>
 <body>
@@ -117,6 +117,20 @@
 </footer>
 
 <script>
+  // --- Pre-select man if pay.html?man=woods.html etc.
+  (function(){
+    try{
+      const params=new URLSearchParams(location.search);
+      const man=params.get('man');
+      if(man){
+        const sel=document.getElementById('day-man');
+        if(sel){
+          for(const opt of sel.options){ if(opt.value===man){ sel.value=man; break; } }
+        }
+      }
+    }catch(e){}
+  })();
+
   // DEMO ONLY — simulate access without real payments.
   // In production, Stripe will handle checkout & you’ll set these after success.
 
@@ -133,16 +147,13 @@
   document.getElementById('buy-day').addEventListener('click', ()=>{
     const url = document.getElementById('day-man').value;
     setSub('day', 24); // 24 hours
-    // Optional: remember chosen man (so rooms can greet her)
     try { localStorage.setItem('bb_day_choice', url); } catch(e){}
-    // Simulate success → go straight to her chosen room
-    window.location.href = url;
+    window.location.href = url; // simulate success → go to chosen room
   });
 
   document.getElementById('buy-month').addEventListener('click', ()=>{
     setSub('month', 24*30); // ~30 days
-    // Simulate success → go back to index (all men unlocked)
-    window.location.href = 'index.html';
+    window.location.href = 'index.html'; // simulate success → back to index (all unlocked conceptually)
   });
 </script>
 

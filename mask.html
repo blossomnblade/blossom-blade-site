@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grayson Kincaid — PG-13 Room</title>
-  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD mask). PG-13 room with natural conversation and subtle brother link." />
+  <meta name="description" content="Grayson Kincaid — Viking Dom • balaclava (COD). PG-13 room with calm, confident pacing."/>
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -28,130 +28,154 @@
     .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
     footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
     a.back{color:#fff;text-decoration:none;opacity:.9}
+
+    /* Typing indicator */
+    .typing-row { display:none; margin:0 0 8px; }
+    .typing-row .bubble { max-width:80%; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); }
+    .typing-dots { display:inline-flex; align-items:center; gap:4px; }
+    .typing-dot { width:6px; height:6px; border-radius:50%; background:#fff; opacity:.25; }
+    @keyframes bbblink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+    .typing-dot:nth-child(1){ animation:bbblink 1.2s infinite; }
+    .typing-dot:nth-child(2){ animation:bbblink 1.2s .2s infinite; }
+    .typing-dot:nth-child(3){ animation:bbblink 1.2s .4s infinite; }
   </style>
+
+  <!-- Subscription Gate -->
+  <script>
+    (function(){
+      function active(){
+        try{
+          const on = localStorage.getItem('bb_subscribed')==='true';
+          const exp = Number(localStorage.getItem('bb_expires_at')||0);
+          return on && Date.now()<exp;
+        }catch(e){return false;}
+      }
+      if(!active()){
+        location.replace('pay.html?man=' + encodeURIComponent('mask.html'));
+      }
+    })();
+  </script>
 </head>
 <body>
-  <header>
-    <a href="index.html" class="back">← All Characters</a>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-      <div style="font-weight:700">Grayson Kincaid</div>
-    </div>
-    <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
-  </header>
+<header>
+  <a href="index.html" class="back">← All Characters</a>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto"/>
+    <div style="font-weight:700">Grayson Kincaid</div>
+  </div>
+  <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
+</header>
 
-  <main>
-    <div class="layout">
-      <section class="card">
-        <div class="tabbar">
-          <span class="tab">Grayson Kincaid</span>
-          <span class="tab">Viking Dom</span>
-          <span class="tab">Balaclava (COD)</span>
+<main>
+  <div class="layout">
+    <section class="card">
+      <div class="tabbar">
+        <span class="tab">Grayson Kincaid</span>
+        <span class="tab">Viking Dom</span>
+        <span class="tab">Balaclava (COD)</span>
+      </div>
+      <div class="hero"></div>
+      <div class="panel">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="font-weight:700;">Red-lit ritual</div>
+          <span class="chip">Commanding • adoring</span>
         </div>
-        <div class="hero"></div>
-        <div class="panel">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Red-lit ritual</div>
-            <span class="chip">Commanding • adoring</span>
-          </div>
-          <p style="opacity:.95;margin:10px 0 0;">Kneel? Not yet—we start with your smile.</p>
-        </div>
-      </section>
+        <p style="opacity:.95;margin:10px 0 0;">Kneel? Not yet—we start with your smile.</p>
+      </div>
+    </section>
 
-      <section class="card chat">
-        <div class="tabbar">
-          <span class="tab">PG-13 Room</span>
-          <span class="tab">Safe • Flirty • Reassuring</span>
-        </div>
-        <div id="chat" class="chatlog"></div>
-        <div class="compose">
-          <input id="msg" class="input" placeholder="Say something sweet…" />
-          <button id="send" class="btn">Send</button>
-        </div>
-      </section>
-    </div>
-  </main>
+    <section class="card chat">
+      <div class="tabbar">
+        <span class="tab">PG-13 Room</span>
+        <span class="tab">Safe • Flirty • Reassuring</span>
+      </div>
+      <div id="chat" class="chatlog"></div>
+      <div class="compose">
+        <input id="msg" class="input" placeholder="Say something sweet…"/>
+        <button id="send" class="btn">Send</button>
+      </div>
+    </section>
+  </div>
+</main>
 
-  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
+<footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
-  <script>
-    const chat = document.getElementById('chat');
-    const msg  = document.getElementById('msg');
-    const send = document.getElementById('send');
+<script>
+  const chat=document.getElementById('chat');
+  const msg=document.getElementById('msg');
+  const send=document.getElementById('send');
 
-    const openers = [
-      "The balaclava stays on—for now.",
-      "We’ll write rules later. For now, talk to me."
-    ];
-    const caringQuestions = [
-      "How was your day—really?",
-      "If I cook for you, what do you feel like?",
-      "Tell me one good thing that happened today.",
-      "What’s your ideal slow Sunday?"
-    ];
-    const bait = "What did you just say?";
+  function bubble(who,text){
+    const row=document.createElement('div');row.className='row';
+    const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
+    b.textContent=text;row.appendChild(b);chat.appendChild(row);
+    chat.scrollTop=chat.scrollHeight;
+  }
 
-    let nickname = "";
-    let shares = 0;
-    let qIndex = 0;
+  // Typing dots
+  let typingRow;
+  (function(){
+    typingRow=document.createElement('div'); typingRow.className='row typing-row';
+    const b=document.createElement('div'); b.className='bubble him';
+    const dots=document.createElement('span'); dots.className='typing-dots';
+    dots.innerHTML='<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    b.appendChild(dots); typingRow.appendChild(b); chat.appendChild(typingRow);
+  })();
+  function showTyping(){typingRow.style.display='flex';}
+  function hideTyping(){typingRow.style.display='none';}
+  function reply(text,delay=1100){ showTyping(); setTimeout(()=>{ hideTyping(); bubble('him',text); },delay); }
 
-    function bubble(who, text){
-      const row = document.createElement('div'); row.className = 'row';
-      const b = document.createElement('div'); b.className = 'bubble ' + (who === 'you' ? 'you' : 'him');
-      b.textContent = text; row.appendChild(b); chat.appendChild(row);
-      chat.scrollTop = chat.scrollHeight;
-    }
-    function reply(text, delay=900){ setTimeout(()=> bubble('him', text), delay); } // a hair slower than Blade
+  const openers=[
+    "The balaclava stays on—for now.",
+    "We’ll write rules later. For now, talk to me."
+  ];
+  const caringQuestions=[
+    "How was your day—really?",
+    "If I cook for you, what do you feel like?",
+    "Tell me one good thing that happened today.",
+    "What’s your ideal slow Sunday?"
+  ];
+  let qIndex=0, shares=0, nickname="";
 
-    // --- Brother detection (Blade) ---
-    function brotherCheck(){
-      try{
-        if (localStorage.getItem('seen_blade') === '1'){
-          reply("My brother told me you like to run. I prefer you kneel.", 1600);
-        }
-      }catch(e){}
-    }
-
-    // seed
-    openers.forEach(t => bubble('him', t));
-    setTimeout(()=> bubble('him', bait), 2000);
-    // mark this brother as seen
-    try{ localStorage.setItem('seen_grayson','1'); }catch(e){}
-    // check for other brother
-    setTimeout(brotherCheck, 2800);
-
-    // caring cadence (don’t rush her)
-    setInterval(() => {
-      if (qIndex >= caringQuestions.length) qIndex = 0;
-      reply(caringQuestions[qIndex++], 0);
-    }, 28000);
-
-    function earnNickname(){
-      if (!nickname && shares >= 1) nickname = "little flame";
-      if (!nickname && shares >= 2) nickname = "bright heart";
-    }
-
-    function respondToUser(){
-      reply("Mm. I’m listening.");
-      earnNickname();
-      setTimeout(()=>{
-        const name = nickname ? ` ${nickname}` : "";
-        bubble('him', `Careful there${name}. 😉`);
-      }, 1600);
-    }
-
-    send.onclick = () => {
-      const t = msg.value.trim(); if(!t) return;
-      bubble('you', t); msg.value=""; shares++;
-      respondToUser();
-    };
-    msg.addEventListener('keydown', e => {
-      if (e.key === 'Enter'){
-        const t = msg.value.trim(); if(!t) return;
-        bubble('you', t); msg.value=""; shares++;
-        respondToUser();
+  // Brother detection (Blade seen?)
+  function brotherCheck(){
+    try{
+      if(localStorage.getItem('seen_blade')==='1'){
+        reply("My brother told me you like to run. I prefer you kneel.",1600);
       }
-    });
-  </script>
+    }catch(e){}
+  }
+
+  openers.forEach(t=>bubble('him',t));
+  setTimeout(()=>reply("What did you just say?",1000),900);
+  try{ localStorage.setItem('seen_grayson','1'); }catch(e){}
+  setTimeout(brotherCheck,2400);
+
+  // Nickname earning (Grayson → little flame → brat)
+  function earnNickname(){
+    if(!nickname && shares>=1) nickname="little flame";
+    if(!nickname && shares>=2) nickname="brat";
+  }
+
+  function nextQuestion(){
+    if(qIndex>=caringQuestions.length) qIndex=0;
+    reply(caringQuestions[qIndex++],1300);
+  }
+
+  function respond(){
+    reply("Mm. I’m listening.", 900);
+    earnNickname();
+    setTimeout(()=>{ const n = nickname ? ` ${nickname}` : ""; reply(`Careful there${n}. 😉`, 900); }, 1700);
+    setTimeout(nextQuestion, 3000);
+  }
+
+  function handleSend(){
+    const t=msg.value.trim(); if(!t) return;
+    bubble('you',t); msg.value=""; shares++;
+    respond();
+  }
+  send.onclick=handleSend;
+  msg.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSend(); });
+</script>
 </body>
 </html>

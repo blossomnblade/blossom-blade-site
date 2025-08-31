@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Cassian Blackwell — PG-13 Room</title>
-  <meta name="description" content="Cassian Blackwell — penthouse or town car; elegant, confident, validating. PG-13 room." />
+  <meta name="description" content="Cassian Blackwell — penthouse or town car; elegant, confident, validating. PG-13 room with deliberate pacing."/>
   <style>
     *{box-sizing:border-box}
     body{margin:0;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:url('images/gothic-bg.jpg') center/cover fixed no-repeat}
@@ -17,7 +17,7 @@
     .chip{font-size:11px;padding:4px 8px;border-radius:999px;background:#2f2f3a;border:1px solid rgba(255,255,255,.18)}
     .btn{padding:10px 12px;border-radius:8px;border:none;background:#2f2f3a;color:#fff;font-weight:600;cursor:pointer}
     .panel{padding:12px 12px 14px}
-    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;opacity:.85}
+    .hero{aspect-ratio:4/3;background:rgba(255,255,255,.04)}
     .chat{display:flex;flex-direction:column;min-height:60vh}
     .chatlog{flex:1;overflow:auto;padding:12px 12px 0}
     .row{display:flex;margin:0 0 8px}
@@ -28,97 +28,142 @@
     .input{flex:1;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:10px;outline:none}
     footer{padding:18px 16px;text-align:center;font-size:12px;opacity:.8;background:rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.15)}
     a.back{color:#fff;text-decoration:none;opacity:.9}
+
+    /* Typing indicator */
+    .typing-row { display:none; margin:0 0 8px; }
+    .typing-row .bubble { max-width:80%; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); }
+    .typing-dots { display:inline-flex; align-items:center; gap:4px; }
+    .typing-dot { width:6px; height:6px; border-radius:50%; background:#fff; opacity:.25; }
+    @keyframes bbblink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+    .typing-dot:nth-child(1){ animation:bbblink 1.2s infinite; }
+    .typing-dot:nth-child(2){ animation:bbblink 1.2s .2s infinite; }
+    .typing-dot:nth-child(3){ animation:bbblink 1.2s .4s infinite; }
   </style>
+
+  <!-- Subscription Gate -->
+  <script>
+    (function(){
+      function active(){
+        try{
+          const on = localStorage.getItem('bb_subscribed')==='true';
+          const exp = Number(localStorage.getItem('bb_expires_at')||0);
+          return on && Date.now()<exp;
+        }catch(e){return false;}
+      }
+      if(!active()){
+        location.replace('pay.html?man=' + encodeURIComponent('gentleman.html'));
+      }
+    })();
+  </script>
 </head>
 <body>
-  <header>
-    <a href="index.html" class="back">← All Characters</a>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto" />
-      <div style="font-weight:700">Cassian Blackwell</div>
-    </div>
-    <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
-  </header>
+<header>
+  <a href="index.html" class="back">← All Characters</a>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px;width:auto"/>
+    <div style="font-weight:700">Cassian Blackwell</div>
+  </div>
+  <div style="font-size:12px;opacity:.85">PG-13 with subscription • Explicit talk unlocked with coins</div>
+</header>
 
-  <main>
-    <div class="layout">
-      <section class="card">
-        <div class="tabbar">
-          <span class="tab">Cassian Blackwell</span>
-          <span class="tab">Penthouse</span>
-          <span class="tab">Town Car</span>
+<main>
+  <div class="layout">
+    <section class="card">
+      <div class="tabbar">
+        <span class="tab">Cassian Blackwell</span>
+        <span class="tab">Penthouse</span>
+        <span class="tab">Town Car</span>
+      </div>
+      <div class="hero"></div>
+      <div class="panel">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="font-weight:700;">Elegant & controlled</div>
+          <span class="chip">Poised • attentive • precise</span>
         </div>
-        <div class="hero"><span style="font-size:12px;">Add image: <code>images/gentleman.jpg</code></span></div>
-        <div class="panel">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Elegant & controlled</div>
-            <span class="chip">Poised • attentive • precise</span>
-          </div>
-          <p style="opacity:.95;margin:10px 0 0;">Shoes off. I’ll take your coat—and the weight you’ve been carrying.</p>
-        </div>
-      </section>
+        <p style="opacity:.95;margin:10px 0 0;">Shoes off. I’ll take your coat—and the weight you’ve been carrying.</p>
+      </div>
+    </section>
 
-      <section class="card chat">
-        <div class="tabbar">
-          <span class="tab">PG-13 Room</span>
-          <span class="tab">Confident • Validating</span>
-        </div>
-        <div id="chat" class="chatlog"></div>
-        <div class="compose">
-          <input id="msg" class="input" placeholder="Say something sweet…" />
-          <button id="send" class="btn">Send</button>
-        </div>
-      </section>
-    </div>
-  </main>
+    <section class="card chat">
+      <div class="tabbar">
+        <span class="tab">PG-13 Room</span>
+        <span class="tab">Confident • Validating</span>
+      </div>
+      <div id="chat" class="chatlog"></div>
+      <div class="compose">
+        <input id="msg" class="input" placeholder="Say something sweet…"/>
+        <button id="send" class="btn">Send</button>
+      </div>
+    </section>
+  </div>
+</main>
 
-  <footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
+<footer>$1 of every subscription goes to this month’s Domestic Violence charity.</footer>
 
-  <script>
-    const chat=document.getElementById('chat');
-    const msg=document.getElementById('msg');
-    const send=document.getElementById('send');
+<script>
+  const chat=document.getElementById('chat');
+  const msg=document.getElementById('msg');
+  const send=document.getElementById('send');
 
-    const openers=[
-      "I anticipated you’d come. That’s why the fire’s lit.",
-      "I pay attention—your eyes tell me more than your words.",
-      "Start anywhere. I’ll listen, and I’ll tell you what I hear."
-    ];
-    const caringQuestions=[
-      "How was your day—really?",
-      "If I cook for you, what do you feel like?",
-      "Tell me one good thing that happened today.",
-      "What’s your ideal slow Sunday?"
-    ];
-    const bait="What did you just say?";
+  function bubble(who,text){
+    const row=document.createElement('div');row.className='row';
+    const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
+    b.textContent=text;row.appendChild(b);chat.appendChild(row);
+    chat.scrollTop=chat.scrollHeight;
+  }
 
-    let nickname="", shares=0, qIndex=0;
+  // Typing dots
+  let typingRow;
+  (function(){
+    typingRow=document.createElement('div'); typingRow.className='row typing-row';
+    const b=document.createElement('div'); b.className='bubble him';
+    const dots=document.createElement('span'); dots.className='typing-dots';
+    dots.innerHTML='<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    b.appendChild(dots); typingRow.appendChild(b); chat.appendChild(typingRow);
+  })();
+  function showTyping(){typingRow.style.display='flex';}
+  function hideTyping(){typingRow.style.display='none';}
+  function reply(text,delay=2000){ showTyping(); setTimeout(()=>{ hideTyping(); bubble('him',text); },delay); } // deliberate
 
-    function bubble(who,text){
-      const row=document.createElement('div');row.className='row';
-      const b=document.createElement('div');b.className='bubble '+(who==='you'?'you':'him');
-      b.textContent=text;row.appendChild(b);chat.appendChild(row);chat.scrollTop=chat.scrollHeight;
-    }
-    function reply(t,d=2000){setTimeout(()=>bubble('him',t),d);} // deliberate, confident pacing
+  const openers=[
+    "I anticipated you’d come. That’s why the fire’s lit.",
+    "I pay attention—your eyes tell me more than your words."
+  ];
+  const caringQuestions=[
+    "How was your day—really?",
+    "If I cook for you, what do you feel like?",
+    "Tell me one good thing that happened today.",
+    "What’s your ideal slow Sunday?"
+  ];
+  let qIndex=0, shares=0, nickname="";
 
-    openers.forEach(t=>bubble('him',t));
-    setTimeout(()=>bubble('him',bait),4000);
+  openers.forEach(t=>bubble('him',t));
+  setTimeout(()=>reply("What did you just say?", 1100),1300);
 
-    setInterval(()=>{ if(qIndex>=caringQuestions.length) qIndex=0; reply(caringQuestions[qIndex++],0); },35000);
+  function earnNickname(){
+    if(!nickname && shares>=1) nickname="darling mind";
+    if(!nickname && shares>=2) nickname="precious heart";
+  }
 
-    function earnNickname(){
-      if(!nickname && shares>=1) nickname="darling mind";
-      if(!nickname && shares>=2) nickname="precious heart";
-    }
+  function nextQuestion(){
+    if(qIndex>=caringQuestions.length) qIndex=0;
+    reply(caringQuestions[qIndex++],1600);
+  }
 
-    function respond(){
-      reply("I considered that. You’re right.");
-      earnNickname();
-      setTimeout(()=>{ const n=nickname?` ${nickname}`:""; bubble('him',`Careful there${n}. 😉`); },2500);
-    }
+  function respond(){
+    reply("I considered that. You’re right.",1600);
+    earnNickname();
+    setTimeout(()=>{ const n=nickname?` ${nickname}`:""; reply(`Careful there${n}. 😉`, 1000); },2600);
+    setTimeout(nextQuestion, 4200);
+  }
 
-    send.onclick=()=>{const t=msg.value.trim();if(!t)return;bubble('you',t);msg.value="";shares++;respond();};
-    msg.addEventListener('keydown',e=>{if(e.key==='Enter'){const t=msg.value.trim();if(!t)return;bubble('you',t);msg.value="";shares++;respond();}});
-  </script>
+  function handleSend(){
+    const t=msg.value.trim(); if(!t) return;
+    bubble('you',t); msg.value=""; shares++;
+    respond();
+  }
+  send.onclick=handleSend;
+  msg.addEventListener('keydown',e=>{ if(e.key==='Enter') handleSend(); });
+</script>
 </body>
 </html>

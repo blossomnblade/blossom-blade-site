@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grayson Kincaid — PG-13 Room</title>
-  <meta name="description" content="Grayson Kincaid — Viking Dom in red light. PG-13 conversation with calm, confident pacing."/>
+  <meta name="description" content="Grayson Kincaid — Viking Dom in red light. PG-13 conversation with slow-build intimacy, stage badge, and gentle coin prompts."/>
   <style>
     *{box-sizing:border-box}
     body{
@@ -16,7 +16,11 @@
       background:rgba(0,0,0,.75); border-bottom:1px solid rgba(255,255,255,.15);
       padding:12px 14px; position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
     }
-    header .meta{font-size:12px; opacity:.9}
+    header .meta{font-size:12px; opacity:.9; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    #stageBadge{
+      font-size:12px; opacity:.95; background:rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.2); padding:4px 8px; border-radius:999px;
+    }
     main{max-width:980px; margin:18px auto; padding:0 14px;}
     .room{
       border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
@@ -27,10 +31,10 @@
       border-bottom:1px solid rgba(255,255,255,.12);
     }
     .name{font-weight:800; letter-spacing:.2px}
-    .note{font-size:12px; opacity:.9}
+    .small{font-size:12px; opacity:.9}
     .chat{
       height:60vh; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
-      background:radial-gradient(1200px 500px at 80% 20%, rgba(122,16,33,.18), transparent 60%);
+      background:radial-gradient(1200px 500px at 75% 20%, rgba(122,16,33,.18), transparent 60%);
     }
     .bubble{
       max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
@@ -38,7 +42,7 @@
       box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
     }
     .me{align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him{align-self:flex-start; background:rgba(122,16,33,.22)} /* Grayson accent (crimson) */
+    .him{align-self:flex-start; background:rgba(122,16,33,.24)} /* crimson accent */
     .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
     .composer{
       display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
@@ -52,13 +56,10 @@
       padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
       background:#7a1021; color:#fff; font-weight:700; cursor:pointer;
     }
-    .small{font-size:12px; opacity:.9}
   </style>
 </head>
 
-<!-- This tells the API which persona to use -->
 <body data-man="grayson">
-
 <header>
   <div style="display:flex;align-items:center;gap:10px;">
     <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
@@ -66,7 +67,10 @@
       <strong>Blossom &amp; Blade</strong>
     </a>
   </div>
-  <div class="meta">PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</div>
+  <div class="meta">
+    <span id="stageBadge">Visitor — PG-13 tease</span>
+    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
+  </div>
 </header>
 
 <main>
@@ -85,75 +89,22 @@
     </form>
   </div>
 
-  <p class="small" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Base rooms stay PG-13; subscriber stage allows suggestive heat (still PG-13).</p>
+  <p class="small" style="margin:10px 2px 0;opacity:.9">
+    Pacing: he speaks one line, then waits. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
+  </p>
 </main>
 
-<script>
-  // --- stage logic (visitor vs subscriber)
-  function getStage(){
-    const p = new URLSearchParams(location.search).get("stage");
-    if (p) return p; // allows testing with ?stage=subscriber
-    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
-  }
-
-  const man = document.body.getAttribute("data-man") || "grayson";
-  const chat   = document.getElementById("chat");
-  const typing = document.getElementById("typing");
-  const form   = document.getElementById("composer");
-  const input  = document.getElementById("input");
-  const sendBtn= document.getElementById("send");
-
-  // Running memory so replies connect
-  const conversation = [];
-
-  function bubble(text, who){
-    const div = document.createElement("div");
-    div.className = "bubble " + (who === "me" ? "me" : "him");
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  }
-  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
-
-  async function askLLM(userText){
-    conversation.push({ role: "user", content: userText });
-
-    setTyping(true);
-    try{
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
-      });
-      const data = await res.json();
-      const reply = (data && data.reply) ? data.reply : "Mm. Again—slowly.";
-      // a small human pause
-      await new Promise(r=>setTimeout(r, 550 + Math.random()*500));
-      bubble(reply, "him");
-      conversation.push({ role: "assistant", content: reply });
-    }catch(e){
-      bubble("Signal flickered. Speak again.", "him");
-    }finally{
-      setTyping(false);
-      input.disabled = false; sendBtn.disabled = false; input.focus();
-    }
-  }
-
-  form.addEventListener("submit", (e)=>{
-    e.preventDefault();
-    const text = input.value.trim();
-    if(!text) return;
-    bubble(text, "me");
-    input.value = "";
-    // enforce “one line, then wait”
-    input.disabled = true; sendBtn.disabled = true;
-    askLLM(text);
-  });
-
-  // --- soft openers in his voice
-  bubble("The balaclava stays on—for now.", "him");
-  setTimeout(()=>bubble("We write rules later. For now, talk to me.", "him"), 700);
-</script>
-
-</body>
-</html>
+<!-- Coin modal -->
+<div id="coinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:1000;">
+  <div style="max-width:520px;width:92%;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden;">
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:800;">Unlock Explicit Room?</div>
+    <div style="padding:14px;">
+      <p style="margin:0 0 10px;opacity:.95;">Sounds like you’re ready to turn the heat up. The explicit room unlocks with coins.</p>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>5 coins — $1</li>
+        <li>25 coins — $5</li>
+        <li>60 coins — $10</li>
+        <li>150 coins — $20</li>
+      </ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="pay.html?man=coins" class="btn" style="padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#7a1021;color:#fff;text-decoration:none;font-weight:700;">Open Coin Shop</

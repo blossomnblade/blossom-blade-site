@@ -1,219 +1,209 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Choose Your Companion</title>
-  <meta name="description" content="Women-safe fantasy chat. PG-13 landing for Blade Kincaid, Grayson Kincaid, Dylan Vale, Silas Lennox, Jesse Granger, Cassian Blackwell." />
-  <style>
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    }
-    header{
-      position:sticky; top:0;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 16px;
-      background:rgba(0,0,0,.75);
-      border-bottom:1px solid rgba(255,255,255,.15);
-      backdrop-filter:saturate(120%) blur(6px);
-      z-index:50; gap:12px; flex-wrap:wrap;
-    }
-    main{max-width:1150px; margin:24px auto; padding:0 16px;}
-    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Blossom & Blade — Choose Your Companion</title>
+<style>
+  :root{
+    --ink:#e9eef0; --muted:#b9c3cc; --border:rgba(255,255,255,.16);
+    --card:rgba(8,10,12,.70); --tag:rgba(255,255,255,.08);
+    --shadow:0 8px 28px rgba(0,0,0,.45);
+    --blade:#8bb1ff; --grayson:#ff6b6b; --dylan:#6bc1ff;
+    --jesse:#f0b47a; --silas:#caa0ff; --alex:#a7e3c2;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+  }
+  header{
+    position:sticky; top:0; z-index:10; backdrop-filter:blur(6px);
+    background:rgba(0,0,0,.75); border-bottom:1px solid var(--border);
+  }
+  .wrap{max-width:1200px; margin:0 auto; padding:14px}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .brand{display:flex; align-items:center; gap:10px}
+  .brand img{height:28px; width:auto; border-radius:4px}
+  .subtitle{font-size:13px; color:var(--muted)}
 
-    .card{
-      display:block; color:inherit; text-decoration:none;
-      border:1px solid rgba(255,255,255,.15); border-radius:14px; overflow:hidden;
-      background:rgba(0,0,0,.7);
-    }
-    .tabbar{
-      display:flex; gap:8px; padding:8px 10px; align-items:center;
-      border-bottom:1px solid rgba(255,255,255,.15);
-    }
-    .tab{
-      font-size:12px; padding:6px 10px; border-radius:6px;
-      font-weight:600; background:#2b2b2b; color:#fff;
-      border:1px solid rgba(255,255,255,.18);
-    }
-    .btn{
-      padding:10px 12px; border-radius:8px; border:none;
-      background:#2b2b2b; color:#fff; cursor:pointer; text-align:center;
-      display:inline-block; font-size:14px; font-weight:600; text-decoration:none;
-    }
-    .chip{font-size:11px; padding:4px 8px; border-radius:999px; background:#2b2b2b; font-weight:500; border:1px solid rgba(255,255,255,.18);}
-    .badge{font-size:11px; opacity:.85}
-    .rowbtn{display:flex; gap:8px; flex-wrap:wrap;}
-    .hero{aspect-ratio:4/3; background:rgba(255,255,255,.04);}
+  main{max-width:1200px; margin:18px auto 10px; padding:0 14px}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
-    /* accents per character */
-    .blade   .tab, .blade .btn, .blade .chip        { background:#245c40; }   /* forest green */
-    .grayson .tab, .grayson .btn, .grayson .chip    { background:#7a1021; }   /* crimson */
-    .dylan   .tab, .dylan .btn, .dylan .chip        { background:#224a66; }   /* steel blue */
-    .rockstar .tab, .rockstar .btn, .rockstar .chip { background:#4b2a6b; }   /* royal violet */
-    .cowboy  .tab, .cowboy .btn, .cowboy .chip      { background:#6b3e1e; }   /* saddle brown */
-    .gentleman .tab, .gentleman .btn, .gentleman .chip { background:#2f2f3a; } /* deep charcoal */
+  .card{
+    border:1px solid var(--border); background:var(--card);
+    border-radius:18px; overflow:hidden; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; min-height:380px;
+    backdrop-filter: blur(2px);
+  }
+  .card .top{
+    padding:10px 12px; display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border);
+  }
+  .tag{
+    font-size:12px; padding:5px 9px; border-radius:999px; background:var(--tag); border:1px solid var(--border);
+  }
+  .blade .tag{background:rgba(139,177,255,.10); border-color:rgba(139,177,255,.25)}
+  .grayson .tag{background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.25)}
+  .dylan .tag{background:rgba(107,193,255,.10); border-color:rgba(107,193,255,.25)}
+  .jesse .tag{background:rgba(240,180,122,.10); border-color:rgba(240,180,122,.25)}
+  .silas .tag{background:rgba(202,160,255,.10); border-color:rgba(202,160,255,.25)}
+  .alex .tag{background:rgba(167,227,194,.10); border-color:rgba(167,227,194,.25)}
 
-    footer{padding:18px 16px; text-align:center; font-size:12px; opacity:.8; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15);}
-  </style>
+  .body{padding:16px; display:flex; flex-direction:column; gap:10px; flex:1}
+  h3{margin:0 0 2px 0; font-size:22px}
+  .traits{font-size:12px; color:var(--muted)}
+  .blurb{margin-top:6px; line-height:1.35}
+  .actions{margin-top:auto}
+  .btn{
+    display:inline-block; padding:11px 12px; border-radius:10px; text-decoration:none; color:#fff;
+    background:rgba(255,255,255,.08); border:1px solid var(--border); font-weight:700;
+  }
+  .btn:hover{background:rgba(255,255,255,.13)}
+  .footline{ text-align:center; margin:18px 0 26px; font-size:14px; opacity:.95 }
+  .footline a{ color:#caa0ff; text-decoration:underline }
+  footer{max-width:1200px; margin:0 auto 26px; padding:0 14px; font-size:13px; color:var(--muted)}
+</style>
 </head>
 <body>
 
-  <header>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:28px; width:auto;" />
-      <div style="font-weight:700">Blossom &amp; Blade</div>
+<header>
+  <div class="wrap">
+    <div class="row">
+      <div class="brand">
+        <img src="images/logo.jpg" alt="Blossom & Blade">
+        <strong>Blossom &amp; Blade</strong>
+      </div>
+      <div class="subtitle">
+        PG-13 with subscription • Explicit talk unlocked with coins • $1/mo goes to a DV charity
+      </div>
     </div>
-    <div style="font-size:12px;opacity:.9;text-align:right;">
-      PG-13 with subscription • Explicit talk unlocked with coins •
-      <span style="white-space:nowrap;">$1 from every subscription goes to DV charity</span>
-    </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;">Choose Your Companion</h1>
-    <p style="opacity:.9;margin:0 0 18px;">PG-13 by default. No visuals. Words, warmth, and foreplay-vibes only.</p>
+<main>
 
-    <div class="grid">
+  <h2 style="margin:0 0 10px 0;">Choose Your Companion</h2>
 
-      <!-- Blade Kincaid -->
-      <div class="card blade">
-        <div class="tabbar">
-          <span class="tab">Blade Kincaid</span>
-          <span class="tab">Ghostface Woods</span>
-          <span class="tab">Chase Fantasy</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Blade Kincaid</div>
-            <span class="chip">Masked hunter</span>
-          </div>
-          <div class="badge">Chase • protective predator energy</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">You found the trail. Brave girl. Don’t worry—I’m exactly where you want me.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=woods.html" class="btn">Enter (Subscribe)</a>
-          </div>
+  <div class="grid">
+
+    <!-- Blade -->
+    <article class="card blade">
+      <div class="top">
+        <span class="tag">Blade Kincaid</span>
+        <span class="tag">Masked Hunter</span>
+        <span class="tag">Chase Fantasy</span>
+      </div>
+      <div class="body">
+        <h3>Blade Kincaid</h3>
+        <div class="traits">Predator energy • protective • thrill-tease</div>
+        <p class="blurb">Footsteps behind you on the trail, breath at your ear. “Brave girl. Don’t worry—I'm exactly where you want me.”</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-      <!-- Grayson Kincaid -->
-      <div class="card grayson">
-        <div class="tabbar">
-          <span class="tab">Grayson Kincaid</span>
-          <span class="tab">Viking Dom</span>
-          <span class="tab">Balaclava (COD)</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Grayson Kincaid</div>
-            <span class="chip">Red-lit ritual</span>
-          </div>
-          <div class="badge">Commanding • adoring • praise &amp; rules</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Kneel? Not yet—we start with your smile.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=mask.html" class="btn">Enter (Subscribe)</a>
-          </div>
+    <!-- Grayson -->
+    <article class="card grayson">
+      <div class="top">
+        <span class="tag">Grayson Kincaid</span>
+        <span class="tag">Viking Dom</span>
+        <span class="tag">Red-lit Ritual</span>
+      </div>
+      <div class="body">
+        <h3>Grayson Kincaid</h3>
+        <div class="traits">Commanding • adoring • praise & rules</div>
+        <p class="blurb">“Slow. Breathe. I’ll teach you where heat begins—one rule at a time.”</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-      <!-- Dylan Vale -->
-      <div class="card dylan">
-        <div class="tabbar">
-          <span class="tab">Dylan Vale</span>
-          <span class="tab">Biker Boy</span>
-          <span class="tab">Blue Eyes • Tattoos</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Dylan Vale</div>
-            <span class="chip">Motel Garage</span>
-          </div>
-          <div class="badge">Sweet trouble • leather-soft talk</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Blue neon and cheap coffee. Sit on the counter—jacket off, guard down.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=garage.html" class="btn">Enter (Subscribe)</a>
-          </div>
+    <!-- Dylan -->
+    <article class="card dylan">
+      <div class="top">
+        <span class="tag">Dylan Vale</span>
+        <span class="tag">Biker Boy</span>
+        <span class="tag">Motel Garage</span>
+      </div>
+      <div class="body">
+        <h3>Dylan Vale</h3>
+        <div class="traits">Sweet trouble • leather-soft talk • playful daredevil</div>
+        <p class="blurb">“Sit on the counter, pretty thing. I like the view from here.” (Blue neon later—no rush.)</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-      <!-- Silas Lennox -->
-      <div class="card rockstar">
-        <div class="tabbar">
-          <span class="tab">Silas Lennox</span>
-          <span class="tab">Rockstar</span>
-          <span class="tab">Backstage • Tour Bus</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Silas Lennox</div>
-            <span class="chip">Eye contact • velvet voice</span>
-          </div>
-          <div class="badge">Sensual • confident • attentive</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Come closer. I want to see what your eyes do when I say your name.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=rockstar.html" class="btn">Enter (Subscribe)</a>
-          </div>
+    <!-- Jesse -->
+    <article class="card jesse">
+      <div class="top">
+        <span class="tag">Jesse Granger</span>
+        <span class="tag">Cowboy</span>
+        <span class="tag">Barn Loft • Kitchen</span>
+      </div>
+      <div class="body">
+        <h3>Jesse Granger</h3>
+        <div class="traits">Polite • protective • sinful smile</div>
+        <p class="blurb">“Darlin’, yes ma’am… sit a spell. Don’t mind if my smile misbehaves.”</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-      <!-- Jesse Granger -->
-      <div class="card cowboy">
-        <div class="tabbar">
-          <span class="tab">Jesse Granger</span>
-          <span class="tab">Cowboy</span>
-          <span class="tab">Barn Loft • Kitchen</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Jesse Granger</div>
-            <span class="chip">Yes ma’am • southern charm</span>
-          </div>
-          <div class="badge">Polite • protective • sinful smile</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Darlin’, yes ma’am… sit a spell. Don’t mind if my smile misbehaves.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=cowboy.html" class="btn">Enter (Subscribe)</a>
-          </div>
+    <!-- Silas -->
+    <article class="card silas">
+      <div class="top">
+        <span class="tag">Silas Lennox</span>
+        <span class="tag">Rockstar</span>
+        <span class="tag">Backstage • Tour Bus</span>
+      </div>
+      <div class="body">
+        <h3>Silas Lennox</h3>
+        <div class="traits">Obsessed eyes • creative • slow-burn hunger</div>
+        <p class="blurb">“Come closer, muse. Let me write something dangerous on your pulse.”</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-      <!-- Cassian Blackwell -->
-      <div class="card gentleman">
-        <div class="tabbar">
-          <span class="tab">Cassian Blackwell</span>
-          <span class="tab">Gentleman</span>
-          <span class="tab">Penthouse • Town Car</span>
-        </div>
-        <div class="hero"></div>
-        <div style="padding:12px 12px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-weight:700;">Cassian Blackwell</div>
-            <span class="chip">Poised • attentive • precise</span>
-          </div>
-          <div class="badge">Elegant • validating • confident</div>
-          <p style="font-size:14px;opacity:.95;margin:10px 0 12px;">Shoes off. I’ll take your coat—and the weight you’ve been carrying.</p>
-          <div class="rowbtn">
-            <a href="pay.html?man=gentleman.html" class="btn">Enter (Subscribe)</a>
-          </div>
+    <!-- Alexander -->
+    <article class="card alex">
+      <div class="top">
+        <span class="tag">Alexander Jackson</span>
+        <span class="tag">Gentleman</span>
+        <span class="tag">Penthouse • Town Car</span>
+      </div>
+      <div class="body">
+        <h3>Alexander Jackson</h3>
+        <div class="traits">Poised • attentive • precise</div>
+        <p class="blurb">“Shoes off. I’ll take your coat—and the weight you’ve been carrying.”</p>
+        <div class="actions">
+          <a class="btn" href="pay.html">Enter (Subscribe)</a>
         </div>
       </div>
+    </article>
 
-    </div>
+  </div>
 
-    <div style="margin-top:18px;padding:10px 12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;font-size:12px;opacity:.9;">
-      Coming soon: Aftercare & alternate rooms (dirty rooms unlock with coins).
-    </div>
-  </main>
+  <!-- calendar teaser replaces the old aftercare/alt rooms line -->
+  <p class="footline">
+    🌙 Coming soon: <strong>Blossom &amp; Blade 2026 Calendar</strong> — 12 moody months, each man featured twice with images from their rooms.
+    <a href="pay.html">See the teaser on the subscription page</a>.
+  </p>
 
-  <footer>
-    $1 of every subscription goes to this month’s Domestic Violence charity.
-  </footer>
+</main>
+
+<footer class="wrap">
+  $1 of every subscription goes to this month’s DV charity.
+</footer>
 
 </body>
 </html>

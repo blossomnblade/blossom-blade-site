@@ -1,103 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Blade Kincaid — PG-13 Room</title>
-  <style>
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:#e9eef0;
-      --bb-bg: url('images/gothic-bg.jpg'); /* fallback */
-      background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    header{
-      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
-      background:rgba(0,0,0,.75); border-bottom:1px solid rgba(255,255,255,.15);
-      padding:12px 14px; position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
-    }
-    header .meta{font-size:12px; opacity:.9; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-    #stageBadge{
-      font-size:12px; opacity:.95; background:rgba(255,255,255,.1);
-      border:1px solid rgba(255,255,255,.2); padding:4px 8px; border-radius:999px;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Blade Kincaid — PG-13 Room</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:#e9eef0;
+    --bb-bg:url('images/gothic-bg.jpg'); /* fallback */
+    background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  header{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);
+    padding:12px 14px;position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);
+  }
+  header .meta{font-size:12px;opacity:.9;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #stageBadge{font-size:12px;opacity:.95;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:4px 8px;border-radius:999px}
 
-    main{max-width:1100px; margin:18px auto; padding:0 14px;}
-
-    .room{
-      display:grid; grid-template-columns: 280px 1fr; gap:0;
-      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
-      background:rgba(0,0,0,.6);
-    }
-    .side{ position:relative; background:rgba(0,0,0,.45);
-      border-right:1px solid rgba(255,255,255,.12);
-      display:flex; align-items:stretch; justify-content:center; overflow:hidden;
-    }
-    .chatwrap{ display:flex; flex-direction:column; min-height:62vh; }
-
-    .portrait{
-      width:100%; height:100%; object-fit:cover; opacity:.95;
-      animation: drift 8s ease-in-out infinite;
-      filter:saturate(1.02) contrast(1.02) brightness(.95);
-    }
-    @keyframes drift{ 0%{transform:translateX(-6px)} 50%{transform:translateX(6px)} 100%{transform:translateX(-6px)} }
-    .sideOverlay{ position:absolute; inset:0;
-      background:linear-gradient(0deg, rgba(0,0,0,.38), transparent 35%, transparent 75%, rgba(0,0,0,.38));
-      pointer-events:none;
-    }
-
-    .roomhead{
-      padding:12px 14px; background:linear-gradient(180deg,#0c1012,transparent);
-      border-bottom:1px solid rgba(255,255,255,.12);
-    }
-    .name{font-weight:800; letter-spacing:.2px}
-    .chat{
-      flex:1; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
-      background:radial-gradient(1200px 520px at 70% 25%, rgba(16,46,32,.24), transparent 60%);
-    }
-    .bubble{
-      max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
-      border:1px solid rgba(255,255,255,.18); backdrop-filter:saturate(120%);
-      box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
-    }
-    .me  {align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him {align-self:flex-start; background:rgba(18,40,28,.35)} /* deep forest green */
-    .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
-    .composer{
-      display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.55);
-    }
-    input[type="text"]{
-      flex:1; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-      background:rgba(255,255,255,.06); color:#fff; outline:none;
-    }
-    button{
-      padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-      background:#123820; color:#fff; font-weight:700; cursor:pointer;
-    }
-
-    @media (max-width:760px){
-      .room{ grid-template-columns:1fr; }
-      .side{ height:260px; border-right:none; }
-      .chat{ min-height:360px; }
-    }
-
-    /* paywall overlay */
-    .overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.7);
-      display:none; align-items:center; justify-content:center; z-index:50;
-    }
-    .modal{
-      width:min(520px,92%); background:rgba(12,12,14,.96);
-      border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:18px;
-      box-shadow:0 20px 50px rgba(0,0,0,.6);
-    }
-    .modal h3{margin:0 0 8px 0}
-    .modal p{margin:0 0 14px 0; opacity:.9}
-    .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
-    .ghost{background:transparent}
-  </style>
+  main{max-width:1100px;margin:18px auto;padding:0 14px}
+  .room{
+    display:grid;grid-template-columns:280px 1fr;gap:0;
+    border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.6);
+  }
+  .side{position:relative;background:rgba(0,0,0,.45);border-right:1px solid rgba(255,255,255,.12);display:flex;align-items:stretch;justify-content:center;overflow:hidden}
+  .portrait{width:100%;height:100%;object-fit:cover;opacity:.95;animation:drift 8s ease-in-out infinite;filter:saturate(1.02) contrast(1.02) brightness(.95)}
+  @keyframes drift{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
+  .sideOverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.38),transparent 35%,transparent 75%,rgba(0,0,0,.38));pointer-events:none}
+  .chatwrap{display:flex;flex-direction:column;min-height:62vh}
+  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#0c1012,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
+  .name{font-weight:800;letter-spacing:.2px}
+  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(1200px 520px at 70% 25%,rgba(16,46,32,.24),transparent 60%)}
+  .bubble{max-width:72%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid rgba(255,255,255,.18);backdrop-filter:saturate(120%);box-shadow:0 1px 0 rgba(0,0,0,.25) inset}
+  .me{align-self:flex-end;background:rgba(255,255,255,.08)}
+  .him{align-self:flex-start;background:rgba(18,40,28,.35)}
+  .typing{font-size:12px;opacity:.75;display:none;margin:0 14px 10px}
+  .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.55)}
+  input[type="text"]{flex:1;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;outline:none}
+  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#123820;color:#fff;font-weight:700;cursor:pointer}
+  @media (max-width:760px){.room{grid-template-columns:1fr}.side{height:260px;border-right:none}.chat{min-height:360px}}
+  /* paywall overlay */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal{width:min(520px,92%);background:rgba(12,12,14,.96);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .modal h3{margin:0 0 8px 0}.modal p{margin:0 0 14px 0;opacity:.9}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .ghost{background:transparent}
+</style>
 </head>
 
 <body data-man="blade">
@@ -122,20 +72,15 @@
     </aside>
 
     <section class="chatwrap">
-      <div class="roomhead">
-        <div class="name">Blade Kincaid</div>
-      </div>
-
+      <div class="roomhead"><div class="name">Blade Kincaid</div></div>
       <div id="chat" class="chat" aria-live="polite"></div>
       <div id="typing" class="typing">Blade is typing…</div>
-
       <form id="composer" class="composer">
         <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
         <button id="send" type="submit">Send</button>
       </form>
     </section>
   </div>
-
   <p class="small" style="margin:10px 2px 0;opacity:.9">
     Pacing: one line at a time. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
   </p>
@@ -154,84 +99,29 @@
 </div>
 
 <script>
-  /* per-man background map */
-  const BB_BACKGROUNDS = {
-    blade:   "images/blade-bg.jpg",
-    grayson: "images/grayson-bg.jpg",
-    dylan:   "images/dylan-bg.jpg",
-    silas:   "images/silas-bg.jpg",
-    jesse:   "images/cowboy-bg.jpg",
-    cassian: "images/cassian-bg.jpg"
-  };
-
-  /* stage flag (visitor/subscriber/dirty) */
-  function getStage(){
-    const p = new URLSearchParams(location.search).get("stage");
+(function(){
+  // ---- helpers
+  function qs(id){ return document.getElementById(id); }
+  function stage(){
+    var p = (new URLSearchParams(location.search)).get("stage");
     if (p) return p;
     return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
   }
-
-  /* featherweight memory */
-  const MEMKEY = 'bb_user';
-  function getUser(){ try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); } catch { return {}; } }
-  function saveUser(obj){ localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); }
-
-  /* greeting lists (gentle) */
-  const SOFT_HELLOS = [
-    "Hey.",
-    "There you are.",
-    "Evening."
-  ];
-
-  function greet(stage){
-    const u = getUser();
-    if (stage === 'subscriber' && (u.name || u.note)){
-      const nm = u.name ? u.name : "you";
-      const hook = u.note ? ` How's that ${u.note}?` : "";
-      bubble(`Hey ${nm}.${hook}`, "him");
-      return;
-    }
-    bubble(SOFT_HELLOS[Math.floor(Math.random()*SOFT_HELLOS.length)], "him");
+  function setBG(){
+    var map = {
+      blade:   "images/blade-bg.jpg",
+      grayson: "images/grayson-bg.jpg",
+      dylan:   "images/dylan-bg.jpg",
+      silas:   "images/silas-bg.jpg",
+      jesse:   "images/cowboy-bg.jpg",
+      cassian: "images/cassian-bg.jpg"
+    };
+    var man = (document.body.getAttribute('data-man')||'').toLowerCase();
+    var src = map[man];
+    if (src){ document.body.style.setProperty('--bb-bg',"url('"+src+"')"); }
   }
-
-  /* init visuals + greeting + 3-min explore window */
-  let freeTimer, inputLockedByPaywall = false;
-  (function init(){
-    const man = (document.body.dataset.man || '').toLowerCase();
-    const src = BB_BACKGROUNDS[man];
-    if (src) document.body.style.setProperty('--bb-bg', `url('${src}')`);
-
-    const stage = getStage();
-    const badge = document.getElementById('stageBadge');
-    if (badge) badge.textContent = (stage === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
-
-    const portrait = document.getElementById('portrait');
-    if (portrait){
-      if(stage === 'subscriber') portrait.src = 'images/blade_sub.jpg';
-      else if(stage === 'dirty') portrait.src = 'images/blade_dirty.jpg';
-      else portrait.src = 'images/blade_tease.jpg';
-    }
-
-    greet(stage);
-
-    // 3-minute explore window (only for non-subscribers)
-    if (stage !== 'subscriber'){
-      freeTimer = setTimeout(()=>showPaywall(), 3 * 60 * 1000);
-    }
-  })();
-
-  /* chat glue */
-  const chat   = document.getElementById("chat");
-  const typing = document.getElementById("typing");
-  const form   = document.getElementById("composer");
-  const input  = document.getElementById("input");
-  const sendBtn= document.getElementById("send");
-  const man    = document.body.dataset.man || "blade";
-  const conversation = [];
-  let userMsgCount = 0;
-
   function bubble(text, who){
-    const div = document.createElement("div");
+    var div = document.createElement("div");
     div.className = "bubble " + (who === "me" ? "me" : "him");
     div.textContent = text;
     chat.appendChild(div);
@@ -239,78 +129,126 @@
   }
   function setTyping(on){ typing.style.display = on ? "block" : "none"; }
 
-  // capture name + light note
-  function tryCapture(text){
-    const u = getUser();
-    const m1 = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
-    const m2 = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
-    const m3 = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
-    if (m1 || m2 || m3) u.name = (m1?.[1] || m2?.[1] || m3?.[1]).trim();
+  // ---- very light memory (no fancy syntax)
+  var MEMKEY = 'bb_user';
+  function getUser(){
+    try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveUser(obj){
+    try { localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); } catch(e){}
+  }
+  function captureFacts(text){
+    var u = getUser();
+    var m;
+    m = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
+    if (!m) m = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
+    if (!m) m = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
+    if (m){ u.name = m[1]; }
     if (/\b(read|book|chapter|novel)\b/i.test(text)) u.note = "book";
-    if (/\bconcert|gig|guitar|studio\b/i.test(text)) u.note = u.note || "music";
+    if (!u.note && /\bconcert|gig|guitar|studio\b/i.test(text)) u.note = "music";
     saveUser(u);
   }
 
-  async function askLLM(userText){
-    conversation.push({ role: "user", content: userText });
-    setTyping(true);
-    try{
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: conversation,
-          man,
-          stage: getStage(),
-          // hint so he isn't too eager
-          softness: { intro:true, nicknameAfter:2 }
-        })
-      });
-      const data = await res.json();
-      const reply = data?.reply || "Tell me more.";
-      await new Promise(r=>setTimeout(r, 520 + Math.random()*520));
-      bubble(reply, "him");
-      conversation.push({ role: "assistant", content: reply });
-    }catch(e){
-      bubble("Signal flickered—try me again.", "him");
-    }finally{
-      setTyping(false);
-      input.disabled = false; sendBtn.disabled = false; input.focus();
-    }
+  // ---- DOM refs
+  var chat   = qs("chat");
+  var typing = qs("typing");
+  var form   = qs("composer");
+  var input  = qs("input");
+  var send   = qs("send");
+  var overlay= qs("overlay");
+  var later  = qs("later");
+
+  // ---- init visuals + header
+  setBG();
+  var st = stage();
+  var badge = qs("stageBadge");
+  if (badge) badge.textContent = (st === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+  var portrait = qs("portrait");
+  if (portrait){
+    if (st === 'subscriber') portrait.src = 'images/blade_sub.jpg';
+    else if (st === 'dirty') portrait.src = 'images/blade_dirty.jpg';
+    else portrait.src = 'images/blade_tease.jpg';
   }
 
-  form.addEventListener("submit", (e)=>{
+  // ---- single soft greeting (always shows)
+  var helloList = ["Hey.", "There you are.", "Evening."];
+  var u = getUser();
+  if (st === 'subscriber' && (u.name || u.note)){
+    var nm = u.name ? u.name : "you";
+    var hook = u.note ? (" How's that " + u.note + "?") : "";
+    bubble("Hey " + nm + "." + hook, "him");
+  } else {
+    bubble(helloList[Math.floor(Math.random()*helloList.length)], "him");
+  }
+
+  // ---- 3 minute explore window for visitors
+  var inputLocked = false;
+  if (st !== 'subscriber'){
+    setTimeout(function(){
+      inputLocked = true;
+      input.disabled = true; send.disabled = true;
+      overlay.style.display = "flex";
+    }, 3*60*1000);
+  }
+  if (later){
+    later.addEventListener('click', function(e){
+      e.preventDefault();
+      overlay.style.display = "none";
+      // keep composer disabled; she can still read
+      inputLocked = true;
+      input.disabled = true; send.disabled = true;
+    });
+  }
+
+  // ---- chat submit
+  var conversation = [];
+  form.addEventListener('submit', function(e){
     e.preventDefault();
-    if (inputLockedByPaywall) return;
-    const text = input.value.trim();
-    if(!text) return;
+    if (inputLocked) return;
+    var text = (input.value || "").trim();
+    if (!text) return;
+
+    // Always show user's bubble immediately
     bubble(text, "me");
+    captureFacts(text);
     input.value = "";
-    userMsgCount++;
-    tryCapture(text);
-    input.disabled = true; sendBtn.disabled = true;
+    input.disabled = true; send.disabled = true;
 
-    // sprinkle nickname only after 2 user messages (server can use this hint)
-    askLLM(text);
+    // Call backend; even if it fails we answer softly
+    setTyping(true);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/chat", true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    conversation.push({ role:"user", content:text });
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState === 4){
+        var reply = "Tell me more.";
+        try{
+          if (xhr.status >= 200 && xhr.status < 300){
+            var data = JSON.parse(xhr.responseText || "{}");
+            if (data && data.reply) reply = data.reply;
+          }
+        }catch(e){}
+        setTimeout(function(){
+          bubble(reply, "him");
+          conversation.push({ role:"assistant", content: reply });
+          setTyping(false);
+          input.disabled = false; send.disabled = false; input.focus();
+        }, 520 + Math.floor(Math.random()*520));
+      }
+    };
+    var payload = { messages: conversation, man: "blade", stage: st, softness: { intro:true, nicknameAfter:2 } };
+    try { xhr.send(JSON.stringify(payload)); } catch(e){
+      // network error fallback
+      setTimeout(function(){
+        bubble("Signal flickered—try me again.", "him");
+        setTyping(false);
+        input.disabled = false; send.disabled = false; input.focus();
+      }, 600);
+    }
   });
-
-  /* paywall */
-  const overlay = document.getElementById('overlay');
-  const laterBtn= document.getElementById('later');
-
-  function showPaywall(){
-    inputLockedByPaywall = true;
-    input.disabled = true; sendBtn.disabled = true;
-    overlay.style.display = "flex";
-  }
-  laterBtn?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    overlay.style.display = "none";
-    // allow reading, but keep composer disabled
-    inputLockedByPaywall = true;
-    input.disabled = true; sendBtn.disabled = true;
-  });
+})();
 </script>
-
 </body>
 </html>

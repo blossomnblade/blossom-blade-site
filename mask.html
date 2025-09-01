@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Blade Kincaid — PG-13 Room</title>
+<title>Grayson Kincaid — PG-13 Room</title>
 <style>
   *{box-sizing:border-box}
   body{
@@ -30,16 +30,16 @@
   @keyframes drift{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
   .sideOverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.38),transparent 35%,transparent 75%,rgba(0,0,0,.38));pointer-events:none}
   .chatwrap{display:flex;flex-direction:column;min-height:62vh}
-  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#0c1012,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
+  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#1a0c10,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
   .name{font-weight:800;letter-spacing:.2px}
-  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(1200px 520px at 70% 25%,rgba(16,46,32,.24),transparent 60%)}
+  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(1200px 520px at 70% 25%,rgba(122,16,33,.22),transparent 60%)}
   .bubble{max-width:72%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid rgba(255,255,255,.18);backdrop-filter:saturate(120%);box-shadow:0 1px 0 rgba(0,0,0,.25) inset}
   .me{align-self:flex-end;background:rgba(255,255,255,.08)}
-  .him{align-self:flex-start;background:rgba(18,40,28,.35)}
+  .him{align-self:flex-start;background:rgba(122,16,33,.30)} /* soft crimson */
   .typing{font-size:12px;opacity:.75;display:none;margin:0 14px 10px}
   .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.55)}
   input[type="text"]{flex:1;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;outline:none}
-  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#123820;color:#fff;font-weight:700;cursor:pointer}
+  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#7a1021;color:#fff;font-weight:700;cursor:pointer}
   @media (max-width:760px){.room{grid-template-columns:1fr}.side{height:260px;border-right:none}.chat{min-height:360px}}
   /* paywall overlay */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
@@ -50,7 +50,7 @@
 </style>
 </head>
 
-<body data-man="blade">
+<body data-man="grayson">
 <header>
   <div style="display:flex;align-items:center;gap:10px;">
     <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
@@ -67,14 +67,14 @@
 <main>
   <div class="room">
     <aside class="side">
-      <img id="portrait" class="portrait" src="images/blade_tease.jpg" alt="Blade portrait"/>
+      <img id="portrait" class="portrait" src="images/grayson_tease.jpg" alt="Grayson portrait"/>
       <div class="sideOverlay"></div>
     </aside>
 
     <section class="chatwrap">
-      <div class="roomhead"><div class="name">Blade Kincaid</div></div>
+      <div class="roomhead"><div class="name">Grayson Kincaid</div></div>
       <div id="chat" class="chat" aria-live="polite"></div>
-      <div id="typing" class="typing">Blade is typing…</div>
+      <div id="typing" class="typing">Grayson is typing…</div>
       <form id="composer" class="composer">
         <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
         <button id="send" type="submit">Send</button>
@@ -89,7 +89,7 @@
 <!-- paywall overlay -->
 <div id="overlay" class="overlay" role="dialog" aria-modal="true">
   <div class="modal">
-    <h3>Wanna keep going?</h3>
+    <h3>Ready for the next lesson?</h3>
     <p>You’ve had a quick feel for him. Subscribe for full PG-13 companionship, and add coins any time for explicit scenes.</p>
     <div class="row">
       <a class="ghost" href="#" id="later" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Maybe later</a>
@@ -129,7 +129,7 @@
   }
   function setTyping(on){ typing.style.display = on ? "block" : "none"; }
 
-  // ---- very light memory (no fancy syntax)
+  // ---- very light memory (name/note)
   var MEMKEY = 'bb_user';
   function getUser(){
     try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); }
@@ -166,20 +166,24 @@
   if (badge) badge.textContent = (st === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
   var portrait = qs("portrait");
   if (portrait){
-    if (st === 'subscriber') portrait.src = 'images/blade_sub.jpg';
-    else if (st === 'dirty') portrait.src = 'images/blade_dirty.jpg';
-    else portrait.src = 'images/blade_tease.jpg';
+    if (st === 'subscriber') portrait.src = 'images/grayson_sub.jpg';
+    else if (st === 'dirty') portrait.src = 'images/grayson_dirty.jpg';
+    else portrait.src = 'images/grayson_tease.jpg';
   }
 
-  // ---- single soft greeting (always shows)
-  var helloList = ["Hey.", "There you are.", "Evening."];
+  // ---- single soft greeting (teacher-of-naughty)
   var u = getUser();
   if (st === 'subscriber' && (u.name || u.note)){
     var nm = u.name ? u.name : "you";
     var hook = u.note ? (" How's that " + u.note + "?") : "";
-    bubble("Hey " + nm + "." + hook, "him");
+    bubble("Evening, " + nm + "." + hook, "him");
   } else {
-    bubble(helloList[Math.floor(Math.random()*helloList.length)], "him");
+    var greets = [
+      "Evening.",
+      "Eyes up.",
+      "Lesson one—look at me."
+    ];
+    bubble(greets[Math.floor(Math.random()*greets.length)], "him");
   }
 
   // ---- 3 minute explore window for visitors
@@ -201,7 +205,7 @@
     });
   }
 
-  // ---- chat submit
+  // ---- chat wire-up
   var conversation = [];
   form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -209,13 +213,13 @@
     var text = (input.value || "").trim();
     if (!text) return;
 
-    // Always show user's bubble immediately
+    // show user's bubble immediately
     bubble(text, "me");
     captureFacts(text);
     input.value = "";
     input.disabled = true; send.disabled = true;
 
-    // Call backend; even if it fails we answer softly
+    // backend call with gentle hints (nickname after a couple msgs)
     setTyping(true);
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/chat", true);
@@ -223,7 +227,7 @@
     conversation.push({ role:"user", content:text });
     xhr.onreadystatechange = function(){
       if (xhr.readyState === 4){
-        var reply = "Tell me more.";
+        var reply = "Good. Now… slower.";
         try{
           if (xhr.status >= 200 && xhr.status < 300){
             var data = JSON.parse(xhr.responseText || "{}");
@@ -235,14 +239,13 @@
           conversation.push({ role:"assistant", content: reply });
           setTyping(false);
           input.disabled = false; send.disabled = false; input.focus();
-        }, 520 + Math.floor(Math.random()*520));
+        }, 500 + Math.floor(Math.random()*540));
       }
     };
-    var payload = { messages: conversation, man: "blade", stage: st, softness: { intro:true, nicknameAfter:2 } };
+    var payload = { messages: conversation, man: "grayson", stage: st, softness: { intro:true, nicknameAfter:2 } };
     try { xhr.send(JSON.stringify(payload)); } catch(e){
-      // network error fallback
       setTimeout(function(){
-        bubble("Signal flickered—try me again.", "him");
+        bubble("Signal flickered—say that again.", "him");
         setTyping(false);
         input.disabled = false; send.disabled = false; input.focus();
       }, 600);

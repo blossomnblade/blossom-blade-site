@@ -1,63 +1,58 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Jesse Granger — PG-13 Room</title>
-  <meta name="description" content="Jesse Granger — cowboy, barn loft or kitchen. PG-13 conversation with polite, protective charm."/>
-  <style>
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:#e9eef0; background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    header{
-      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
-      background:rgba(0,0,0,.75); border-bottom:1px solid rgba(255,255,255,.15);
-      padding:12px 14px; position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
-    }
-    header .meta{font-size:12px; opacity:.9}
-    main{max-width:980px; margin:18px auto; padding:0 14px;}
-    .room{
-      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
-      background:rgba(0,0,0,.6);
-    }
-    .roomhead{
-      padding:12px 14px; background:linear-gradient(180deg,#1a130c,transparent);
-      border-bottom:1px solid rgba(255,255,255,.12);
-    }
-    .name{font-weight:800; letter-spacing:.2px}
-    .chat{
-      height:60vh; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
-      background:radial-gradient(1200px 500px at 70% 25%, rgba(107,62,30,.22), transparent 60%);
-    }
-    .bubble{
-      max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
-      border:1px solid rgba(255,255,255,.18); backdrop-filter:saturate(120%);
-      box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
-    }
-    .me{align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him{align-self:flex-start; background:rgba(107,62,30,.24)} /* Jesse accent: saddle brown */
-    .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
-    .composer{
-      display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.55);
-    }
-    input[type="text"]{
-      flex:1; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-      background:rgba(255,255,255,.06); color:#fff; outline:none;
-    }
-    button{
-      padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-      background:#6b3e1e; color:#fff; font-weight:700; cursor:pointer;
-    }
-    .small{font-size:12px; opacity:.9}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Jesse Granger — PG-13 Room</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:#f3eee8;
+    --bb-bg:url('images/gothic-bg.jpg'); /* fallback */
+    background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  header{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);
+    padding:12px 14px;position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);
+  }
+  header .meta{font-size:12px;opacity:.9;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #stageBadge{font-size:12px;opacity:.95;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:4px 8px;border-radius:999px}
+
+  main{max-width:1100px;margin:18px auto;padding:0 14px}
+  .room{
+    display:grid;grid-template-columns:280px 1fr;gap:0;
+    border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.6);
+  }
+  .side{position:relative;background:rgba(0,0,0,.45);border-right:1px solid rgba(255,255,255,.12);display:flex;align-items:stretch;justify-content:center;overflow:hidden}
+  .portrait{width:100%;height:100%;object-fit:cover;opacity:.95;animation:drift 8s ease-in-out infinite;filter:saturate(1.02) contrast(1.02) brightness(.95)}
+  @keyframes drift{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
+  .sideOverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.38),transparent 35%,transparent 75%,rgba(0,0,0,.38));pointer-events:none}
+  .chatwrap{display:flex;flex-direction:column;min-height:62vh}
+  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#140f0b,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
+  .name{font-weight:800;letter-spacing:.2px}
+  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:
+        radial-gradient(1200px 520px at 70% 25%,rgba(160,108,48,.22),transparent 60%)}
+  .bubble{max-width:72%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid rgba(255,255,255,.18);backdrop-filter:saturate(120%);box-shadow:0 1px 0 rgba(0,0,0,.25) inset}
+  .me{align-self:flex-end;background:rgba(255,255,255,.08)}
+  .him{align-self:flex-start;background:rgba(160,108,48,.32)} /* warm whiskey amber */
+  .typing{font-size:12px;opacity:.75;display:none;margin:0 14px 10px}
+  .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.55)}
+  input[type="text"]{flex:1;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;outline:none}
+  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#8a5a2d;color:#fff;font-weight:700;cursor:pointer}
+  @media (max-width:760px){.room{grid-template-columns:1fr}.side{height:260px;border-right:none}.chat{min-height:360px}}
+
+  /* paywall overlay */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal{width:min(520px,92%);background:rgba(12,12,14,.96);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .modal h3{margin:0 0 8px 0}.modal p{margin:0 0 14px 0;opacity:.9}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .ghost{background:transparent}
+</style>
 </head>
 
-<!-- tells the API which persona to use -->
 <body data-man="jesse">
-
 <header>
   <div style="display:flex;align-items:center;gap:10px;">
     <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
@@ -65,94 +60,192 @@
       <strong>Blossom &amp; Blade</strong>
     </a>
   </div>
-  <div class="meta">PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</div>
+  <div class="meta">
+    <span id="stageBadge">Visitor — PG-13 tease</span>
+    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
+  </div>
 </header>
 
 <main>
   <div class="room">
-    <div class="roomhead">
-      <div class="name">Jesse Granger</div>
-      <div class="small">Barn loft • Kitchen • “Yes, ma’am” manners • Protective</div>
-    </div>
+    <aside class="side">
+      <img id="portrait" class="portrait" src="images/jesse_tease.jpg" alt="Jesse portrait"/>
+      <div class="sideOverlay"></div>
+    </aside>
 
-    <div id="chat" class="chat" aria-live="polite"></div>
-    <div id="typing" class="typing">Jesse is typing…</div>
-
-    <form id="composer" class="composer">
-      <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
-      <button id="send" type="submit">Send</button>
-    </form>
+    <section class="chatwrap">
+      <div class="roomhead"><div class="name">Jesse Granger</div></div>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <div id="typing" class="typing">Jesse is typing…</div>
+      <form id="composer" class="composer">
+        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
   </div>
-
-  <p class="small" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Base rooms stay PG-13; subscriber stage allows suggestive heat (still PG-13).</p>
+  <p class="small" style="margin:10px 2px 0;opacity:.9">
+    Pacing: one line at a time. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
+  </p>
 </main>
 
+<!-- paywall overlay -->
+<div id="overlay" class="overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Stay a while?</h3>
+    <p>You’ve had a quick feel for him. Subscribe for full PG-13 companionship, and add coins any time for explicit scenes.</p>
+    <div class="row">
+      <a class="ghost" href="#" id="later" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Maybe later</a>
+      <a class="ghost" href="pay.html" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Subscribe</a>
+    </div>
+  </div>
+</div>
+
 <script>
-  // --- stage logic (visitor vs subscriber)
-  function getStage(){
-    const p = new URLSearchParams(location.search).get("stage");
-    if (p) return p; // allows ?stage=subscriber for quick testing
+(function(){
+  // ---- helpers
+  function qs(id){ return document.getElementById(id); }
+  function stage(){
+    var p = (new URLSearchParams(location.search)).get("stage");
+    if (p) return p;
     return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
   }
-
-  const man = document.body.getAttribute("data-man") || "jesse";
-  const chat   = document.getElementById("chat");
-  const typing = document.getElementById("typing");
-  const form   = document.getElementById("composer");
-  const input  = document.getElementById("input");
-  const sendBtn= document.getElementById("send");
-
-  // Running memory so replies connect
-  const conversation = [];
-
+  function setBG(){
+    var map = {
+      blade:   "images/blade-bg.jpg",
+      grayson: "images/grayson-bg.jpg",
+      dylan:   "images/dylan-bg.jpg",
+      silas:   "images/silas-bg.jpg",
+      jesse:   "images/cowboy-bg.jpg",
+      cassian: "images/cassian-bg.jpg"
+    };
+    var man = (document.body.getAttribute('data-man')||'').toLowerCase();
+    var src = map[man];
+    if (src){ document.body.style.setProperty('--bb-bg',"url('"+src+"')"); }
+  }
   function bubble(text, who){
-    const div = document.createElement("div");
+    var div = document.createElement("div");
     div.className = "bubble " + (who === "me" ? "me" : "him");
     div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+    qs("chat").appendChild(div);
+    qs("chat").scrollTop = qs("chat").scrollHeight;
   }
-  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
+  function setTyping(on){ qs("typing").style.display = on ? "block" : "none"; }
 
-  async function askLLM(userText){
-    conversation.push({ role: "user", content: userText });
-
-    setTyping(true);
-    try{
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
-      });
-      const data = await res.json();
-      const reply = (data && data.reply) ? data.reply : "Yes, ma’am. Say that again.";
-      // human pause
-      await new Promise(r=>setTimeout(r, 560 + Math.random()*500));
-      bubble(reply, "him");
-      conversation.push({ role: "assistant", content: reply });
-    }catch(e){
-      bubble("Wind kicked up—mind sayin’ that once more?", "him");
-    }finally{
-      setTyping(false);
-      input.disabled = false; sendBtn.disabled = false; input.focus();
-    }
+  // ---- very light memory (name/note)
+  var MEMKEY = 'bb_user';
+  function getUser(){
+    try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveUser(obj){
+    try { localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); } catch(e){}
+  }
+  function captureFacts(text){
+    var u = getUser();
+    var m;
+    m = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
+    if (!m) m = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
+    if (!m) m = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
+    if (m){ u.name = m[1]; }
+    if (/\b(read|book|chapter|novel)\b/i.test(text)) u.note = "book";
+    if (!u.note && /\bconcert|gig|guitar|studio\b/i.test(text)) u.note = "music";
+    saveUser(u);
   }
 
-  form.addEventListener("submit", (e)=>{
+  // ---- init visuals + header
+  setBG();
+  var st = stage();
+  var badge = qs("stageBadge");
+  if (badge) badge.textContent = (st === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+  var portrait = qs("portrait");
+  if (portrait){
+    if (st === 'subscriber') portrait.src = 'images/jesse_sub.jpg';
+    else if (st === 'dirty') portrait.src = 'images/jesse_dirty.jpg';
+    else portrait.src = 'images/jesse_tease.jpg';
+  }
+
+  // ---- single soft greeting (manners + naughty smile)
+  var u = getUser();
+  if (st === 'subscriber' && (u.name || u.note)){
+    var nm = u.name ? u.name : "darlin'";
+    var hook = u.note ? (" That " + u.note + " treat you right?") : "";
+    bubble("Evenin’, " + nm + "." + hook, "him");
+  } else {
+    var greets = [
+      "Evenin’, ma’am.",
+      "Hey, sugar.",
+      "You came lookin’ for trouble or supper?"
+    ];
+    bubble(greets[Math.floor(Math.random()*greets.length)], "him");
+  }
+
+  // ---- 3 minute explore window for visitors
+  var input = qs("input"), send = qs("send"), overlay = qs("overlay"), later = qs("later");
+  var inputLocked = false;
+  if (st !== 'subscriber'){
+    setTimeout(function(){
+      inputLocked = true;
+      input.disabled = true; send.disabled = true;
+      overlay.style.display = "flex";
+    }, 3*60*1000);
+  }
+  if (later){
+    later.addEventListener('click', function(e){
+      e.preventDefault();
+      overlay.style.display = "none";
+      // keep composer disabled; she can still read
+      inputLocked = true;
+      input.disabled = true; send.disabled = true;
+    });
+  }
+
+  // ---- chat wire-up
+  var conversation = [];
+  qs("composer").addEventListener('submit', function(e){
     e.preventDefault();
-    const text = input.value.trim();
-    if(!text) return;
+    if (inputLocked) return;
+    var text = (input.value || "").trim();
+    if (!text) return;
+
+    // show user's bubble immediately
     bubble(text, "me");
+    captureFacts(text);
     input.value = "";
-    // enforce “one line, then wait”
-    input.disabled = true; sendBtn.disabled = true;
-    askLLM(text);
+    input.disabled = true; send.disabled = true;
+
+    // backend call with gentle hints
+    setTyping(true);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/chat", true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    conversation.push({ role:"user", content:text });
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState === 4){
+        var reply = "Yes, ma’am. Go on.";
+        try{
+          if (xhr.status >= 200 && xhr.status < 300){
+            var data = JSON.parse(xhr.responseText || "{}");
+            if (data && data.reply) reply = data.reply;
+          }
+        }catch(e){}
+        setTimeout(function(){
+          bubble(reply, "him");
+          conversation.push({ role:"assistant", content: reply });
+          setTyping(false);
+          input.disabled = false; send.disabled = false; input.focus();
+        }, 500 + Math.floor(Math.random()*540));
+      }
+    };
+    var payload = { messages: conversation, man: "jesse", stage: st, softness: { intro:true, nicknameAfter:2 } };
+    try { xhr.send(JSON.stringify(payload)); } catch(e){
+      setTimeout(function(){
+        bubble("Wind knocked the signal—say that again.", "him");
+        setTyping(false);
+        input.disabled = false; send.disabled = false; input.focus();
+      }, 600);
+    }
   });
-
-  // --- soft openers in his voice
-  bubble("Evenin’, darlin’. Boots off—kitchen light’s warm.", "him");
-  setTimeout(()=>bubble("Tell me what you’re hungry for, nice and slow. Yes, ma’am.", "him"), 700);
+})();
 </script>
-
 </body>
 </html>

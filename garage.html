@@ -1,134 +1,259 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Dylan Vale — PG-13 Room</title>
+  <meta name="description" content="Dylan Vale — PG-13 chat room."/>
   <style>
-    body {
-      background: url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
-      font-family: 'Georgia', serif;
-      color: #eee;
-      margin: 0;
-      padding: 0;
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:#e9eef0;
+      /* IMPORTANT: this must match your repo filename exactly */
+      background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-    .chat-container {
-      max-width: 800px;
-      margin: 60px auto;
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    header{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:rgba(0,0,0,.75); border-bottom:1px solid rgba(255,255,255,.15);
+      padding:12px 14px; position:sticky; top:0; z-index:20; backdrop-filter:blur(6px);
     }
-    .header {
-      font-size: 1.8em;
-      font-weight: bold;
-      margin-bottom: 15px;
-      text-align: center;
-      color: #6cf; /* biker neon blue */
+    header .meta{font-size:12px; opacity:.9; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    #stageBadge{
+      font-size:12px; opacity:.95; background:rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.2); padding:4px 8px; border-radius:999px;
     }
-    .messages {
-      min-height: 300px;
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #333;
-      border-radius: 6px;
-      overflow-y: auto;
-      background: rgba(20, 20, 20, 0.6);
+
+    main{max-width:1100px; margin:18px auto; padding:0 14px;}
+
+    /* grid with sidebar that can be left or right via .right-side */
+    .room{
+      display:grid; grid-template-columns: 280px 1fr; gap:0;
+      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
+      background:rgba(0,0,0,.6);
     }
-    .message {
-      margin: 6px 0;
-      padding: 10px 14px;
-      border-radius: 8px;
-      max-width: 75%;
-      line-height: 1.4em;
+    .right-side{ grid-template-columns: 1fr 280px; }
+    .side{ order:1; position:relative; background:rgba(0,0,0,.45);
+      border-right:1px solid rgba(255,255,255,.12);
+      display:flex; align-items:stretch; justify-content:center; overflow:hidden;
     }
-    .bot {
-      background: #2b3a4a;
-      color: #fff;
+    .right-side .side{ order:2; border-right:none; border-left:1px solid rgba(255,255,255,.12); }
+    .chatwrap{ order:2; display:flex; flex-direction:column; min-height:62vh; }
+    .right-side .chatwrap{ order:1; }
+
+    /* --- Sidebar portrait --- */
+    .portrait{
+      width:100%; height:100%; object-fit:cover; opacity:.96;
+      animation: drift 8s ease-in-out infinite;
+      filter:saturate(1.02) contrast(1.02);
     }
-    .user {
-      background: #4a2b2b;
-      color: #fff;
-      margin-left: auto;
+    @keyframes drift{
+      0% { transform: translateX(-6px); }
+      50%{ transform: translateX(6px); }
+      100%{transform: translateX(-6px); }
     }
-    .input-box {
-      display: flex;
-      gap: 10px;
+    .sideOverlay{
+      position:absolute; inset:0;
+      background:linear-gradient(0deg, rgba(0,0,0,.35), transparent 35%, transparent 75%, rgba(0,0,0,.35));
+      pointer-events:none;
     }
-    .input-box input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #555;
-      background: #111;
-      color: #eee;
+
+    /* --- Chat area --- */
+    .roomhead{
+      padding:12px 14px; background:linear-gradient(180deg,#0c121a,transparent);
+      border-bottom:1px solid rgba(255,255,255,.12);
     }
-    .input-box button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      background: #3a7;
-      color: white;
-      cursor: pointer;
+    .name{font-weight:800; letter-spacing:.2px}
+    .chat{
+      flex:1; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
+      background:radial-gradient(1200px 520px at 70% 25%, rgba(34,74,102,.20), transparent 60%);
     }
-    .typing {
-      font-style: italic;
-      color: #aaa;
-      margin: 5px 0;
+    .bubble{
+      max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
+      border:1px solid rgba(255,255,255,.18); backdrop-filter:saturate(120%);
+      box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
+    }
+    .me{align-self:flex-end; background:rgba(255,255,255,.08)}
+    .him{align-self:flex-start; background:rgba(34,74,102,.24)} /* steel blue */
+    .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
+    .composer{
+      display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.55);
+    }
+    input[type="text"]{
+      flex:1; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06); color:#fff; outline:none;
+    }
+    button{
+      padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+      background:#224a66; color:#fff; font-weight:700; cursor:pointer;
+    }
+
+    /* small screens: stack portrait above chat */
+    @media (max-width: 760px){
+      .room{ grid-template-columns: 1fr; }
+      .side{ height:260px; border-right:none; border-left:none; }
+      .chat{ min-height:360px; }
+    }
+
+    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
+      padding:10px 12px; border-radius:8px; font-weight:700; color:#fff;
+      background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
     }
   </style>
 </head>
-<body>
-  <div class="chat-container">
-    <div class="header">Dylan Vale</div>
-    <div id="chat" class="messages"></div>
-    <div id="typing" class="typing" style="display:none;">Dylan is typing…</div>
-    <div class="input-box">
-      <input type="text" id="userInput" placeholder="Say something sweet…" />
-      <button onclick="sendMessage()">Send</button>
-    </div>
+
+<body data-man="dylan">
+<header>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;"/>
+      <strong>Blossom &amp; Blade</strong>
+    </a>
+  </div>
+  <div class="meta">
+    <span id="stageBadge">Visitor — PG-13 tease</span>
+    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
+  </div>
+</header>
+
+<main>
+  <div id="room" class="room">
+    <!-- Sidebar portrait -->
+    <aside class="side">
+      <img id="portrait" class="portrait" src="images/dylan_tease.jpg" alt="Dylan Vale portrait" />
+      <div class="sideOverlay"></div>
+    </aside>
+
+    <!-- Chat column -->
+    <section class="chatwrap">
+      <div class="roomhead">
+        <div class="name">Dylan Vale</div>
+      </div>
+
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <div id="typing" class="typing">Dylan is typing…</div>
+
+      <form id="composer" class="composer">
+        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
   </div>
 
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const message = input.value.trim();
-      if (!message) return;
+  <p class="small" style="margin:10px 2px 0;opacity:.9">
+    Pacing: he speaks one line, then waits. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
+  </p>
+</main>
 
-      appendMessage("You", message, "user");
-      input.value = "";
+<!-- Coin modal -->
+<div id="coinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:1000;">
+  <div style="max-width:520px;width:92%;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden;">
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:800;">Unlock Explicit Room?</div>
+    <div style="padding:14px;">
+      <p style="margin:0 0 10px;opacity:.95;">Sounds like you’re ready to turn the heat up. The explicit room unlocks with coins.</p>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>5 coins — $1</li>
+        <li>25 coins — $5</li>
+        <li>60 coins — $10</li>
+        <li>150 coins — $20</li>
+      </ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="pay.html?man=coins" class="btn">Open Coin Shop</a>
+        <button id="coinClose" class="btn" style="background:#2b2b2b;">Maybe later</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      document.getElementById("typing").style.display = "block";
+<script>
+  // stage + portrait
+  function getStage(){
+    const p = new URLSearchParams(location.search).get("stage");
+    if (p) return p;
+    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
+  }
+  (function(){
+    const stage = getStage();
+    const badge = document.getElementById('stageBadge');
+    if (badge) badge.textContent = (stage === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+    const portrait = document.getElementById('portrait');
+    if (portrait){
+      if(stage === 'subscriber') portrait.src = 'images/dylan_sub.jpg';
+      else if(stage === 'dirty') portrait.src = 'images/dylan_dirty.jpg';
+      else portrait.src = 'images/dylan_tease.jpg';
+    }
+  })();
 
-      const response = await fetch("/api/chat", {
+  // coin modal
+  (function(){
+    const modal = document.getElementById('coinModal');
+    const close = document.getElementById('coinClose');
+    if (close) close.addEventListener('click', ()=> modal.style.display='none');
+    window.showCoinModal = ()=> { if(modal) modal.style.display='flex'; };
+  })();
+
+  // chat wire-up
+  const man = document.body.getAttribute("data-man") || "dylan";
+  const chat   = document.getElementById("chat");
+  const typing = document.getElementById("typing");
+  const form   = document.getElementById("composer");
+  const input  = document.getElementById("input");
+  const sendBtn= document.getElementById("send");
+  const conversation = [];
+
+  function bubble(text, who){
+    const div = document.createElement("div");
+    div.className = "bubble " + (who === "me" ? "me" : "him");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
+
+  async function askLLM(userText){
+    conversation.push({ role: "user", content: userText });
+
+    setTyping(true);
+    try{
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ persona: "dylan", message })
+        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
       });
+      const data = await res.json();
+      const reply = data?.reply || "Talk to me.";
+      await new Promise(r=>setTimeout(r, 560 + Math.random()*500));
+      bubble(reply, "him");
+      conversation.push({ role: "assistant", content: reply });
 
-      const data = await response.json();
-      document.getElementById("typing").style.display = "none";
-
-      if (data.reply) {
-        appendMessage("Dylan", data.reply, "bot");
+      if (data?.suggestCoin && typeof window.showCoinModal === 'function') {
+        setTimeout(()=> window.showCoinModal(), 400);
       }
+    }catch(e){
+      bubble("Signal flickered—try me again.", "him");
+    }finally{
+      setTyping(false);
+      input.disabled = false; sendBtn.disabled = false; input.focus();
+    }
+  }
+
+  form.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    bubble(text, "me");
+    input.value = "";
+    input.disabled = true; sendBtn.disabled = true;
+
+    const explicitHints = /(explicit|uncensored|NSFW|filthy|hard|raw|nasty|describe|details|graphic|porn|dirty talk|choke|spank|deep|oral|thrust|ride|suck|lick|moan)/i;
+    if (explicitHints.test(text) && typeof window.showCoinModal === 'function') {
+      setTimeout(()=> window.showCoinModal(), 300);
     }
 
-    function appendMessage(sender, text, cls) {
-      const chat = document.getElementById("chat");
-      const msg = document.createElement("div");
-      msg.className = `message ${cls}`;
-      msg.innerText = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
+    askLLM(text);
+  });
+</script>
 
-    // Dylan’s starter line (no bio phrases, just natural)
-    window.onload = () => {
-      appendMessage("Dylan", "Sit on the counter, pretty thing. I like the view from here.", "bot");
-    };
-  </script>
 </body>
 </html>

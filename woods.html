@@ -1,14 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Blade Kincaid — PG-13 Room</title>
-  <meta name="description" content="Blade Kincaid — masked hunter, chase fantasy. Sidebar portrait + slow-burn chat with stage badge and coin cue." />
   <style>
     *{box-sizing:border-box}
     body{
-      margin:0; color:#e9eef0; background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+      margin:0; color:#e9eef0;
+      --bb-bg: url('images/gothic-bg.jpg'); /* fallback */
+      background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     header{
@@ -23,54 +24,45 @@
     }
 
     main{max-width:1100px; margin:18px auto; padding:0 14px;}
+
     .room{
       display:grid; grid-template-columns: 280px 1fr; gap:0;
       border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
       background:rgba(0,0,0,.6);
     }
-
-    /* --- Sidebar portrait --- */
-    .side{
-      position:relative; background:rgba(0,0,0,.45);
+    .side{ position:relative; background:rgba(0,0,0,.45);
       border-right:1px solid rgba(255,255,255,.12);
       display:flex; align-items:stretch; justify-content:center; overflow:hidden;
     }
+    .chatwrap{ display:flex; flex-direction:column; min-height:62vh; }
+
     .portrait{
-      width:100%; height:100%; object-fit:cover; opacity:.96; 
-      transform:translateX(0);
+      width:100%; height:100%; object-fit:cover; opacity:.95;
       animation: drift 8s ease-in-out infinite;
-      filter:saturate(1.02) contrast(1.02);
+      filter:saturate(1.02) contrast(1.02) brightness(.95);
     }
-    @keyframes drift{
-      0% { transform: translateX(-6px); }
-      50%{ transform: translateX(6px); }
-      100%{transform: translateX(-6px); }
-    }
-    .sideOverlay{
-      position:absolute; inset:0;
-      background:linear-gradient(0deg, rgba(0,0,0,.35), transparent 35%, transparent 75%, rgba(0,0,0,.35));
+    @keyframes drift{ 0%{transform:translateX(-6px)} 50%{transform:translateX(6px)} 100%{transform:translateX(-6px)} }
+    .sideOverlay{ position:absolute; inset:0;
+      background:linear-gradient(0deg, rgba(0,0,0,.38), transparent 35%, transparent 75%, rgba(0,0,0,.38));
       pointer-events:none;
     }
 
-    /* --- Chat area --- */
-    .chatwrap{display:flex; flex-direction:column; min-height:62vh;}
     .roomhead{
-      padding:12px 14px; background:linear-gradient(180deg,#0f1512,transparent);
+      padding:12px 14px; background:linear-gradient(180deg,#0c1012,transparent);
       border-bottom:1px solid rgba(255,255,255,.12);
     }
     .name{font-weight:800; letter-spacing:.2px}
-    .small{font-size:12px; opacity:.9}
     .chat{
       flex:1; min-height:420px; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px;
-      background:radial-gradient(1200px 520px at 25% 20%, rgba(36,92,64,.15), transparent 60%);
+      background:radial-gradient(1200px 520px at 70% 25%, rgba(16,46,32,.24), transparent 60%);
     }
     .bubble{
       max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.35;
       border:1px solid rgba(255,255,255,.18); backdrop-filter:saturate(120%);
       box-shadow:0 1px 0 rgba(0,0,0,.25) inset;
     }
-    .me{align-self:flex-end; background:rgba(255,255,255,.08)}
-    .him{align-self:flex-start; background:rgba(36,92,64,.22)} /* forest green */
+    .me  {align-self:flex-end; background:rgba(255,255,255,.08)}
+    .him {align-self:flex-start; background:rgba(18,40,28,.35)} /* deep forest green */
     .typing{font-size:12px; opacity:.75; display:none; margin:0 14px 10px}
     .composer{
       display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.12);
@@ -82,21 +74,29 @@
     }
     button{
       padding:11px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-      background:#245c40; color:#fff; font-weight:700; cursor:pointer;
+      background:#123820; color:#fff; font-weight:700; cursor:pointer;
     }
-    .smallnote{font-size:12px; opacity:.9}
 
-    /* small screens: stack portrait above chat */
-    @media (max-width: 760px){
-      .room{ grid-template-columns: 1fr; }
-      .side{ height:260px; }
+    @media (max-width:760px){
+      .room{ grid-template-columns:1fr; }
+      .side{ height:260px; border-right:none; }
       .chat{ min-height:360px; }
     }
 
-    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
-      padding:10px 12px; border-radius:8px; font-weight:700; color:#fff;
-      background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
+    /* paywall overlay */
+    .overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.7);
+      display:none; align-items:center; justify-content:center; z-index:50;
     }
+    .modal{
+      width:min(520px,92%); background:rgba(12,12,14,.96);
+      border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:18px;
+      box-shadow:0 20px 50px rgba(0,0,0,.6);
+    }
+    .modal h3{margin:0 0 8px 0}
+    .modal p{margin:0 0 14px 0; opacity:.9}
+    .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .ghost{background:transparent}
   </style>
 </head>
 
@@ -104,7 +104,7 @@
 <header>
   <div style="display:flex;align-items:center;gap:10px;">
     <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;" />
+      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;"/>
       <strong>Blossom &amp; Blade</strong>
     </a>
   </div>
@@ -116,84 +116,119 @@
 
 <main>
   <div class="room">
-    <!-- Sidebar portrait -->
     <aside class="side">
-      <img id="portrait" class="portrait" src="images/blade_tease.jpg" alt="Blade Kincaid portrait" />
+      <img id="portrait" class="portrait" src="images/blade_tease.jpg" alt="Blade portrait"/>
       <div class="sideOverlay"></div>
     </aside>
 
-    <!-- Chat column -->
     <section class="chatwrap">
       <div class="roomhead">
         <div class="name">Blade Kincaid</div>
-        <div class="small">Masked hunter • Chase fantasy • Protective &amp; teasing</div>
       </div>
 
       <div id="chat" class="chat" aria-live="polite"></div>
       <div id="typing" class="typing">Blade is typing…</div>
 
       <form id="composer" class="composer">
-        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off" />
+        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
         <button id="send" type="submit">Send</button>
       </form>
     </section>
   </div>
 
-  <p class="smallnote" style="margin:10px 2px 0;">Pacing: he speaks one line, then waits. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.</p>
+  <p class="small" style="margin:10px 2px 0;opacity:.9">
+    Pacing: one line at a time. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
+  </p>
 </main>
 
-<!-- Coin modal -->
-<div id="coinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:1000;">
-  <div style="max-width:520px;width:92%;background:#111;border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden;">
-    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:800;">Unlock Explicit Room?</div>
-    <div style="padding:14px;">
-      <p style="margin:0 0 10px;opacity:.95;">Sounds like you’re ready to turn the heat up. The explicit room unlocks with coins.</p>
-      <ul style="padding-left:18px;margin:0 0 10px;">
-        <li>5 coins — $1</li>
-        <li>25 coins — $5</li>
-        <li>60 coins — $10</li>
-        <li>150 coins — $20</li>
-      </ul>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="pay.html?man=coins" class="btn">Open Coin Shop</a>
-        <button id="coinClose" class="btn" style="background:#2b2b2b;">Maybe later</button>
-      </div>
+<!-- paywall overlay -->
+<div id="overlay" class="overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Wanna keep going?</h3>
+    <p>You’ve had a quick feel for him. Subscribe for full PG-13 companionship, and add coins any time for explicit scenes.</p>
+    <div class="row">
+      <a class="ghost" href="#" id="later" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Maybe later</a>
+      <a class="ghost" href="pay.html" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Subscribe</a>
     </div>
   </div>
 </div>
 
 <script>
-  // --- stage badge + portrait swap
+  /* per-man background map */
+  const BB_BACKGROUNDS = {
+    blade:   "images/blade-bg.jpg",
+    grayson: "images/grayson-bg.jpg",
+    dylan:   "images/dylan-bg.jpg",
+    silas:   "images/silas-bg.jpg",
+    jesse:   "images/cowboy-bg.jpg",
+    cassian: "images/cassian-bg.jpg"
+  };
+
+  /* stage flag (visitor/subscriber/dirty) */
   function getStage(){
     const p = new URLSearchParams(location.search).get("stage");
     if (p) return p;
     return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
   }
-  (function(){
+
+  /* featherweight memory */
+  const MEMKEY = 'bb_user';
+  function getUser(){ try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); } catch { return {}; } }
+  function saveUser(obj){ localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); }
+
+  /* greeting lists (gentle) */
+  const SOFT_HELLOS = [
+    "Hey.",
+    "There you are.",
+    "Evening."
+  ];
+
+  function greet(stage){
+    const u = getUser();
+    if (stage === 'subscriber' && (u.name || u.note)){
+      const nm = u.name ? u.name : "you";
+      const hook = u.note ? ` How's that ${u.note}?` : "";
+      bubble(`Hey ${nm}.${hook}`, "him");
+      return;
+    }
+    bubble(SOFT_HELLOS[Math.floor(Math.random()*SOFT_HELLOS.length)], "him");
+  }
+
+  /* init visuals + greeting + 3-min explore window */
+  let freeTimer, inputLockedByPaywall = false;
+  (function init(){
+    const man = (document.body.dataset.man || '').toLowerCase();
+    const src = BB_BACKGROUNDS[man];
+    if (src) document.body.style.setProperty('--bb-bg', `url('${src}')`);
+
     const stage = getStage();
     const badge = document.getElementById('stageBadge');
     if (badge) badge.textContent = (stage === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
+
     const portrait = document.getElementById('portrait');
     if (portrait){
-      portrait.src = stage === 'subscriber' ? 'images/blade_sub.jpg' : 'images/blade_tease.jpg';
+      if(stage === 'subscriber') portrait.src = 'images/blade_sub.jpg';
+      else if(stage === 'dirty') portrait.src = 'images/blade_dirty.jpg';
+      else portrait.src = 'images/blade_tease.jpg';
+    }
+
+    greet(stage);
+
+    // 3-minute explore window (only for non-subscribers)
+    if (stage !== 'subscriber'){
+      freeTimer = setTimeout(()=>showPaywall(), 3 * 60 * 1000);
     }
   })();
 
-  // --- coin modal control
-  (function(){
-    const modal = document.getElementById('coinModal');
-    const close = document.getElementById('coinClose');
-    if (close) close.addEventListener('click', ()=> modal.style.display='none');
-    window.showCoinModal = ()=> { if(modal) modal.style.display='flex'; };
-  })();
-
-  const man = document.body.getAttribute("data-man") || "blade";
+  /* chat glue */
   const chat   = document.getElementById("chat");
   const typing = document.getElementById("typing");
   const form   = document.getElementById("composer");
   const input  = document.getElementById("input");
   const sendBtn= document.getElementById("send");
+  const man    = document.body.dataset.man || "blade";
   const conversation = [];
+  let userMsgCount = 0;
 
   function bubble(text, who){
     const div = document.createElement("div");
@@ -204,27 +239,40 @@
   }
   function setTyping(on){ typing.style.display = on ? "block" : "none"; }
 
+  // capture name + light note
+  function tryCapture(text){
+    const u = getUser();
+    const m1 = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
+    const m2 = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
+    const m3 = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
+    if (m1 || m2 || m3) u.name = (m1?.[1] || m2?.[1] || m3?.[1]).trim();
+    if (/\b(read|book|chapter|novel)\b/i.test(text)) u.note = "book";
+    if (/\bconcert|gig|guitar|studio\b/i.test(text)) u.note = u.note || "music";
+    saveUser(u);
+  }
+
   async function askLLM(userText){
     conversation.push({ role: "user", content: userText });
-
     setTyping(true);
     try{
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation, man, stage: getStage() })
+        body: JSON.stringify({
+          messages: conversation,
+          man,
+          stage: getStage(),
+          // hint so he isn't too eager
+          softness: { intro:true, nicknameAfter:2 }
+        })
       });
       const data = await res.json();
-      const reply = data?.reply || "Tell me again—slowly.";
-      await new Promise(r=>setTimeout(r, 560 + Math.random()*500));
+      const reply = data?.reply || "Tell me more.";
+      await new Promise(r=>setTimeout(r, 520 + Math.random()*520));
       bubble(reply, "him");
       conversation.push({ role: "assistant", content: reply });
-
-      if (data?.suggestCoin && typeof window.showCoinModal === 'function') {
-        setTimeout(()=> window.showCoinModal(), 400);
-      }
     }catch(e){
-      bubble("Branches creaked—say it once more, wildflower.", "him");
+      bubble("Signal flickered—try me again.", "him");
     }finally{
       setTyping(false);
       input.disabled = false; sendBtn.disabled = false; input.focus();
@@ -233,24 +281,35 @@
 
   form.addEventListener("submit", (e)=>{
     e.preventDefault();
+    if (inputLockedByPaywall) return;
     const text = input.value.trim();
     if(!text) return;
     bubble(text, "me");
     input.value = "";
+    userMsgCount++;
+    tryCapture(text);
     input.disabled = true; sendBtn.disabled = true;
 
-    // gentle client-side hint detection
-    const explicitHints = /(explicit|uncensored|NSFW|filthy|hard|raw|nasty|describe|details|graphic|porn|dirty talk|choke|spank|deep|oral|thrust|ride|suck|lick|moan)/i;
-    if (explicitHints.test(text) && typeof window.showCoinModal === 'function') {
-      setTimeout(()=> window.showCoinModal(), 300);
-    }
-
+    // sprinkle nickname only after 2 user messages (server can use this hint)
     askLLM(text);
   });
 
-  // Soft openers (deranged-but-protective; still PG-13)
-  bubble("You found me in the dark. Good instincts.", "him");
-  setTimeout(()=>bubble("Tell me what you want—make me chase it.", "him"), 700);
+  /* paywall */
+  const overlay = document.getElementById('overlay');
+  const laterBtn= document.getElementById('later');
+
+  function showPaywall(){
+    inputLockedByPaywall = true;
+    input.disabled = true; sendBtn.disabled = true;
+    overlay.style.display = "flex";
+  }
+  laterBtn?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    overlay.style.display = "none";
+    // allow reading, but keep composer disabled
+    inputLockedByPaywall = true;
+    input.disabled = true; sendBtn.disabled = true;
+  });
 </script>
 
 </body>

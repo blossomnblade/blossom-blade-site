@@ -36,7 +36,7 @@
   .card{
     border:1px solid var(--border); background:var(--card);
     border-radius:18px; overflow:hidden; box-shadow:var(--shadow);
-    display:flex; flex-direction:column; min-height:380px;
+    display:flex; flex-direction:column; min-height:420px;
     backdrop-filter: blur(2px);
   }
   .card .top{
@@ -50,15 +50,30 @@
   .dylan .tag{background:rgba(107,193,255,.10); border-color:rgba(107,193,255,.25)}
   .jesse .tag{background:rgba(240,180,122,.10); border-color:rgba(240,180,122,.25)}
   .silas .tag{background:rgba(202,160,255,.10); border-color:rgba(202,160,255,.25)}
-  .alex .tag{background:rgba(167,227,194,.10); border-color:rgba(167,227,194,.25)}
+  .alex  .tag{background:rgba(167,227,194,.10); border-color:rgba(167,227,194,.25)}
 
-  .body{padding:16px; display:flex; flex-direction:column; gap:10px; flex:1}
-  h3{margin:0 0 2px 0; font-size:22px}
+  .body{padding:14px; display:flex; flex-direction:column; gap:8px; flex:1}
+
+  /* Portrait block */
+  .portrait{
+    width:100%; height:240px; border-radius:12px;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.28)),
+      radial-gradient(1200px 300px at 50% -80px, rgba(255,255,255,.06), transparent 60%),
+      #1a1d21;
+    background-size:cover; background-position:center;
+    border:1px solid var(--border);
+    overflow:hidden;
+  }
+  /* if you ever use an <img>, this keeps it tidy */
+  .portrait img{width:100%; height:100%; object-fit:cover; display:block}
+
+  h3{margin:2px 0 0 0; font-size:20px}
   .traits{font-size:12px; color:var(--muted)}
-  .blurb{margin-top:6px; line-height:1.35}
+  .blurb{margin-top:4px; line-height:1.35}
   .actions{margin-top:auto}
   .btn{
-    display:inline-block; padding:11px 12px; border-radius:10px; text-decoration:none; color:#fff;
+    display:inline-block; padding:10px 12px; border-radius:10px; text-decoration:none; color:#fff;
     background:rgba(255,255,255,.08); border:1px solid var(--border); font-weight:700;
   }
   .btn:hover{background:rgba(255,255,255,.13)}
@@ -97,12 +112,11 @@
         <span class="tag">Chase Fantasy</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/blade.jpg')"></div>
         <h3>Blade Kincaid</h3>
         <div class="traits">Predator energy • protective • thrill-tease</div>
         <p class="blurb">Footsteps behind you on the trail, breath at your ear. “Brave girl. Don’t worry—I'm exactly where you want me.”</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
@@ -114,12 +128,11 @@
         <span class="tag">Red-lit Ritual</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/grayson.jpg')"></div>
         <h3>Grayson Kincaid</h3>
         <div class="traits">Commanding • adoring • praise & rules</div>
         <p class="blurb">“Slow. Breathe. I’ll teach you where heat begins—one rule at a time.”</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
@@ -131,12 +144,11 @@
         <span class="tag">Motel Garage</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/dylan.jpg')"></div>
         <h3>Dylan Vale</h3>
         <div class="traits">Sweet trouble • leather-soft talk • playful daredevil</div>
-        <p class="blurb">“Sit on the counter, pretty thing. I like the view from here.” (Blue neon later—no rush.)</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <p class="blurb">“Sit on the counter, pretty thing. I like the view from here.”</p>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
@@ -148,12 +160,11 @@
         <span class="tag">Barn Loft • Kitchen</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/jesse.jpg')"></div>
         <h3>Jesse Granger</h3>
         <div class="traits">Polite • protective • sinful smile</div>
         <p class="blurb">“Darlin’, yes ma’am… sit a spell. Don’t mind if my smile misbehaves.”</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
@@ -165,12 +176,11 @@
         <span class="tag">Backstage • Tour Bus</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/silas.jpg')"></div>
         <h3>Silas Lennox</h3>
         <div class="traits">Obsessed eyes • creative • slow-burn hunger</div>
         <p class="blurb">“Come closer, muse. Let me write something dangerous on your pulse.”</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
@@ -182,18 +192,16 @@
         <span class="tag">Penthouse • Town Car</span>
       </div>
       <div class="body">
+        <div class="portrait" style="background-image:url('images/portraits/alex.jpg')"></div>
         <h3>Alexander Jackson</h3>
         <div class="traits">Poised • attentive • precise</div>
         <p class="blurb">“Shoes off. I’ll take your coat—and the weight you’ve been carrying.”</p>
-        <div class="actions">
-          <a class="btn" href="pay.html">Enter (Subscribe)</a>
-        </div>
+        <div class="actions"><a class="btn" href="pay.html">Enter (Subscribe)</a></div>
       </div>
     </article>
 
   </div>
 
-  <!-- calendar teaser replaces the old aftercare/alt rooms line -->
   <p class="footline">
     🌙 Coming soon: <strong>Blossom &amp; Blade 2026 Calendar</strong> — 12 moody months, each man featured twice with images from their rooms.
     <a href="pay.html">See the teaser on the subscription page</a>.

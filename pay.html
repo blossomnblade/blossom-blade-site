@@ -1,199 +1,188 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Subscribe</title>
-  <meta name="description" content="Choose a pass and start your PG-13 fantasy chat. Coins unlock explicit rooms. $1 to Domestic Violence charity." />
-  <style>
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    }
-    header{
-      position:sticky; top:0; z-index:20;
-      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
-      padding:12px 14px; background:rgba(0,0,0,.75);
-      border-bottom:1px solid rgba(255,255,255,.15); backdrop-filter:blur(6px);
-    }
-    main{max-width:980px; margin:20px auto; padding:0 14px 40px;}
-    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
-    .card{
-      border:1px solid rgba(255,255,255,.18); border-radius:16px; overflow:hidden;
-      background:rgba(0,0,0,.7);
-    }
-    .head{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.12); font-weight:800;}
-    .body{padding:14px;}
-    .price{font-size:28px; font-weight:800; letter-spacing:.2px; margin:4px 0 8px;}
-    .sub{opacity:.9; font-size:12px; margin-top:6px}
-    ul{padding-left:18px; margin:8px 0 0}
-    li{margin:4px 0}
-    .btn{display:inline-block; text-decoration:none; border:none; cursor:pointer;
-      padding:11px 14px; border-radius:10px; font-weight:700; color:#fff;
-      background:#4b2a6b; border:1px solid rgba(255,255,255,.18);
-    }
-    .muted{opacity:.85; font-size:12px}
-    .notice{margin:14px 0; padding:10px 12px; border:1px dashed rgba(255,255,255,.25); border-radius:12px; background:rgba(0,0,0,.55)}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .chip{font-size:12px; padding:5px 8px; border-radius:999px; background:#2b2b2b; border:1px solid rgba(255,255,255,.18)}
-    .danger{opacity:.9; font-size:12px; color:#ffd6d6}
-    footer{padding:18px 14px; text-align:center; font-size:12px; background:rgba(0,0,0,.75); border-top:1px solid rgba(255,255,255,.15)}
-    .accent{color:#d9b3ff}
-    .col{display:flex; flex-direction:column; gap:8px}
-    .disabled{opacity:.6; cursor:not-allowed}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Subscribe • Blossom & Blade</title>
+<style>
+  :root{
+    --ink:#e9eef0; --muted:#b9c3cc; --glass:rgba(0,0,0,.55);
+    --border:rgba(255,255,255,.15); --card:rgba(12,14,16,.7);
+    --accent:#2e6e55;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  header{
+    position:sticky; top:0; z-index:10; backdrop-filter:blur(6px);
+    background:rgba(0,0,0,.75); border-bottom:1px solid var(--border);
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:14px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand img{height:28px; width:auto; border-radius:4px}
+
+  main{max-width:1100px; margin:20px auto; padding:0 14px; display:grid; gap:18px; grid-template-columns: 2fr 1fr;}
+  @media (max-width:900px){ main{grid-template-columns:1fr;} }
+
+  .card{
+    border:1px solid var(--border); background:var(--card);
+    border-radius:16px; overflow:hidden;
+  }
+  .card h2{margin:0; padding:12px 14px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.35); font-size:18px}
+  .card .inner{padding:14px}
+
+  .plans{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media (max-width:680px){ .plans{grid-template-columns:1fr} }
+
+  .plan{
+    border:1px solid var(--border); border-radius:14px; padding:14px; background:rgba(255,255,255,.04);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .plan h3{margin:0;font-size:18px}
+  .price{font-weight:800; font-size:22px}
+  .pill{display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; opacity:.95}
+  .btn{
+    text-align:center; text-decoration:none; padding:11px 12px; border-radius:10px;
+    border:1px solid var(--border); background:rgba(255,255,255,.08); color:#fff; font-weight:700; cursor:pointer;
+  }
+  .btn:hover{ background:rgba(255,255,255,.13); }
+  .btn.primary{ background:var(--accent); border-color:rgba(255,255,255,.2); }
+  .muted{color:var(--muted); font-size:13px}
+
+  .coins{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+  @media (max-width:680px){ .coins{grid-template-columns:repeat(2,1fr)} }
+  .coin{border:1px solid var(--border); border-radius:12px; padding:12px; background:rgba(255,255,255,.04); text-align:center}
+  .coin h4{margin:0 0 4px 0}
+  .coin .price{font-size:16px}
+
+  /* Calendar Teaser */
+  .calendar{display:grid; gap:14px}
+  .months{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  @media (max-width:900px){ .months{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:560px){ .months{grid-template-columns:1fr} }
+  .month{
+    border:1px solid var(--border); border-radius:12px; overflow:hidden; background:rgba(255,255,255,.04)
+  }
+  .shot{
+    aspect-ratio: 16/10; background:#111 center/cover no-repeat;
+    filter:contrast(1.02) saturate(1.04) brightness(.96);
+  }
+  .meta{padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .meta .who{opacity:.95}
+  .coming{font-size:12px; border:1px solid var(--border); padding:3px 8px; border-radius:999px; opacity:.9}
+
+  .notify{
+    display:flex; gap:8px; flex-wrap:wrap; margin-top:6px
+  }
+  input[type="email"]{
+    flex:1; min-width:220px; padding:11px 12px; border-radius:10px; border:1px solid var(--border);
+    background:rgba(255,255,255,.06); color:#fff; outline:none;
+  }
+  .btn.disabled{opacity:.5; cursor:not-allowed}
+  footer{max-width:1100px; margin:10px auto 34px; padding:0 14px; font-size:13px; opacity:.9}
+</style>
 </head>
 <body>
-
 <header>
-  <div class="row">
-    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;" />
+  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div class="brand">
+      <img src="images/logo.jpg" alt="Blossom & Blade">
       <strong>Blossom &amp; Blade</strong>
-    </a>
-    <span class="chip">Transparent pricing</span>
+    </div>
+    <div class="muted">$1 of every subscription goes to this month’s Domestic Violence charity.</div>
   </div>
-  <div class="muted">PG-13 with subscription • Explicit talk unlocked with coins • $1 of every subscription goes to this month’s DV charity</div>
 </header>
 
 <main>
-  <h1 style="margin:6px 0 2px;">Choose Your Access</h1>
-  <p class="muted" id="who"></p>
-
-  <div class="notice">
-    <strong>Simple rules</strong>: <span class="accent">Subscription = foreplay / companionship (PG-13)</span>.  
-    <span class="accent">Coins = explicit escalation</span> in alternate rooms. No visuals, words only. Aftercare included.
-  </div>
-
-  <div class="grid" style="margin-top:10px;">
-
-    <!-- Day Pass -->
-    <div class="card">
-      <div class="head">Day Pass — per character</div>
-      <div class="body">
-        <div class="price">$5.99</div>
-        <div class="sub">24 hours access to <span id="charName">this character</span>. PG-13 vibe with flirty innuendo.</div>
-        <ul>
-          <li>One character for a day</li>
-          <li>Warm conversation, one line at a time</li>
-          <li>Innuendo allowed (still PG-13)</li>
-        </ul>
-        <div class="row" style="margin-top:10px;">
-          <button class="btn" id="buyDay">Start Day Pass</button>
-          <span class="muted">Reset chat so it feels like a fresh meet.</span>
+  <!-- LEFT: Subscriptions + Coins -->
+  <section class="card">
+    <h2>Choose your access</h2>
+    <div class="inner">
+      <div class="plans">
+        <div class="plan">
+          <h3>Day Pass</h3>
+          <div class="price">$5.99</div>
+          <div class="muted">Pick one man for the day. PG-13 flirting & companionship.</div>
+          <div class="pill">Great for a quick taste</div>
+          <a class="btn" href="#" id="buyDay">Buy Day Pass</a>
+        </div>
+        <div class="plan">
+          <h3>Monthly</h3>
+          <div class="price">$10.99</div>
+          <div class="muted">All six men. PG-13 companionship, name memory, and gentle aftercare.</div>
+          <div class="pill">Best value</div>
+          <a class="btn primary" href="#" id="buyMonth">Buy Monthly</a>
         </div>
       </div>
-    </div>
 
-    <!-- Monthly -->
-    <div class="card">
-      <div class="head">Monthly — all six men</div>
-      <div class="body">
-        <div class="price">$10.99</div>
-        <div class="sub">Unlimited PG-13 across <em>all</em> companions. Slow-build intimacy + suggestive heat.</div>
-        <ul>
-          <li>Access to all 6 characters</li>
-          <li>Remembers your vibe per room</li>
-          <li>Best value for exploring</li>
-        </ul>
-        <div class="row" style="margin-top:10px;">
-          <button class="btn" id="buyMonth">Start Monthly</button>
-          <span class="muted">Cancel anytime. $1 goes to DV charity.</span>
-        </div>
+      <hr style="border:0;border-top:1px solid var(--border); margin:14px 0"/>
+
+      <h3 style="margin:0 0 8px 0">Coins (unlock explicit “dirty rooms”)</h3>
+      <div class="coins">
+        <div class="coin"><h4>5 coins</h4><div class="price">$1</div></div>
+        <div class="coin"><h4>25 coins</h4><div class="price">$5</div></div>
+        <div class="coin"><h4>60 coins</h4><div class="price">$10</div></div>
+        <div class="coin"><h4>150 coins</h4><div class="price">$20</div></div>
       </div>
+      <p class="muted" style="margin-top:8px">Subscription = PG-13 companionship. Coins = explicit escalation (words only, no visuals).</p>
     </div>
+  </section>
 
-    <!-- Coins -->
-    <div class="card">
-      <div class="head">Coins — unlock explicit rooms</div>
-      <div class="body">
-        <div class="sub">Use coins to enter the “dirty room” when you’re ready. No pressure.</div>
-        <ul>
-          <li>5 coins — $1</li>
-          <li>25 coins — $5</li>
-          <li>60 coins — $10</li>
-          <li>150 coins — $20</li>
-        </ul>
-        <div class="row" style="margin-top:10px;">
-          <button class="btn disabled" disabled>Coin Shop (coming soon)</button>
-          <span class="muted">Explicit talk stays locked until coins are enabled.</span>
-        </div>
+  <!-- RIGHT: Calendar Teaser -->
+  <aside class="card">
+    <h2>Blossom &amp; Blade 2026 Calendar — <span style="opacity:.9">Coming Soon</span></h2>
+    <div class="inner calendar">
+      <p class="muted">Twelve moody prints for your wall. Each man gets two months with two different images you’ll recognize from the site.</p>
+
+      <div class="months">
+        <!-- Sample placeholders -->
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/blade-jan.jpg')"></div><div class="meta"><span class="who">Jan — Blade</span><span class="coming">Teaser</span></div></div>
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/grayson-feb.jpg')"></div><div class="meta"><span class="who">Feb — Grayson</span><span class="coming">Teaser</span></div></div>
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/dylan-mar.jpg')"></div><div class="meta"><span class="who">Mar — Dylan</span><span class="coming">Teaser</span></div></div>
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/jesse-apr.jpg')"></div><div class="meta"><span class="who">Apr — Jesse</span><span class="coming">Teaser</span></div></div>
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/silas-may.jpg')"></div><div class="meta"><span class="who">May — Silas</span><span class="coming">Teaser</span></div></div>
+        <div class="month"><div class="shot" style="background-image:url('images/calendar/alex-jun.jpg')"></div><div class="meta"><span class="who">Jun — Alexander</span><span class="coming">Teaser</span></div></div>
       </div>
+
+      <div class="notify">
+        <input id="email" type="email" placeholder="Email for preorder notice (optional)"/>
+        <button class="btn disabled" title="Coming soon" disabled>Preorder</button>
+      </div>
+      <p id="emailMsg" class="muted"></p>
     </div>
-
-  </div>
-
-  <div class="notice">
-    <strong>Privacy & pacing</strong>: He speaks one line, then waits. We keep it respectful, women-safe, and grounded.  
-    After purchase we refresh the room so it feels natural—no factory scripts.
-  </div>
-
-  <div class="danger">
-    Developer note: this page is in <em>test mode</em>. The buttons below simulate a successful purchase so you can try the flow now.
-  </div>
-
-  <div class="row" style="margin-top:10px;">
-    <button class="btn" id="simulateDay">Simulate Day Pass</button>
-    <button class="btn" id="simulateMonth">Simulate Monthly</button>
-  </div>
+  </aside>
 </main>
 
 <footer>
-  $1 of every subscription goes to this month’s Domestic Violence charity.
+  Prices: Day Pass $5.99 (one man), Month $10.99 (all men). Coins unlock explicit fantasy talk. $1 of every subscription goes to this month’s DV charity.
 </footer>
 
 <script>
-  // --- read which room sent us here
-  const params = new URLSearchParams(location.search);
-  const manPage = (params.get('man') || 'index.html').replace(/^\//,'');
-  // map filename to a friendly name
-  const nameMap = {
-    "woods.html":"Blade Kincaid",
-    "mask.html":"Grayson Kincaid",
-    "garage.html":"Dylan Vale",
-    "rockstar.html":"Silas Lennox",
-    "cowboy.html":"Jesse Granger",
-    "gentleman.html":"Cassian Blackwell"
-  };
-  const charName = nameMap[manPage] || "your companion";
-  document.getElementById('who').textContent = `You’re checking out: ${charName}`;
-  document.getElementById('charName').textContent = charName;
-
-  // --- helpers
-  function markSubscriber(level){
-    // level: 'day' or 'month'
-    // mark as subscriber for stage-based chat
+  document.getElementById('buyDay').addEventListener('click', function(e){
+    e.preventDefault();
+    alert('Day Pass checkout coming soon.');
+  });
+  document.getElementById('buyMonth').addEventListener('click', function(e){
+    e.preventDefault();
     localStorage.setItem('bb_subscriber','1');
-    if(level === 'month'){ localStorage.setItem('bb_month','1'); }
+    alert('Monthly checkout coming soon. For demo, subscriber mode is toggled.');
+  });
 
-    // clear any old thread memory so it feels like a new “meet”
-    try{
-      const keyGuess = 'bb_thread_' + (manPage.split('.')[0] || 'room');
-      localStorage.removeItem(keyGuess);
-    }catch(e){}
-
-    // send her back to the room; subscriber stage will kick in
-    const dest = manPage + '?stage=subscriber';
-    location.href = dest;
-  }
-
-  // --- live checkout (future): call your server to create a Stripe Checkout Session then redirect.
-  async function startCheckout(kind){
-    // placeholder: when we integrate Stripe, we’ll POST to /api/checkout
-    // and redirect to the returned URL.
-    alert("Live checkout coming soon. Using simulator for now.");
-  }
-
-  // Buttons
-  document.getElementById('buyDay').addEventListener('click', ()=> startCheckout('day'));
-  document.getElementById('buyMonth').addEventListener('click', ()=> startCheckout('month'));
-
-  // Simulators (let you test today)
-  document.getElementById('simulateDay').addEventListener('click', ()=> markSubscriber('day'));
-  document.getElementById('simulateMonth').addEventListener('click', ()=> markSubscriber('month'));
+  (function(){
+    var input = document.getElementById('email');
+    var msg = document.getElementById('emailMsg');
+    if (!input) return;
+    input.addEventListener('change', function(){
+      var v = (input.value||'').trim();
+      if (!v) { msg.textContent=''; return; }
+      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      msg.textContent = ok ? 'Saved locally. We’ll ping you when preorders open.' : 'That email looks off—try again?';
+      if (ok){ try { localStorage.setItem('bb_calendar_notify', v); } catch(e){} }
+    });
+  })();
 </script>
-
 </body>
 </html>

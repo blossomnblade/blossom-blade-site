@@ -1,248 +1,79 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Alexander Jackson — PG-13 Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box}
-  body{
-    margin:0; color:#eef0f3;
-    --bb-bg:url('images/gothic-bg.jpg'); /* fallback */
-    background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
-  header{
-    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-    background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);
-    padding:12px 14px;position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);
-  }
-  header .meta{font-size:12px;opacity:.9;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  #stageBadge{font-size:12px;opacity:.95;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:4px 8px;border-radius:999px}
-
-  main{max-width:1100px;margin:18px auto;padding:0 14px}
-  .room{
-    display:grid;grid-template-columns:280px 1fr;gap:0;
-    border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.6);
-  }
-  .side{position:relative;background:rgba(0,0,0,.45);border-right:1px solid rgba(255,255,255,.12);display:flex;align-items:stretch;justify-content:center;overflow:hidden}
-  .portrait{width:100%;height:100%;object-fit:cover;opacity:.95;animation:drift 8s ease-in-out infinite;filter:saturate(1.02) contrast(1.02) brightness(.95)}
-  @keyframes drift{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
-  .sideOverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.38),transparent 35%,transparent 75%,rgba(0,0,0,.38));pointer-events:none}
-  .chatwrap{display:flex;flex-direction:column;min-height:62vh}
-  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#0d0f12,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
-  .name{font-weight:800;letter-spacing:.2px}
-  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:
-        radial-gradient(1200px 520px at 70% 25%,rgba(40,72,64,.20),transparent 60%)}
-  .bubble{max-width:72%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid rgba(255,255,255,.18);backdrop-filter:saturate(120%);box-shadow:0 1px 0 rgba(0,0,0,.25) inset}
-  .me{align-self:flex-end;background:rgba(255,255,255,.08)}
-  .him{align-self:flex-start;background:rgba(40,72,64,.30)} /* elegant teal/green */
-  .typing{font-size:12px;opacity:.75;display:none;margin:0 14px 10px}
-  .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.55)}
-  input[type="text"]{flex:1;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;outline:none}
-  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#2a5046;color:#fff;font-weight:700;cursor:pointer}
-  @media (max-width:760px){.room{grid-template-columns:1fr}.side{height:260px;border-right:none}.chat{min-height:360px}}
-
-  /* paywall overlay */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
-  .modal{width:min(520px,92%);background:rgba(12,12,14,.96);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
-  .modal h3{margin:0 0 8px 0}.modal p{margin:0 0 14px 0;opacity:.9}
-  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-  .ghost{background:transparent}
+  :root{--panel:#0f1218ee;--ink:#e7eef7;--ink-d:#a2b0c2;--bubble-me:#31465f;--bubble-bot:#1a2030}
+  body{margin:0;color:var(--ink);font-family:Inter,system-ui,Roboto,Helvetica,Arial,sans-serif;background:#000 url("images/alexander-bg.jpg") center/cover no-repeat fixed;}
+  .veil{position:fixed;inset:0;background:linear-gradient(#0006,#000c)}
+  .wrap{position:relative;max-width:980px;margin:72px auto;padding:0 16px}
+  .stage{display:inline-block;margin:0 0 8px 4px;padding:6px 12px;border-radius:999px;font-size:12px;background:#151b29;border:1px solid #263145;color:var(--ink-d)}
+  .card{background:var(--panel);border:1px solid #263145;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #0009}
+  header{padding:18px 20px 12px;border-bottom:1px solid #263145}
+  header h1{margin:0;font-size:22px}
+  header .tags{margin-top:6px;font-size:12px;color:var(--ink-d)}
+  #chatbox{padding:18px 14px;height:58vh;overflow:auto}
+  .bubble{display:inline-block;max-width:75%;margin:8px 0;padding:10px 12px;border-radius:14px;background:#1d2538;border:1px solid #2a3750}
+  .me{background:#354a67;margin-left:auto;border-color:#476083}
+  .footer{display:flex;gap:10px;padding:12px;border-top:1px solid #263145}
+  .footer input{flex:1;padding:12px;border-radius:12px;border:1px solid #2b3a54;background:#0f1420;color:var(--ink)}
+  .footer button{padding:12px 16px;border-radius:12px;border:1px solid #2b3a54;background:#21304a;color:var(--ink);cursor:pointer}
+  .typing{font-size:12px;color:var(--ink-d);padding:0 14px 10px;visibility:hidden}
+  .tip{font-size:11px;color:#9aa7ba;padding:0 14px 12px}
 </style>
 </head>
-
-<body data-man="cassian">
-<header>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;"/>
-      <strong>Blossom &amp; Blade</strong>
-    </a>
-  </div>
-  <div class="meta">
-    <span id="stageBadge">Visitor — PG-13 tease</span>
-    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
-  </div>
-</header>
-
-<main>
-  <div class="room">
-    <aside class="side">
-      <img id="portrait" class="portrait" src="images/cassian_tease.jpg" alt="Alexander portrait"/>
-      <div class="sideOverlay"></div>
-    </aside>
-
-    <section class="chatwrap">
-      <div class="roomhead"><div class="name">Alexander Jackson</div></div>
-      <div id="chat" class="chat" aria-live="polite"></div>
-      <div id="typing" class="typing">Alexander is typing…</div>
-      <form id="composer" class="composer">
-        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
-        <button id="send" type="submit">Send</button>
-      </form>
-    </section>
-  </div>
-  <p class="small" style="margin:10px 2px 0;opacity:.9">
-    Pacing: one line at a time. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
-  </p>
-</main>
-
-<!-- paywall overlay -->
-<div id="overlay" class="overlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <h3>Shall we make it official?</h3>
-    <p>You’ve had a quick feel for him. Subscribe for full PG-13 companionship, and add coins any time for explicit scenes.</p>
-    <div class="row">
-      <a class="ghost" href="#" id="later" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Maybe later</a>
-      <a class="ghost" href="pay.html" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Subscribe</a>
+<body>
+<div class="veil"></div>
+<div class="wrap">
+  <span id="stageLabel" class="stage">PG-13 with subscription • Explicit talk unlocks with coins</span>
+  <div class="card">
+    <header>
+      <h1>Alexander Jackson</h1>
+      <div class="tags">Gentleman • penthouse/town car • elegant, validating, possessive</div>
+    </header>
+    <div id="chatbox"></div>
+    <div id="typing" class="typing">Alexander is typing…</div>
+    <div class="tip">One line at a time. He waits for your reply before continuing.</div>
+    <div class="footer">
+      <input id="msg" placeholder="Say something sweet…" autocomplete="off" />
+      <button id="send">Send</button>
     </div>
   </div>
 </div>
 
 <script>
-(function(){
-  // ---- helpers
-  function qs(id){ return document.getElementById(id); }
-  function stage(){
-    var p = (new URLSearchParams(location.search)).get("stage");
-    if (p) return p;
-    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
-  }
-  function setBG(){
-    var map = {
-      blade:   "images/blade-bg.jpg",
-      grayson: "images/grayson-bg.jpg",
-      dylan:   "images/dylan-bg.jpg",
-      silas:   "images/silas-bg.jpg",
-      jesse:   "images/cowboy-bg.jpg",
-      cassian: "images/cassian-bg.jpg"
-    };
-    var man = (document.body.getAttribute('data-man')||'').toLowerCase();
-    var src = map[man];
-    if (src){ document.body.style.setProperty('--bb-bg',"url('"+src+"')"); }
-  }
-  function bubble(text, who){
-    var div = document.createElement("div");
-    div.className = "bubble " + (who === "me" ? "me" : "him");
-    div.textContent = text;
-    qs("chat").appendChild(div);
-    qs("chat").scrollTop = qs("chat").scrollHeight;
-  }
-  function setTyping(on){ qs("typing").style.display = on ? "block" : "none"; }
+  const params=new URLSearchParams(location.search);
+  const STAGE=params.get("stage")||"tease";
+  document.getElementById("stageLabel").textContent=(STAGE==="subscriber")?"Subscriber — PG-13 + suggestive":"PG-13 with subscription • Explicit talk unlocks with coins";
 
-  // ---- very light memory (name/note)
-  var MEMKEY = 'bb_user';
-  function getUser(){
-    try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function saveUser(obj){
-    try { localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); } catch(e){}
-  }
-  function captureFacts(text){
-    var u = getUser();
-    var m;
-    m = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
-    if (!m) m = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
-    if (!m) m = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
-    if (m){ u.name = m[1]; }
-    if (/\b(read|book|chapter|novel)\b/i.test(text)) u.note = "book";
-    if (!u.note && /\bconcert|gig|guitar|studio\b/i.test(text)) u.note = "music";
-    saveUser(u);
+  const MAN="alexander";
+  const BOX=document.getElementById("chatbox");
+  const INPUT=document.getElementById("msg");
+  const SEND=document.getElementById("send");
+  const TYPING=document.getElementById("typing");
+
+  function memKey(){return `bb_mem_${MAN}`;}
+  function loadMem(){try{return JSON.parse(localStorage.getItem(memKey()))||{};}catch{return {};}}
+  function saveMem(o){localStorage.setItem(memKey(),JSON.stringify(o));}
+  function memPairs(){const m=loadMem();return Object.entries(m).map(([k,v])=>`${k}=${v}`);}
+  function upsertMemo(m){const[k,...r]=String(m||"").split("=");const v=r.join("=").trim();if(!k||!v)return;const cur=loadMem();cur[k.trim()]=v;saveMem(cur);}
+
+  function bubble(t,who="bot"){const b=document.createElement("div");b.className="bubble"+(who==="me"?" me":"");b.textContent=t;BOX.appendChild(b);BOX.scrollTop=BOX.scrollHeight;}
+
+  async function askAPI(message){
+    TYPING.style.visibility="visible";
+    try{
+      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({man:MAN,stage:STAGE,message,memories:memPairs()})});
+      const data=await res.json(); if(data?.memo)upsertMemo(data.memo);
+      return data?.reply||"I’m listening. Slow and precise.";
+    }catch(e){return "Driver hit a tunnel—say that once more."}
+    finally{TYPING.style.visibility="hidden";}
   }
 
-  // ---- init visuals + header
-  setBG();
-  var st = stage();
-  var badge = qs("stageBadge");
-  if (badge) badge.textContent = (st === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
-  var portrait = qs("portrait");
-  if (portrait){
-    if (st === 'subscriber') portrait.src = 'images/cassian_sub.jpg';
-    else if (st === 'dirty') portrait.src = 'images/cassian_dirty.jpg';
-    else portrait.src = 'images/cassian_tease.jpg';
-  }
+  SEND.addEventListener("click",async()=>{const t=(INPUT.value||"").trim();if(!t)return;bubble(t,"me");INPUT.value="";const r=await askAPI(t);bubble(r,"bot");});
+  INPUT.addEventListener("keydown",(e)=>{if(e.key==="Enter")SEND.click();});
 
-  // ---- single soft greeting (rich, attentive, not braggy; closet dom undertone)
-  var u = getUser();
-  if (st === 'subscriber' && (u.name || u.note)){
-    var nm = u.name ? u.name : "you";
-    var hook = u.note ? (" Tell me about the " + u.note + ".") : "";
-    bubble("Good evening, " + nm + "." + hook, "him");
-  } else {
-    var greets = [
-      "Good evening.",
-      "You’re precisely on time.",
-      "I was hoping you’d arrive."
-    ];
-    bubble(greets[Math.floor(Math.random()*greets.length)], "him");
-  }
-
-  // ---- 3 minute explore window for visitors
-  var input = qs("input"), send = qs("send"), overlay = qs("overlay"), later = qs("later");
-  var inputLocked = false;
-  if (st !== 'subscriber'){
-    setTimeout(function(){
-      inputLocked = true;
-      input.disabled = true; send.disabled = true;
-      overlay.style.display = "flex";
-    }, 3*60*1000);
-  }
-  if (later){
-    later.addEventListener('click', function(e){
-      e.preventDefault();
-      overlay.style.display = "none";
-      inputLocked = true;
-      input.disabled = true; send.disabled = true;
-    });
-  }
-
-  // ---- chat wire-up
-  var conversation = [];
-  qs("composer").addEventListener('submit', function(e){
-    e.preventDefault();
-    if (inputLocked) return;
-    var text = (input.value || "").trim();
-    if (!text) return;
-
-    bubble(text, "me");
-    captureFacts(text);
-    input.value = "";
-    input.disabled = true; send.disabled = true;
-
-    setTyping(true);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/chat", true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    conversation.push({ role:"user", content:text });
-    xhr.onreadystatechange = function(){
-      if (xhr.readyState === 4){
-        var reply = "I’m listening.";
-        try{
-          if (xhr.status >= 200 && xhr.status < 300){
-            var data = JSON.parse(xhr.responseText || "{}");
-            if (data && data.reply) reply = data.reply;
-          }
-        }catch(e){}
-        setTimeout(function(){
-          bubble(reply, "him");
-          conversation.push({ role:"assistant", content: reply });
-          setTyping(false);
-          input.disabled = false; send.disabled = false; input.focus();
-        }, 500 + Math.floor(Math.random()*540));
-      }
-    };
-    var payload = { messages: conversation, man: "cassian", stage: st, softness: { intro:true, nicknameAfter:2 } };
-    try { xhr.send(JSON.stringify(payload)); } catch(e){
-      setTimeout(function(){
-        bubble("Line was busy—say that again.", "him");
-        setTyping(false);
-        input.disabled = false; send.disabled = false; input.focus();
-      }, 600);
-    }
-  });
-})();
+  (async function greet(){const r=await askAPI("__GREET__");bubble(r,"bot");}());
 </script>
-</body>
-</html>
+</body></html>

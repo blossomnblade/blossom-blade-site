@@ -1,257 +1,211 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Grayson Kincaid — PG-13 Room</title>
-<style>
-  *{box-sizing:border-box}
-  body{
-    margin:0; color:#e9eef0;
-    --bb-bg:url('images/gothic-bg.jpg'); /* fallback */
-    background:#0b0b0d var(--bb-bg) center/cover fixed no-repeat;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
-  header{
-    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-    background:rgba(0,0,0,.75);border-bottom:1px solid rgba(255,255,255,.15);
-    padding:12px 14px;position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);
-  }
-  header .meta{font-size:12px;opacity:.9;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  #stageBadge{font-size:12px;opacity:.95;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:4px 8px;border-radius:999px}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grayson Kincaid — PG-13 Room</title>
+  <meta name="description" content="Warm, respectful fantasy chat. PG-13 by default; explicit talk only in coin rooms." />
 
-  main{max-width:1100px;margin:18px auto;padding:0 14px}
-  .room{
-    display:grid;grid-template-columns:280px 1fr;gap:0;
-    border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.6);
-  }
-  .side{position:relative;background:rgba(0,0,0,.45);border-right:1px solid rgba(255,255,255,.12);display:flex;align-items:stretch;justify-content:center;overflow:hidden}
-  .portrait{width:100%;height:100%;object-fit:cover;opacity:.95;animation:drift 8s ease-in-out infinite;filter:saturate(1.02) contrast(1.02) brightness(.95)}
-  @keyframes drift{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
-  .sideOverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.38),transparent 35%,transparent 75%,rgba(0,0,0,.38));pointer-events:none}
-  .chatwrap{display:flex;flex-direction:column;min-height:62vh}
-  .roomhead{padding:12px 14px;background:linear-gradient(180deg,#1a0c10,transparent);border-bottom:1px solid rgba(255,255,255,.12)}
-  .name{font-weight:800;letter-spacing:.2px}
-  .chat{flex:1;min-height:420px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(1200px 520px at 70% 25%,rgba(122,16,33,.22),transparent 60%)}
-  .bubble{max-width:72%;padding:10px 12px;border-radius:14px;line-height:1.35;border:1px solid rgba(255,255,255,.18);backdrop-filter:saturate(120%);box-shadow:0 1px 0 rgba(0,0,0,.25) inset}
-  .me{align-self:flex-end;background:rgba(255,255,255,.08)}
-  .him{align-self:flex-start;background:rgba(122,16,33,.30)} /* soft crimson */
-  .typing{font-size:12px;opacity:.75;display:none;margin:0 14px 10px}
-  .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.55)}
-  input[type="text"]{flex:1;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;outline:none}
-  button{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#7a1021;color:#fff;font-weight:700;cursor:pointer}
-  @media (max-width:760px){.room{grid-template-columns:1fr}.side{height:260px;border-right:none}.chat{min-height:360px}}
-  /* paywall overlay */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
-  .modal{width:min(520px,92%);background:rgba(12,12,14,.96);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
-  .modal h3{margin:0 0 8px 0}.modal p{margin:0 0 14px 0;opacity:.9}
-  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-  .ghost{background:transparent}
-</style>
+  <style>
+    :root{
+      --ink:#e6eef6;
+      --ink-dim:#c9d3dd;
+      --bubble:#1b2230;
+      --bubble-soft:#222a3a;
+      --brand:#be1e2d;          /* deep red accent */
+      --brand-dim:#8f1723;
+      --panel:rgba(10,12,18,.75);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+      color:var(--ink);
+      background:#0b0b0b url("./images/grayson-bg.jpg") center / cover no-repeat fixed;
+    }
+    /* dim, hazy overlay so text stays readable on bright red */
+    .screen-haze{position:fixed; inset:0; background:rgba(0,0,0,.55); pointer-events:none; z-index:0;}
+
+    header{
+      position:sticky; top:0; z-index:2;
+      backdrop-filter: blur(6px);
+      background:linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.25));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{
+      max-width:1100px; margin:0 auto; padding:14px 16px;
+      display:flex; align-items:center; gap:12px; color:var(--ink-dim);
+    }
+    .chip{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12)}
+    .chip.badge{background:rgba(190,30,45,.12); border-color:rgba(190,30,45,.35); color:#ffd7dc}
+
+    .wrap{position:relative; z-index:1; max-width:1100px; margin:22px auto; padding:0 16px;}
+    .card{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .title{
+      display:flex; align-items:baseline; gap:12px;
+      padding:18px 18px 0;
+    }
+    h1{margin:0; font-size:24px; letter-spacing:.3px}
+    .subtitle{margin:0 18px 16px; font-size:13px; color:var(--ink-dim)}
+
+    .chat{
+      height:min(66vh, 640px);
+      overflow:auto;
+      padding:18px;
+      scrollbar-width:thin;
+    }
+    .row{display:flex; margin:10px 0}
+    .me,.bot{
+      max-width:72%;
+      padding:12px 14px;
+      border-radius:14px;
+      line-height:1.35;
+      font-size:15px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.25);
+    }
+    .me{margin-left:auto; background:#3a4663; color:#fff}
+    .bot{background:var(--bubble); border:1px solid rgba(255,255,255,.05)}
+    .soft{background:var(--bubble-soft); color:var(--ink-dim)}
+
+    .compose{
+      display:flex; gap:10px; padding:14px; border-top:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.38));
+    }
+    input[type=text]{
+      flex:1; padding:14px 13px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:#0e1320; color:var(--ink); outline:none;
+    }
+    button{
+      padding:12px 14px; border-radius:12px; border:0; cursor:pointer;
+      color:#fff; background:var(--brand);
+    }
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .typing{display:inline-flex; gap:6px; align-items:center}
+    .dot{width:6px; height:6px; border-radius:50%; background:#9fb0c2; opacity:.75; animation:blink 1.2s infinite}
+    .dot:nth-child(2){animation-delay:.15s}
+    .dot:nth-child(3){animation-delay:.3s}
+    @keyframes blink{0%,80%,100%{opacity:.25} 40%{opacity:.9}}
+  </style>
 </head>
 
-<body data-man="grayson">
-<header>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
-      <img src="images/logo.jpg" alt="Blossom n Blade" style="height:26px;width:auto;border-radius:4px;"/>
-      <strong>Blossom &amp; Blade</strong>
-    </a>
-  </div>
-  <div class="meta">
-    <span id="stageBadge">Visitor — PG-13 tease</span>
-    <span>PG-13 with subscription • Explicit talk unlocked with coins • $1 to this month’s DV charity</span>
-  </div>
-</header>
+<body>
+  <div class="screen-haze"></div>
 
-<main>
-  <div class="room">
-    <aside class="side">
-      <img id="portrait" class="portrait" src="images/grayson_tease.jpg" alt="Grayson portrait"/>
-      <div class="sideOverlay"></div>
-    </aside>
+  <header>
+    <div class="bar">
+      <strong>Grayson Kincaid</strong>
+      <span class="chip">Viking Dom • Red-lit room</span>
+      <span class="chip badge">PG-13 with subscription • Explicit talk unlocks with coins</span>
+    </div>
+  </header>
 
-    <section class="chatwrap">
-      <div class="roomhead"><div class="name">Grayson Kincaid</div></div>
-      <div id="chat" class="chat" aria-live="polite"></div>
-      <div id="typing" class="typing">Grayson is typing…</div>
-      <form id="composer" class="composer">
-        <input id="input" type="text" placeholder="Say something sweet…" autocomplete="off"/>
+  <main class="wrap">
+    <section class="card" role="region" aria-label="Chat with Grayson">
+      <div class="title">
+        <h1>Grayson Kincaid</h1>
+        <span class="chip" style="border-color:rgba(255,255,255,.14);color:#ffd7dc;background:rgba(190,30,45,.09)">steady, attentive, in control</span>
+      </div>
+      <p class="subtitle">One line at a time. He waits for your reply before continuing.</p>
+
+      <div id="chat" class="chat" aria-live="polite" aria-atomic="false"></div>
+
+      <form id="composer" class="compose" autocomplete="off">
+        <input id="msg" type="text" placeholder="Say something sweet…" />
         <button id="send" type="submit">Send</button>
       </form>
     </section>
-  </div>
-  <p class="small" style="margin:10px 2px 0;opacity:.9">
-    Pacing: one line at a time. Visitor = tease PG-13. Subscriber = suggestive PG-13. Explicit requires coins.
-  </p>
-</main>
+  </main>
 
-<!-- paywall overlay -->
-<div id="overlay" class="overlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <h3>Ready for the next lesson?</h3>
-    <p>You’ve had a quick feel for him. Subscribe for full PG-13 companionship, and add coins any time for explicit scenes.</p>
-    <div class="row">
-      <a class="ghost" href="#" id="later" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Maybe later</a>
-      <a class="ghost" href="pay.html" style="padding:10px 12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;text-decoration:none">Subscribe</a>
-    </div>
-  </div>
-</div>
+  <script>
+    // ---- page config
+    const MAN = "grayson"; // persona key used by /api/chat
+    const stageFromUrl = new URLSearchParams(location.search).get("stage") || "subscriber";
 
-<script>
-(function(){
-  // ---- helpers
-  function qs(id){ return document.getElementById(id); }
-  function stage(){
-    var p = (new URLSearchParams(location.search)).get("stage");
-    if (p) return p;
-    return localStorage.getItem('bb_subscriber') === '1' ? 'subscriber' : 'tease';
-  }
-  function setBG(){
-    var map = {
-      blade:   "images/blade-bg.jpg",
-      grayson: "images/grayson-bg.jpg",
-      dylan:   "images/dylan-bg.jpg",
-      silas:   "images/silas-bg.jpg",
-      jesse:   "images/cowboy-bg.jpg",
-      cassian: "images/cassian-bg.jpg"
-    };
-    var man = (document.body.getAttribute('data-man')||'').toLowerCase();
-    var src = map[man];
-    if (src){ document.body.style.setProperty('--bb-bg',"url('"+src+"')"); }
-  }
-  function bubble(text, who){
-    var div = document.createElement("div");
-    div.className = "bubble " + (who === "me" ? "me" : "him");
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  }
-  function setTyping(on){ typing.style.display = on ? "block" : "none"; }
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('composer');
+    const input = document.getElementById('msg');
+    const sendBtn = document.getElementById('send');
 
-  // ---- very light memory (name/note)
-  var MEMKEY = 'bb_user';
-  function getUser(){
-    try { return JSON.parse(localStorage.getItem(MEMKEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function saveUser(obj){
-    try { localStorage.setItem(MEMKEY, JSON.stringify(obj || {})); } catch(e){}
-  }
-  function captureFacts(text){
-    var u = getUser();
-    var m;
-    m = text.match(/\bmy name is\s+([A-Za-z'-]{2,})/i);
-    if (!m) m = text.match(/\bi(?:'m| am)\s+([A-Za-z'-]{2,})/i);
-    if (!m) m = text.match(/\bcall me\s+([A-Za-z'-]{2,})/i);
-    if (m){ u.name = m[1]; }
-    if (/\b(read|book|chapter|novel)\b/i.test(text)) u.note = "book";
-    if (!u.note && /\bconcert|gig|guitar|studio\b/i.test(text)) u.note = "music";
-    saveUser(u);
-  }
-
-  // ---- DOM refs
-  var chat   = qs("chat");
-  var typing = qs("typing");
-  var form   = qs("composer");
-  var input  = qs("input");
-  var send   = qs("send");
-  var overlay= qs("overlay");
-  var later  = qs("later");
-
-  // ---- init visuals + header
-  setBG();
-  var st = stage();
-  var badge = qs("stageBadge");
-  if (badge) badge.textContent = (st === 'subscriber') ? 'Subscriber — PG-13 + suggestive' : 'Visitor — PG-13 tease';
-  var portrait = qs("portrait");
-  if (portrait){
-    if (st === 'subscriber') portrait.src = 'images/grayson_sub.jpg';
-    else if (st === 'dirty') portrait.src = 'images/grayson_dirty.jpg';
-    else portrait.src = 'images/grayson_tease.jpg';
-  }
-
-  // ---- single soft greeting (teacher-of-naughty)
-  var u = getUser();
-  if (st === 'subscriber' && (u.name || u.note)){
-    var nm = u.name ? u.name : "you";
-    var hook = u.note ? (" How's that " + u.note + "?") : "";
-    bubble("Evening, " + nm + "." + hook, "him");
-  } else {
-    var greets = [
-      "Evening.",
-      "Eyes up.",
-      "Lesson one—look at me."
-    ];
-    bubble(greets[Math.floor(Math.random()*greets.length)], "him");
-  }
-
-  // ---- 3 minute explore window for visitors
-  var inputLocked = false;
-  if (st !== 'subscriber'){
-    setTimeout(function(){
-      inputLocked = true;
-      input.disabled = true; send.disabled = true;
-      overlay.style.display = "flex";
-    }, 3*60*1000);
-  }
-  if (later){
-    later.addEventListener('click', function(e){
-      e.preventDefault();
-      overlay.style.display = "none";
-      // keep composer disabled; she can still read
-      inputLocked = true;
-      input.disabled = true; send.disabled = true;
-    });
-  }
-
-  // ---- chat wire-up
-  var conversation = [];
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    if (inputLocked) return;
-    var text = (input.value || "").trim();
-    if (!text) return;
-
-    // show user's bubble immediately
-    bubble(text, "me");
-    captureFacts(text);
-    input.value = "";
-    input.disabled = true; send.disabled = true;
-
-    // backend call with gentle hints (nickname after a couple msgs)
-    setTyping(true);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/chat", true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    conversation.push({ role:"user", content:text });
-    xhr.onreadystatechange = function(){
-      if (xhr.readyState === 4){
-        var reply = "Good. Now… slower.";
-        try{
-          if (xhr.status >= 200 && xhr.status < 300){
-            var data = JSON.parse(xhr.responseText || "{}");
-            if (data && data.reply) reply = data.reply;
-          }
-        }catch(e){}
-        setTimeout(function(){
-          bubble(reply, "him");
-          conversation.push({ role:"assistant", content: reply });
-          setTyping(false);
-          input.disabled = false; send.disabled = false; input.focus();
-        }, 500 + Math.floor(Math.random()*540));
-      }
-    };
-    var payload = { messages: conversation, man: "grayson", stage: st, softness: { intro:true, nicknameAfter:2 } };
-    try { xhr.send(JSON.stringify(payload)); } catch(e){
-      setTimeout(function(){
-        bubble("Signal flickered—say that again.", "him");
-        setTyping(false);
-        input.disabled = false; send.disabled = false; input.focus();
-      }, 600);
+    function addBot(text, soft=false){
+      const row = document.createElement('div');
+      row.className = 'row';
+      const b = document.createElement('div');
+      b.className = 'bot' + (soft ? ' soft' : '');
+      b.textContent = text;
+      row.appendChild(b);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
     }
-  });
-})();
-</script>
+    function addMe(text){
+      const row = document.createElement('div');
+      row.className = 'row';
+      const m = document.createElement('div');
+      m.className = 'me';
+      m.textContent = text;
+      row.appendChild(m);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function addTyping(){
+      const row = document.createElement('div');
+      row.className = 'row';
+      const b = document.createElement('div');
+      b.className = 'bot soft typing';
+      b.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+      row.appendChild(b);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+      return row;
+    }
+
+    // greet once per visit (natural, not pushy)
+    const greetedKey = 'greeted-' + MAN;
+    if(!sessionStorage.getItem(greetedKey)){
+      setTimeout(()=>{
+        addBot("Evening, little flame. Tell me one true thing about your day.");
+        sessionStorage.setItem(greetedKey,'1');
+      }, 500);
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const text = (input.value || '').trim();
+      if(!text) return;
+      addMe(text);
+      input.value = '';
+      input.focus();
+
+      sendBtn.disabled = true;
+      const typing = addTyping();
+
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ man: MAN, message: text, stage: stageFromUrl })
+        });
+        const data = await res.json();
+        typing.remove();
+        if(!res.ok){
+          addBot("Hmm. That didn’t land. Try again in a moment?", true);
+        }else{
+          // server returns { reply: "..." }
+          addBot(data.reply || "I’m here.");
+        }
+      }catch(err){
+        typing.remove();
+        addBot("Stormy signal. I’ll be right here when it clears.", true);
+      }finally{
+        sendBtn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,26 +1,30 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dylan Vale — PG-13 Room</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--panel:#0f1319ee;--ink:#e7eef7;--ink-d:#9fb0c5;--bubble-me:#31465f;--bubble-bot:#1a2230;}
-  body{margin:0;color:var(--ink);font-family:Inter,system-ui,Roboto,Helvetica,Arial,sans-serif;background:#000 url("images/dylan-bg.jpg") center/cover no-repeat fixed;}
+  :root{--panel:#0f1319ee;--ink:#e7eef7;--ink-d:#9fb0c5;--bubble-me:#31465f;--bubble-bot:#1a2230;--border:#263145}
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);font-family:Inter,system-ui,Roboto,Helvetica,Arial,sans-serif;
+       background:#000 url("images/dylan-bg.jpg") center/cover no-repeat fixed;}
   .veil{position:fixed;inset:0;background:linear-gradient(#0006,#000c)}
   .wrap{position:relative;max-width:980px;margin:72px auto;padding:0 16px}
-  .stage{display:inline-block;margin:0 0 8px 4px;padding:6px 12px;border-radius:999px;font-size:12px;background:#161e29;border:1px solid #263145;color:#9fb0c5}
-  .card{background:var(--panel);border:1px solid #263145;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #0009}
-  header{padding:18px 20px 12px;border-bottom:1px solid #263145}
+  .stage{display:inline-block;margin:0 0 8px 4px;padding:6px 12px;border-radius:999px;font-size:12px;
+         background:#161e29;border:1px solid var(--border);color:var(--ink-d)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #0009}
+  header{padding:18px 20px 12px;border-bottom:1px solid var(--border)}
   header h1{margin:0;font-size:22px}
-  header .tags{margin-top:6px;font-size:12px;color:#9fb0c5}
-  #chatbox{padding:18px 14px;height:58vh;overflow:auto}
+  header .tags{margin-top:6px;font-size:12px;color:var(--ink-d)}
+  #chatbox{padding:18px 14px;height:58vh;overflow:auto;scrollbar-width:thin}
   .bubble{display:inline-block;max-width:75%;margin:8px 0;padding:10px 12px;border-radius:14px;background:#1e2738;border:1px solid #2a3750}
   .me{background:#354a67;margin-left:auto;border-color:#476083}
-  .footer{display:flex;gap:10px;padding:12px;border-top:1px solid #263145}
+  .typing{font-size:12px;color:var(--ink-d);padding:0 14px 10px;visibility:hidden}
+  .tip{font-size:11px;color:#9aa7ba;padding:0 14px 12px}
+  .footer{display:flex;gap:10px;padding:12px;border-top:1px solid var(--border)}
   .footer input{flex:1;padding:12px;border-radius:12px;border:1px solid #2b3a54;background:#0f1420;color:var(--ink)}
   .footer button{padding:12px 16px;border-radius:12px;border:1px solid #2b3a54;background:#21304a;color:var(--ink);cursor:pointer}
-  .typing{font-size:12px;color:#9fb0c5;padding:0 14px 10px;visibility:hidden}
-  .tip{font-size:11px;color:#9aa7ba;padding:0 14px 12px}
 </style>
 </head>
 <body>
@@ -32,20 +36,25 @@
       <h1>Dylan Vale</h1>
       <div class="tags">Biker boy • blue neon • sweet trouble</div>
     </header>
-    <div id="chatbox"></div>
+
+    <div id="chatbox" aria-live="polite" aria-atomic="false"></div>
     <div id="typing" class="typing">Dylan is typing…</div>
     <div class="tip">One line at a time. He waits for your reply before continuing.</div>
+
     <div class="footer">
-      <input id="msg" placeholder="Say something sweet…" autocomplete="off" />
+      <input id="msg" placeholder="Say something sweet…" autocomplete="off"/>
       <button id="send">Send</button>
     </div>
   </div>
 </div>
 
 <script>
-  const params=new URLSearchParams(location.search);
-  const STAGE=params.get("stage")||"tease";
-  document.getElementById("stageLabel").textContent=(STAGE==="subscriber")?"Subscriber — PG-13 + suggestive":"PG-13 with subscription • Explicit talk unlocks with coins";
+  // stage badge
+  const params = new URLSearchParams(location.search);
+  const STAGE = params.get("stage") || "tease";
+  document.getElementById("stageLabel").textContent = (STAGE==="subscriber")
+    ? "Subscriber — PG-13 + suggestive"
+    : "PG-13 with subscription • Explicit talk unlocks with coins";
 
   const MAN="dylan";
   const BOX=document.getElementById("chatbox");
@@ -53,27 +62,37 @@
   const SEND=document.getElementById("send");
   const TYPING=document.getElementById("typing");
 
+  // lightweight memory
   function memKey(){return `bb_mem_${MAN}`;}
   function loadMem(){try{return JSON.parse(localStorage.getItem(memKey()))||{};}catch{return {};}}
   function saveMem(o){localStorage.setItem(memKey(),JSON.stringify(o));}
   function memPairs(){const m=loadMem();return Object.entries(m).map(([k,v])=>`${k}=${v}`);}
   function upsertMemo(m){const[k,...r]=String(m||"").split("=");const v=r.join("=").trim();if(!k||!v)return;const cur=loadMem();cur[k.trim()]=v;saveMem(cur);}
 
+  // ui helpers
   function bubble(t,who="bot"){const b=document.createElement("div");b.className="bubble"+(who==="me"?" me":"");b.textContent=t;BOX.appendChild(b);BOX.scrollTop=BOX.scrollHeight;}
 
   async function askAPI(message){
     TYPING.style.visibility="visible";
     try{
-      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({man:MAN,stage:STAGE,message,memories:memPairs()})});
-      const data=await res.json(); if(data?.memo)upsertMemo(data.memo);
-      return data?.reply||"Say that again, pretty thing.";
-    }catch(e){return "Garage wifi blinked—hit me again."}
-    finally{TYPING.style.visibility="hidden";}
+      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({man:MAN,stage:STAGE,message,memories:memPairs()})});
+      const data=await res.json();
+      if(data?.memo) upsertMemo(data.memo);
+      return data?.reply || "Say that again, pretty thing.";
+    }catch(e){ return "Garage wifi blinked—hit me again."; }
+    finally{ TYPING.style.visibility="hidden"; }
   }
 
-  SEND.addEventListener("click",async()=>{const t=(INPUT.value||"").trim();if(!t)return;bubble(t,"me");INPUT.value="";const r=await askAPI(t);bubble(r,"bot");});
-  INPUT.addEventListener("keydown",(e)=>{if(e.key==="Enter")SEND.click();});
+  SEND.addEventListener("click", async ()=>{
+    const text=(INPUT.value||"").trim(); if(!text) return;
+    bubble(text,"me"); INPUT.value="";
+    const reply=await askAPI(text); bubble(reply,"bot");
+  });
+  INPUT.addEventListener("keydown",e=>{ if(e.key==="Enter") SEND.click(); });
 
-  (async function greet(){const r=await askAPI("__GREET__");bubble(r,"bot");}());
+  // greet
+  (async function(){ const r=await askAPI("__GREET__"); bubble(r,"bot"); }());
 </script>
-</body></html>
+</body>
+</html>

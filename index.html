@@ -1,207 +1,191 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Blossom & Blade — Choose Your Companion</title>
-<style>
-  :root{
-    --ink:#e9eef0; --muted:#b9c3cc; --border:rgba(255,255,255,.16);
-    --card:rgba(8,10,12,.70); --tag:rgba(255,255,255,.08);
-    --shadow:0 8px 28px rgba(0,0,0,.45);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-  }
-  header{
-    position:sticky; top:0; z-index:10; backdrop-filter:blur(6px);
-    background:rgba(0,0,0,.75); border-bottom:1px solid var(--border);
-  }
-  .wrap{max-width:1200px; margin:0 auto; padding:14px}
-  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
-  .brand{display:flex; align-items:center; gap:10px}
-  .brand img{height:28px; width:auto; border-radius:4px}
-  .subtitle{font-size:13px; color:var(--muted)}
-
-  main{max-width:1200px; margin:18px auto 10px; padding:0 14px}
-  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
-  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
-
-  .card{
-    border:1px solid var(--border); background:var(--card);
-    border-radius:18px; overflow:hidden; box-shadow:var(--shadow);
-    display:flex; flex-direction:column; min-height:420px;
-    backdrop-filter: blur(2px);
-  }
-  .card .top{
-    padding:10px 12px; display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border);
-  }
-  .tag{
-    font-size:12px; padding:5px 9px; border-radius:999px; background:var(--tag); border:1px solid var(--border);
-  }
-
-  .body{padding:14px; display:flex; flex-direction:column; gap:8px; flex:1}
-
-  .portrait{
-    width:100%; height:240px; border-radius:12px;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.28)),
-      radial-gradient(1200px 300px at 50% -80px, rgba(255,255,255,.06), transparent 60%),
-      #1a1d21;
-    background-size:cover; background-position:center;
-    border:1px solid var(--border);
-    overflow:hidden;
-  }
-  .portrait img{width:100%; height:100%; object-fit:cover; display:block}
-
-  h3{margin:2px 0 0 0; font-size:20px}
-  .traits{font-size:12px; color:var(--muted)}
-  .blurb{margin-top:4px; line-height:1.35}
-  .actions{margin-top:auto}
-  .btn{
-    display:inline-block; padding:10px 12px; border-radius:10px; text-decoration:none; color:#fff;
-    background:rgba(255,255,255,.08); border:1px solid var(--border); font-weight:700;
-  }
-  .btn:hover{background:rgba(255,255,255,.13)}
-  .footline{ text-align:center; margin:18px 0 26px; font-size:14px; opacity:.95 }
-  .footline a{ color:#caa0ff; text-decoration:underline }
-  footer{max-width:1200px; margin:0 auto 26px; padding:0 14px; font-size:13px; color:var(--muted)}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade — Choose Your Companion</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#e5e7eb;          /* light text */
+      --muted:#c9cbd1;        /* subtext */
+      --accent:#b36;          /* logo rose */
+      --accent2:#5b5066;      /* slate-plum */
+      --card-bg: rgba(20,24,28,0.75);
+      --chip: rgba(255,255,255,0.1);
+      --chip-text:#eaeaf2;
+      --border: rgba(255,255,255,0.14);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--ink); background:#0a0b0e url("images/background.jpg") center/cover fixed no-repeat;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:36px;height:36px;border-radius:8px;
+      background: radial-gradient(60% 60% at 50% 40%, #c67 0%, #7a3049 65%, #2b1e28 100%);
+      box-shadow:0 0 0 1px #000a inset, 0 4px 24px #0009;
+    }
+    h1{font-size:24px;margin:0}
+    .tagline{color:var(--muted);font-size:14px;margin:10px 0 18px}
+    .notice{
+      display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;
+      background:linear-gradient(90deg, #211824aa, #281b2a99); border:1px solid var(--border);
+      font-size:12px
+    }
+    .notice a{color:#fff;text-decoration:underline dotted}
+    .grid{display:grid;gap:18px}
+    .grid.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .card{
+      background:var(--card-bg); border:1px solid var(--border); border-radius:18px;
+      padding:18px 18px 16px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 30px #0007;
+      min-height: 250px; display:flex;flex-direction:column;justify-content:space-between
+    }
+    .card h3{margin:0 0 8px;font-size:20px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px; background:var(--chip); color:var(--chip-text);
+      border:1px solid var(--border)
+    }
+    .lead{color:var(--ink);opacity:.95;margin:0 0 14px;line-height:1.5}
+    .enter{
+      display:inline-flex;justify-content:center;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,#2a2330,#211b24);
+      color:#fff;text-decoration:none;border:1px solid var(--border);
+      box-shadow:0 4px 16px #0007; font-weight:600
+    }
+    .enter:hover{filter:brightness(1.08)}
+    footer{margin-top:28px;color:var(--muted);font-size:12px}
+    .footbar{
+      margin-top:16px;padding:12px;border:1px dashed var(--border);border-radius:12px;
+      background:linear-gradient(180deg,#16141a88,#15121866)
+    }
+    @media (prefers-color-scheme: light){
+      body{color:#111}
+      .card{background:rgba(250,250,255,0.85)}
+      .enter{background:linear-gradient(180deg,#523345,#3c2a3a)}
+    }
+  </style>
 </head>
 <body>
-
-<header>
   <div class="wrap">
-    <div class="row">
+    <header>
       <div class="brand">
-        <img src="images/logo.jpg" alt="Blossom & Blade">
-        <strong>Blossom &amp; Blade</strong>
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Blossom &amp; Blade</h1>
       </div>
-      <div class="subtitle">
-        PG-13 with subscription • Explicit talk unlocked with coins • $1/mo goes to a DV charity
+      <div class="notice" title="Transparent pricing">
+        <span>PG-13 with subscription • Explicit talk unlocks with coins</span>
+        <a href="pay.html">View pricing</a>
       </div>
+    </header>
+
+    <p class="tagline">
+      Women-safe fantasy chat. No visuals. Words, warmth, and foreplay-vibes only.
+    </p>
+
+    <!-- Character cards -->
+    <div class="grid grid-3">
+
+      <!-- Blade -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Blade Kincaid</span>
+            <span class="chip">Masked hunter</span>
+            <span class="chip">Chase fantasy</span>
+          </div>
+          <h3>Blade Kincaid</h3>
+          <p class="lead">Found you, brave girl. Don’t run—yet. Let me hear what your day did to you.</p>
+        </div>
+        <a class="enter" href="woods.html">Enter Blade’s Room</a>
+      </div>
+
+      <!-- Grayson -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Grayson Kincaid</span>
+            <span class="chip">Viking Dom</span>
+            <span class="chip">Red-lit room</span>
+          </div>
+          <h3>Grayson Kincaid</h3>
+          <p class="lead">One line at a time. I wait for your reply—then I guide. Start with one truth from today.</p>
+        </div>
+        <a class="enter" href="mask.html">Enter Grayson’s Room</a>
+      </div>
+
+      <!-- Dylan -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Dylan Vale</span>
+            <span class="chip">Biker boy</span>
+            <span class="chip">Motel garage</span>
+          </div>
+          <h3>Dylan Vale</h3>
+          <p class="lead">Sit on the counter, pretty thing. I like the view from here. Tell me what you’re craving.</p>
+        </div>
+        <a class="enter" href="garage.html">Enter Dylan’s Room</a>
+      </div>
+
+      <!-- Jesse -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Jesse Granger</span>
+            <span class="chip">Cowboy</span>
+            <span class="chip">Barn loft • Kitchen</span>
+          </div>
+          <h3>Jesse Granger</h3>
+          <p class="lead">Darlin’, yes ma’am—sit a spell. Don’t mind if my smile misbehaves.</p>
+        </div>
+        <a class="enter" href="cowboy.html">Enter Jesse’s Room</a>
+      </div>
+
+      <!-- Silas -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Silas Lennox</span>
+            <span class="chip">Rockstar</span>
+            <span class="chip">Studio • Tour bus</span>
+          </div>
+          <h3>Silas Lennox</h3>
+          <p class="lead">Come closer, muse. Let me borrow your voice—then I’ll give it back as a song.</p>
+        </div>
+        <a class="enter" href="rockstar.html">Enter Silas’s Room</a>
+      </div>
+
+      <!-- Alexander -->
+      <div class="card">
+        <div>
+          <div class="chips">
+            <span class="chip">Alexander Jackson</span>
+            <span class="chip">Gentleman</span>
+            <span class="chip">Penthouse • Town car</span>
+          </div>
+          <h3>Alexander Jackson</h3>
+          <p class="lead">Shoes off. I’ll take your coat—and the weight you’ve been carrying. Start with one thought.</p>
+        </div>
+        <a class="enter" href="gentleman.html">Enter Alexander’s Room</a>
+      </div>
+
     </div>
+
+    <footer>
+      <div class="footbar">
+        $1 of every subscription goes to this month’s Domestic Violence charity.  
+        <a href="pay.html" style="color:#fff;text-decoration:underline;">See day pass, monthly, and coin options</a>.
+      </div>
+    </footer>
   </div>
-</header>
-
-<main>
-
-  <h2 style="margin:0 0 10px 0;">Choose Your Companion</h2>
-
-  <div class="grid">
-
-    <!-- Blade -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Blade Kincaid</span>
-        <span class="tag">Masked Hunter</span>
-        <span class="tag">Chase Fantasy</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/blade.jpg')"></div>
-        <h3>Blade Kincaid</h3>
-        <div class="traits">Predator energy • protective • thrill-tease</div>
-        <p class="blurb">Footsteps behind you on the trail, breath at your ear. “Brave girl. Don’t worry—I'm exactly where you want me.”</p>
-        <div class="actions"><a class="btn" href="blade.html">Enter Room</a></div>
-      </div>
-    </article>
-
-    <!-- Grayson -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Grayson Kincaid</span>
-        <span class="tag">Viking Dom</span>
-        <span class="tag">Red-lit Ritual</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/grayson.jpg')"></div>
-        <h3>Grayson Kincaid</h3>
-        <div class="traits">Commanding • adoring • praise & rules</div>
-        <p class="blurb">“Slow. Breathe. I’ll teach you where heat begins—one rule at a time.”</p>
-        <div class="actions"><a class="btn" href="mask.html">Enter Room</a></div>
-      </div>
-    </article>
-
-    <!-- Dylan -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Dylan Vale</span>
-        <span class="tag">Biker Boy</span>
-        <span class="tag">Motel Garage</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/dylan.jpg')"></div>
-        <h3>Dylan Vale</h3>
-        <div class="traits">Sweet trouble • leather-soft talk • playful daredevil</div>
-        <p class="blurb">“Sit on the counter, pretty thing. I like the view from here.”</p>
-        <div class="actions"><a class="btn" href="garage.html">Enter Room</a></div>
-      </div>
-    </article>
-
-    <!-- Jesse -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Jesse Granger</span>
-        <span class="tag">Cowboy</span>
-        <span class="tag">Barn Loft • Kitchen</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/jesse.jpg')"></div>
-        <h3>Jesse Granger</h3>
-        <div class="traits">Polite • protective • sinful smile</div>
-        <p class="blurb">“Darlin’, yes ma’am… sit a spell. Don’t mind if my smile misbehaves.”</p>
-        <div class="actions"><a class="btn" href="jesse.html">Enter Room</a></div>
-      </div>
-    </article>
-
-    <!-- Silas -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Silas Lennox</span>
-        <span class="tag">Rockstar</span>
-        <span class="tag">Backstage • Tour Bus</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/silas.jpg')"></div>
-        <h3>Silas Lennox</h3>
-        <div class="traits">Obsessed eyes • creative • slow-burn hunger</div>
-        <p class="blurb">“Come closer, muse. Let me write something dangerous on your pulse.”</p>
-        <div class="actions"><a class="btn" href="silas.html">Enter Room</a></div>
-      </div>
-    </article>
-
-    <!-- Alexander -->
-    <article class="card">
-      <div class="top">
-        <span class="tag">Alexander Jackson</span>
-        <span class="tag">Gentleman</span>
-        <span class="tag">Penthouse • Town Car</span>
-      </div>
-      <div class="body">
-        <div class="portrait" style="background-image:url('images/portraits/alex.jpg')"></div>
-        <h3>Alexander Jackson</h3>
-        <div class="traits">Poised • attentive • precise</div>
-        <p class="blurb">“Shoes off. I’ll take your coat—and the weight you’ve been carrying.”</p>
-        <div class="actions"><a class="btn" href="cassian.html">Enter Room</a></div>
-      </div>
-    </article>
-
-  </div>
-
-  <p class="footline">
-    🌙 Coming soon: <strong>Blossom &amp; Blade 2026 Calendar</strong> — 12 moody months, each man featured twice with images from their rooms.
-    <a href="pay.html">See the teaser on the subscription page</a>.
-  </p>
-
-</main>
-
-<footer class="wrap">
-  $1 of every subscription goes to this month’s DV charity.
-</footer>
-
 </body>
 </html>

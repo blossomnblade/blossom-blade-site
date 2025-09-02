@@ -1,155 +1,79 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Grayson Kincaid — PG-13 Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#e9eef0; --muted:#b9c3cc; --border:rgba(255,255,255,.16);
-    --panel:rgba(8,10,12,.70); --tag:rgba(255,255,255,.08);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background:#0b0b0d url('images/grayson-bg.jpg') center/cover fixed no-repeat;
-  }
-  header{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);border-bottom:1px solid var(--border)}
-  .wrap{max-width:980px;margin:0 auto;padding:12px 14px}
-  .title{display:flex;align-items:center;gap:10px}
-  .crumbs{font-size:12px;color:var(--muted)}
-  .chip{font-size:12px;padding:5px 9px;border-radius:999px;background:var(--tag);border:1px solid var(--border);margin-left:6px}
-
-  .chat{
-    max-width:980px;margin:18px auto;padding:14px;
-    background:var(--panel);border:1px solid var(--border);border-radius:16px;
-  }
-  .stream{height:62vh;overflow:auto;padding:8px 6px}
-  .row{display:flex;margin:8px 0}
-  .me{justify-content:flex-end}
-  .bubble{
-    max-width:70%;padding:10px 14px;border-radius:14px;border:1px solid var(--border);
-    background:rgba(255,255,255,.08)
-  }
-  .mine{background:rgba(82,131,255,.18)}
-  .meta{font-size:12px;color:var(--muted);margin:6px 0 4px}
-  form{display:flex;gap:8px;margin-top:8px}
-  input[type="text"]{flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:#0f1215;color:var(--ink)}
-  button{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:#2b6fff;color:#fff;font-weight:700;cursor:pointer}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  .note{font-size:12px;color:var(--muted);margin:8px 0}
+  :root{--panel:#10131aee;--ink:#e6eef7;--ink-d:#9fb0c5;--bubble-me:#354766;--bubble-bot:#1a2232;--accent:#b11a1a;}
+  body{margin:0;color:var(--ink);font-family:Inter,system-ui,Roboto,Helvetica,Arial,sans-serif;background:#000 url("images/grayson-bg.jpg") center/cover no-repeat fixed;}
+  .veil{position:fixed;inset:0;background:linear-gradient(#0006,#000c), radial-gradient(80% 60% at 50% 0%, #0000, #000 70%);}
+  .wrap{position:relative;max-width:980px;margin:72px auto;padding:0 16px;}
+  .stage{display:inline-block;margin:0 0 8px 4px;padding:6px 12px;border-radius:999px;font-size:12px;background:#171e2a;border:1px solid #263145;color:var(--ink-d)}
+  .card{background:var(--panel);border:1px solid #263145;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #0009}
+  header{padding:18px 20px 12px;border-bottom:1px solid #263145}
+  header h1{margin:0;font-size:22px}
+  header .tags{margin-top:6px;font-size:12px;color:var(--ink-d)}
+  #chatbox{padding:18px 14px;height:58vh;overflow:auto}
+  .bubble{display:inline-block;max-width:75%;margin:8px 0;padding:10px 12px;border-radius:14px;background:var(--bubble-bot);border:1px solid #2a3750}
+  .me{background:var(--bubble-me);margin-left:auto;border-color:#465d81}
+  .footer{display:flex;gap:10px;padding:12px;border-top:1px solid #263145}
+  .footer input{flex:1;padding:12px;border-radius:12px;border:1px solid #2b3a54;background:#0f1420;color:var(--ink)}
+  .footer button{padding:12px 16px;border-radius:12px;border:1px solid #2b3a54;background:#21304a;color:var(--ink);cursor:pointer}
+  .typing{font-size:12px;color:var(--ink-d);padding:0 14px 10px;visibility:hidden}
+  .tip{font-size:11px;color:#9aa7ba;padding:0 14px 12px}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="wrap">
-    <div class="title">
-      <strong style="font-size:18px">Grayson Kincaid</strong>
-      <span class="chip">Viking Dom • Red-lit room</span>
+<div class="veil"></div>
+<div class="wrap">
+  <span id="stageLabel" class="stage">PG-13 with subscription • Explicit talk unlocks with coins</span>
+  <div class="card">
+    <header>
+      <h1>Grayson Kincaid</h1>
+      <div class="tags">Viking Dom • Red-lit room • steady, attentive, in control</div>
+    </header>
+    <div id="chatbox"></div>
+    <div id="typing" class="typing">Grayson is typing…</div>
+    <div class="tip">One line at a time. He waits for your reply before continuing.</div>
+    <div class="footer">
+      <input id="msg" placeholder="Say something sweet…" autocomplete="off" />
+      <button id="send">Send</button>
     </div>
-    <div class="crumbs">PG-13 with subscription • Explicit talk unlocks with coins</div>
   </div>
-</header>
-
-<main class="chat">
-  <div class="meta">One line at a time. He waits for your reply before continuing.</div>
-  <div id="stream" class="stream" aria-live="polite"></div>
-  <form id="form">
-    <input id="msg" type="text" placeholder="Say something sweet…" autocomplete="off" required/>
-    <button id="send" type="submit">Send</button>
-  </form>
-  <div class="note" id="note">Tip: You’re in <span id="stageLabel">PG-13</span> mode.</div>
-</main>
+</div>
 
 <script>
-/* --- tiny helper: get URL params --- */
-const qs = new URLSearchParams(location.search);
-const stage = qs.get('stage') || (document.cookie.includes('bb_subscriber=1') ? 'subscriber' : 'tease');
-document.getElementById('stageLabel').textContent = stage === 'subscriber' ? 'Subscriber' : 'Tease';
+  const params=new URLSearchParams(location.search);
+  const STAGE=params.get("stage")||"tease";
+  document.getElementById("stageLabel").textContent=(STAGE==="subscriber")?"Subscriber — PG-13 + suggestive":"PG-13 with subscription • Explicit talk unlocks with coins";
 
-/* --- DOM handles --- */
-const stream = document.getElementById('stream');
-const form   = document.getElementById('form');
-const msgInp = document.getElementById('msg');
-const sendBtn= document.getElementById('send');
+  const MAN="grayson";
+  const BOX=document.getElementById("chatbox");
+  const INPUT=document.getElementById("msg");
+  const SEND=document.getElementById("send");
+  const TYPING=document.getElementById("typing");
 
-/* --- render bubbles --- */
-function addBubble(text, mine=false){
-  const row = document.createElement('div');
-  row.className = 'row' + (mine?' me':'');
-  const b = document.createElement('div');
-  b.className = 'bubble' + (mine?' mine':'');
-  b.textContent = text;
-  row.appendChild(b);
-  stream.appendChild(row);
-  stream.scrollTop = stream.scrollHeight;
-}
-let typingEl = null;
-function showTyping(){
-  typingEl = document.createElement('div');
-  typingEl.className = 'row';
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  b.textContent = '…typing';
-  typingEl.appendChild(b);
-  stream.appendChild(typingEl);
-  stream.scrollTop = stream.scrollHeight;
-}
-function hideTyping(){
-  if(typingEl){ typingEl.remove(); typingEl=null; }
-}
+  function memKey(){return `bb_mem_${MAN}`;}
+  function loadMem(){try{return JSON.parse(localStorage.getItem(memKey()))||{};}catch{return {};}}
+  function saveMem(o){localStorage.setItem(memKey(),JSON.stringify(o));}
+  function memPairs(){const m=loadMem();return Object.entries(m).map(([k,v])=>`${k}=${v}`);}
+  function upsertMemo(m){const[k,...r]=String(m||"").split("=");const v=r.join("=").trim();if(!k||!v)return;const cur=loadMem();cur[k.trim()]=v;saveMem(cur);}
 
-/* --- first line from Grayson (AI) to start the convo --- */
-async function greet(){
-  showTyping();
-  try{
-    const res = await fetch('/api/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ man:'grayson', stage, message:'__GREET__' })
-    });
-    const data = await res.json();
-    hideTyping();
-    addBubble(data.reply || "Evening. Tell me one true thing about your day.");
-  }catch(e){
-    hideTyping();
-    addBubble("I’m here, little flame. If I go quiet, refresh and we’ll try again.");
+  function bubble(t,who="bot"){const b=document.createElement("div");b.className="bubble"+(who==="me"?" me":"");b.textContent=t;BOX.appendChild(b);BOX.scrollTop=BOX.scrollHeight;}
+
+  async function askAPI(message){
+    TYPING.style.visibility="visible";
+    try{
+      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({man:MAN,stage:STAGE,message,memories:memPairs()})});
+      const data=await res.json(); if(data?.memo)upsertMemo(data.memo);
+      return data?.reply||"I’m listening—say that again.";
+    }catch(e){return "Signal hiccup—try me again."}
+    finally{TYPING.style.visibility="hidden";}
   }
-}
-greet();
 
-/* --- submit handler: one line, wait for reply --- */
-let waiting = false;
-form.addEventListener('submit', async (ev)=>{
-  ev.preventDefault();
-  if(waiting) return;
+  SEND.addEventListener("click",async()=>{const t=(INPUT.value||"").trim();if(!t)return;bubble(t,"me");INPUT.value="";const r=await askAPI(t);bubble(r,"bot");});
+  INPUT.addEventListener("keydown",(e)=>{if(e.key==="Enter")SEND.click();});
 
-  const text = msgInp.value.trim();
-  if(!text) return;
-  addBubble(text, true);
-  msgInp.value = '';
-  waiting = true; sendBtn.disabled = true; msgInp.disabled = true;
-  showTyping();
-
-  try{
-    const res = await fetch('/api/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ man:'grayson', stage, message:text })
-    });
-    const data = await res.json();
-    hideTyping();
-    addBubble(data.reply || "(he squeezes your hand, thinking.)");
-  }catch(err){
-    hideTyping();
-    addBubble("Connection hiccup—say that again, slowly.");
-  }finally{
-    waiting = false; sendBtn.disabled = false; msgInp.disabled = false; msgInp.focus();
-  }
-});
+  (async function greet(){const r=await askAPI("__GREET__");bubble(r,"bot");}());
 </script>
-
-</body>
-</html>
+</body></html>

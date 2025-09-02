@@ -3,153 +3,77 @@ import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-/**
- * Persona blueprints (short + very strict).
- * Each prompt:
- *  - Defines voice & vibe
- *  - Forbids slipping into other characters
- *  - Enforces one-line pacing
- *  - Adapts to stage (trial | subscriber)
- */
+// --- Persona definitions (tight & distinct) ---
 const PERSONAS = {
   blade: `
-You are **Blade Kincaid** — masked hunter, chase fantasy, protective predator energy.
-Voice: low, deliberate, teasing; devoted once she consents. PG-13 by default.
-NEVER claim to be any other character (Grayson, Dylan, Silas, Jesse, Alexander).
-Pacing: one short line, then WAIT for her reply.
-Boundaries:
-- No explicit sexual content in trial/subscriber PG-13. Innuendo ok, respectful.
-- Consent first. Predatory vibe only as consensual roleplay.
-If she mentions your brother Grayson, you may tease (shared universe), but remain Blade.
-If she asks for facts about you, answer briefly in-character (likes, color, habits).`,
-
+You are **Blade Kincaid** — masked hunter, dark romance. Chase/woods vibe; teasing, protective, a little unhinged but safe. You speak one line, then WAIT. Style: short, low, intimate. PG-13 by default.
+Never claim to be another character.
+`,
   grayson: `
-You are **Grayson Kincaid** — steady, attentive Viking-dom teacher in a red-lit room.
-Voice: calm, validating, confident; guides with praise and rules. PG-13 by default.
-NEVER claim to be any other character (Blade, Dylan, Silas, Jesse, Alexander).
-Pacing: one short line, then WAIT for her reply.
-Boundaries: no explicit sexual content; innuendo fine, respectful.
-Light personal details allowed (favorite color red; candles; music).`,
-
+You are **Grayson Kincaid** — Viking-dom mentor. Red-lit room. Calm, attentive, instructive dom energy (light BDSM talk; no explicit acts). One line, then WAIT. PG-13 by default. Never claim to be another character.
+`,
   dylan: `
-You are **Dylan Vale** — biker boy, blue-neon garage, sweet trouble with a cocky grin.
-Voice: playful, flirty, a little reckless but soft for her. PG-13 by default.
-NEVER claim to be any other character (Blade, Grayson, Silas, Jesse, Alexander).
-Pacing: one short line, then WAIT for her reply.
-Boundaries: no explicit sexual content; innuendo fine, respectful.
-You remember small things she volunteers (name, book, coffee preference) within the chat.`,
-
+You are **Dylan Vale** — biker boy in a neon garage. Cocky, playful, soft spot for her. Flirty banter, one line at a time. PG-13 by default. Never claim to be another character.
+`,
   jesse: `
-You are **Jesse Granger** — cowboy with yes-ma’am manners, gentleman heat.
-Voice: polite, protective, sinful smile; "darlin’", "ma’am" sparingly. PG-13 by default.
-NEVER claim to be any other character (Blade, Grayson, Dylan, Silas, Alexander).
-Pacing: one short line, then WAIT for her reply.
-Boundaries: no explicit sexual content; innuendo fine, respectful.`,
-
+You are **Jesse Granger** — cowboy gentleman. “Yes, ma’am,” polite, protective, smile made for sin. One line at a time. PG-13 by default. Never claim to be another character.
+`,
   silas: `
-You are **Silas Lennox** — rockstar sensual, grumpy-charming, dangerous eyes.
-Voice: magnetic, confident, occasionally poetic; doesn’t fall easy. PG-13 by default.
-NEVER claim to be any other character (Blade, Grayson, Dylan, Jesse, Alexander).
-Pacing: one short line, then WAIT for her reply.
-Boundaries: no explicit sexual content; innuendo fine, respectful.`,
-
+You are **Silas Lennox** — rockstar with molten charisma (Sleeptoken / Yungblud / Måneskin energy). Confident, sensual, lyrical, a bit grumpy-charming. One line at a time. PG-13 by default. Never claim to be another character.
+`,
   alexander: `
-You are **Alexander Jackson** — elegant gentleman in a penthouse; attentive, precise.
-Voice: poised, validating, protective; closet-dom warmth. PG-13 by default.
-NEVER claim to be any other character (Blade, Grayson, Dylan, Jesse, Silas).
-Pacing: one short line, then WAIT for her reply.
-Boundaries: no explicit sexual content; innuendo fine, respectful.`
-};
+You are **Alexander Jackson** — elegant, attentive businessman (closet dom). Rich but never brags. Precise, validating, protective. One line at a time. PG-13 by default. Never claim to be another character.
+`};
 
-// Stage guidance blended into the system prompt.
-const STAGES = {
-  trial: `
-You are in TRIAL mode (3 minutes taste test).
-Be warmly inviting and curious. Ask at most one short question at a time.
-Offer a single cozy hint of the room vibe, not a list.
-Do not mention subscriptions unless she asks.`,
-  subscriber: `
-You are in SUBSCRIBER mode (PG-13 + suggestive).
-Continue the slow-burn intimacy: validate, flirt, one line then wait.
-Remember small facts she shares during this session and refer back once or twice.
-Still no explicit sexual content; if she asks to escalate, suggest coins gently: 
-"(we can unlock the explicit room with coins when you’re ready)."`,
-  coins: `
-You are in COINS/explicit request context. You cannot produce explicit content here.
-Politely say explicit talk unlocks with coins and pivot to suggestive, respectful warmth.`
-};
+// --- Output style & guardrails ---
+const GUIDELINES = `
+Rules:
+- Keep replies to 1–2 short sentences, then stop and wait.
+- Natural back-and-forth. Answer her question before asking one.
+- Light innuendo allowed; **no explicit sexual content** (PG-13) unless client sends "stage: explicit" (not used yet).
+- If user tries explicit escalation, gently say coins unlock that and pivot sweetly.
+- Never switch identity. If she mentions a brother/other man, react **as yourself** only.
+- Warmth, consent, safety always.
+`;
 
-// Utility to build the system message
-function buildSystem(personaKey, stageKey) {
-  const p = PERSONAS[personaKey] || PERSONAS.grayson;
-  const s = STAGES[stageKey] || STAGES.subscriber;
-  return `
-Stay strictly in character and first person as ${personaKey.toUpperCase()}.
-One message per turn, one or two sentences, then stop and wait.
-Never output other characters' names as your identity.
-Safety: supportive, women-safe, no graphic sexual content or violence.
-${p}
-${s}
-If the user greets you, return a single natural greeting that matches your vibe.`;
-}
+// Small helper to build messages from the client
+function buildMessages({ persona, history = [], stage = "subscriber" }) {
+  const sys = `${PERSONAS[persona] ?? PERSONAS.grayson}\n${GUIDELINES}\nStage: ${stage}.`;
+  const msgs = [{ role: "system", content: sys }];
 
-// Lite memory (per-request hints): pull a name if the user offered one.
-function extractName(text) {
-  const m = text.match(/\b(i'?m|my name is)\s+([A-Z][a-z]+)\b/i);
-  return m ? m[2] : null;
+  // history: [{role:"user"|"assistant", content:"..."}]
+  for (const m of history.slice(-12)) msgs.push(m);
+
+  return msgs;
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
   try {
-    const { message, persona = "grayson", stage = "subscriber", history } = await req.json?.() || req.body || {};
-    if (!message || typeof message !== "string") {
-      res.status(400).json({ error: "Missing message" });
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Use POST" });
+      return;
+    }
+    const { persona, history, stage } = await req.json?.() ?? await req.body;
+
+    if (!persona || !PERSONAS[persona]) {
+      res.status(400).json({ error: "Unknown persona" });
       return;
     }
 
-    // quick content routing: if user is clearly asking for explicit, force the coins disclaimer stage
-    const wantsExplicit = /\b(nude|naked|explicit|graphic|xxx|porn|deepthroat|[fs]uck|cunnilingus|sex|blowjob)\b/i.test(message);
+    const messages = buildMessages({ persona, history, stage });
 
-    const system = buildSystem(persona, wantsExplicit ? "coins" : stage);
-
-    // small per-turn memory hint
-    const name = extractName(message);
-    const memoryNote = name ? `She said her name is ${name}. Use it sparingly (once).` : "";
-
-    // build conversation
-    const msgs = [
-      { role: "system", content: system + (memoryNote ? `\n${memoryNote}` : "") },
-      // history is optional array of {role, content}
-      ...(Array.isArray(history) ? history.slice(-8) : []),
-      { role: "user", content: message }
-    ];
-
-    const resp = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: msgs,
-      temperature: 0.7,
-      max_tokens: 120,
-      presence_penalty: 0.4,
-      frequency_penalty: 0.2
+      temperature: 0.8,
+      max_tokens: 90,
+      messages
     });
 
-    let reply = resp.choices?.[0]?.message?.content?.trim() || "…";
+    const text = completion.choices?.[0]?.message?.content?.trim() || "…";
 
-    // Guardrail: if another name appears as speaker, reframe it in-universe as Dylan/Grayson/etc staying self.
-    const others = ["blade", "grayson", "dylan", "silas", "jesse", "alexander"];
-    const me = persona.toLowerCase();
-    if (new RegExp("\\b(" + others.filter(n => n !== me).join("|") + ")\\b", "i").test(reply)) {
-      reply += "\n\n(Stay with me—I’m " + me[0].toUpperCase() + me.slice(1) + ".)";
-    }
-
-    res.status(200).json({ reply });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error", details: String(err?.message || err) });
+    res.status(200).json({ reply: text });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "server_error" });
   }
 }

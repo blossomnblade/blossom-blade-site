@@ -1,109 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dylan Vale — PG-13 Room</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: url("images/dylan-garage.jpg") no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-    }
-    .chat-container {
-      background: rgba(0, 0, 0, 0.65);
-      margin: 50px auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 800px;
-    }
-    h1 {
-      margin-top: 0;
-    }
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .bot {
-      background: rgba(50, 50, 50, 0.8);
-      text-align: left;
-    }
-    .user {
-      background: rgba(100, 100, 100, 0.8);
-      text-align: right;
-    }
-    #input-area {
-      margin-top: 15px;
-      display: flex;
-    }
-    #user-input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px 0 0 8px;
-      border: none;
-    }
-    #send-btn {
-      padding: 10px 20px;
-      border: none;
-      background: dodgerblue;
-      color: white;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>Dylan Vale — PG-13 Room</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{--card:#0f172a;--ink:#e2e8f0}
+  body{
+    margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; color:var(--ink);
+    background:#000 url("images/dylan-garage.jpg") center/cover no-repeat fixed;
+  }
+  .wrap{max-width:900px;margin:5rem auto;padding:1rem}
+  .title{font-size:2.2rem;font-weight:800;text-shadow:0 2px 16px rgba(0,0,0,.85)}
+  .chat{background:rgba(5,8,20,.6);backdrop-filter:blur(6px);border-radius:16px;
+        padding:1rem;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+  .bubble{display:inline-block;background:rgba(255,255,255,.08);padding:.7rem 1rem;
+          border-radius:12px;margin:.5rem 0;max-width:80%}
+  .you{background:rgba(59,130,246,.22);margin-left:auto}
+  .row{display:flex;gap:.5rem;margin-top:.75rem}
+  input{flex:1;padding:.7rem .9rem;border-radius:10px;border:1px solid rgba(255,255,255,.15);
+        background:rgba(0,0,0,.35);color:#fff}
+  button{padding:.7rem 1rem;border-radius:10px;border:0;background:#60a5fa;color:#00112a;font-weight:700;cursor:pointer}
+  .tip{opacity:.7;font-size:.85rem;margin-top:.25rem}
+</style>
 </head>
 <body>
-  <div class="chat-container">
-    <h1>Dylan Vale</h1>
-    <div id="chat-box"></div>
-    <div id="input-area">
-      <input id="user-input" type="text" placeholder="Say something sweet…" />
-      <button id="send-btn">Send</button>
+  <div class="wrap">
+    <div class="title">Dylan Vale</div>
+    <div id="chat" class="chat"></div>
+    <div class="row">
+      <input id="box" placeholder="Say something sweet…" />
+      <button id="send">Send</button>
     </div>
+    <div class="tip">He answers one line, then waits. PG-13; explicit talk unlocks with coins.</div>
   </div>
 
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
+<script>
+const persona = "dylan";       // <<< HARD PERSONA
+const stage = "subscriber";    // "trial" | "subscriber" (for later)
+const chat = document.getElementById('chat');
+const box = document.getElementById('box');
+const send = document.getElementById('send');
+let history = [];
 
-      const chatBox = document.getElementById("chat-box");
+function addBubble(text, mine=false){
+  const b=document.createElement('div');
+  b.className='bubble'+(mine?' you':'');
+  b.textContent=text;
+  chat.appendChild(b);
+  chat.scrollTop=chat.scrollHeight;
+}
+async function ask(text){
+  history.push({role:'user', content:text});
+  const res = await fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ persona, history, stage })
+  });
+  const data = await res.json();
+  const reply = data.reply || '…';
+  history.push({role:'assistant', content:reply});
+  addBubble(reply, false);
+}
 
-      // user bubble
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.textContent = message;
-      chatBox.appendChild(userMsg);
+send.onclick = () => {
+  const v = box.value.trim();
+  if(!v) return;
+  addBubble(v, true);
+  box.value='';
+  ask(v);
+};
 
-      input.value = "";
-
-      // send to serverless AI function
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ character: "dylan", message })
-      });
-
-      const data = await response.json();
-
-      // bot bubble
-      const botMsg = document.createElement("div");
-      botMsg.className = "message bot";
-      botMsg.textContent = data.reply;
-      chatBox.appendChild(botMsg);
-
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    document.getElementById("send-btn").addEventListener("click", sendMessage);
-    document.getElementById("user-input").addEventListener("keypress", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-  </script>
+// one casual opener only
+addBubble("Sit on the counter, pretty thing. I like the view from here.");
+</script>
 </body>
 </html>

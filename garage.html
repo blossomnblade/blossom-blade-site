@@ -1,79 +1,109 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en">
+<head>
+<meta charset="utf-8" />
 <title>Dylan Vale — PG-13 Room</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  :root{--panel:#0f1319ee;--ink:#e7eef7;--ink-d:#9fb0c5;--bubble-me:#31465f;--bubble-bot:#1a2230;}
-  body{margin:0;color:var(--ink);font-family:Inter,system-ui,Roboto,Helvetica,Arial,sans-serif;background:#000 url("images/dylan-bg.jpg") center/cover no-repeat fixed;}
-  .veil{position:fixed;inset:0;background:linear-gradient(#0006,#000c)}
-  .wrap{position:relative;max-width:980px;margin:72px auto;padding:0 16px}
-  .stage{display:inline-block;margin:0 0 8px 4px;padding:6px 12px;border-radius:999px;font-size:12px;background:#161e29;border:1px solid #263145;color:#9fb0c5}
-  .card{background:var(--panel);border:1px solid #263145;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #0009}
-  header{padding:18px 20px 12px;border-bottom:1px solid #263145}
-  header h1{margin:0;font-size:22px}
-  header .tags{margin-top:6px;font-size:12px;color:#9fb0c5}
-  #chatbox{padding:18px 14px;height:58vh;overflow:auto}
-  .bubble{display:inline-block;max-width:75%;margin:8px 0;padding:10px 12px;border-radius:14px;background:#1e2738;border:1px solid #2a3750}
-  .me{background:#354a67;margin-left:auto;border-color:#476083}
-  .footer{display:flex;gap:10px;padding:12px;border-top:1px solid #263145}
-  .footer input{flex:1;padding:12px;border-radius:12px;border:1px solid #2b3a54;background:#0f1420;color:var(--ink)}
-  .footer button{padding:12px 16px;border-radius:12px;border:1px solid #2b3a54;background:#21304a;color:var(--ink);cursor:pointer}
-  .typing{font-size:12px;color:#9fb0c5;padding:0 14px 10px;visibility:hidden}
-  .tip{font-size:11px;color:#9aa7ba;padding:0 14px 12px}
+  :root{--ink:#e8eef7}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; color:var(--ink);
+    background:#000 url("images/dylan-garage.jpg") center/cover no-repeat fixed;
+  }
+  .veil{position:fixed; inset:0; background:radial-gradient(60% 40% at 50% 10%, #0000, #000a 70%), linear-gradient(#0005, #0009)}
+  .wrap{position:relative; max-width:900px; margin:72px auto; padding:0 16px}
+  .title{font-size:28px; font-weight:800; text-shadow:0 2px 16px #000}
+  .chat{background:#0b1118cc; backdrop-filter:blur(6px); border:1px solid #0008;
+        border-radius:16px; padding:16px; box-shadow:0 10px 40px #0009; min-height:46vh}
+  .bubble{display:inline-block; background:#1f2937; padding:10px 12px; border-radius:12px; margin:6px 0; max-width:80%}
+  .you{background:#2563eb55; margin-left:auto}
+  .row{display:flex; gap:8px; margin-top:10px}
+  input{flex:1; padding:12px 14px; border-radius:10px; border:1px solid #ffffff22;
+        background:#0c1420; color:#fff; outline:none}
+  button{padding:12px 16px; border-radius:10px; border:1px solid #00000055;
+         background:linear-gradient(180deg,#2563eb,#1e40af); color:#fff; font-weight:700; cursor:pointer}
+  .tip{opacity:.8; font-size:.9rem; margin-top:8px}
+  .no-bg body{background:linear-gradient(180deg,#0b1118,#0a0f1a)}
 </style>
 </head>
 <body>
 <div class="veil"></div>
 <div class="wrap">
-  <span id="stageLabel" class="stage">PG-13 with subscription • Explicit talk unlocks with coins</span>
-  <div class="card">
-    <header>
-      <h1>Dylan Vale</h1>
-      <div class="tags">Biker boy • blue neon • sweet trouble</div>
-    </header>
-    <div id="chatbox"></div>
-    <div id="typing" class="typing">Dylan is typing…</div>
-    <div class="tip">One line at a time. He waits for your reply before continuing.</div>
-    <div class="footer">
-      <input id="msg" placeholder="Say something sweet…" autocomplete="off" />
-      <button id="send">Send</button>
-    </div>
+  <div class="title">Dylan Vale</div>
+  <div id="chat" class="chat" aria-live="polite"></div>
+  <div class="row">
+    <input id="box" placeholder="Say something sweet…" autocomplete="off" />
+    <button id="send">Send</button>
   </div>
+  <div class="tip">One line at a time. PG-13 with subscription • Explicit talk unlocks with coins.</div>
 </div>
 
 <script>
-  const params=new URLSearchParams(location.search);
-  const STAGE=params.get("stage")||"tease";
-  document.getElementById("stageLabel").textContent=(STAGE==="subscriber")?"Subscriber — PG-13 + suggestive":"PG-13 with subscription • Explicit talk unlocks with coins";
+const persona = "dylan";
+const stage = "subscriber";
+const chat = document.getElementById('chat');
+const box  = document.getElementById('box');
+const send = document.getElementById('send');
 
-  const MAN="dylan";
-  const BOX=document.getElementById("chatbox");
-  const INPUT=document.getElementById("msg");
-  const SEND=document.getElementById("send");
-  const TYPING=document.getElementById("typing");
+let history = [];
+let greeted = false;
+let sending = false;
 
-  function memKey(){return `bb_mem_${MAN}`;}
-  function loadMem(){try{return JSON.parse(localStorage.getItem(memKey()))||{};}catch{return {};}}
-  function saveMem(o){localStorage.setItem(memKey(),JSON.stringify(o));}
-  function memPairs(){const m=loadMem();return Object.entries(m).map(([k,v])=>`${k}=${v}`);}
-  function upsertMemo(m){const[k,...r]=String(m||"").split("=");const v=r.join("=").trim();if(!k||!v)return;const cur=loadMem();cur[k.trim()]=v;saveMem(cur);}
+function addBubble(text, mine=false){
+  const b = document.createElement('div');
+  b.className = 'bubble' + (mine ? ' you' : '');
+  b.textContent = text;
+  chat.appendChild(b);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-  function bubble(t,who="bot"){const b=document.createElement("div");b.className="bubble"+(who==="me"?" me":"");b.textContent=t;BOX.appendChild(b);BOX.scrollTop=BOX.scrollHeight;}
+async function ask(text){
+  history.push({ role:'user', content:text });
+  const res = await fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ persona, history, stage })
+  });
+  const data  = await res.json();
+  const reply = data.reply || '…';
+  history.push({ role:'assistant', content:reply });
+  addBubble(reply, false);
+}
 
-  async function askAPI(message){
-    TYPING.style.visibility="visible";
-    try{
-      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({man:MAN,stage:STAGE,message,memories:memPairs()})});
-      const data=await res.json(); if(data?.memo)upsertMemo(data.memo);
-      return data?.reply||"Say that again, pretty thing.";
-    }catch(e){return "Garage wifi blinked—hit me again."}
-    finally{TYPING.style.visibility="hidden";}
-  }
+async function handleSend(){
+  if (sending) return;
+  const v = box.value.trim();
+  if(!v) return;
+  sending = true;
 
-  SEND.addEventListener("click",async()=>{const t=(INPUT.value||"").trim();if(!t)return;bubble(t,"me");INPUT.value="";const r=await askAPI(t);bubble(r,"bot");});
-  INPUT.addEventListener("keydown",(e)=>{if(e.key==="Enter")SEND.click();});
+  addBubble(v, true);
+  box.value = '';
 
-  (async function greet(){const r=await askAPI("__GREET__");bubble(r,"bot");}());
+  try { await ask(v); }
+  catch { addBubble("Garage wifi blinked—say that again?", false); }
+  finally { sending = false; }
+}
+
+// send on click
+send.addEventListener('click', handleSend);
+// send on Enter
+box.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
+});
+
+// greet ONCE
+if (!greeted) {
+  greeted = true;
+  addBubble("Sit on the counter, pretty thing. I like the view from here.");
+}
+
+// check background file exists
+(function verifyBg(){
+  const tester = new Image();
+  tester.onerror = () => { document.documentElement.classList.add('no-bg'); };
+  tester.src = "images/dylan-garage.jpg";
+})();
 </script>
-</body></html>
+</body>
+</html>

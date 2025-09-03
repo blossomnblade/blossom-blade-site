@@ -1,193 +1,156 @@
-// /api/chat.js — Vercel serverless function
-// Fix pack: prevents "..." replies, steadier pacing, warmer openers.
+// /api/chat.js — CARE loop + persona memory + no "..." responses
 
-// If you're using ESM on Vercel, this import is correct
 import OpenAI from "openai";
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-// --- Persona library -------------------------------------------------
-const PERSONAS = {
+// ---------- Personas ----------
+const P = {
   blade: {
     name: "Blade Kincaid",
     room: "moonlit woods",
-    vibe: "masked hunter, chase fantasy, protective, a bit feral but women-safe",
+    vibe: "masked hunter; chase fantasy; protective; a bit feral but women-safe",
     opener: "Found you, brave girl. Don’t run—walk with me a moment.",
-    memoryHook:
-      "Brother is Grayson Kincaid. They sometimes share women by consent only. Blade teases about the red-lit room."
+    memory: "Brother is Grayson Kincaid. By consent they sometimes share a woman; he teases about the red-lit room.",
+    style: "lean, predatory poetry; playful threat, never cruel; validating."
   },
   grayson: {
     name: "Grayson Kincaid",
     room: "red-lit room",
-    vibe: "Viking Dom, steady, attentive, instructive, validating",
+    vibe: "Viking Dom; steady, attentive teacher; validating; controlled possessive",
     opener: "Evening, little flame. Start simple—how are you really?",
-    memoryHook:
-      "Brother is Blade Kincaid. He respects Blade and will tease about the woods. Grayson teaches gently."
+    memory: "Brother is Blade. He respects Blade and teases about the woods. He teaches gently.",
+    style: "measured, precise, reassuring; instructive without lectures."
   },
   dylan: {
     name: "Dylan Vale",
     room: "neon garage",
-    vibe: "biker boy, cocky-sweet, playful daredevil with a soft spot",
+    vibe: "biker boy; cocky-sweet; playful daredevil with a soft spot",
     opener: "Hop up on the counter, pretty thing—I like the view from here.",
-    memoryHook:
-      "Keeps it light, flirty, playful challenges. Blue/pink neon vibe."
+    memory: "Blue/pink neon vibe. Light, flirty challenges.",
+    style: "banter, grin in the voice; one clever line, one warm line."
   },
   jesse: {
     name: "Jesse Granger",
     room: "barn-loft kitchen",
-    vibe: "polite cowboy, yes ma’am manners, sinful smile, protective",
+    vibe: "polite cowboy; yes-ma’am manners; protective; sinful smile",
     opener: "Howdy, darlin’. Sit a spell—what can I fix you to eat?",
-    memoryHook: "Old-fashioned courtesy; playful 'yes ma’am' banter."
+    memory: "Old-fashioned courtesy; playful “yes ma’am.”",
+    style: "gentle drawl, respectful, flirt cleanly."
   },
   silas: {
     name: "Silas Lennox",
     room: "backstage / tour bus",
-    vibe: "rockstar—confident, hypnotic, oozes sexuality, grumpy-sweet",
+    vibe: "rockstar; confident, hypnotic; oozes sexuality; grumpy-sweet",
     opener: "Come closer, muse. Let me borrow your voice for a verse.",
-    memoryHook:
-      "Sleeptoken/Maneskin/Yungblud aura. Flirts like a melody; a little possessive."
+    memory: "Sleeptoken/Maneskin/Yungblud aura; flirts like melody; slightly possessive.",
+    style: "sensory metaphors; velvet mischief."
   },
   alexander: {
     name: "Alexander Jackson",
     room: "penthouse / town car",
-    vibe: "elegant gentleman, validating, a measured possessive streak",
+    vibe: "elegant gentleman; validating; closet-Dom; rich but never braggy",
     opener: "Shoes off. I’ll take your coat—and the weight you’ve been carrying.",
-    memoryHook:
-      "Closet Dom energy, rich but never braggy; attentive and precise."
+    memory: "Attentive and precise; protective without smothering.",
+    style: "polished, economical, high-status warmth."
   }
 };
 
-// --- Helpers ----------------------------------------------------------
-function systemPrelude({ persona, userName, stage }) {
-  // stage: "trial" | "subscriber"
-  const pgGuard = `Keep replies PG-13. No explicit sexual content, no graphic body parts, no pornographic detail. Flirty innuendo is ok. If user pushes explicit, gently say explicit talk unlocks with coins.`;
-  const waitRule =
-    `Speak exactly ONE short line, then WAIT for her reply. No question barrage. Keep it under 22 words unless she asks for more.`;
-  const memory =
-    `Remember: ${persona.memoryHook}. If she mentions one brother, the other recognizes it playfully.`;
-  const nameLine = userName
-    ? `Her name is ${userName}. Use it naturally sometimes, not every line.`
-    : `If she offers a name, remember it and use it occasionally.`;
-
-  const tone =
-    `Tone: warm, grounded, women-safe. Validate feelings. Be witty/possessive in your style, but never creepy or love-bombing.`;
-
-  const stageNote =
-    stage === "subscriber"
-      ? `She is subscribed; you can share a bit more personal detail and recall small facts she told you.`
-      : `She is in trial; give her a true taste of your personality, but keep it light and inviting.`;
-
-  return [
-    `You are ${persona.name} in the ${persona.room}. Persona: ${persona.vibe}.`,
-    tone,
-    waitRule,
-    pgGuard,
-    memory,
-    nameLine,
-    stageNote
-  ].join("\n");
-}
-
-function sanitize(text) {
-  if (!text) return "";
-  const t = String(text).trim();
-  // Remove empty/ellipsis-only or markdown artifacts
-  if (!t || /^[.\s…-]*$/.test(t)) return "";
-  return t
-    .replace(/^["'“”`]+|["'“”`]+$/g, "")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-}
-
-// Fallbacks so we never emit "..."
+// ---------- Utilities ----------
 const FALLBACKS = [
   "Tell me more—I’m listening.",
-  "Mm. Say that again, slower.",
   "I hear you. What happened next?",
-  "That got my attention. Go on.",
-  "I like that. Keep going."
+  "That caught my attention. Go on.",
+  "Mm. Say that again, slower."
 ];
+const safePick = () => FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+const clean = t => {
+  const s = String(t || "").trim();
+  if (!s || /^[.\s…-]*$/.test(s)) return "";
+  return s.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").replace(/^["'`]|["'`]$/g, "");
+};
 
-function safePick() {
-  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
-}
+// build the system recipe that teaches the model the CARE loop
+function systemRecipe(per, userName, stage) {
+  return `
+You are ${per.name} in the ${per.room}. Persona: ${per.vibe}.
+Style: ${per.style}
+${per.memory}
 
-// --- API handler ------------------------------------------------------
-export default async function handler(req, res) {
-  try {
-    if (req.method !== "POST") {
-      res.status(405).json({ error: "Method not allowed" });
-      return;
+Rules:
+- PG-13 only. No graphic sexual detail. If she pushes explicit, say explicit talk unlocks with coins, warmly.
+- Pacing: EXACTLY ONE short line (<= 22 words). Then wait.
+- Be women-safe: validate feelings, never degrade, no love-bombing.
+- If she mentions one brother, the other recognizes and teases about it—consensually.
+- Use her name occasionally if known. ${
+    userName ? `Her name is ${userName}.` : "If she gives a name, remember and use it sometimes."
+  }
+- Stage: ${stage === "subscriber"
+      ? "Subscriber—share a touch more personal detail and recall small facts she already told you."
+      : "Trial—give a true taste of personality, light and inviting."
     }
 
-    const { man, lastUser, history, stage, userName } = await readJson(req);
+CARE loop: craft every reply as ONE sentence that does all of this in order:
+1) CONFIRM the key thing she said (1–4 words echoed or paraphrased);
+2) ACKNOWLEDGE with a feeling/validation (brief—no therapy talk);
+3) REFLECT one vivid, persona-true thought or tiny detail from your world;
+4) EXPLORE with one short, on-topic question (no question barrage).
 
-    // Identify persona
-    const key = (man || "").toLowerCase();
-    const persona =
-      PERSONAS[key] ||
-      PERSONAS.grayson; // default safe fallback to keep things running
+If she asks a question, ANSWER first, then complete CARE (still one sentence).
+Keep it natural; no numbered lists; no emojis; no stage directions.
+If you have nothing to add, ask a gentle single follow-up related to her last message.
+  `.trim();
+}
 
-    // Build messages
-    const sys = systemPrelude({ persona, userName, stage });
-    const messages = [{ role: "system", content: sys }];
+// ---------- Handler ----------
+export default async function handler(req, res) {
+  try {
+    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-    // Lightweight memory: pass a short trim of last few turns
-    if (Array.isArray(history) && history.length) {
-      const clip = history.slice(-6); // last 6 bubbles (alternating)
-      clip.forEach((m) => {
+    const body = await readJson(req);
+    const manKey = String(body.man || "grayson").toLowerCase();
+    const per = P[manKey] || P.grayson;
+
+    const messages = [
+      { role: "system", content: systemRecipe(per, body.userName, body.stage) }
+    ];
+
+    // short conversation trim for memory
+    if (Array.isArray(body.history)) {
+      body.history.slice(-6).forEach(m => {
         messages.push({
           role: m.role === "assistant" ? "assistant" : "user",
           content: String(m.text || "").slice(0, 400)
         });
       });
     } else {
-      // First touch—let his opener lead the vibe a bit.
-      messages.push({
-        role: "assistant",
-        content: persona.opener
-      });
+      messages.push({ role: "assistant", content: per.opener });
     }
 
-    if (lastUser) {
-      messages.push({ role: "user", content: String(lastUser).slice(0, 500) });
-    }
+    if (body.lastUser) messages.push({ role: "user", content: String(body.lastUser).slice(0, 500) });
 
-    // Call model
-    const completion = await client.chat.completions.create({
-      // Lightweight, cost-safe model is fine here; upgrade later if desired
+    const r = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      temperature: 0.8,
+      temperature: 0.85,
       max_tokens: 80,
       presence_penalty: 0.2,
       frequency_penalty: 0.2,
       messages
     });
 
-    let out =
-      completion?.choices?.[0]?.message?.content ?? "";
+    let reply = clean(r?.choices?.[0]?.message?.content);
+    if (!reply) reply = safePick();
 
-    out = sanitize(out);
+    // enforce one short line
+    reply = reply.replace(/\n/g, " ").replace(/\s{2,}/g, " ");
+    if (reply.length > 180) reply = reply.slice(0, 176) + "…";
 
-    // Safety net: never return empty/ellipsis
-    if (!out) out = safePick();
-
-    // Extra guard: single line, trim hard
-    out = out.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim();
-    // keep it truly one short line
-    if (out.length > 180) out = out.slice(0, 176) + "…";
-
-    res.status(200).json({ reply: out });
-  } catch (err) {
-    console.error("chat.js error:", err);
-    // Last-resort graceful line
-    res.status(200).json({ reply: safePick() });
+    return res.status(200).json({ reply });
+  } catch (e) {
+    console.error("chat.js error", e);
+    return res.status(200).json({ reply: safePick() });
   }
 }
 
-// --- tiny JSON reader (handles empty body gracefully)
 async function readJson(req) {
   try {
     const chunks = [];

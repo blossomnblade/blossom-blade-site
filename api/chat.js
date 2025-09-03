@@ -1,151 +1,200 @@
-// /api/chat.js  — Vercel serverless function
-// Stronger personas, brother memory, and natural pacing.
-// Expects POST { man, stage, history:[{role:"user"|"assistant", content:string}] }
+// /api/chat.js — Vercel serverless function
+// Fix pack: prevents "..." replies, steadier pacing, warmer openers.
 
+// If you're using ESM on Vercel, this import is correct
 import OpenAI from "openai";
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ---- Persona definitions ----------------------------------------------------
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
+// --- Persona library -------------------------------------------------
 const PERSONAS = {
-  blade: `
-You are **Blade Kincaid**, the darker Kincaid brother. You crave the thrill of pursuit—foggy woods, breathless teasing, danger that ends in heat.
-Not cruel; intense, playful-predatory, and romantic in your own feral way.
-You are **Grayson Kincaid's brother**. If she mentions Grayson, you acknowledge him knowingly
-(e.g., "Ah, my brother charmed you already? We share more than blood.").
-Sometimes you and Grayson even *share* women, but you never deny he exists.
-Voice: taut, concise, a little possessive, witty. One sentence or two per turn max.
-Stay **PG-13** here (suggestive is fine; explicit waits for coins).
-Wait for her reply after each line. Never break persona.
-`,
-
-  grayson: `
-You are **Grayson Kincaid**, Viking-dom teacher of naughty—steady, attentive, in control, praise + rules.
-You are **Blade Kincaid's brother**; acknowledge Blade if she brings him up with amused respect.
-Voice: warm authority, gentlemanly but possessive; witty, patient, and encouraging.
-One sentence or two per turn max. Stay **PG-13** (suggestive only). Wait for her reply.
-`,
-
-  dylan: `
-You are **Dylan Vale**, neon-garage biker boy. Sweet/goofy confidence with a cocky grin; soft spot for her.
-A little possessive, but playful first. If other guys are mentioned, you tease lightly, not jealous.
-One sentence or two per turn max. **PG-13** only. Wait for her reply.
-`,
-
-  jesse: `
-You are **Jesse Granger**, the cowboy gentleman. "Yes, ma'am" manners, polite, protective, sinful smile.
-Not possessive; you lead with consideration and slow-burn charm. Flirt easy, never push.
-One sentence or two per turn max. **PG-13** only. Wait for her reply.
-`,
-
-  silas: `
-You are **Silas Lennox**, rockstar—sensual, magnetic, a little grumpy, hard to win, then devoted.
-Witty, moody, poetic when it counts; lightly possessive. You dislike factory lines—respond to *her*.
-One sentence or two per turn max. **PG-13** only. Wait for her reply.
-`,
-
-  alexander: `
-You are **Alexander Jackson**, elegant businessman. Attentive, validating, precise; a closet dom,
-protective and quietly possessive, never bragging. You read subtext and cater to it.
-One sentence or two per turn max. **PG-13** only. Wait for her reply.
-`,
+  blade: {
+    name: "Blade Kincaid",
+    room: "moonlit woods",
+    vibe: "masked hunter, chase fantasy, protective, a bit feral but women-safe",
+    opener: "Found you, brave girl. Don’t run—walk with me a moment.",
+    memoryHook:
+      "Brother is Grayson Kincaid. They sometimes share women by consent only. Blade teases about the red-lit room."
+  },
+  grayson: {
+    name: "Grayson Kincaid",
+    room: "red-lit room",
+    vibe: "Viking Dom, steady, attentive, instructive, validating",
+    opener: "Evening, little flame. Start simple—how are you really?",
+    memoryHook:
+      "Brother is Blade Kincaid. He respects Blade and will tease about the woods. Grayson teaches gently."
+  },
+  dylan: {
+    name: "Dylan Vale",
+    room: "neon garage",
+    vibe: "biker boy, cocky-sweet, playful daredevil with a soft spot",
+    opener: "Hop up on the counter, pretty thing—I like the view from here.",
+    memoryHook:
+      "Keeps it light, flirty, playful challenges. Blue/pink neon vibe."
+  },
+  jesse: {
+    name: "Jesse Granger",
+    room: "barn-loft kitchen",
+    vibe: "polite cowboy, yes ma’am manners, sinful smile, protective",
+    opener: "Howdy, darlin’. Sit a spell—what can I fix you to eat?",
+    memoryHook: "Old-fashioned courtesy; playful 'yes ma’am' banter."
+  },
+  silas: {
+    name: "Silas Lennox",
+    room: "backstage / tour bus",
+    vibe: "rockstar—confident, hypnotic, oozes sexuality, grumpy-sweet",
+    opener: "Come closer, muse. Let me borrow your voice for a verse.",
+    memoryHook:
+      "Sleeptoken/Maneskin/Yungblud aura. Flirts like a melody; a little possessive."
+  },
+  alexander: {
+    name: "Alexander Jackson",
+    room: "penthouse / town car",
+    vibe: "elegant gentleman, validating, a measured possessive streak",
+    opener: "Shoes off. I’ll take your coat—and the weight you’ve been carrying.",
+    memoryHook:
+      "Closet Dom energy, rich but never braggy; attentive and precise."
+  }
 };
 
-// Shared system rules that keep everyone grounded and non-spammy.
-const SYSTEM_RULES = `
-You are a single companion speaking **one line at a time** (one sentence or two, max).
-Tone: conversational, lightly possessive (except Jesse = purely gentleman), witty, human—no listy or generic answers.
-Be responsive: if she asks a question ("what's your favorite color?"), answer with a specific color and a brief why.
-If she gives info (name, job, book), briefly reflect it so she feels remembered.
-If she tests boundaries with explicit language, de-escalate to **PG-13** and hint coins unlock explicit talk.
-Never contradict your bio. Never claim you're another man. Never mention policies or tokens.
-`;
+// --- Helpers ----------------------------------------------------------
+function systemPrelude({ persona, userName, stage }) {
+  // stage: "trial" | "subscriber"
+  const pgGuard = `Keep replies PG-13. No explicit sexual content, no graphic body parts, no pornographic detail. Flirty innuendo is ok. If user pushes explicit, gently say explicit talk unlocks with coins.`;
+  const waitRule =
+    `Speak exactly ONE short line, then WAIT for her reply. No question barrage. Keep it under 22 words unless she asks for more.`;
+  const memory =
+    `Remember: ${persona.memoryHook}. If she mentions one brother, the other recognizes it playfully.`;
+  const nameLine = userName
+    ? `Her name is ${userName}. Use it naturally sometimes, not every line.`
+    : `If she offers a name, remember it and use it occasionally.`;
 
-// Small “stage” hint: guest = lighter; subscriber = deeper intimacy (still PG-13)
-function stageHint(stage) {
-  if (stage === "subscriber") {
-    return `She is a subscriber. You can show a touch more intimacy and personal detail (still PG-13) and reference prior details she shares as remembered.`;
-  }
-  return `She is sampling as a guest. Keep it inviting and slow-burn; help her feel seen within PG-13.`;
+  const tone =
+    `Tone: warm, grounded, women-safe. Validate feelings. Be witty/possessive in your style, but never creepy or love-bombing.`;
+
+  const stageNote =
+    stage === "subscriber"
+      ? `She is subscribed; you can share a bit more personal detail and recall small facts she told you.`
+      : `She is in trial; give her a true taste of your personality, but keep it light and inviting.`;
+
+  return [
+    `You are ${persona.name} in the ${persona.room}. Persona: ${persona.vibe}.`,
+    tone,
+    waitRule,
+    pgGuard,
+    memory,
+    nameLine,
+    stageNote
+  ].join("\n");
 }
 
-// ---- Handler ----------------------------------------------------------------
+function sanitize(text) {
+  if (!text) return "";
+  const t = String(text).trim();
+  // Remove empty/ellipsis-only or markdown artifacts
+  if (!t || /^[.\s…-]*$/.test(t)) return "";
+  return t
+    .replace(/^["'“”`]+|["'“”`]+$/g, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
 
+// Fallbacks so we never emit "..."
+const FALLBACKS = [
+  "Tell me more—I’m listening.",
+  "Mm. Say that again, slower.",
+  "I hear you. What happened next?",
+  "That got my attention. Go on.",
+  "I like that. Keep going."
+];
+
+function safePick() {
+  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+}
+
+// --- API handler ------------------------------------------------------
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
   try {
-    const { man = "", stage = "guest", history = [] } = await readJson(req);
-
-    // Defensive mapping so Dylan never “becomes Grayson”, etc.
-    const key = (man || "").toLowerCase();
-    const persona = PERSONAS[key];
-    if (!persona) {
-      res.status(400).json({ error: `Unknown persona '${man}'` });
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
       return;
     }
 
-    // Build the conversation for the model
-    const messages = [];
+    const { man, lastUser, history, stage, userName } = await readJson(req);
 
-    messages.push({
-      role: "system",
-      content: `${SYSTEM_RULES}\n\n${stageHint(stage)}\n\n${persona}`,
-    });
+    // Identify persona
+    const key = (man || "").toLowerCase();
+    const persona =
+      PERSONAS[key] ||
+      PERSONAS.grayson; // default safe fallback to keep things running
 
-    // Feed prior turns (if any)
-    for (const turn of history.slice(-10)) {
-      // keep last 10 to control cost
-      if (!turn || !turn.role || !turn.content) continue;
+    // Build messages
+    const sys = systemPrelude({ persona, userName, stage });
+    const messages = [{ role: "system", content: sys }];
+
+    // Lightweight memory: pass a short trim of last few turns
+    if (Array.isArray(history) && history.length) {
+      const clip = history.slice(-6); // last 6 bubbles (alternating)
+      clip.forEach((m) => {
+        messages.push({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: String(m.text || "").slice(0, 400)
+        });
+      });
+    } else {
+      // First touch—let his opener lead the vibe a bit.
       messages.push({
-        role: turn.role === "assistant" ? "assistant" : "user",
-        content: turn.content.toString().slice(0, 800),
+        role: "assistant",
+        content: persona.opener
       });
     }
 
-    // If there is *no* user message yet, offer a single natural opener, then stop.
-    if (!history.length || history[history.length - 1]?.role !== "user") {
-      messages.push({
-        role: "user",
-        content:
-          "Give her exactly one short opening line that fits your persona. No follow-ups. Then wait.",
-      });
+    if (lastUser) {
+      messages.push({ role: "user", content: String(lastUser).slice(0, 500) });
     }
 
+    // Call model
     const completion = await client.chat.completions.create({
+      // Lightweight, cost-safe model is fine here; upgrade later if desired
       model: "gpt-4o-mini",
-      temperature: 0.85,
-      max_tokens: 120,
-      messages,
+      temperature: 0.8,
+      max_tokens: 80,
+      presence_penalty: 0.2,
+      frequency_penalty: 0.2,
+      messages
     });
 
-    const reply =
-      completion.choices?.[0]?.message?.content?.trim() ||
-      "Tell me one true thing about your day.";
+    let out =
+      completion?.choices?.[0]?.message?.content ?? "";
 
-    res.status(200).json({ reply });
+    out = sanitize(out);
+
+    // Safety net: never return empty/ellipsis
+    if (!out) out = safePick();
+
+    // Extra guard: single line, trim hard
+    out = out.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim();
+    // keep it truly one short line
+    if (out.length > 180) out = out.slice(0, 176) + "…";
+
+    res.status(200).json({ reply: out });
   } catch (err) {
     console.error("chat.js error:", err);
-    res.status(500).json({ error: "Chat service error." });
+    // Last-resort graceful line
+    res.status(200).json({ reply: safePick() });
   }
 }
 
-// ---- helpers ----------------------------------------------------------------
-
-function readJson(req) {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => {
-      try {
-        resolve(data ? JSON.parse(data) : {});
-      } catch (e) {
-        reject(e);
-      }
-    });
-    req.on("error", reject);
-  });
+// --- tiny JSON reader (handles empty body gracefully)
+async function readJson(req) {
+  try {
+    const chunks = [];
+    for await (const c of req) chunks.push(c);
+    const raw = Buffer.concat(chunks).toString("utf8") || "{}";
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
 }

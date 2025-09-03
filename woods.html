@@ -1,109 +1,135 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Blade Kincaid — PG-13 Room</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: url("images/blade-woods.jpg") no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-    }
-    .chat-container {
-      background: rgba(0, 0, 0, 0.65);
-      margin: 50px auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 800px;
-    }
-    h1 {
-      margin-top: 0;
-    }
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .bot {
-      background: rgba(50, 50, 50, 0.8);
-      text-align: left;
-    }
-    .user {
-      background: rgba(100, 100, 100, 0.8);
-      text-align: right;
-    }
-    #input-area {
-      margin-top: 15px;
-      display: flex;
-    }
-    #user-input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px 0 0 8px;
-      border: none;
-    }
-    #send-btn {
-      padding: 10px 20px;
-      border: none;
-      background: crimson;
-      color: white;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>Blade Kincaid — PG-13 Room</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --ink:#e8f2ff;
+    --accent:#0ea5e9;         /* cool moonlit blue */
+    --bubble:#123041;          /* assistant bubble */
+    --you:#2b5b72;             /* user bubble */
+  }
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui, Segoe UI, Roboto, Arial; color:var(--ink);
+    background:#051218 url("images/blade-woods.jpg") center/cover no-repeat fixed;
+  }
+
+  /* dim + vignette for readability */
+  .veil{position:fixed; inset:0;
+        background:
+          radial-gradient(70% 55% at 50% 12%, #0000, #000a 70%),
+          linear-gradient(#0006, #000a)}
+  .wrap{position:relative; max-width:920px; margin:72px auto; padding:0 16px}
+  .title{font-size:32px; font-weight:800; text-shadow:0 2px 18px #000}
+
+  .chat{
+    background:#061c26cc; backdrop-filter:blur(6px);
+    border:1px solid #0008; border-radius:16px; padding:16px;
+    box-shadow:0 12px 42px #0009; min-height:46vh
+  }
+  .bubble{
+    display:inline-block; color:#e6f7ff;
+    background:var(--bubble); padding:10px 12px; border-radius:12px;
+    margin:6px 0; max-width:80%; line-height:1.35; box-shadow:0 6px 18px #0007
+  }
+  .you{ background:var(--you); margin-left:auto }
+  .row{display:flex; gap:8px; margin-top:12px}
+  input{
+    flex:1; padding:12px 14px; border-radius:10px; border:1px solid #ffffff22;
+    background:#081821; color:#e8f2ff; outline:none
+  }
+  input::placeholder{color:#a8c0cf}
+  button{
+    padding:12px 16px; border-radius:10px; border:1px solid #00000055;
+    background:linear-gradient(180deg, #38bdf8, #0891b2);
+    color:#002232; font-weight:800; cursor:pointer
+  }
+  .tip{opacity:.9; font-size:.9rem; margin-top:8px}
+  .no-bg body{background:linear-gradient(#07131a,#0a1620)}
+</style>
 </head>
 <body>
-  <div class="chat-container">
-    <h1>Blade Kincaid</h1>
-    <div id="chat-box"></div>
-    <div id="input-area">
-      <input id="user-input" type="text" placeholder="Say something sweet…" />
-      <button id="send-btn">Send</button>
-    </div>
+<div class="veil"></div>
+<div class="wrap">
+  <div class="title">Blade Kincaid</div>
+
+  <div id="chat" class="chat" aria-live="polite"></div>
+
+  <div class="row">
+    <input id="box" placeholder="Say something sweet…" autocomplete="off" />
+    <button id="send">Send</button>
   </div>
 
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
+  <div class="tip">
+    One line at a time. He waits for your reply before continuing. PG-13 with subscription · Explicit talk unlocks with coins.
+  </div>
+</div>
 
-      const chatBox = document.getElementById("chat-box");
+<script>
+const persona = "blade";
+const stage   = "subscriber";        // or "guest" if you’re testing pre-sub
+const chat = document.getElementById('chat');
+const box  = document.getElementById('box');
+const send = document.getElementById('send');
 
-      // user bubble
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.textContent = message;
-      chatBox.appendChild(userMsg);
+let history = [];
+let greeted = false;
+let sending = false;
 
-      input.value = "";
+function addBubble(text, mine=false){
+  const b = document.createElement('div');
+  b.className = 'bubble' + (mine ? ' you' : '');
+  b.textContent = text;
+  chat.appendChild(b);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-      // send to serverless AI function
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ character: "blade", message })
-      });
+async function ask(text){
+  history.push({ role:'user', content:text });
+  const res = await fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ persona, history, stage })
+  });
+  const data  = await res.json();
+  const reply = data.reply || '…';
+  history.push({ role:'assistant', content:reply });
+  addBubble(reply, false);
+}
 
-      const data = await response.json();
+async function handleSend(){
+  if (sending) return;
+  const v = box.value.trim();
+  if(!v) return;
+  sending = true;
 
-      // bot bubble
-      const botMsg = document.createElement("div");
-      botMsg.className = "message bot";
-      botMsg.textContent = data.reply;
-      chatBox.appendChild(botMsg);
+  addBubble(v, true);
+  box.value = '';
 
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+  try { await ask(v); }
+  catch { addBubble("Wind shifted—say it again, slower.", false); }
+  finally { sending = false; }
+}
 
-    document.getElementById("send-btn").addEventListener("click", sendMessage);
-    document.getElementById("user-input").addEventListener("keypress", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-  </script>
+// Click + Enter to send
+send.addEventListener('click', handleSend);
+box.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); handleSend(); }});
+
+// Greet once (PG-13, chase vibe without violence)
+if (!greeted){
+  greeted = true;
+  addBubble("You came to the woods. Brave. Tell me one true thing I should know before I catch you.");
+}
+
+// Background fallback if image path is bad
+(function verifyBg(){
+  const img = new Image();
+  img.onerror = () => document.documentElement.classList.add('no-bg');
+  img.src = "images/blade-woods.jpg";
+})();
+</script>
 </body>
 </html>

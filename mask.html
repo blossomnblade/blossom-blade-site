@@ -5,43 +5,106 @@
 <title>Grayson Kincaid — PG-13 Room</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;color:#f2e8e8;
-       background:#120307 url("images/grayson-bg.jpg") center/cover no-repeat fixed;}
-  .wrap{max-width:900px;margin:5rem auto;padding:1rem}
-  .title{font-size:2.2rem;font-weight:800;text-shadow:0 2px 16px rgba(0,0,0,.85)}
-  .chat{background:rgba(20,0,0,.55);backdrop-filter:blur(6px);border-radius:16px;padding:1rem;box-shadow:0 10px 40px rgba(0,0,0,.6)}
-  .bubble{display:inline-block;background:rgba(255,255,255,.08);padding:.7rem 1rem;border-radius:12px;margin:.5rem 0;max-width:80%}
-  .you{background:rgba(244,63,94,.25);margin-left:auto}
-  .row{display:flex;gap:.5rem;margin-top:.75rem}
-  input{flex:1;padding:.7rem .9rem;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35);color:#fff}
-  button{padding:.7rem 1rem;border-radius:10px;border:0;background:#fb7185;color:#2a0008;font-weight:700;cursor:pointer}
-  .tip{opacity:.8;font-size:.85rem;margin-top:.25rem}
+  :root{--ink:#f8e9ec}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; color:var(--ink);
+    background:#120307 url("images/grayson-bg.jpg") center/cover no-repeat fixed;
+  }
+  /* veil for readability on brighter screens */
+  .veil{position:fixed; inset:0; background:
+    radial-gradient(65% 45% at 50% 15%, #0000, #0009 70%),
+    linear-gradient(#0005, #000a)}
+  .wrap{position:relative; max-width:900px; margin:72px auto; padding:0 16px}
+  .title{font-size:28px; font-weight:800; text-shadow:0 2px 16px #000}
+  .chat{background:#28070acc; backdrop-filter:blur(6px); border:1px solid #0008;
+        border-radius:16px; padding:16px; box-shadow:0 10px 40px #0009; min-height:46vh}
+  .bubble{display:inline-block; background:#3a0b10; padding:10px 12px; border-radius:12px; margin:6px 0; max-width:80%}
+  .you{background:#fb718533; margin-left:auto}
+  .row{display:flex; gap:8px; margin-top:10px}
+  input{flex:1; padding:12px 14px; border-radius:10px; border:1px solid #ffffff22;
+        background:#160407; color:#fff; outline:none}
+  button{padding:12px 16px; border-radius:10px; border:1px solid #00000055;
+         background:linear-gradient(180deg,#be123c,#9f1239); color:#fff; font-weight:700; cursor:pointer}
+  .tip{opacity:.85; font-size:.9rem; margin-top:8px}
+  .no-bg body{background:linear-gradient(180deg,#17060a,#0f0407)}
 </style>
 </head>
 <body>
+<div class="veil"></div>
 <div class="wrap">
   <div class="title">Grayson Kincaid</div>
-  <div id="chat" class="chat"></div>
+  <div id="chat" class="chat" aria-live="polite"></div>
   <div class="row">
-    <input id="box" placeholder="Say something sweet…" />
+    <input id="box" placeholder="Speak, little flame…" autocomplete="off" />
     <button id="send">Send</button>
   </div>
-  <div class="tip">One line at a time. He answers, then asks. PG-13; explicit talk unlocks with coins.</div>
+  <div class="tip">One line at a time. He answers first, then guides. PG-13; explicit unlocks with coins.</div>
 </div>
+
 <script>
-const persona="grayson"; const stage="subscriber";
-const chat=document.getElementById('chat'); const box=document.getElementById('box'); const send=document.getElementById('send');
-let history=[];
-function addBubble(t,m=false){const b=document.createElement('div');b.className='bubble'+(m?' you':'');b.textContent=t;chat.appendChild(b);chat.scrollTop=chat.scrollHeight;}
-async function ask(t){
-  history.push({role:'user',content:t});
-  const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({persona,history,stage})});
-  const d=await r.json(); const reply=d.reply||'…';
-  history.push({role:'assistant',content:reply}); addBubble(reply);
+const persona = "grayson";
+const stage   = "subscriber";
+const chat = document.getElementById('chat');
+const box  = document.getElementById('box');
+const send = document.getElementById('send');
+
+let history = [];
+let greeted = false;
+let sending = false;
+
+function addBubble(text, mine=false){
+  const b = document.createElement('div');
+  b.className = 'bubble' + (mine ? ' you' : '');
+  b.textContent = text;
+  chat.appendChild(b);
+  chat.scrollTop = chat.scrollHeight;
 }
-send.onclick=()=>{const v=box.value.trim(); if(!v) return; addBubble(v,true); box.value=''; ask(v);};
-// single opener:
-addBubble("Evening, little flame. Tell me one true thing about your day.");
+
+async function ask(text){
+  history.push({ role:'user', content:text });
+  const res = await fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ persona, history, stage })
+  });
+  const data  = await res.json();
+  const reply = data.reply || '…';
+  history.push({ role:'assistant', content:reply });
+  addBubble(reply, false);
+}
+
+async function handleSend(){
+  if (sending) return;
+  const v = box.value.trim();
+  if(!v) return;
+  sending = true;
+
+  addBubble(v, true);
+  box.value = '';
+
+  try { await ask(v); }
+  catch { addBubble("Signal dipped. Say it again, slower.", false); }
+  finally { sending = false; }
+}
+
+// click send
+send.addEventListener('click', handleSend);
+// Enter to send
+box.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSend(); } });
+
+// greet once
+if (!greeted) {
+  greeted = true;
+  addBubble("Evening, little flame. Tell me one true thing about your day.");
+}
+
+// background sanity check
+(function verifyBg(){
+  const img = new Image();
+  img.onerror = () => { document.documentElement.classList.add('no-bg'); };
+  img.src = "images/grayson-bg.jpg";
+})();
 </script>
 </body>
 </html>

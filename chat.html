@@ -233,16 +233,24 @@ another.addEventListener("click",()=>{if(count<MAX_TRIALS) startPreview();});
 snooze.addEventListener("click",()=>{overlay.style.display="none"; overlay.setAttribute("aria-hidden","true"); end=Date.now()+60*1000; localStorage.setItem(END_KEY,String(end)); requestAnimationFrame(tick);});
 
 /* ----------------- severity + memory facts ----------------- */
-// Tweak these lists if needed:
-const HARD=["nude","naked","oral","blowjob","handjob","cum","inside you","moan for me","choke me","porn"];
-const MED =["bed","kiss","neck","ride","spank","grind","dirty","aroused","turn on","get me off","touch me","thighs","hard","wet"];
+// 🔥 Expanded triggers so “lick/rail/take me” flip the popup quickly.
+const HARD = [
+  "lick me","eat me","suck","go down","oral","blowjob","handjob",
+  "cum","finish in me","inside me","moan for me","choke me","porn",
+  "rail me","bend me over"
+];
+const MED = [
+  "lick","kiss my","neck","ride","ride me","spank","grind","dirty",
+  "aroused","turn on","get me off","touch me","thighs","hard","wet",
+  "desk","counter","tie me","take me","pin me"
+];
 function severity(t){
   const s=t.toLowerCase();
   if(HARD.some(w=>s.includes(w))) return 2;
   if(MED.some(w=>s.includes(w))) return 1;
   return 0;
 }
-// Memory facts per guy (very light; safe)
+// Memory facts per guy (light)
 const MEM_KEY = `bb.mem:${id}`;
 function getMemory(){ try{return JSON.parse(localStorage.getItem(MEM_KEY)||`{"facts":[]}`);}catch(_){return{facts:[]}} }
 function addFact(f){
@@ -257,20 +265,18 @@ function mineFacts(text){
 }
 
 /* ----------------- brain hookup ----------------- */
-const history = []; // we keep last few turns
+const history = []; // last few turns
 let mediumCount = 0; // for delayed coin popup
 let lastAssistant = ""; // anti exact repeat
 
-// seed opener (one short persona intro sent via brain to keep style consistent)
 async function seedIntro(){
-  const intro = `Start the chat in your persona with one short opener and a concrete question (example: “Tell me your shirt color”).
-  Keep it PG.`;
+  const intro = `Start the chat in your persona with one short opener and a concrete question (example: “Tell me your shirt color”). Keep it PG.`;
   const reply = await callBrain("pg", [{role:"user", content:intro}], true);
-  pushAssistant(reply || `I’m here. Tell me one truth from today.`); // fallback
+  pushAssistant(reply || `I’m here. Tell me one truth from today.`);
 }
 function pushAssistant(text){
   if(!text) return;
-  if(text.trim() === lastAssistant.trim()) return; // avoid exact repeat
+  if(text.trim() === lastAssistant.trim()) return;
   lastAssistant = text.trim();
   history.push({role:"assistant", content:lastAssistant});
   row(`<strong>${esc(guy.name)}:</strong> ${esc(lastAssistant)}`);
@@ -308,10 +314,11 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
   if(level===1) mediumCount++;
   let mode = "pg";
 
-  if(level===2 || mediumCount>=2){
+  // ⚖️ Lower threshold: 1 medium nudge shows popup
+  if(level===2 || mediumCount>=1){
     if(getCoins()<=0){
       showCoins(); mediumCount=0;
-      row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only). You’re safe here.</em>`);
+      row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only).</em>`);
       mode = "pg";
     }else{
       spendCoin(); updateBadge(); mode = "erotic";
@@ -326,18 +333,10 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
 /* ----------------- kickoff ----------------- */
 (function(){
   document.body.style.setProperty("--hero", `url("${guy.bg}")`);
-  // Start preview or lock if used
-  if(Number(localStorage.getItem(COUNT_KEY)||0) >= MAX_TRIALS){ lock(true); return; }
+  if(Number(localStorage.getItem(`bb.trialCount:${id}`)||0) >= 3){ lock(true); return; }
   if(!end || end<=Date.now()){ startPreview(); } else { requestAnimationFrame(tick); }
-  // seed a first line
   seedIntro();
 })();
-
-/* ----------------- coins UI tweaks ----------------- */
-const coinPopupEl=document.getElementById("coinPopup");
-if(localStorage.getItem("bb.coinPopupShown")!=="1"){
-  // Don’t auto-show; we only show by severity logic.
-}
 document.getElementById("coinBadge").title = "Coin packs appear when convo leans spicy.";
 </script>
 </body>

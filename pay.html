@@ -6,65 +6,40 @@
 <title>Subscribe • Blossom n Blade</title>
 <meta name="description" content="Choose a day pass, monthly plan, or coin packs for erotic chat add-ons." />
 <style>
-  :root{
-    --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
-    --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25; }
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:
-      linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
-      var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+    background:linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
+               var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
   }
-  .banner{
-    text-align:center; font-size:13px; padding:8px 12px;
-    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35));
-    border-bottom:1px solid var(--line);
-  }
-  header{
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  .banner{ text-align:center; font-size:13px; padding:8px 12px;
+    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35)); border-bottom:1px solid var(--line); }
+  header{ display:flex; justify-content:space-between; align-items:center; gap:12px;
     padding:16px; border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));
-  }
+    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0)); }
   .brand{display:flex; align-items:center; gap:10px}
-  .dot{width:26px;height:26px;border-radius:50%;
-       background:conic-gradient(from 220deg,var(--wine),var(--plum));
-       box-shadow:0 0 0 2px #000 inset}
+  .dot{width:26px;height:26px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum)); box-shadow:0 0 0 2px #000 inset}
   h1{margin:0; font-size:18px}
   a{color:#e7bddf; text-decoration:none}
   .wrap{max-width:1100px; margin:0 auto; padding:22px 16px 56px}
   .hero{text-align:center; margin:6px 0 16px}
   .hero h2{margin:0 0 4px; font-size:24px}
   .hero p{margin:0; color:var(--muted); font-size:14px}
-  .trialbar{
-    max-width:980px; margin:12px auto 8px; text-align:center;
-    padding:10px 12px; border:1px solid var(--line); border-radius:999px;
-    background:linear-gradient(180deg,#1a121a,#120a11); color:#e9d4e6; font-size:14px;
-  }
-  .grid{
-    display:grid; gap:18px; margin-top:14px;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    max-width:980px; margin-left:auto; margin-right:auto;
-  }
-  .card{
-    background:linear-gradient(180deg, rgba(23,16,23,.95), rgba(23,16,23,.92));
-    border:1px solid var(--line); border-radius:16px; overflow:hidden;
-    box-shadow:0 1px 12px rgba(0,0,0,.28);
-  }
-  .card .hd{padding:12px 14px; border-bottom:1px solid #241624;
-            background:linear-gradient(180deg,#1a121a,#120a11)}
+  .trialbar{ max-width:980px; margin:12px auto 8px; text-align:center; padding:10px 12px;
+    border:1px solid var(--line); border-radius:999px;
+    background:linear-gradient(180deg,#1a121a,#120a11); color:#e9d4e6; font-size:14px; }
+  .grid{ display:grid; gap:18px; margin-top:14px;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); max-width:980px; margin-left:auto; margin-right:auto; }
+  .card{ background:linear-gradient(180deg, rgba(23,16,23,.95), rgba(23,16,23,.92));
+    border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 1px 12px rgba(0,0,0,.28); }
+  .card .hd{padding:12px 14px; border-bottom:1px solid #241624; background:linear-gradient(180deg,#1a121a,#120a11)}
   .card h3{margin:0; font-size:18px}
   .price{font-size:26px; font-weight:800; margin:2px 0 0}
   .body{padding:14px; font-size:14px; color:var(--muted)}
-  ul{margin:0 0 12px 18px}
-  li{margin:4px 0}
-  .btn{
-    display:inline-block; margin-top:8px; padding:10px 14px; border-radius:999px;
-    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700;
-    border:none; cursor:pointer; text-align:center
-  }
+  ul{margin:0 0 12px 18px} li{margin:4px 0}
+  .btn{ display:inline-block; margin-top:8px; padding:10px 14px; border-radius:999px;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700; border:none; cursor:pointer; text-align:center }
   .pill{display:inline-block; padding:3px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
   .pill.good{border-color:#234323; background:#0f1a11}
   .coins{display:grid; gap:12px; grid-template-columns:repeat(2,1fr); margin-top:8px}
@@ -73,10 +48,8 @@
   .note{text-align:center; color:var(--muted); font-size:12px; margin-top:12px}
   .footer{margin-top:26px; text-align:center; color:var(--muted); font-size:12px}
   .back{display:inline-flex; align-items:center; gap:8px}
-  .avatar{
-    width:56px; height:56px; border-radius:12px; object-fit:cover; margin:0 auto 8px; display:block;
-    border:1px solid #2a1a25; box-shadow:0 2px 10px rgba(0,0,0,.3)
-  }
+  .avatar{ width:56px; height:56px; border-radius:12px; object-fit:cover; margin:0 auto 8px; display:block;
+    border:1px solid #2a1a25; box-shadow:0 2px 10px rgba(0,0,0,.3) }
 </style>
 </head>
 <body>
@@ -84,10 +57,7 @@
 <div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
 
 <header>
-  <div class="brand">
-    <div class="dot" aria-hidden="true"></div>
-    <h1>Blossom n Blade</h1>
-  </div>
+  <div class="brand"><div class="dot" aria-hidden="true"></div><h1>Blossom n Blade</h1></div>
   <a class="back" href="/index.html">← Back to Choose</a>
 </header>
 
@@ -95,7 +65,7 @@
   <section class="hero">
     <img id="heroAvatar" class="avatar" src="/images/gothic-bg.jpg" alt="" />
     <h2 id="heroTitle">Choose your plan</h2>
-    <p id="heroSub" class="tagline">PG-13 companionship by default. Coins unlock erotic chat (words only, no visuals).</p>
+    <p class="tagline">PG-13 companionship by default. Coins unlock erotic chat (words only, no visuals).</p>
   </section>
 
   <div class="trialbar">Each room includes a <strong>3½-minute free vibe preview per man</strong> (resets per guy).</div>
@@ -103,10 +73,7 @@
   <section class="grid" aria-label="Plans and options">
     <!-- Day Pass -->
     <article class="card" id="day">
-      <div class="hd">
-        <h3>Day Pass</h3>
-        <div class="price">$5.99</div>
-      </div>
+      <div class="hd"><h3>Day Pass</h3><div class="price">$5.99</div></div>
       <div class="body">
         <span class="pill" id="dayFor">For one man (today)</span>
         <ul>
@@ -120,10 +87,7 @@
 
     <!-- Monthly -->
     <article class="card" id="month">
-      <div class="hd">
-        <h3>Monthly <span class="pill good">Includes 3 coins</span></h3>
-        <div class="price">$10.99</div>
-      </div>
+      <div class="hd"><h3>Monthly <span class="pill good">Includes 3 coins</span></h3><div class="price">$10.99</div></div>
       <div class="body">
         <span class="pill">All six men</span>
         <ul>
@@ -138,26 +102,20 @@
 
     <!-- Coins -->
     <article class="card">
-      <div class="hd">
-        <h3>Coins <span class="pill">unlock erotic chat</span></h3>
-      </div>
+      <div class="hd"><h3>Coins <span class="pill">unlock erotic chat</span></h3></div>
       <div class="body">
         <div class="coins">
-          <div class="coin"><strong>5</strong>$1</div>
-          <div class="coin"><strong>25</strong>$5</div>
-          <div class="coin"><strong>60</strong>$10</div>
-          <div class="coin"><strong>150</strong>$20</div>
+          <div class="coin"><strong>5</strong>$1</div><div class="coin"><strong>25</strong>$5</div>
+          <div class="coin"><strong>60</strong>$10</div><div class="coin"><strong>150</strong>$20</div>
         </div>
         <div class="note">Coins trigger by natural conversation prompts—never pushy.</div>
         <button class="btn" data-action="coins">Buy Coins</button>
       </div>
     </article>
 
-    <!-- Coming Soon / Calendar -->
+    <!-- Coming Soon -->
     <article class="card">
-      <div class="hd">
-        <h3>Coming Soon</h3>
-      </div>
+      <div class="hd"><h3>Coming Soon</h3></div>
       <div class="body">
         <ul>
           <li>Wall-worthy moody prints (12 months)</li>
@@ -176,34 +134,26 @@
 </main>
 
 <script>
-/* Map ?man= to a guy, set background + labels. Uses your CURRENT filenames. */
+/* Map ?man= to a guy; set background + avatar. No Day Pass name injection. */
 const MAP = {
-  blade:     { name:"Blade Kincaid",   bg:"/images/blade-woods.jpg",    card:"/images/blade_front_card.jpg" },
-  dylan:     { name:"Dylan Vale",      bg:"/images/dylan-garage.jpg",  card:"/images/dylan-garage.jpg" },
-  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg",    card:"/images/grayson-bg.jpg" },
-  silas:     { name:"Silas Lennox",    bg:"/images/gothic-bg.jpg",     card:"/images/gothic-bg.jpg" },
-  alexander: { name:"Alexander Jackson",bg:"/images/gentleman-bg.jpg", card:"/images/gentleman-bg.jpg" },
-  jesse:     { name:"Jesse Granger",   bg:"/images/cowboy.jpg",        card:"/images/cowboy.jpg" }
+  blade:{name:"Blade Kincaid",bg:"/images/blade-woods.jpg",card:"/images/blade_front_card.jpg"},
+  dylan:{name:"Dylan Vale",bg:"/images/dylan-garage.jpg",card:"/images/dylan-garage.jpg"},
+  grayson:{name:"Grayson Kincaid",bg:"/images/grayson-bg.jpg",card:"/images/grayson-bg.jpg"},
+  silas:{name:"Silas Lennox",bg:"/images/gothic-bg.jpg",card:"/images/gothic-bg.jpg"},
+  alexander:{name:"Alexander Jackson",bg:"/images/gentleman-bg.jpg",card:"/images/gentleman-bg.jpg"},
+  jesse:{name:"Jesse Granger",bg:"/images/cowboy.jpg",card:"/images/cowboy.jpg"}
 };
-/* Accept old aliases e.g. ?man=garage */
-const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
-const qs = new URLSearchParams(location.search);
-let id = (qs.get("man")||"").toLowerCase().trim();
-id = ALIAS[id] || id;
-const guy = MAP[id] || MAP.silas; // default Silas
+const ALIAS={garage:"dylan",gentleman:"alexander",cowboy:"jesse",rockstar:"silas",mask:"blade",viking:"grayson"};
+const qs=new URLSearchParams(location.search);
+let id=(qs.get("man")||"").toLowerCase().trim(); id=ALIAS[id]||id; const guy=MAP[id]||MAP.silas;
 
-/* Set BG + labels */
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
-document.getElementById("heroTitle").textContent = "Choose your plan"; // <— no name appended
-document.getElementById("heroAvatar").src = guy.card;
-document.getElementById("heroAvatar").alt = guy.name;
-document.getElementById("dayFor").textContent = `For ${guy.name} (today)`;
+document.getElementById("heroAvatar").src=guy.card;
+document.getElementById("heroAvatar").alt=guy.name;
 
-/* Button behavior — placeholder for Tuesday demo */
+/* Demo click handlers */
 document.querySelectorAll(".btn[data-action]").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    alert("Demo mode: payment wiring coming next. (Plan: "+btn.dataset.action+" for "+guy.name+")");
-  });
+  btn.addEventListener("click", ()=>{ alert("Demo mode: payment wiring coming next."); });
 });
 </script>
 </body>

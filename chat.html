@@ -77,10 +77,8 @@
   }
   .coinpop h4{margin:0 0 6px; font:800 14px/1.2 system-ui}
   .coinpacks{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
-  .coinbtn{
-    display:block; text-align:center; padding:8px 10px; border-radius:12px; font-weight:800;
-    border:1px dashed #3a2239; background:#160f16; color:#fff; cursor:pointer
-  }
+  .coinbtn{display:block; text-align:center; padding:8px 10px; border-radius:12px; font-weight:800;
+    border:1px dashed #3a2239; background:#160f16; color:#fff; cursor:pointer}
   .coinmeta{font-size:12px; color:#bba9b6; margin-top:6px}
   .coinclose{margin-top:8px; text-align:center}
   .coinclose a{color:#bba9b6; font-size:12px; text-decoration:underline}
@@ -150,7 +148,7 @@
 </div>
 
 <script>
-/* === Age gate: don’t enter without clicking === */
+/* === Age gate === */
 (function enforceAgeGate(){
   const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
   if (!until || until <= Date.now()){
@@ -160,20 +158,26 @@
   }
 })();
 
-/* === Character mapping (uses your current filenames; safe fallbacks) === */
+/* === Character mapping === */
 const MAP = {
-  blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg", card:"/images/blade-woods.jpg",
-          intro:"Found you, brave girl. Don’t run—yet. What would make a perfect chase tonight?" },
-  dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg", card:"/images/dylan-garage.jpg",
-          intro:"Hop up on the counter, pretty thing. PG-13 for now—what kind of trouble do you want?" },
-  grayson:{ name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg", card:"/images/grayson-bg.jpg",
-            intro:"One line at a time. Give me a detail I should notice when I look at you." },
-  silas:{ name:"Silas Lennox", bg:"/images/gothic-bg.jpg", card:"/images/gothic-bg.jpg",
-          intro:"Come closer, muse. Lend me a verse—soft, or a little rough on the edges?" },
-  alexander:{ name:"Alexander Jackson", bg:"/images/gothic-bg.jpg", card:"/images/gothic-bg.jpg",
-              intro:"Shoes off. Let me take your coat and one weight off your mind." },
-  jesse:{ name:"Jesse Granger", bg:"/images/gothic-bg.jpg", card:"/images/gothic-bg.jpg",
-          intro:"Darlin’, sit a spell. Start with one truth from today and we’ll go from there." }
+  blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg",
+          intro:"Found you, brave girl. Don’t run—yet. What would make a perfect chase tonight?",
+          style:"chase", call:"brave girl" },
+  dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg",
+          intro:"Hop up on the counter, pretty thing. PG-13 for now—what kind of trouble do you want?",
+          style:"biker", call:"pretty thing" },
+  grayson:{ name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg",
+            intro:"One line at a time. Give me a detail I should notice when I look at you.",
+            style:"viking", call:"good heart" },
+  silas:{ name:"Silas Lennox", bg:"/images/gothic-bg.jpg",
+          intro:"Come closer, muse. Lend me a verse—soft, or a little rough on the edges?",
+          style:"poet", call:"muse" },
+  alexander:{ name:"Alexander Jackson", bg:"/images/gentleman-bg.jpg",
+              intro:"Shoes off. Let me take your coat and one weight off your mind.",
+              style:"gentleman", call:"darling" },
+  jesse:{ name:"Jesse Granger", bg:"/images/cowboy.jpg",
+          intro:"Darlin’, sit a spell. Start with one truth from today and we’ll go from there.",
+          style:"cowboy", call:"darlin’" }
 };
 const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
 
@@ -182,12 +186,11 @@ let id = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCa
 id = ALIAS[id] || id; if(!MAP[id]) id = "silas";
 const guy = MAP[id];
 
-/* Branding + links */
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
 document.getElementById("hdrTitle").textContent = `${guy.name}`;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 
-/* === Coins (local demo; we can hook Stripe later) === */
+/* === Coins (demo; hook Stripe later) === */
 const COIN_KEY = "bb.coins";
 function getCoins(){ return Math.max(0, Number(localStorage.getItem(COIN_KEY) || 0)); }
 function setCoins(n){ localStorage.setItem(COIN_KEY, String(Math.max(0,n))); updateBadge(); }
@@ -207,12 +210,12 @@ coinPopup.addEventListener("click", (e)=>{
 });
 function looksSpicy(text){
   const t = text.toLowerCase();
-  const triggers = ["erotic","explicit","spicy","dirty","nsfw","more","go further","turn up","coin","unlock"];
+  const triggers = ["erotic","explicit","spicy","dirty","nsfw","more","go further","turn up","coin","unlock","kiss","neck","bed","ride","choke"]; // still PG-13 gate
   return triggers.some(k => t.includes(k));
 }
 
 /* === Free-trial timer & overlay === */
-const TRIAL_SECONDS = 210; // 3:30 per preview
+const TRIAL_SECONDS = 210; // 3:30
 const MAX_TRIALS = 3;
 const END_KEY   = `bb.trialEnd:${id}`;
 const COUNT_KEY = `bb.trialCount:${id}`;
@@ -233,8 +236,132 @@ function row(html, you=false){
   chat.appendChild(r); chat.scrollTop = chat.scrollHeight;
 }
 function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
+
+/* === Smart reply engine === */
+const memory = {
+  name: localStorage.getItem("bb.userName") || null,
+  facts: JSON.parse(localStorage.getItem("bb.userFacts") || "[]")
+};
+function saveMemory(){ try{
+  if (memory.name) localStorage.setItem("bb.userName", memory.name);
+  localStorage.setItem("bb.userFacts", JSON.stringify(memory.facts.slice(-6)));
+}catch(e){} }
+
+function captureName(t){
+  // "i'm kasey", "i am kasey", "my name is kasey"
+  const m = t.match(/\b(?:i[' ]?m|i am|my name is)\s+([a-z][a-z]+)\b/i);
+  if (m) { memory.name = m[1].replace(/^./, c=>c.toUpperCase()); saveMemory(); return memory.name; }
+  return null;
+}
+function captureHave(t){
+  // "i have a piercing", "i've got tattoos"
+  const m = t.match(/\b(?:i have|i've got|got)\s+(?:a|an|some)?\s*([a-z- ]{2,20})/i);
+  if (m){ const fact = m[1].trim(); if (fact && !memory.facts.includes(fact)){ memory.facts.push(fact); saveMemory(); } return fact; }
+  return null;
+}
+
+function classify(t){
+  const s = t.toLowerCase().trim();
+  if (!s) return {type:"empty"};
+  if (/^(hi|hey|hello|yo|howdy)\b/.test(s)) return {type:"greet"};
+  const name = captureName(t); if (name) return {type:"intro", name};
+  if (/\b(tired|stressed|anxious|sad|lonely|happy|excited|mad|angry|overwhelmed)\b/.test(s))
+    return {type:"feeling", word:s.match(/\b(tired|stressed|anxious|sad|lonely|happy|excited|mad|angry|overwhelmed)\b/)[1]};
+  const have = captureHave(t); if (have) return {type:"have", item:have};
+  if (/\b(thank(s| you)|you( are|'re) (hot|handsome|sweet|nice)|like you)\b/.test(s))
+    return {type:"compliment"};
+  if (/\b\?|tell me|can you|what('s| is)|how do\b/.test(s)) return {type:"question"};
+  return {type:"generic", echo: s.replace(/[.!?]+$/,'')};
+}
+
+function personaLine(style, key, payload={}){
+  const n = memory.name ? ` ${memory.name}` : "";
+  const lines = {
+    greet: {
+      chase:    [`I see you${n}. Quiet steps… but I still found you. What kind of night did you have—quiet or loud?`],
+      biker:    [`Hey${n}. Slide up here where I can hear you. Long day or good kind of trouble?`],
+      viking:   [`I’m here. One line at a time${n}. Start with one truth from today.`],
+      poet:     [`There you are${n}. Give me a single note from your day—soft or gritty.`],
+      gentleman:[`Good evening${n}. Coat off, shoulders down. What weight can I set aside for you?`],
+      cowboy:   [`Howdy${n}. Boots off, take a breath. What’d the day do to you?`]
+    },
+    intro: {
+      chase:    ([name])=>`${name}, brave name. Do you want me patient… or do you want me to run you a little?`,
+      biker:    ([name])=>`${name}, I like how that sounds. You want calm talk or a teasing tune-up?`,
+      viking:   ([name])=>`${name}. Good. Give me one detail I should notice when I look at you.`,
+      poet:     ([name])=>`${name}. It lands well in my mouth. One image you’d paint for me?`,
+      gentleman:([name])=>`Pleasure, ${name}. Window view or lights low while we talk?`,
+      cowboy:   ([name])=>`Nice to meet you, ${name}. Porch swing slow or a little rowdy?`
+    },
+    feeling: {
+      chase:    ([w])=>`You’re ${w}. Then I ease the pace and keep you close. Tell me one thing I can take off your mind.`,
+      biker:    ([w])=>`${w}, huh? I’ll keep the engine low and the voice steady. What would help right now—listening or guidance?`,
+      viking:   ([w])=>`${w}. Name one place in your body that notices it first.`,
+      poet:     ([w])=>`${w} tastes like dusk on the tongue. Offer me one small detail and I’ll trade you calm.`,
+      gentleman:([w])=>`${w} isn’t a place you have to stay. Breathe. Give me one task I can carry for you.`,
+      cowboy:   ([w])=>`If you’re ${w}, I’ll slow the horses. Want soft words or a grin that misbehaves a little?`
+    },
+    have: {
+      chase:    ([it])=>`${it}? Then I’m curious. Where would I notice it first if I stepped closer?`,
+      biker:    ([it])=>`${it}, yeah? Show-or-tell—where’s it catching the light?`,
+      viking:   ([it])=>`${it}. Describe the line of it in five words.`,
+      poet:     ([it])=>`${it}. Let me see it in a sentence I can hum.`,
+      gentleman:([it])=>`${it}? Noted. Do you like it hidden or shown on purpose?`,
+      cowboy:   ([it])=>`${it}, huh. If I looked you over, where would my eyes stop?`
+    },
+    compliment: {
+      chase:    [`Good. Keep your eyes on me. Tell me what you want me to notice first.`],
+      biker:    [`I like hearing that. What would you want my hands to find first—metaphorically speaking.`],
+      viking:   [`Accepted. Now give me direction: softer, or a little heavier?`],
+      poet:     [`Say it again and I’ll write a line about it. One more detail—texture or temperature?`],
+      gentleman:[`Thank you. I’ll earn it. Would you like calm praise or playful daring?`],
+      cowboy:   [`Appreciate it. Now point me—sweet or a little wicked?`]
+    },
+    question: {
+      chase:    [`Ask me anything, but trade me a truth for it. What do you want to know?`],
+      biker:    [`Shoot the question. I’ll give it to you straight.`],
+      viking:   [`Question granted. Keep it to one line, and then you answer mine.`],
+      poet:     [`Ask, and I’ll answer in a sentence that fits your breath.`],
+      gentleman:[`Go ahead. I’ll be clear, and kind.`],
+      cowboy:   [`Fire away, darlin’. I’ve got time.`]
+    },
+    generic: {
+      chase:    ([echo])=>`“${echo},” mm. Then I catch you easy. Doorway or shadows—where should I find you?`,
+      biker:    ([echo])=>`“${echo}.” I like that. Want the slow ride or a quick detour?`,
+      viking:   ([echo])=>`“${echo}.” Good. Give me one more detail—I only take them one at a time.`,
+      poet:     ([echo])=>`“${echo}.” I can work with that. Offer one more note I can hold on my tongue.`,
+      gentleman:([echo])=>`“${echo}.” Understood. Would you prefer gentle questions or confident direction?`,
+      cowboy:   ([echo])=>`“${echo},” huh. Keep talkin’. Porch light on or off?`
+    }
+  };
+  const bucket = lines[key];
+  const styleLines = bucket[guy.style];
+  if (Array.isArray(styleLines)) return styleLines[Math.floor(Math.random()*styleLines.length)];
+  if (typeof styleLines === "function") {
+    const arr = Array.isArray(payload) ? payload : [payload];
+    return styleLines(arr);
+  }
+  return "Tell me more—in your own words.";
+}
+
+function generateReply(userText){
+  const c = classify(userText);
+  switch(c.type){
+    case "greet":    return personaLine(guy.style, "greet");
+    case "intro":    return personaLine(guy.style, "intro", [c.name]);
+    case "feeling":  return personaLine(guy.style, "feeling", [c.word]);
+    case "have":     return personaLine(guy.style, "have", [c.item]);
+    case "compliment": return personaLine(guy.style, "compliment");
+    case "question": return personaLine(guy.style, "question");
+    case "generic":  return personaLine(guy.style, "generic", [c.echo.slice(0,80)]);
+    default:         return personaLine(guy.style, "generic", ["stay close"]);
+  }
+}
+
+/* Seed welcome */
 row(`<strong>${guy.name}:</strong> ${esc(guy.intro)}`);
 
+/* Overlay / pay links */
 const overlay = document.getElementById("overlay");
 const freeLeft= document.getElementById("freeLeft");
 const another = document.getElementById("anotherPreview");
@@ -244,6 +371,7 @@ const buyMon  = document.getElementById("buyMonth");
 function ageGate(plan){ return `/age.html?man=${encodeURIComponent(id)}&plan=${encodeURIComponent(plan)}`; }
 buyDay.href = ageGate("day"); buyMon.href = ageGate("month");
 
+/* Timer helpers */
 function fmt(ms){
   const s = Math.max(0, Math.ceil(ms/1000));
   const m = Math.floor(s/60).toString();
@@ -274,7 +402,7 @@ function lock(limitReached){
   composer.classList.add("disabled"); input.disabled = true;
   document.getElementById("ovTitle").textContent = limitReached ? `Free previews used up` : `Time’s up — ${guy.name} can keep you longer`;
   document.getElementById("ovPill").textContent  = limitReached ? `You’ve had ${MAX_TRIALS} previews with ${guy.name}` : `Keep going with ${guy.name}`;
-  document.getElementById("ovAvatar").src = guy.card; document.getElementById("ovAvatar").alt = guy.name;
+  document.getElementById("ovAvatar").src = guy.bg; document.getElementById("ovAvatar").alt = guy.name;
 
   if(!limitReached){
     const mark = localStorage.getItem(MARK_KEY);
@@ -296,24 +424,13 @@ snooze.addEventListener("click", ()=>{
   end = Date.now() + 60*1000; localStorage.setItem(END_KEY, String(end)); requestAnimationFrame(tick);
 });
 
-/* Demo reply (PG-13) */
-function botReply(){
-  const replies = [
-    "Mhm. Tell me more—in your own words.",
-    "I’m listening. Where do you feel it most—heart or head?",
-    "Good. Breathe. Give me one detail I can hold onto.",
-    "Do you want softer… or a little bolder in tone?",
-    "Stay with me. What would make tonight easier?"
-  ];
-  row(`<strong>${guy.name}:</strong> ${esc(replies[Math.floor(Math.random()*replies.length)])}`);
-}
-
 /* Send handler + coin trigger */
 document.getElementById("composer").addEventListener("submit", (e)=>{
   e.preventDefault();
   const t = input.value.trim(); if(!t) return;
   row(esc(t), true); input.value = "";
 
+  // coin & escalation gate
   if (looksSpicy(t)){
     if (getCoins() <= 0){
       showCoins();
@@ -321,10 +438,12 @@ document.getElementById("composer").addEventListener("submit", (e)=>{
       return;
     } else {
       spendCoin(); updateBadge();
-      row(`<em class="sys">Spent 1 coin to unlock erotic tone for this message.</em>`);
+      row(`<em class="sys">Spent 1 coin for a spicier tone. Still consent-first.</em>`);
     }
   }
-  setTimeout(botReply, 500);
+
+  const reply = generateReply(t);
+  row(`<strong>${guy.name}:</strong> ${esc(reply)}`);
 });
 
 /* Kickoff */

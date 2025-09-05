@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Day Pass Checkout (demo) • Blossom n Blade</title>
+<style>
+  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font:600 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    background:linear-gradient(0deg, rgba(14,10,13,.88), rgba(14,10,13,.88)),
+               url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
+  }
+  header{padding:14px 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11)}
+  .wrap{max-width:760px; margin:28px auto; padding:0 14px}
+  .card{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#1a121a,#120a11);
+        box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .hd{padding:16px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:12px}
+  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum))}
+  h1{margin:0; font-size:18px}
+  .bd{padding:18px}
+  .muted{color:var(--muted); font-size:13px}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
+  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:800; color:white;
+       background:linear-gradient(90deg,var(--plum),var(--wine))}
+  .btn.ghost{background:#2a1a25}
+  .ok{padding:8px 10px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123; display:none; margin-bottom:10px}
+  .warn{padding:8px 10px; border-radius:10px; background:#2a1a25; color:#f6d7ef; border:1px dashed #3a203a; display:none; margin-top:10px}
+</style>
+</head>
+<body>
+<header>Day Pass checkout (demo). Adults only.</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="hd"><div class="dot" aria-hidden="true"></div><h1>Day Pass — $5.99</h1></div>
+    <div class="bd">
+      <div id="ageok" class="ok">Age verified — good to go.</div>
+      <p class="muted">
+        This page is a demo placeholder so you can keep testing flow.
+        Clicking <b>Complete purchase (demo)</b> will simulate success and drop you in the chat.
+      </p>
+      <ul class="muted">
+        <li>Unlocks one guy of your choice for the day</li>
+        <li>PG-13 by default; coins can unlock erotic chat (words only)</li>
+      </ul>
+      <div class="actions">
+        <button id="complete" class="btn">Complete purchase (demo)</button>
+        <a id="back" class="btn ghost" href="/pay.html">Back to plans</a>
+      </div>
+      <div id="warn" class="warn">Your browser blocked local storage. If you bounce to age-check again, hard refresh (Ctrl/Cmd + F5).</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---- helpers ---- */
+const qs   = new URLSearchParams(location.search);
+const man  = (qs.get("man")||"").toLowerCase();
+
+function storageWorks(){
+  try{ localStorage.setItem("__bbprobe","1"); const ok=localStorage.getItem("__bbprobe")==="1"; localStorage.removeItem("__bbprobe"); return ok; }
+  catch(e){ return false; }
+}
+
+/* ---- honor age gate (same keys used elsewhere) ---- */
+const KEY_MAIN = "bb.ageVerifiedUntil";
+const KEY_FLAG = "bb.ageVerified";
+const until = Number(localStorage.getItem(KEY_MAIN) || 0);
+const flag  = localStorage.getItem(KEY_FLAG) === "1";
+
+if (!((until && until > Date.now()) || flag)){
+  const next = location.pathname + location.search + location.hash;
+  location.replace(`/age.html?man=${encodeURIComponent(man)}&plan=day&next=${encodeURIComponent(next)}`);
+}
+
+if (until && until > Date.now()) document.getElementById("ageok").style.display = "block";
+if (!storageWorks()) document.getElementById("warn").style.display = "block";
+
+/* ---- demo “success” ---- */
+document.getElementById("complete").addEventListener("click", ()=>{
+  // mark a demo entitlement so we can tweak behavior later if needed
+  try{ localStorage.setItem("bb.demoDayPass","1"); }catch(e){}
+  // send to chat
+  const target = man ? `/chat.html?man=${encodeURIComponent(man)}` : "/index.html";
+  location.replace(target);
+});
+
+// keep guy in the back link
+document.getElementById("back").href = man ? `/pay.html?man=${encodeURIComponent(man)}` : "/pay.html";
+</script>
+</body>
+</html>

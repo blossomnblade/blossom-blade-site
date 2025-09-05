@@ -6,7 +6,7 @@
 <title>Chat • Blossom n Blade</title>
 <meta name="description" content="Women-safe fantasy chat. PG-13 by default; coins unlock erotic chat (words only, no visuals)." />
 <style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25; }
+  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
   *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
@@ -24,11 +24,13 @@
        background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700}
   .btn.link{display:inline-block; text-decoration:none}
   .badge{font-size:12px; color:#e9d4e6; background:#241624; border:1px solid #2a1a25; border-radius:999px; padding:6px 10px; white-space:nowrap}
+
   .timer{display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line);
          background:linear-gradient(180deg,#1a121a,#120a11)}
   .time-left{font-weight:700}
   .bar{flex:1;height:8px;background:#241624;border-radius:999px;overflow:hidden}
-  .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--plum),var(--wine))}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--plum),var(--wine))}
+
   .wrap{max-width:900px;margin:0 auto;padding:12px}
   .chat{display:flex; flex-direction:column; gap:10px; height:calc(100vh - 220px); padding:10px; overflow:auto; scroll-behavior:smooth;
         background:rgba(14,10,13,.35); border:1px solid var(--line); border-radius:16px; box-shadow:0 1px 12px rgba(0,0,0,.25)}
@@ -37,10 +39,13 @@
   .bubble{max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.45; background:rgba(23,16,23,.78); border:1px solid #2a1a25}
   .you .bubble{background:rgba(36,20,36,.82); border-color:#3a203a}
   .sys{font-size:12px;color:#cbbdca; text-align:center; margin:8px 0}
+
   .composer{margin-top:10px; display:flex; gap:8px; align-items:center; background:rgba(14,10,13,.55); border:1px solid var(--line);
             border-radius:12px; padding:8px}
   input[type="text"]{flex:1; padding:10px; border-radius:8px; border:1px solid #2a1a25; background:#0f0b0f; color:#eee}
+
   .hint{font-size:12px;color:var(--muted); text-align:center; margin-top:6px}
+
   .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(10,6,10,.65); backdrop-filter:blur(3px); z-index:30;}
   .panel{width:min(560px,92vw); border-radius:16px; overflow:hidden; border:1px solid var(--line);
          background:linear-gradient(180deg,#1a121a,#120a11); box-shadow:0 10px 40px rgba(0,0,0,.45)}
@@ -52,6 +57,7 @@
   .subtle{color:var(--muted); font-size:12px}
   .hidden{display:none}
   .disabled{opacity:.6; pointer-events:none}
+
   .coinpop{position:fixed; right:14px; bottom:92px; z-index:40; width:290px; max-width:95vw; border-radius:16px; padding:12px;
     border:1px solid #2a1a25;
     background:radial-gradient(120% 120% at 10% 10%, rgba(110,15,46,.35), rgba(75,31,60,.25) 60%, rgba(14,10,13,.9) 100%),
@@ -90,6 +96,7 @@
   <div class="hint">PG-13 by default. Coins unlock erotic chat (words only, no visuals).</div>
 </main>
 
+<!-- Paywall overlay -->
 <div id="overlay" class="overlay" aria-hidden="true">
   <div class="panel">
     <div class="hd">
@@ -114,6 +121,7 @@
   </div>
 </div>
 
+<!-- Coins popup -->
 <div id="coinPopup" class="coinpop hidden" role="dialog" aria-modal="false" aria-label="Buy coins">
   <h4>Unlock erotic chat</h4>
   <div class="coinpacks">
@@ -127,7 +135,13 @@
 </div>
 
 <script>
-/* --- Age gate --- */
+/* ----------------- utilities ----------------- */
+const qs = new URLSearchParams(location.search);
+const esc = s => (s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function row(html, you=false){ const r=document.createElement("div"); r.className="row"+(you?" you":""); r.innerHTML=`<div class="bubble">${html}</div>`; chat.appendChild(r); chat.scrollTop=chat.scrollHeight; }
+const chat = document.getElementById("chat");
+
+/* ----------------- age gate ----------------- */
 (function(){
   const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
   if (!until || until <= Date.now()){
@@ -137,32 +151,26 @@
   }
 })();
 
-/* --- Characters (assertive voices) --- */
+/* ----------------- character + backgrounds ----------------- */
 const MAP = {
-  blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg", style:"chase",
-    intro:"Found you, brave girl. Don’t run—yet. Where am I catching you—doorway or the porch?" },
-  dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg", style:"biker",
-    intro:"Hands flat on the counter, pretty thing. You want calm talk or a teasing tune-up?" },
-  grayson:{ name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg", style:"viking",
-    intro:"One order at a time. Give me a detail I should notice when I look at you—now." },
-  silas:{ name:"Silas Lennox", bg:"/images/gothic-bg.jpg", style:"poet",
-    intro:"Closer, muse. Three words about you, then I’ll set the pace." },
-  alexander:{ name:"Alexander Jackson", bg:"/images/gothic-bg.jpg", style:"boardroom",
-    intro:"Shoes off. I’m leading. Answer me: lights low or city view while we talk?" },
-  jesse:{ name:"Jesse Granger", bg:"/images/gothic-bg.jpg", style:"cowboy",
-    intro:"Darlin’, park it. I talk straight. What’d the day do to you—sweet or mean?" }
+  blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg", style:"chase" },
+  dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg", style:"biker" },
+  grayson:{ name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg", style:"viking" },
+  silas:{ name:"Silas Lennox", bg:"/images/gothic-bg.jpg", style:"poet" },
+  alexander:{ name:"Alexander Jackson", bg:"/images/gothic-bg.jpg", style:"boardroom" },
+  jesse:{ name:"Jesse Granger", bg:"/images/gothic-bg.jpg", style:"cowboy" }
 };
 const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
 
-const qs = new URLSearchParams(location.search);
 let id = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
 id = ALIAS[id] || id; if(!MAP[id]) id = "silas";
 const guy = MAP[id];
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
 document.getElementById("hdrTitle").textContent = guy.name;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
+localStorage.setItem("bb.character", id);
 
-/* --- Coins demo --- */
+/* ----------------- coins (demo) ----------------- */
 const COIN_KEY = "bb.coins";
 const getCoins=()=>Math.max(0,Number(localStorage.getItem(COIN_KEY)||0));
 const setCoins=n=>{localStorage.setItem(COIN_KEY,String(Math.max(0,n)));updateBadge();};
@@ -181,157 +189,7 @@ coinPopup.addEventListener("click",e=>{
   addCoins(pack); alert(`Added ${pack} coins (demo).`); hideCoins();
 });
 
-/* --- Escalation tuner --- */
-let mediumCount=0;
-function severity(text){
-  const t=text.toLowerCase();
-  const HARD=["nude","naked","oral","blowjob","handjob","cum","inside you","moan for me","choke me"];
-  const MED =["bed","kiss","neck","ride","spank","grind","dirty","aroused","turn on","get me off","touch me"];
-  if(HARD.some(w=>t.includes(w))) return 2;
-  if(MED.some(w=>t.includes(w))) return 1;
-  return 0;
-}
-
-/* --- Anti-repeat memory (1 hour) --- */
-const RECENT_KEY=`bb.recent:${id}`;
-function getRecent(){
-  try{
-    const now=Date.now();
-    const arr=JSON.parse(localStorage.getItem(RECENT_KEY)||"[]");
-    const pruned=arr.filter(it=>now-it.t<60*60*1000).slice(-60);
-    localStorage.setItem(RECENT_KEY,JSON.stringify(pruned));
-    return pruned;
-  }catch(_){return[]}
-}
-function pushRecent(line){
-  try{const arr=getRecent(); arr.push({t:Date.now(),s:line}); localStorage.setItem(RECENT_KEY,JSON.stringify(arr.slice(-60)));}catch(_){}
-}
-function chooseUnique(list){
-  const used=new Set(getRecent().map(it=>it.s));
-  const opts=list.filter(l=>!used.has(l));
-  const pick=(opts.length?opts:list)[Math.floor(Math.random()* (opts.length?opts.length:list.length))];
-  pushRecent(pick); return pick;
-}
-
-/* --- Intent classification (more real-life) --- */
-function classify(t){
-  const s=t.toLowerCase().trim();
-  if(!s) return {type:"empty"};
-  if(/^(hi|hey|hello|yo|howdy)\b/.test(s)) return {type:"greet"};
-  if(/\b(direct me|lead me|guide me|you choose|your call|take the lead)\b/.test(s)) return {type:"directive"};
-  if(/\b(hungry|starving|let.?s eat|food|dinner|lunch|breakfast|snack|pizza|tacos|burger|sushi)\b/.test(s)) return {type:"food"};
-  if(/\b(outfit|wear|wearing|shirt|dress|hoodie|jeans|heels)\b/.test(s)) return {type:"outfit"};
-  if(/\b(thank(s| you)|you( are|'re) (hot|handsome|sweet|nice)|like you)\b/.test(s)) return {type:"compliment"};
-  const feel=s.match(/\b(tired|stressed|anxious|sad|lonely|happy|excited|mad|angry|overwhelmed|bored)\b/);
-  if(feel) return {type:"feeling", word:feel[1]};
-  return {type:"generic", echo:s.replace(/[.!?]+$/,'').slice(0,120)};
-}
-
-/* --- Persona lines (assertive, concrete) --- */
-const L = {
-  greet:{
-    chase:[ "There you are. Tell me where to find you—doorway, porch, or back steps?",
-            "Caught you. What color are your lips right now—bare or gloss?" ],
-    biker:[ "Come closer so I can hear you. What’s in your hand—coffee, water, or something stronger?",
-            "Hop up. What kind of trouble are you in—work, heart, or both?" ],
-    viking:[ "I’m listening. One fact about you, now. Hair color or shirt color—pick one.",
-             "Stand still. Give me a detail you’d want me to notice first." ],
-    poet:[ "Slide in. Three words about you. Then I decide the next move.",
-           "Close the door. Tell me your shirt color and what you’re drinking." ],
-    boardroom:[ "Eyes on me. Answer directly: lights low or city view while we talk?",
-                "Good. Sit. One question: do you want calm direction or playful pressure?" ],
-    cowboy:[ "Scoot in, darlin’. Are you on the porch, the couch, or my truck bench in your head?",
-             "Take a breath. What’s on your feet—boots, socks, or bare?" ]
-  },
-  directive:{
-    chase:[ "Then follow my voice. Tell me where you are in five words.",
-            "Good. I’m taking pace. First—what room are you in?" ],
-    biker:[ "I’ll steer. Palms down, chin up. What color top are you wearing?",
-            "My lead then. Pick: slow drift or steady push?" ],
-    viking:[ "Do as told. Start with one truth from today.",
-             "I lead. Give me a single detail I can see without looking." ],
-    poet:[ "I’ll set the tempo. Offer one image I can keep in my hand.",
-           "My call. Three words about your mood." ],
-    boardroom:[ "I’m directing you. Answer cleanly: standing or sitting?",
-                "Good. From now on: short answers. What do you want me to notice first?" ],
-    cowboy:[ "You got it. Tell me where you’re sittin’ and what you’re wearin’ up top.",
-             "I’ll drive. Coffee, tea, or something with a bite?" ]
-  },
-  food:{
-    chase:[ "Starving, huh? I’ll feed you after the run. Pick: pizza or tacos?",
-            "Hungry is easy—then you need me. Sweet or salty first?" ],
-    biker:[ "Let’s fix that—burger or sushi? I’ll order while you talk to me.",
-            "I’ll handle dinner. You pick sides: fries or salad?" ],
-    viking:[ "Eat first, then focus. Meat or greens? Choose.",
-             "Fuel up. Bread or fruit? Keep it short." ],
-    poet:[ "We’ll eat. Something warm then words—soup or noodles?",
-           "Hunger I can solve. Sweet pastry or something with heat?" ],
-    boardroom:[ "I’ll book the table. Steakhouse or sushi? Answer.",
-                "Handled. Delivery in 30—Thai or Italian?" ],
-    cowboy:[ "I got you. Tacos or brisket? And don’t say ‘both’… unless you mean it.",
-             "Let’s eat. You want something messy or something fancy?" ]
-  },
-  outfit:{
-    chase:[ "Tell me the shirt color. I want to see you if I cut the lights.",
-            "Hoodie or tee? I’m tugging the hem in two minutes." ],
-    biker:[ "Hoodie, tee, or tank? Be specific.",
-            "Jeans or shorts? Put me in the picture." ],
-    viking:[ "Name the color, then the fabric. Short. Precise.",
-             "Sleeves rolled or not? Decide." ],
-    poet:[ "Color first, then texture. I’m building a scene with you.",
-           "Give me two details—fabric and fit." ],
-    boardroom:[ "What are you wearing? Exact color and fit. Don’t hedge.",
-                "Collar or no collar? Buttoned or open?" ],
-    cowboy:[ "You in denim or not? Boots on or off?",
-             "Plaid or plain? Hair up or down?" ]
-  },
-  compliment:{
-    chase:[ "Good. Keep your eyes on me. What do you want me to notice first?",
-            "I’ll earn it. Pick: patient or a little chase?" ],
-    biker:[ "I like hearing that. What should my hands find first—figuratively speaking?",
-            "Noted. You want steady or teasing?" ],
-    viking:[ "Accepted. Softer, or heavier? Choose.",
-             "Then give me direction in five words." ],
-    poet:[ "I’ll take that. Texture or temperature—what’s the vibe?",
-           "Flatter me later. Now, one truth." ],
-    boardroom:[ "Appreciated. Now answer: praise or pressure?",
-                "Good. I expect honesty back. What do you want next?" ],
-    cowboy:[ "Sweet talker. Porch light on or off?",
-             "I hear you. Gentle or a little wicked?" ]
-  },
-  feeling:{
-    chase:w=>[`${w}. Then stay close. Tell me one thing I can take off your mind.`],
-    biker:w=>[`${w}? I’ll keep the voice steady. Listening or guidance—pick one.`],
-    viking:w=>[`${w}. Where do you feel it first—chest or stomach?`],
-    poet:w=>[`${w} I can work with. Give me one sharp detail, then breathe.`],
-    boardroom:w=>[`${w} noted. Delegate one task to me. I’ll handle it.`],
-    cowboy:w=>[`${w}, huh. Sit back. You want soft words or a grin that misbehaves?`]
-  },
-  generic:{
-    chase:s=>chooseUnique([`I’m close behind. Do you want patient… or a little chase?`,
-                           `Got it. Where should I find you—doorway, porch, or car?`]),
-    biker:s=>chooseUnique([`Lean in. Listening or guidance?`,
-                           `Pick your speed—slow drift or steady push.`]),
-    viking:s=>chooseUnique([`One more detail. Keep it tight.`,
-                            `Decide: softer or heavier.`]),
-    poet:s=>chooseUnique([`Give me three words about you—now.`,
-                          `Color first, then texture.`]),
-    boardroom:s=>chooseUnique([`Answer cleanly: standing or sitting?`,
-                               `Short answers from now on. What do you want me to notice first?`]),
-    cowboy:s=>chooseUnique([`Talk to me, darlin’. Porch light on or off?`,
-                            `Sweet or rowdy—your pick.`])
-  }
-};
-
-/* --- Small helpers --- */
-const chat=document.getElementById("chat");
-function row(html, you=false){const r=document.createElement("div"); r.className="row"+(you?" you":""); r.innerHTML=`<div class="bubble">${html}</div>`; chat.appendChild(r); chat.scrollTop=chat.scrollHeight;}
-const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-
-/* seed */
-row(`<strong>${guy.name}:</strong> ${esc(guy.intro)}`);
-
-/* --- Overlay + timer --- */
+/* ----------------- preview timer & overlay ----------------- */
 const overlay=document.getElementById("overlay");
 const freeLeft=document.getElementById("freeLeft");
 const another=document.getElementById("anotherPreview");
@@ -342,6 +200,7 @@ const timeleft=document.getElementById("timeleft");
 const fill=document.getElementById("fill");
 const composer=document.getElementById("composer");
 const input=document.getElementById("input");
+
 function ageGate(plan){return `/age.html?man=${encodeURIComponent(id)}&plan=${encodeURIComponent(plan)}`;}
 buyDay.href=ageGate("day"); buyMon.href=ageGate("month");
 
@@ -368,61 +227,118 @@ function lock(limitReached){
   freeLeft.textContent=left?`${left} free preview${left===1?"":"s"} left with ${guy.name}.`:`No free previews left for ${guy.name}.`;
   document.getElementById("ovActions").classList.toggle("hidden", left===0);
   snooze.disabled=(left===0); another.disabled=(left===0);
-  overlay.style.display="grid"; overlay.setAttribute("aria-hidden","false");
+  overlay.style.display="grid"; overlay.setAttribute("aria-hidden","true"?"false":"false");
 }
 another.addEventListener("click",()=>{if(count<MAX_TRIALS) startPreview();});
 snooze.addEventListener("click",()=>{overlay.style.display="none"; overlay.setAttribute("aria-hidden","true"); end=Date.now()+60*1000; localStorage.setItem(END_KEY,String(end)); requestAnimationFrame(tick);});
 
-/* --- Reply selection --- */
-function pick(bucket, payload){
-  const set=L[bucket] && L[bucket][guy.style];
-  if(!set) return chooseUnique(["Tell me more—in your own words."]);
-  if(Array.isArray(set)) return chooseUnique(set);
-  // function
-  const arr=set(payload);
-  return chooseUnique(Array.isArray(arr)?arr:[arr]);
+/* ----------------- severity + memory facts ----------------- */
+// Tweak these lists if needed:
+const HARD=["nude","naked","oral","blowjob","handjob","cum","inside you","moan for me","choke me","porn"];
+const MED =["bed","kiss","neck","ride","spank","grind","dirty","aroused","turn on","get me off","touch me","thighs","hard","wet"];
+function severity(t){
+  const s=t.toLowerCase();
+  if(HARD.some(w=>s.includes(w))) return 2;
+  if(MED.some(w=>s.includes(w))) return 1;
+  return 0;
+}
+// Memory facts per guy (very light; safe)
+const MEM_KEY = `bb.mem:${id}`;
+function getMemory(){ try{return JSON.parse(localStorage.getItem(MEM_KEY)||`{"facts":[]}`);}catch(_){return{facts:[]}} }
+function addFact(f){
+  const mem=getMemory(); if(!mem.facts.includes(f)){ mem.facts.push(f); localStorage.setItem(MEM_KEY, JSON.stringify(mem)); }
+}
+function mineFacts(text){
+  const s=text.toLowerCase();
+  if(/\b(pizza|tacos|burger|sushi|thai|italian)\b/.test(s)) addFact(`likes ${RegExp.$1}`);
+  if(/\b(boots|heels|sneakers)\b/.test(s)) addFact(`wears ${RegExp.$1}`);
+  if(/\b(black|white|red|blue|green|pink|purple)\b/.test(s) && /\b(shirt|top|hoodie|dress)\b/.test(s)) addFact(`top ${RegExp.$1}`);
+  if(/\bcity view|lights low\b/.test(s)) addFact(s.includes("city view")?"city view":"lights low");
 }
 
-/* --- Send handler (with delayed coin popup) --- */
-document.getElementById("composer").addEventListener("submit",(e)=>{
+/* ----------------- brain hookup ----------------- */
+const history = []; // we keep last few turns
+let mediumCount = 0; // for delayed coin popup
+let lastAssistant = ""; // anti exact repeat
+
+// seed opener (one short persona intro sent via brain to keep style consistent)
+async function seedIntro(){
+  const intro = `Start the chat in your persona with one short opener and a concrete question (example: “Tell me your shirt color”).
+  Keep it PG.`;
+  const reply = await callBrain("pg", [{role:"user", content:intro}], true);
+  pushAssistant(reply || `I’m here. Tell me one truth from today.`); // fallback
+}
+function pushAssistant(text){
+  if(!text) return;
+  if(text.trim() === lastAssistant.trim()) return; // avoid exact repeat
+  lastAssistant = text.trim();
+  history.push({role:"assistant", content:lastAssistant});
+  row(`<strong>${esc(guy.name)}:</strong> ${esc(lastAssistant)}`);
+}
+
+async function callBrain(mode, extraHistory=[], systemSeed=false){
+  const payload = {
+    guy: id,
+    mode,
+    userName: "you",
+    history: systemSeed ? extraHistory : [...history, ...extraHistory],
+    memory: getMemory()
+  };
+  try{
+    const r = await fetch("/api/brain", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+    const j = await r.json();
+    if(j?.reply) return j.reply;
+    return "Say more—I’m listening.";
+  }catch(e){
+    console.error(e);
+    return "Network’s acting up. Try one more line for me.";
+  }
+}
+
+/* ----------------- send handler ----------------- */
+document.getElementById("composer").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const t=input.value.trim(); if(!t) return;
-  row(esc(t),true); input.value="";
+  row(esc(t),true);
+  history.push({role:"user", content:t});
+  input.value="";
+  mineFacts(t);
 
-  const level=severity(t);
+  const level = severity(t);
   if(level===1) mediumCount++;
+  let mode = "pg";
+
   if(level===2 || mediumCount>=2){
     if(getCoins()<=0){
       showCoins(); mediumCount=0;
       row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only). You’re safe here.</em>`);
-      // continue conversation with a soft but assertive line
-      const c=classify(t);
-      const fallback = pick(c.type==="feeling"?"feeling":"generic", c.echo||c.word||"");
-      row(`<strong>${guy.name}:</strong> ${esc(fallback)}`);
-      return;
-    } else { spendCoin(); updateBadge(); row(`<em class="sys">Spent 1 coin for a hotter tone.</em>`); }
+      mode = "pg";
+    }else{
+      spendCoin(); updateBadge(); mode = "erotic";
+      row(`<em class="sys">Spent 1 coin for a hotter tone.</em>`);
+    }
   }
 
-  const c=classify(t);
-  let reply;
-  switch(c.type){
-    case "greet":      reply = pick("greet"); break;
-    case "directive":  reply = pick("directive"); break;
-    case "food":       reply = pick("food"); break;
-    case "outfit":     reply = pick("outfit"); break;
-    case "compliment": reply = pick("compliment"); break;
-    case "feeling":    reply = pick("feeling", c.word); break;
-    default:           reply = pick("generic", c.echo);
-  }
-  row(`<strong>${guy.name}:</strong> ${esc(reply)}`);
+  const reply = await callBrain(mode);
+  pushAssistant(reply);
 });
 
-/* --- Kickoff --- */
+/* ----------------- kickoff ----------------- */
 (function(){
-  localStorage.setItem("bb.character", id);
-  if(Number(localStorage.getItem("bb.trialCount:"+id)||0) >= MAX_TRIALS){ lock(true); return; }
+  document.body.style.setProperty("--hero", `url("${guy.bg}")`);
+  // Start preview or lock if used
+  if(Number(localStorage.getItem(COUNT_KEY)||0) >= MAX_TRIALS){ lock(true); return; }
   if(!end || end<=Date.now()){ startPreview(); } else { requestAnimationFrame(tick); }
+  // seed a first line
+  seedIntro();
 })();
+
+/* ----------------- coins UI tweaks ----------------- */
+const coinPopupEl=document.getElementById("coinPopup");
+if(localStorage.getItem("bb.coinPopupShown")!=="1"){
+  // Don’t auto-show; we only show by severity logic.
+}
+document.getElementById("coinBadge").title = "Coin packs appear when convo leans spicy.";
 </script>
 </body>
 </html>

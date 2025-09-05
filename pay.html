@@ -62,4 +62,157 @@
   .card h3{margin:0; font-size:18px}
   .price{font-size:26px; font-weight:800; margin:2px 0 0}
   .body{padding:14px; font-size:14px; color:var(--muted)}
-  ul{margin:0 0 12px
+  ul{margin:0 0 12px 18px}
+  li{margin:4px 0}
+  .btn{
+    display:inline-block; margin-top:8px; padding:10px 14px; border-radius:999px;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700;
+    border:none; cursor:pointer; text-align:center
+  }
+  .pill{display:inline-block; padding:3px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
+  .pill.good{border-color:#234323; background:#0f1a11}
+  .coins{display:grid; gap:12px; grid-template-columns:repeat(2,1fr); margin-top:8px}
+  .coin{border:1px dashed #362036; border-radius:12px; padding:10px 12px; text-align:center; background:rgba(14,10,13,.35)}
+  .coin strong{display:block; font-size:18px; margin-bottom:2px; color:#fff}
+  .note{text-align:center; color:var(--muted); font-size:12px; margin-top:12px}
+  .footer{margin-top:26px; text-align:center; color:var(--muted); font-size:12px}
+  .back{display:inline-flex; align-items:center; gap:8px}
+  .avatar{
+    width:56px; height:56px; border-radius:12px; object-fit:cover; margin:0 auto 8px; display:block;
+    border:1px solid #2a1a25; box-shadow:0 2px 10px rgba(0,0,0,.3)
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
+
+<header>
+  <div class="brand">
+    <div class="dot" aria-hidden="true"></div>
+    <h1>Blossom n Blade</h1>
+  </div>
+  <a class="back" href="/index.html">← Back to Choose</a>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <img id="heroAvatar" class="avatar" src="/images/gothic-bg.jpg" alt="" />
+    <h2 id="heroTitle">Choose your plan</h2>
+    <p id="heroSub" class="tagline">PG-13 companionship by default. Coins unlock erotic chat (words only, no visuals).</p>
+  </section>
+
+  <!-- Moved here: trial info applies to BOTH plans -->
+  <div class="trialbar">Each room includes a <strong>3½-minute free vibe preview per man</strong> (resets per guy).</div>
+
+  <section class="grid" aria-label="Plans and options">
+    <!-- Day Pass -->
+    <article class="card" id="day">
+      <div class="hd">
+        <h3>Day Pass</h3>
+        <div class="price">$5.99</div>
+      </div>
+      <div class="body">
+        <span class="pill" id="dayFor">For one man (today)</span>
+        <ul>
+          <li>Full day access to your chosen man</li>
+          <li>Warmth, flirting, companionship</li>
+          <li>Gentle aftercare included</li>
+        </ul>
+        <button class="btn" data-action="day">Buy Day Pass</button>
+      </div>
+    </article>
+
+    <!-- Monthly -->
+    <article class="card" id="month">
+      <div class="hd">
+        <h3>Monthly <span class="pill good">Includes 3 coins</span></h3>
+        <div class="price">$10.99</div>
+      </div>
+      <div class="body">
+        <span class="pill">All six men</span>
+        <ul>
+          <li>PG-13 companionship across all rooms</li>
+          <li>Name memory and vibe continuity</li>
+          <li>Includes <strong>3 coins</strong> to unlock erotic chat</li>
+          <li>$1 donated to DV charity</li>
+        </ul>
+        <button class="btn" data-action="month">Buy Monthly</button>
+      </div>
+    </article>
+
+    <!-- Coins -->
+    <article class="card">
+      <div class="hd">
+        <h3>Coins <span class="pill">unlock erotic chat</span></h3>
+      </div>
+      <div class="body">
+        <div class="coins">
+          <div class="coin"><strong>5</strong>$1</div>
+          <div class="coin"><strong>25</strong>$5</div>
+          <div class="coin"><strong>60</strong>$10</div>
+          <div class="coin"><strong>150</strong>$20</div>
+        </div>
+        <div class="note">Coins trigger by natural conversation prompts—never pushy.</div>
+        <button class="btn" data-action="coins">Buy Coins</button>
+      </div>
+    </article>
+
+    <!-- Coming Soon / Calendar -->
+    <article class="card">
+      <div class="hd">
+        <h3>Coming Soon</h3>
+      </div>
+      <div class="body">
+        <ul>
+          <li>Wall-worthy moody prints (12 months)</li>
+          <li>Release calendar & preorders</li>
+        </ul>
+        <form onsubmit="event.preventDefault(); alert('Thanks! We’ll ping you when preorders open.');">
+          <input type="email" placeholder="Email for preorder notice (optional)"
+                 style="width:100%;padding:10px;border-radius:10px;border:1px solid #2a1a25;background:#0f0b0f;color:#eee" />
+          <button class="btn" style="width:100%;margin-top:8px">Notify Me</button>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <div class="footer">#booktok • #masktok</div>
+</main>
+
+<script>
+/* Map ?man= to a guy, set background + labels. Uses your CURRENT filenames. */
+const MAP = {
+  blade:     { name:"Blade Kincaid",   bg:"/images/blade-woods.jpg",    card:"/images/blade_front_card.jpg" },
+  dylan:     { name:"Dylan Vale",      bg:"/images/dylan-garage.jpg",  card:"/images/dylan-garage.jpg" },
+  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg",    card:"/images/grayson-bg.jpg" },
+  silas:     { name:"Silas Lennox",    bg:"/images/gothic-bg.jpg",     card:"/images/gothic-bg.jpg" },
+  alexander: { name:"Alexander Jackson",bg:"/images/gentleman-bg.jpg", card:"/images/gentleman-bg.jpg" },
+  jesse:     { name:"Jesse Granger",   bg:"/images/cowboy.jpg",        card:"/images/cowboy.jpg" }
+};
+/* Accept old aliases e.g. ?man=garage */
+const ALIAS = {
+  garage:"dylan", gentleman:"alexander", cowboy:"jesse",
+  rockstar:"silas", mask:"blade", viking:"grayson"
+};
+const qs = new URLSearchParams(location.search);
+let id = (qs.get("man")||"").toLowerCase().trim();
+id = ALIAS[id] || id;
+const guy = MAP[id] || MAP.silas; // default Silas
+
+/* Set BG + labels */
+document.body.style.setProperty("--hero", `url("${guy.bg}")`);
+document.getElementById("heroTitle").textContent = `Choose your plan — ${guy.name}`;
+document.getElementById("heroAvatar").src = guy.card;
+document.getElementById("heroAvatar").alt = guy.name;
+document.getElementById("dayFor").textContent = `For ${guy.name} (today)`;
+
+/* Button behavior — placeholder for Tuesday demo */
+document.querySelectorAll(".btn[data-action]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    alert("Demo mode: payment wiring coming next. (Plan: "+btn.dataset.action+" for "+guy.name+")");
+  });
+});
+</script>
+</body>
+</html>

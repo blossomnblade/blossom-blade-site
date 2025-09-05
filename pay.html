@@ -75,13 +75,13 @@
     <article class="card" id="day">
       <div class="hd"><h3>Day Pass</h3><div class="price">$5.99</div></div>
       <div class="body">
-        <span class="pill" id="dayFor">For one man (today)</span>
+        <span class="pill">For one man (today)</span>
         <ul>
           <li>Full day access to your chosen man</li>
           <li>Warmth, flirting, companionship</li>
           <li>Gentle aftercare included</li>
         </ul>
-        <button class="btn" data-action="day">Buy Day Pass</button>
+        <a id="buyDay" class="btn" href="#">Buy Day Pass</a>
       </div>
     </article>
 
@@ -96,7 +96,7 @@
           <li>Includes <strong>3 coins</strong> to unlock erotic chat</li>
           <li>$1 donated to DV charity</li>
         </ul>
-        <button class="btn" data-action="month">Buy Monthly</button>
+        <a id="buyMonth" class="btn" href="#">Buy Monthly</a>
       </div>
     </article>
 
@@ -109,7 +109,7 @@
           <div class="coin"><strong>60</strong>$10</div><div class="coin"><strong>150</strong>$20</div>
         </div>
         <div class="note">Coins trigger by natural conversation prompts—never pushy.</div>
-        <button class="btn" data-action="coins">Buy Coins</button>
+        <a id="buyCoins" class="btn" href="#">Buy Coins</a>
       </div>
     </article>
 
@@ -134,7 +134,7 @@
 </main>
 
 <script>
-/* Map ?man= to a guy; set background + avatar. No Day Pass name injection. */
+/* Background + avatar mapping (uses your existing filenames) */
 const MAP = {
   blade:{name:"Blade Kincaid",bg:"/images/blade-woods.jpg",card:"/images/blade_front_card.jpg"},
   dylan:{name:"Dylan Vale",bg:"/images/dylan-garage.jpg",card:"/images/dylan-garage.jpg"},
@@ -145,16 +145,21 @@ const MAP = {
 };
 const ALIAS={garage:"dylan",gentleman:"alexander",cowboy:"jesse",rockstar:"silas",mask:"blade",viking:"grayson"};
 const qs=new URLSearchParams(location.search);
-let id=(qs.get("man")||"").toLowerCase().trim(); id=ALIAS[id]||id; const guy=MAP[id]||MAP.silas;
+let id=(qs.get("man")||localStorage.getItem("bb.character")||"").toLowerCase().trim();
+id=ALIAS[id]||id; if(!MAP[id]) id="silas";
+const guy=MAP[id];
 
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
 document.getElementById("heroAvatar").src=guy.card;
 document.getElementById("heroAvatar").alt=guy.name;
 
-/* Demo click handlers */
-document.querySelectorAll(".btn[data-action]").forEach(btn=>{
-  btn.addEventListener("click", ()=>{ alert("Demo mode: payment wiring coming next."); });
-});
+/* Route through age gate before purchase */
+function gate(plan){
+  return `/age.html?man=${encodeURIComponent(id)}&plan=${encodeURIComponent(plan)}`;
+}
+document.getElementById("buyDay").href = gate("day");
+document.getElementById("buyMonth").href = gate("month");
+document.getElementById("buyCoins").href = gate("coins");
 </script>
 </body>
 </html>

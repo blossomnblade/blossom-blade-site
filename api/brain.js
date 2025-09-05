@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     res.status(200).json({ reply });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    res.status(200).json({ reply: "Network’s acting up. Give me one more line." }); // keep chat flowing
   }
 }
 
@@ -75,12 +75,20 @@ async function callOpenAI(apiKey, messages){
     method:"POST",
     headers:{ "Authorization":`Bearer ${apiKey}`, "Content-Type":"application/json" },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
-      temperature: 0.7, presence_penalty: 0.8, frequency_penalty: 0.5,
+      // ⚠️ Use a live, low-cost model by default:
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      temperature: 0.7,
+      presence_penalty: 0.8,
+      frequency_penalty: 0.5,
       messages
     })
   });
-  if(!r.ok){ throw new Error(`OpenAI ${r.status}: ${await r.text().catch(()=>"(no body)")}`); }
-  const j = await r.json();
-  return j?.choices?.[0]?.message?.content?.trim() || "Say more—I’m listening.";
+  // Try to parse error bodies so we don't silently fail
+  const text = await r.text();
+  let j = {};
+  try { j = JSON.parse(text); } catch { /* ignore */ }
+  if (!r.ok) {
+    throw new Error(`OpenAI ${r.status}: ${j?.error?.message || text || "(no body)"}`);
+  }
+  return j?.choices?.[0]?.message?.content?.trim() || "I’m here. Tell me one truth from today.";
 }

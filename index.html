@@ -1,191 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Choose Your Companion</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blossom n Blade • Choose Your Match</title>
+  <meta name="description" content="Pick your companion: Blade, Dylan, Grayson, Silas, Alexander, or Jesse." />
   <style>
     :root{
-      --ink:#e5e7eb;          /* light text */
-      --muted:#c9cbd1;        /* subtext */
-      --accent:#b36;          /* logo rose */
-      --accent2:#5b5066;      /* slate-plum */
-      --card-bg: rgba(20,24,28,0.75);
-      --chip: rgba(255,255,255,0.1);
-      --chip-text:#eaeaf2;
-      --border: rgba(255,255,255,0.14);
+      --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
+      --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{box-sizing:border-box} html,body{height:100%}
     body{
-      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      color:var(--ink); background:#0a0b0e url("images/background.jpg") center/cover fixed no-repeat;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 700px at 60% -10%, rgba(110,15,46,.25), transparent),
+                 radial-gradient(900px 600px at -10% 110%, rgba(75,31,60,.28), transparent),
+                 var(--bg);
+      font:500 16px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial;
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:36px;height:36px;border-radius:8px;
-      background: radial-gradient(60% 60% at 50% 40%, #c67 0%, #7a3049 65%, #2b1e28 100%);
-      box-shadow:0 0 0 1px #000a inset, 0 4px 24px #0009;
-    }
-    h1{font-size:24px;margin:0}
-    .tagline{color:var(--muted);font-size:14px;margin:10px 0 18px}
-    .notice{
-      display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;
-      background:linear-gradient(90deg, #211824aa, #281b2a99); border:1px solid var(--border);
-      font-size:12px
-    }
-    .notice a{color:#fff;text-decoration:underline dotted}
-    .grid{display:grid;gap:18px}
-    .grid.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    header{display:flex;justify-content:space-between;align-items:center;
+      padding:18px 16px;border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#140d14,transparent)}
+    .brand{display:flex;gap:10px;align-items:center}
+    .dot{width:28px;height:28px;border-radius:50%;
+      background:conic-gradient(from 220deg,var(--wine),var(--plum));
+      box-shadow:0 0 0 2px #000 inset}
+    h1{margin:0;font-size:18px}
+    .note{font-size:12px;color:var(--muted)}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 44px}
+    .hero h2{margin:0 0 6px;font-size:22px}
+    .hero p{margin:0;color:var(--muted);font-size:14px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
     .card{
-      background:var(--card-bg); border:1px solid var(--border); border-radius:18px;
-      padding:18px 18px 16px; backdrop-filter: blur(6px);
-      box-shadow: 0 8px 30px #0007;
-      min-height: 250px; display:flex;flex-direction:column;justify-content:space-between
-    }
-    .card h3{margin:0 0 8px;font-size:20px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-    .chip{
-      font-size:12px; padding:6px 10px; border-radius:999px; background:var(--chip); color:var(--chip-text);
-      border:1px solid var(--border)
-    }
-    .lead{color:var(--ink);opacity:.95;margin:0 0 14px;line-height:1.5}
-    .enter{
-      display:inline-flex;justify-content:center;align-items:center;gap:8px;
-      padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,#2a2330,#211b24);
-      color:#fff;text-decoration:none;border:1px solid var(--border);
-      box-shadow:0 4px 16px #0007; font-weight:600
-    }
-    .enter:hover{filter:brightness(1.08)}
-    footer{margin-top:28px;color:var(--muted);font-size:12px}
-    .footbar{
-      margin-top:16px;padding:12px;border:1px dashed var(--border);border-radius:12px;
-      background:linear-gradient(180deg,#16141a88,#15121866)
-    }
-    @media (prefers-color-scheme: light){
-      body{color:#111}
-      .card{background:rgba(250,250,255,0.85)}
-      .enter{background:linear-gradient(180deg,#523345,#3c2a3a)}
-    }
+      position:relative;display:flex;flex-direction:column;cursor:pointer;
+      background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+      box-shadow:0 1px 10px rgba(0,0,0,.25);outline:0 solid transparent;
+      transition:transform .15s ease, outline .15s ease}
+    .card:hover{transform:translateY(-2px);outline:2px solid var(--plum)}
+    figure{margin:0;aspect-ratio:3/4;background:#0c0a0c;display:grid;place-items:center}
+    img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.95) contrast(1.05)}
+    .placeholder{width:100%;height:100%;display:grid;place-items:center;color:#e9d4e6;
+      background:repeating-linear-gradient(45deg,#211421,#211421 10px,#2b1a28 10px,#2b1a28 20px)}
+    .meta{padding:10px 12px 12px}
+    .meta h3{margin:0 0 4px;font:700 16px/1.2 system-ui}
+    .meta p{margin:0;font-size:12px;color:var(--muted)}
+    .cta{position:absolute;left:10px;bottom:10px}
+    .choose{border:none;border-radius:999px;padding:8px 12px;
+      background:linear-gradient(90deg,var(--plum),var(--wine));color:white;font-weight:700}
+    .footer{margin-top:20px;color:var(--muted);font-size:12px;border-top:1px dashed var(--line);padding-top:12px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <h1>Blossom &amp; Blade</h1>
-      </div>
-      <div class="notice" title="Transparent pricing">
-        <span>PG-13 with subscription • Explicit talk unlocks with coins</span>
-        <a href="pay.html">View pricing</a>
-      </div>
-    </header>
+<header>
+  <div class="brand"><div class="dot" aria-hidden="true"></div><h1>Blossom n Blade</h1></div>
+  <div class="note">PG-13 on landing • Adults inside</div>
+</header>
 
-    <p class="tagline">
-      Women-safe fantasy chat. No visuals. Words, warmth, and foreplay-vibes only.
-    </p>
+<main class="wrap">
+  <section class="hero" aria-labelledby="pick">
+    <h2 id="pick">Choose your match</h2>
+    <p>Tap a card to enter the room. You’ll get a few minutes to feel the vibe before choosing a plan.</p>
+  </section>
 
-    <!-- Character cards -->
-    <div class="grid grid-3">
+  <section class="grid" id="grid" aria-label="Character selection"></section>
 
-      <!-- Blade -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Blade Kincaid</span>
-            <span class="chip">Masked hunter</span>
-            <span class="chip">Chase fantasy</span>
-          </div>
-          <h3>Blade Kincaid</h3>
-          <p class="lead">Found you, brave girl. Don’t run—yet. Let me hear what your day did to you.</p>
-        </div>
-        <a class="enter" href="woods.html">Enter Blade’s Room</a>
-      </div>
-
-      <!-- Grayson -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Grayson Kincaid</span>
-            <span class="chip">Viking Dom</span>
-            <span class="chip">Red-lit room</span>
-          </div>
-          <h3>Grayson Kincaid</h3>
-          <p class="lead">One line at a time. I wait for your reply—then I guide. Start with one truth from today.</p>
-        </div>
-        <a class="enter" href="mask.html">Enter Grayson’s Room</a>
-      </div>
-
-      <!-- Dylan -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Dylan Vale</span>
-            <span class="chip">Biker boy</span>
-            <span class="chip">Motel garage</span>
-          </div>
-          <h3>Dylan Vale</h3>
-          <p class="lead">Sit on the counter, pretty thing. I like the view from here. Tell me what you’re craving.</p>
-        </div>
-        <a class="enter" href="garage.html">Enter Dylan’s Room</a>
-      </div>
-
-      <!-- Jesse -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Jesse Granger</span>
-            <span class="chip">Cowboy</span>
-            <span class="chip">Barn loft • Kitchen</span>
-          </div>
-          <h3>Jesse Granger</h3>
-          <p class="lead">Darlin’, yes ma’am—sit a spell. Don’t mind if my smile misbehaves.</p>
-        </div>
-        <a class="enter" href="cowboy.html">Enter Jesse’s Room</a>
-      </div>
-
-      <!-- Silas -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Silas Lennox</span>
-            <span class="chip">Rockstar</span>
-            <span class="chip">Studio • Tour bus</span>
-          </div>
-          <h3>Silas Lennox</h3>
-          <p class="lead">Come closer, muse. Let me borrow your voice—then I’ll give it back as a song.</p>
-        </div>
-        <a class="enter" href="rockstar.html">Enter Silas’s Room</a>
-      </div>
-
-      <!-- Alexander -->
-      <div class="card">
-        <div>
-          <div class="chips">
-            <span class="chip">Alexander Jackson</span>
-            <span class="chip">Gentleman</span>
-            <span class="chip">Penthouse • Town car</span>
-          </div>
-          <h3>Alexander Jackson</h3>
-          <p class="lead">Shoes off. I’ll take your coat—and the weight you’ve been carrying. Start with one thought.</p>
-        </div>
-        <a class="enter" href="gentleman.html">Enter Alexander’s Room</a>
-      </div>
-
-    </div>
-
-    <footer>
-      <div class="footbar">
-        $1 of every subscription goes to this month’s Domestic Violence charity.  
-        <a href="pay.html" style="color:#fff;text-decoration:underline;">See day pass, monthly, and coin options</a>.
-      </div>
-    </footer>
+  <div class="footer">
+    Tip: to change an image later, just upload a new JPG in <code>/images/</code> with the same name and refresh.
   </div>
+</main>
+
+<script>
+/* No JSON files. We point directly at your CURRENT JPG names in /images/. */
+const GUYS = [
+  { id:"blade",     name:"Blade",     file:"/images/blade_front_card.jpg",    blurb:"Ghostface energy. Calm… then cut." },
+  { id:"dylan",     name:"Dylan",     file:"/images/dylan-garage.jpg",        blurb:"Grease, keys, and quiet eyes." },
+  { id:"grayson",   name:"Grayson",   file:"/images/grayson-bg.jpg",          blurb:"COD mask; playful menace." },
+  { id:"silas",     name:"Silas",     file:"/images/gothic-bg.jpg",           blurb:"Rocker light, velvet night." },
+  { id:"alexander", name:"Alexander", file:"/images/gentleman-bg.jpg",        blurb:"Boardroom charm, sleeves rolled." },
+  { id:"jesse",     name:"Jesse",     file:"/images/cowboy.jpg",              blurb:"Rodeo heat with a soft drawl." },
+];
+
+const grid = document.getElementById("grid");
+grid.innerHTML = GUYS.map(g => `
+  <article class="card" data-id="${g.id}" role="button" tabindex="0" aria-label="Choose ${g.name}">
+    <figure>
+      <img src="${g.file}" alt="${g.name}" loading="lazy" />
+      <div class="placeholder" hidden>image missing</div>
+      <div class="cta"><button class="choose" type="button" aria-hidden="true">Choose</button></div>
+    </figure>
+    <div class="meta">
+      <h3>${g.name}</h3>
+      <p>${g.blurb}</p>
+    </div>
+  </article>
+`).join("");
+
+/* Graceful fallback if a file doesn’t exist */
+document.querySelectorAll(".card").forEach(card => {
+  const img = card.querySelector("img");
+  const ph  = card.querySelector(".placeholder");
+  img.addEventListener("error", () => { img.hidden = true; ph.hidden = false; }, {once:true});
+});
+
+function choose(id){
+  try { localStorage.setItem("bb.character", id); } catch(e){}
+  location.href = "/chat.html"; // we’ll add this next
+}
+
+grid.addEventListener("click", e => {
+  const card = e.target.closest(".card");
+  if (card) choose(card.dataset.id);
+});
+grid.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") {
+    const card = e.target.closest(".card");
+    if (card) { e.preventDefault(); choose(card.dataset.id); }
+  }
+});
+</script>
 </body>
 </html>

@@ -54,7 +54,7 @@
 </header>
 
 <main class="wrap">
-  <!-- Verify (always requires a click) -->
+  <!-- First-time verify -->
   <section id="verify" class="card">
     <h2>Adults only inside</h2>
     <p class="sub">Please confirm you’re 18+ before continuing.</p>
@@ -75,12 +75,19 @@
     <div class="tiny"><a id="forgetLink" href="#">Reset age check on this device</a></div>
   </section>
 
-  <!-- Already verified: still requires explicit click -->
+  <!-- Already verified: must re-acknowledge with checkboxes -->
   <section id="verified" class="card hidden" aria-live="polite">
-    <h2>Verified — you’re good</h2>
-    <p class="sub">You’ve already confirmed 18+. Continue when ready.</p>
+    <h2>Verified — one more check</h2>
+    <p class="sub">For everyone’s safety, please re-acknowledge to continue.</p>
+    <div class="checks">
+      <label><input id="vChkAge" type="checkbox" /> I confirm that I am <strong>18 years or older</strong>.</label>
+      <label><input id="vChkTerms" type="checkbox" />
+        I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and
+        <a href="/guidelines.html" target="_blank" rel="noopener">Community Standards</a>.
+      </label>
+    </div>
     <div class="actions">
-      <a id="goNext" class="btn" href="#">Continue</a>
+      <button id="goNextBtn" class="btn" disabled>Continue</button>
       <button id="seeReceipt" class="btn softer" type="button">View saved receipt</button>
       <a id="resetAgain" class="btn softer" href="#">Reset & verify again</a>
     </div>
@@ -109,28 +116,26 @@ function buildNext(){
   const p = new URLSearchParams();
   if (idRaw) p.set("man", idRaw);
   const q = p.toString(); if (q) url += `?${q}`;
-  if (plan === "day") url += "#day";
-  else if (plan === "month") url += "#month";
+  if (plan === "day") url += "#day"; else if (plan === "month") url += "#month";
   return url;
 }
 function sanitizeNext(n){
   if(!n) return null;
-  try{ const u = new URL(n, location.origin);
-       if(u.origin === location.origin) return u.pathname + u.search + u.hash; }catch(e){}
+  try{ const u=new URL(n,location.origin); if(u.origin===location.origin) return u.pathname+u.search+u.hash; }catch(e){}
   return null;
 }
 const NEXT = sanitizeNext(nextParam) || buildNext();
 
 /* Elements */
-const verifiedCard = document.getElementById("verified");
 const verifyCard   = document.getElementById("verify");
+const verifiedCard = document.getElementById("verified");
 const receiptBox   = document.getElementById("receipt");
 const receiptPre   = document.getElementById("receiptPre");
 
 /* Helpers */
 function nowIso(){ return new Date().toISOString(); }
 function plusDaysISO(d){ return new Date(Date.now()+d*864e5).toISOString(); }
-function tz(){ try{return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";}catch(e){return "UTC";} }
+function tz(){ try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";}catch(e){return"UTC";} }
 function token(){ return "bb-" + Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36); }
 
 function saveReceipt(days){
@@ -147,21 +152,14 @@ function saveReceipt(days){
   };
   localStorage.setItem("bb.ageConsent", JSON.stringify(rec));
   localStorage.setItem("bb.ageConsentToken", rec.token);
-  // also store the enforcement flag
-  const until = Date.now() + days*864e5;
+  const until = Date.now() + days*864e5; // enforcement flag
   localStorage.setItem("bb.ageVerifiedUntil", String(until));
   return rec;
 }
 function getReceipt(){
-  try{ const r = JSON.parse(localStorage.getItem("bb.ageConsent") || "null"); return r || null; }
-  catch(e){ return null; }
+  try{ return JSON.parse(localStorage.getItem("bb.ageConsent") || "null"); } catch(e){ return null; }
 }
-function showReceipt(){
-  const r = getReceipt();
-  receiptPre.textContent = r ? JSON.stringify(r, null, 2)
-                             : "No receipt stored on this device yet.";
-  receiptBox.classList.remove("hidden");
-}
+function showReceipt(){ const r=getReceipt(); receiptPre.textContent=r?JSON.stringify(r,null,2):"No receipt stored."; receiptBox.classList.remove("hidden"); }
 function hideReceipt(){ receiptBox.classList.add("hidden"); }
 
 /* Reset links */
@@ -176,25 +174,39 @@ document.getElementById("forgetLink").addEventListener("click",(e)=>{
   location.reload();
 });
 
-/* Already-verified vs verify flow — but NEVER auto-redirect */
+/* Show correct flow (never auto-redirect; both flows need checkboxes) */
 const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
 const nowMs = Date.now();
 if (until && until > nowMs) {
   verifyCard.classList.add("hidden");
   verifiedCard.classList.remove("hidden");
-  document.getElementById("goNext").href = NEXT;
+
+  const vAge = document.getElementById("vChkAge");
+  const vTerms = document.getElementById("vChkTerms");
+  const goNextBtn = document.getElementById("goNextBtn");
+  const updateV = ()=>{ goNextBtn.disabled = !(vAge.checked && vTerms.checked); };
+  vAge.addEventListener("change", updateV);
+  vTerms.addEventListener("change", updateV);
+  goNextBtn.addEventListener("click", ()=>{
+    // store a quick reaffirmation stamp
+    const ack = { at: nowIso(), token: localStorage.getItem("bb.ageConsentToken") || token(), man:idRaw||null, plan:plan||null };
+    localStorage.setItem("bb.ageReack", JSON.stringify(ack));
+    location.href = NEXT;
+  });
+
+  document.getElementById("seeReceipt").addEventListener("click", showReceipt);
   document.getElementById("resetAgain").addEventListener("click",(e)=>{
     e.preventDefault();
     try{
       localStorage.removeItem("bb.ageVerifiedUntil");
       localStorage.removeItem("bb.ageConsent");
       localStorage.removeItem("bb.ageConsentToken");
+      localStorage.removeItem("bb.ageReack");
     }catch(e){}
     location.reload();
   });
-  document.getElementById("seeReceipt").addEventListener("click", showReceipt);
 } else {
-  // Need verification
+  // First-time verify
   const chkAge = document.getElementById("chkAge");
   const chkTerms = document.getElementById("chkTerms");
   const chkRemember = document.getElementById("chkRemember");
@@ -204,8 +216,7 @@ if (until && until > nowMs) {
   chkTerms.addEventListener("change", update);
   btn.addEventListener("click", ()=>{
     const days = chkRemember.checked ? 30 : 1;
-    const rec = saveReceipt(days);
-    // Optional: show the token briefly so users can note it (we keep it simple)
+    const rec = saveReceipt(days); // stores flag + receipt
     alert("Verified. Token: " + rec.token);
     location.href = NEXT;
   });

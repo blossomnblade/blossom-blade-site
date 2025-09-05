@@ -39,13 +39,9 @@
   .hero h2{margin:0 0 4px; font-size:24px}
   .hero p{margin:0; color:var(--muted); font-size:14px}
   .trialbar{
-    max-width:980px; margin:12px auto 8px;
-    text-align:center;
-    padding:10px 12px;
-    border:1px solid var(--line);
-    border-radius:999px;
-    background:linear-gradient(180deg,#1a121a,#120a11);
-    color:#e9d4e6; font-size:14px;
+    max-width:980px; margin:12px auto 8px; text-align:center;
+    padding:10px 12px; border:1px solid var(--line); border-radius:999px;
+    background:linear-gradient(180deg,#1a121a,#120a11); color:#e9d4e6; font-size:14px;
   }
   .grid{
     display:grid; gap:18px; margin-top:14px;
@@ -102,7 +98,6 @@
     <p id="heroSub" class="tagline">PG-13 companionship by default. Coins unlock erotic chat (words only, no visuals).</p>
   </section>
 
-  <!-- Moved here: trial info applies to BOTH plans -->
   <div class="trialbar">Each room includes a <strong>3½-minute free vibe preview per man</strong> (resets per guy).</div>
 
   <section class="grid" aria-label="Plans and options">
@@ -191,10 +186,7 @@ const MAP = {
   jesse:     { name:"Jesse Granger",   bg:"/images/cowboy.jpg",        card:"/images/cowboy.jpg" }
 };
 /* Accept old aliases e.g. ?man=garage */
-const ALIAS = {
-  garage:"dylan", gentleman:"alexander", cowboy:"jesse",
-  rockstar:"silas", mask:"blade", viking:"grayson"
-};
+const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
 const qs = new URLSearchParams(location.search);
 let id = (qs.get("man")||"").toLowerCase().trim();
 id = ALIAS[id] || id;
@@ -202,7 +194,7 @@ const guy = MAP[id] || MAP.silas; // default Silas
 
 /* Set BG + labels */
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
-document.getElementById("heroTitle").textContent = `Choose your plan — ${guy.name}`;
+document.getElementById("heroTitle").textContent = "Choose your plan"; // <— no name appended
 document.getElementById("heroAvatar").src = guy.card;
 document.getElementById("heroAvatar").alt = guy.name;
 document.getElementById("dayFor").textContent = `For ${guy.name} (today)`;

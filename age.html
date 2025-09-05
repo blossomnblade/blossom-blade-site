@@ -50,7 +50,7 @@
         </div>
         <div class="row">
           <input id="c2" type="checkbox" />
-          <label for="c2">I accept the site’s **rules & policies** (PG-13 by default; words-only erotic chat via coins).</label>
+          <label for="c2">I accept the site’s **rules & policies** (PG-13 by default; words-only erotic chat unlocked by coins).</label>
         </div>
 
         <div class="actions">
@@ -69,16 +69,15 @@
 </div>
 
 <script>
-/* unified key so ALL pages agree */
+/* --- unified keys (ALL pages read these) --- */
 const KEY_MAIN = "bb.ageVerifiedUntil";
-/* write to legacy names too (so older pages won’t loop) */
 const KEY_LEG1 = "bb.age_verified_until";
 const KEY_FLAG = "bb.ageVerified";
 
 const qs = new URLSearchParams(location.search);
 const man  = (qs.get("man")||"").toLowerCase();
 const plan = (qs.get("plan")||"").toLowerCase();
-const next = qs.get("next"); // exact URL to return to, if provided
+const next = qs.get("next"); // may be /alexander or /rooms/alexander etc.
 
 const untilNow = Number(localStorage.getItem(KEY_MAIN) || 0);
 const status = document.getElementById("status");
@@ -90,21 +89,37 @@ const resetBtn = document.getElementById("reset");
 const receipt = document.getElementById("receipt");
 const loopwarn = document.getElementById("loopwarn");
 
+/* normalizes pretty paths to real files so we don't 404 */
+function normalizeNext(n){
+  if (!n) return null;
+  try{
+    const u = new URL(n, location.origin);
+    const p = u.pathname.replace(/\/+$/,'').toLowerCase();
+    const m = p.match(/^\/(?:rooms\/)?(alexander|blade|dylan|grayson|silas|jesse)$/i);
+    if (m){
+      return `/chat.html?man=${m[1].toLowerCase()}`;
+    }
+    return u.pathname + u.search + u.hash;
+  }catch(e){ return n; }
+}
+function storageWorks(){
+  try{ localStorage.setItem("__bbprobe","1"); const ok=localStorage.getItem("__bbprobe")==="1"; localStorage.removeItem("__bbprobe"); return ok; }
+  catch(e){ return false; }
+}
 function saveVerification(days=30){
   const until = Date.now() + days*24*60*60*1000;
-  /* write to all keys */
   localStorage.setItem(KEY_MAIN, String(until));
   localStorage.setItem(KEY_LEG1, String(until));
   localStorage.setItem(KEY_FLAG, "1");
   return until;
 }
-
 function targetURL(){
-  if (next) return next;
+  const normalized = normalizeNext(next);
+  if (normalized) return normalized;
   if (plan) return `/pay.html?man=${encodeURIComponent(man)}&plan=${encodeURIComponent(plan)}`;
+  if (man)  return `/chat.html?man=${encodeURIComponent(man)}`;
   return "/index.html";
 }
-
 function updateUIFromSaved(){
   if (untilNow && untilNow > Date.now()){
     status.style.display = "block";
@@ -113,31 +128,14 @@ function updateUIFromSaved(){
     go.disabled = false;
   }
 }
-
 function redirectIfVerified(){
   if (untilNow && untilNow > Date.now()){
-    // already verified → let them through immediately if coming back
-    // from pay/chat. Only auto-redirect if we were invoked with next/plan.
-    if (next || plan) location.replace(targetURL());
+    if (next || plan || man){ location.replace(targetURL()); }
   }
 }
-
-function storageWorks(){
-  try {
-    const probe = "__bb_probe__";
-    localStorage.setItem(probe, "1");
-    const ok = localStorage.getItem(probe) === "1";
-    localStorage.removeItem(probe);
-    return ok;
-  } catch(e){ return false; }
-}
-
-/* enable button when both boxes are checked */
 function toggleGo(){ go.disabled = !(c1.checked && c2.checked); }
 c1.addEventListener("change", toggleGo);
 c2.addEventListener("change", toggleGo);
-
-/* submit */
 form.addEventListener("submit",(e)=>{
   e.preventDefault();
   const until = saveVerification(30);
@@ -145,19 +143,14 @@ form.addEventListener("submit",(e)=>{
   status.style.display = "block";
   receipt.textContent = `Saved receipt expires: ${when}`;
   go.disabled = false;
-  // go straight to the intended page
   location.replace(targetURL());
 });
-
-/* manual reset */
 resetBtn.addEventListener("click", ()=>{
   localStorage.removeItem(KEY_MAIN);
   localStorage.removeItem(KEY_LEG1);
   localStorage.removeItem(KEY_FLAG);
   location.reload();
 });
-
-/* first paint */
 updateUIFromSaved();
 redirectIfVerified();
 if (!storageWorks()) loopwarn.style.display = "block";

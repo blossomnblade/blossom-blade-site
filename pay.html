@@ -1,188 +1,172 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Subscribe • Blossom & Blade</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Subscribe • Blossom n Blade</title>
+<meta name="description" content="Choose a day pass, monthly plan, or coin packs for erotic add-ons." />
 <style>
   :root{
-    --ink:#e9eef0; --muted:#b9c3cc; --glass:rgba(0,0,0,.55);
-    --border:rgba(255,255,255,.15); --card:rgba(12,14,16,.7);
-    --accent:#2e6e55;
+    --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
+    --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{
-    margin:0; color:var(--ink);
-    background:#0b0b0d url('images/gothic-bg.jpg') center/cover fixed no-repeat;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    background:
+      linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
+      var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+  }
+  .banner{
+    text-align:center; font-size:13px; padding:8px 12px;
+    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35));
+    border-bottom:1px solid var(--line);
   }
   header{
-    position:sticky; top:0; z-index:10; backdrop-filter:blur(6px);
-    background:rgba(0,0,0,.75); border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:16px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));
   }
-  .wrap{max-width:1100px; margin:0 auto; padding:14px;}
-  .brand{display:flex; align-items:center; gap:10px;}
-  .brand img{height:28px; width:auto; border-radius:4px}
-
-  main{max-width:1100px; margin:20px auto; padding:0 14px; display:grid; gap:18px; grid-template-columns: 2fr 1fr;}
-  @media (max-width:900px){ main{grid-template-columns:1fr;} }
-
+  .brand{display:flex; align-items:center; gap:10px}
+  .dot{width:26px;height:26px;border-radius:50%;
+       background:conic-gradient(from 220deg,var(--wine),var(--plum));
+       box-shadow:0 0 0 2px #000 inset}
+  h1{margin:0; font-size:18px}
+  a{color:#e7bddf; text-decoration:none}
+  .wrap{max-width:1100px; margin:0 auto; padding:22px 16px 56px}
+  .hero{text-align:center; margin:6px 0 20px}
+  .hero h2{margin:0 0 4px; font-size:24px}
+  .hero p{margin:0; color:var(--muted); font-size:14px}
+  .grid{
+    display:grid; gap:18px; margin-top:18px;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    max-width:980px; margin-left:auto; margin-right:auto; /* centered */
+  }
   .card{
-    border:1px solid var(--border); background:var(--card);
-    border-radius:16px; overflow:hidden;
+    background:linear-gradient(180deg, rgba(23,16,23,.95), rgba(23,16,23,.92));
+    border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    box-shadow:0 1px 12px rgba(0,0,0,.28);
   }
-  .card h2{margin:0; padding:12px 14px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.35); font-size:18px}
-  .card .inner{padding:14px}
-
-  .plans{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-  @media (max-width:680px){ .plans{grid-template-columns:1fr} }
-
-  .plan{
-    border:1px solid var(--border); border-radius:14px; padding:14px; background:rgba(255,255,255,.04);
-    display:flex; flex-direction:column; gap:10px;
-  }
-  .plan h3{margin:0;font-size:18px}
-  .price{font-weight:800; font-size:22px}
-  .pill{display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; opacity:.95}
+  .card .hd{padding:12px 14px; border-bottom:1px solid #241624;
+            background:linear-gradient(180deg,#1a121a,#120a11)}
+  .card h3{margin:0; font-size:18px}
+  .price{font-size:26px; font-weight:800; margin:2px 0 0}
+  .body{padding:14px; font-size:14px; color:var(--muted)}
+  ul{margin:0 0 12px 18px}
+  li{margin:4px 0}
   .btn{
-    text-align:center; text-decoration:none; padding:11px 12px; border-radius:10px;
-    border:1px solid var(--border); background:rgba(255,255,255,.08); color:#fff; font-weight:700; cursor:pointer;
+    display:inline-block; margin-top:8px; padding:10px 14px; border-radius:999px;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700;
+    border:none; cursor:pointer; text-align:center
   }
-  .btn:hover{ background:rgba(255,255,255,.13); }
-  .btn.primary{ background:var(--accent); border-color:rgba(255,255,255,.2); }
-  .muted{color:var(--muted); font-size:13px}
-
-  .coins{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
-  @media (max-width:680px){ .coins{grid-template-columns:repeat(2,1fr)} }
-  .coin{border:1px solid var(--border); border-radius:12px; padding:12px; background:rgba(255,255,255,.04); text-align:center}
-  .coin h4{margin:0 0 4px 0}
-  .coin .price{font-size:16px}
-
-  /* Calendar Teaser */
-  .calendar{display:grid; gap:14px}
-  .months{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
-  @media (max-width:900px){ .months{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:560px){ .months{grid-template-columns:1fr} }
-  .month{
-    border:1px solid var(--border); border-radius:12px; overflow:hidden; background:rgba(255,255,255,.04)
+  .pill{display:inline-block; padding:3px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
+  .coins{display:grid; gap:12px; grid-template-columns:repeat(2,1fr); margin-top:8px}
+  .coin{border:1px dashed #362036; border-radius:12px; padding:10px 12px; text-align:center; background:rgba(14,10,13,.35)}
+  .coin strong{display:block; font-size:18px; margin-bottom:2px; color:#fff}
+  .note{text-align:center; color:var(--muted); font-size:12px; margin-top:12px}
+  .footer{margin-top:26px; text-align:center; color:var(--muted); font-size:12px}
+  .back{display:inline-flex; align-items:center; gap:8px}
+  .avatar{
+    width:56px; height:56px; border-radius:12px; object-fit:cover; margin:0 auto 8px; display:block;
+    border:1px solid #2a1a25; box-shadow:0 2px 10px rgba(0,0,0,.3)
   }
-  .shot{
-    aspect-ratio: 16/10; background:#111 center/cover no-repeat;
-    filter:contrast(1.02) saturate(1.04) brightness(.96);
-  }
-  .meta{padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
-  .meta .who{opacity:.95}
-  .coming{font-size:12px; border:1px solid var(--border); padding:3px 8px; border-radius:999px; opacity:.9}
-
-  .notify{
-    display:flex; gap:8px; flex-wrap:wrap; margin-top:6px
-  }
-  input[type="email"]{
-    flex:1; min-width:220px; padding:11px 12px; border-radius:10px; border:1px solid var(--border);
-    background:rgba(255,255,255,.06); color:#fff; outline:none;
-  }
-  .btn.disabled{opacity:.5; cursor:not-allowed}
-  footer{max-width:1100px; margin:10px auto 34px; padding:0 14px; font-size:13px; opacity:.9}
 </style>
 </head>
 <body>
+
+<div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
+
 <header>
-  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div class="brand">
-      <img src="images/logo.jpg" alt="Blossom & Blade">
-      <strong>Blossom &amp; Blade</strong>
-    </div>
-    <div class="muted">$1 of every subscription goes to this month’s Domestic Violence charity.</div>
+  <div class="brand">
+    <div class="dot" aria-hidden="true"></div>
+    <h1>Blossom n Blade</h1>
   </div>
+  <a class="back" href="/index.html">← Back to Choose</a>
 </header>
 
-<main>
-  <!-- LEFT: Subscriptions + Coins -->
-  <section class="card">
-    <h2>Choose your access</h2>
-    <div class="inner">
-      <div class="plans">
-        <div class="plan">
-          <h3>Day Pass</h3>
-          <div class="price">$5.99</div>
-          <div class="muted">Pick one man for the day. PG-13 flirting & companionship.</div>
-          <div class="pill">Great for a quick taste</div>
-          <a class="btn" href="#" id="buyDay">Buy Day Pass</a>
-        </div>
-        <div class="plan">
-          <h3>Monthly</h3>
-          <div class="price">$10.99</div>
-          <div class="muted">All six men. PG-13 companionship, name memory, and gentle aftercare.</div>
-          <div class="pill">Best value</div>
-          <a class="btn primary" href="#" id="buyMonth">Buy Monthly</a>
-        </div>
-      </div>
-
-      <hr style="border:0;border-top:1px solid var(--border); margin:14px 0"/>
-
-      <h3 style="margin:0 0 8px 0">Coins (unlock explicit “dirty rooms”)</h3>
-      <div class="coins">
-        <div class="coin"><h4>5 coins</h4><div class="price">$1</div></div>
-        <div class="coin"><h4>25 coins</h4><div class="price">$5</div></div>
-        <div class="coin"><h4>60 coins</h4><div class="price">$10</div></div>
-        <div class="coin"><h4>150 coins</h4><div class="price">$20</div></div>
-      </div>
-      <p class="muted" style="margin-top:8px">Subscription = PG-13 companionship. Coins = explicit escalation (words only, no visuals).</p>
-    </div>
+<main class="wrap">
+  <section class="hero">
+    <img id="heroAvatar" class="avatar" src="/images/gothic-bg.jpg" alt="" />
+    <h2 id="heroTitle">Choose your plan</h2>
+    <p id="heroSub" class="tagline">PG-13 companionship by default. Coins unlock erotic talk (words only, no visuals).</p>
   </section>
 
-  <!-- RIGHT: Calendar Teaser -->
-  <aside class="card">
-    <h2>Blossom &amp; Blade 2026 Calendar — <span style="opacity:.9">Coming Soon</span></h2>
-    <div class="inner calendar">
-      <p class="muted">Twelve moody prints for your wall. Each man gets two months with two different images you’ll recognize from the site.</p>
-
-      <div class="months">
-        <!-- Sample placeholders -->
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/blade-jan.jpg')"></div><div class="meta"><span class="who">Jan — Blade</span><span class="coming">Teaser</span></div></div>
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/grayson-feb.jpg')"></div><div class="meta"><span class="who">Feb — Grayson</span><span class="coming">Teaser</span></div></div>
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/dylan-mar.jpg')"></div><div class="meta"><span class="who">Mar — Dylan</span><span class="coming">Teaser</span></div></div>
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/jesse-apr.jpg')"></div><div class="meta"><span class="who">Apr — Jesse</span><span class="coming">Teaser</span></div></div>
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/silas-may.jpg')"></div><div class="meta"><span class="who">May — Silas</span><span class="coming">Teaser</span></div></div>
-        <div class="month"><div class="shot" style="background-image:url('images/calendar/alex-jun.jpg')"></div><div class="meta"><span class="who">Jun — Alexander</span><span class="coming">Teaser</span></div></div>
+  <section class="grid" aria-label="Plans and options">
+    <!-- Day Pass -->
+    <article class="card">
+      <div class="hd">
+        <h3>Day Pass</h3>
+        <div class="price">$5.99</div>
       </div>
-
-      <div class="notify">
-        <input id="email" type="email" placeholder="Email for preorder notice (optional)"/>
-        <button class="btn disabled" title="Coming soon" disabled>Preorder</button>
+      <div class="body">
+        <span class="pill" id="dayFor">For one man (today)</span>
+        <ul>
+          <li>3–4 minute intro vibe, then full day access</li>
+          <li>Warmth, flirting, companionship</li>
+          <li>Gentle aftercare included</li>
+        </ul>
+        <button class="btn" data-action="day">Buy Day Pass</button>
       </div>
-      <p id="emailMsg" class="muted"></p>
-    </div>
-  </aside>
+    </article>
+
+    <!-- Monthly -->
+    <article class="card">
+      <div class="hd">
+        <h3>Monthly</h3>
+        <div class="price">$10.99</div>
+      </div>
+      <div class="body">
+        <span class="pill">All six men</span>
+        <ul>
+          <li>PG-13 companionship across all rooms</li>
+          <li>Name memory and vibe continuity</li>
+          <li>$1 donated to DV charity</li>
+        </ul>
+        <button class="btn" data-action="month">Buy Monthly</button>
+      </div>
+    </article>
+
+    <!-- Coins -->
+    <article class="card">
+      <div class="hd">
+        <h3>Coins <span class="pill">unlocks erotic “dirty rooms”</span></h3>
+      </div>
+      <div class="body">
+        <div class="coins">
+          <div class="coin"><strong>5</strong>$1</div>
+          <div class="coin"><strong>25</strong>$5</div>
+          <div class="coin"><strong>60</strong>$10</div>
+          <div class="coin"><strong>150</strong>$20</div>
+        </div>
+        <div class="note">Coins trigger by natural conversation prompts—never pushy.</div>
+        <button class="btn" data-action="coins">Buy Coins</button>
+      </div>
+    </article>
+
+    <!-- Coming Soon / Calendar -->
+    <article class="card">
+      <div class="hd">
+        <h3>Coming Soon</h3>
+      </div>
+      <div class="body">
+        <ul>
+          <li>Wall-worthy moody prints (12 months)</li>
+          <li>Release calendar & preorders</li>
+        </ul>
+        <form onsubmit="event.preventDefault(); alert('Thanks! We’ll ping you when preorders open.');">
+          <input type="email" placeholder="Email for preorder notice (optional)"
+                 style="width:100%;padding:10px;border-radius:10px;border:1px solid #2a1a25;background:#0f0b0f;color:#eee" />
+          <button class="btn" style="width:100%;margin-top:8px">Notify Me</button>
+        </form>
+      </div>
+    </article>
+  </section>
+
+  <div class="footer">#booktok • #masktok</div>
 </main>
 
-<footer>
-  Prices: Day Pass $5.99 (one man), Month $10.99 (all men). Coins unlock explicit fantasy talk. $1 of every subscription goes to this month’s DV charity.
-</footer>
-
 <script>
-  document.getElementById('buyDay').addEventListener('click', function(e){
-    e.preventDefault();
-    alert('Day Pass checkout coming soon.');
-  });
-  document.getElementById('buyMonth').addEventListener('click', function(e){
-    e.preventDefault();
-    localStorage.setItem('bb_subscriber','1');
-    alert('Monthly checkout coming soon. For demo, subscriber mode is toggled.');
-  });
-
-  (function(){
-    var input = document.getElementById('email');
-    var msg = document.getElementById('emailMsg');
-    if (!input) return;
-    input.addEventListener('change', function(){
-      var v = (input.value||'').trim();
-      if (!v) { msg.textContent=''; return; }
-      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-      msg.textContent = ok ? 'Saved locally. We’ll ping you when preorders open.' : 'That email looks off—try again?';
-      if (ok){ try { localStorage.setItem('bb_calendar_notify', v); } catch(e){} }
-    });
-  })();
-</script>
-</body>
-</html>
+/* Map ?man= to a guy, set background + labels. Uses your CURRENT filenames. */
+const MAP = {
+  blade:

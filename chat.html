@@ -130,7 +130,7 @@
     <a data-pack="60"  class="coinbtn">60 coins — $10</a>
     <a data-pack="150" class="coinbtn">150 coins — $20</a>
   </div>
-  <div class="coinmeta">Triggers naturally by convo prompts—never pushy.</div>
+  <div class="coinmeta">1 coin unlocks <b>10 hot replies</b>. Triggers naturally—never pushy.</div>
   <div class="coinclose"><a href="#" id="coinClose">Not now</a></div>
 </div>
 
@@ -170,14 +170,19 @@ document.getElementById("hdrTitle").textContent = guy.name;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 localStorage.setItem("bb.character", id);
 
-/* ----------------- coins (demo) ----------------- */
+/* ----------------- coins + erotic turns ----------------- */
 const COIN_KEY = "bb.coins";
+const TURNS_KEY = `bb.eroticTurns:${id}`;     // remaining erotic replies for this guy
 const getCoins=()=>Math.max(0,Number(localStorage.getItem(COIN_KEY)||0));
 const setCoins=n=>{localStorage.setItem(COIN_KEY,String(Math.max(0,n)));updateBadge();};
 const addCoins=n=>setCoins(getCoins()+n);
 const spendCoin=()=>{const c=getCoins(); if(c>0){setCoins(c-1); return true;} return false;};
 const updateBadge=()=>document.getElementById("coinBadge").textContent=`Coins: ${getCoins()}`;
 updateBadge();
+
+const getTurns=()=>Math.max(0, Number(localStorage.getItem(TURNS_KEY)||0));
+const setTurns=n=>localStorage.setItem(TURNS_KEY, String(Math.max(0,n)));
+const decTurns=()=>{ const t=getTurns(); setTurns(Math.max(0,t-1)); return t-1; };
 
 const coinPopup=document.getElementById("coinPopup");
 const showCoins=()=>{coinPopup.classList.remove("hidden"); localStorage.setItem("bb.coinPopupShown","1");};
@@ -233,7 +238,6 @@ another.addEventListener("click",()=>{if(count<MAX_TRIALS) startPreview();});
 snooze.addEventListener("click",()=>{overlay.style.display="none"; overlay.setAttribute("aria-hidden","true"); end=Date.now()+60*1000; localStorage.setItem(END_KEY,String(end)); requestAnimationFrame(tick);});
 
 /* ----------------- severity + memory facts ----------------- */
-// 🔥 Expanded triggers so “lick/rail/take me” flip the popup quickly.
 const HARD = [
   "lick me","eat me","suck","go down","oral","blowjob","handjob",
   "cum","finish in me","inside me","moan for me","choke me","porn",
@@ -265,9 +269,9 @@ function mineFacts(text){
 }
 
 /* ----------------- brain hookup ----------------- */
-const history = []; // last few turns
-let mediumCount = 0; // for delayed coin popup
-let lastAssistant = ""; // anti exact repeat
+const history = [];
+let mediumCount = 0;
+let lastAssistant = "";
 
 async function seedIntro(){
   const intro = `Start the chat in your persona with one short opener and a concrete question (example: “Tell me your shirt color”). Keep it PG.`;
@@ -280,6 +284,12 @@ function pushAssistant(text){
   lastAssistant = text.trim();
   history.push({role:"assistant", content:lastAssistant});
   row(`<strong>${esc(guy.name)}:</strong> ${esc(lastAssistant)}`);
+  // if we were in erotic mode, consume a turn
+  if(getTurns() > 0){ 
+    if(decTurns() === 0){
+      row(`<em class="sys">Your 10 hot replies are used—back to PG-13.</em>`);
+    }
+  }
 }
 
 async function callBrain(mode, extraHistory=[], systemSeed=false){
@@ -312,17 +322,19 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
 
   const level = severity(t);
   if(level===1) mediumCount++;
-  let mode = "pg";
 
-  // ⚖️ Lower threshold: 1 medium nudge shows popup
-  if(level===2 || mediumCount>=1){
+  // decide mode
+  let mode = "pg";
+  if(getTurns() > 0){
+    mode = "erotic"; // already unlocked
+  } else if(level===2 || mediumCount>=1){
     if(getCoins()<=0){
       showCoins(); mediumCount=0;
       row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only).</em>`);
       mode = "pg";
     }else{
-      spendCoin(); updateBadge(); mode = "erotic";
-      row(`<em class="sys">Spent 1 coin for a hotter tone.</em>`);
+      spendCoin(); setTurns(10); updateBadge(); mode = "erotic";
+      row(`<em class="sys">Spent 1 coin — unlocked 10 hotter replies.</em>`);
     }
   }
 

@@ -78,11 +78,23 @@ if (!((until && until > Date.now()) || flag)){
 if (until && until > Date.now()) document.getElementById("ageok").style.display = "block";
 if (!storageWorks()) document.getElementById("warn").style.display = "block";
 
-/* ---- demo “success” ---- */
+/* ---- demo “success” : set a 24h Day Pass + clear preview locks ---- */
 document.getElementById("complete").addEventListener("click", ()=>{
-  // mark a demo entitlement so we can tweak behavior later if needed
-  try{ localStorage.setItem("bb.demoDayPass","1"); }catch(e){}
-  // send to chat
+  try{
+    const passUntil = Date.now() + 24*60*60*1000; // 24h
+    if (man) localStorage.setItem(`bb.pass:day:${man}`, String(passUntil));
+    localStorage.setItem("bb.pass:last", man||"");
+    localStorage.setItem("bb.pass:active", "day");
+    localStorage.setItem("bb.demoDayPass", "1");
+
+    // Clear any preview/loop locks so chat won’t block after purchase
+    const keys = [];
+    for (let i=0;i<localStorage.length;i++){ keys.push(localStorage.key(i)); }
+    keys.forEach(k=>{
+      if (/^bb\.(preview|trial|loops?)/i.test(k)) localStorage.removeItem(k);
+    });
+  }catch(e){}
+
   const target = man ? `/chat.html?man=${encodeURIComponent(man)}` : "/index.html";
   location.replace(target);
 });

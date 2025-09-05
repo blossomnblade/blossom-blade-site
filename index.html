@@ -1,120 +1,144 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blossom n Blade • Choose Your Match</title>
-  <meta name="description" content="Pick your companion: Blade, Dylan, Grayson, Silas, Alexander, or Jesse." />
-  <style>
-    :root{
-      --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
-      --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
-    }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{
-      margin:0; color:var(--ink);
-      background:radial-gradient(1200px 700px at 60% -10%, rgba(110,15,46,.25), transparent),
-                 radial-gradient(900px 600px at -10% 110%, rgba(75,31,60,.28), transparent),
-                 var(--bg);
-      font:500 16px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial;
-    }
-    header{display:flex;justify-content:space-between;align-items:center;
-      padding:18px 16px;border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg,#140d14,transparent)}
-    .brand{display:flex;gap:10px;align-items:center}
-    .dot{width:28px;height:28px;border-radius:50%;
-      background:conic-gradient(from 220deg,var(--wine),var(--plum));
-      box-shadow:0 0 0 2px #000 inset}
-    h1{margin:0;font-size:18px}
-    .note{font-size:12px;color:var(--muted)}
-    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 44px}
-    .hero h2{margin:0 0 6px;font-size:22px}
-    .hero p{margin:0;color:var(--muted);font-size:14px}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-    .card{
-      position:relative;display:flex;flex-direction:column;cursor:pointer;
-      background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
-      box-shadow:0 1px 10px rgba(0,0,0,.25);outline:0 solid transparent;
-      transition:transform .15s ease, outline .15s ease}
-    .card:hover{transform:translateY(-2px);outline:2px solid var(--plum)}
-    figure{margin:0;aspect-ratio:3/4;background:#0c0a0c;display:grid;place-items:center}
-    img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.95) contrast(1.05)}
-    .placeholder{width:100%;height:100%;display:grid;place-items:center;color:#e9d4e6;
-      background:repeating-linear-gradient(45deg,#211421,#211421 10px,#2b1a28 10px,#2b1a28 20px)}
-    .meta{padding:10px 12px 12px}
-    .meta h3{margin:0 0 4px;font:700 16px/1.2 system-ui}
-    .meta p{margin:0;font-size:12px;color:var(--muted)}
-    .cta{position:absolute;left:10px;bottom:10px}
-    .choose{border:none;border-radius:999px;padding:8px 12px;
-      background:linear-gradient(90deg,var(--plum),var(--wine));color:white;font-weight:700}
-    .footer{margin-top:20px;color:var(--muted);font-size:12px;border-top:1px dashed var(--line);padding-top:12px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Blossom n Blade • Choose Your Match</title>
+<meta name="description" content="Women-safe fantasy chat. Pick Blade, Dylan, Grayson, Silas, Alexander, or Jesse." />
+<style>
+  :root{
+    --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
+    --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    /* Silas = full-page background */
+    background:
+      linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
+      url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
+  }
+  .banner{
+    text-align:center; font-size:13px; padding:8px 12px;
+    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35));
+    border-bottom:1px solid var(--line);
+  }
+  header{
+    display:flex; justify-content:center; gap:16px; align-items:center;
+    padding:18px 16px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));
+  }
+  .dot{width:28px;height:28px;border-radius:50%;
+    background:conic-gradient(from 220deg,var(--wine),var(--plum));
+    box-shadow:0 0 0 2px #000 inset}
+  h1{margin:0; font-size:20px; text-align:center}
+  .tag{font-size:12px; color:var(--muted)}
+  .wrap{max-width:1100px; margin:0 auto; padding:22px 16px 48px}
+  .hero{ text-align:center; margin:4px 0 18px }
+  .hero h2{ margin:0 0 6px; font-size:24px }
+  .hero p{ margin:0; color:var(--muted); font-size:14px }
+  .actions{ margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap }
+  .btn{
+    border:none; border-radius:999px; padding:10px 14px; cursor:pointer;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700
+  }
+  .grid{
+    display:grid; gap:16px;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    max-width:980px; margin:16px auto 0; /* centered */
+  }
+  .card{
+    position:relative; display:flex; flex-direction:column;
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    box-shadow:0 1px 10px rgba(0,0,0,.25); cursor:pointer;
+    transition:transform .15s ease, outline .15s ease; outline:0 solid transparent;
+  }
+  .card:hover{ transform:translateY(-2px); outline:2px solid var(--plum) }
+  figure{ margin:0; aspect-ratio:3/4; background:#0c0a0c; display:grid; place-items:center }
+  img{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.95) contrast(1.05) }
+  .placeholder{width:100%;height:100%;display:grid;place-items:center;color:#e9d4e6;
+    background:repeating-linear-gradient(45deg,#211421,#211421 10px,#2b1a28 10px,#2b1a28 20px)}
+  .meta{ padding:10px 12px 12px; text-align:center }
+  .meta h3{ margin:0 0 4px; font:700 16px/1.2 system-ui }
+  .meta p{ margin:0; font-size:12px; color:var(--muted) }
+  .enter{ margin:10px auto 14px; width:max-content }
+  .enter button{ composes:btn; }
+  .footnote{ margin-top:20px; text-align:center; color:var(--muted); font-size:12px }
+  a{ color:#e7bddf; text-decoration:none }
+</style>
 </head>
 <body>
+
+<div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
+
 <header>
-  <div class="brand"><div class="dot" aria-hidden="true"></div><h1>Blossom n Blade</h1></div>
-  <div class="note">PG-13 on landing • Adults inside</div>
+  <div class="dot" aria-hidden="true"></div>
+  <h1>Blossom n Blade</h1>
 </header>
 
 <main class="wrap">
   <section class="hero" aria-labelledby="pick">
     <h2 id="pick">Choose your match</h2>
-    <p>Tap a card to enter the room. You’ll get a few minutes to feel the vibe before choosing a plan.</p>
+    <p class="tag">Women-safe fantasy chat • PG-13 on landing • Adults inside</p>
+    <div class="actions">
+      <a class="btn" href="/pay.html">View Pricing</a>
+    </div>
   </section>
 
   <section class="grid" id="grid" aria-label="Character selection"></section>
 
-  <div class="footer">
-    Tip: to change an image later, just upload a new JPG in <code>/images/</code> with the same name and refresh.
-  </div>
+  <p class="footnote">#booktok • #masktok</p>
 </main>
 
 <script>
-/* No JSON files. We point directly at your CURRENT JPG names in /images/. */
+/* Uses YOUR current filenames in /images/ (no JSON). */
 const GUYS = [
-  { id:"blade",     name:"Blade",     file:"/images/blade_front_card.jpg",    blurb:"Ghostface energy. Calm… then cut." },
-  { id:"dylan",     name:"Dylan",     file:"/images/dylan-garage.jpg",        blurb:"Grease, keys, and quiet eyes." },
-  { id:"grayson",   name:"Grayson",   file:"/images/grayson-bg.jpg",          blurb:"COD mask; playful menace." },
-  { id:"silas",     name:"Silas",     file:"/images/gothic-bg.jpg",           blurb:"Rocker light, velvet night." },
-  { id:"alexander", name:"Alexander", file:"/images/gentleman-bg.jpg",        blurb:"Boardroom charm, sleeves rolled." },
-  { id:"jesse",     name:"Jesse",     file:"/images/cowboy.jpg",              blurb:"Rodeo heat with a soft drawl." },
+  { id:"blade",     name:"Blade",     file:"/images/blade_front_card.jpg", blurb:"Masked hunter. Calm… then cut." },
+  { id:"grayson",   name:"Grayson",   file:"/images/grayson-bg.jpg",       blurb:"COD balaclava. One truth at a time." },
+  { id:"dylan",     name:"Dylan",     file:"/images/dylan-garage.jpg",     blurb:"Biker bay, quiet eyes." },
+  { id:"silas",     name:"Silas",     file:"/images/gothic-bg.jpg",        blurb:"Rocker light, velvet night." },
+  { id:"alexander", name:"Alexander", file:"/images/gentleman-bg.jpg",     blurb:"Boardroom charm, sleeves rolled." },
+  { id:"jesse",     name:"Jesse",     file:"/images/cowboy.jpg",           blurb:"Rodeo heat with a soft drawl." },
 ];
 
 const grid = document.getElementById("grid");
 grid.innerHTML = GUYS.map(g => `
-  <article class="card" data-id="${g.id}" role="button" tabindex="0" aria-label="Choose ${g.name}">
+  <article class="card" data-id="${g.id}" role="button" tabindex="0" aria-label="Enter ${g.name}'s room">
     <figure>
       <img src="${g.file}" alt="${g.name}" loading="lazy" />
       <div class="placeholder" hidden>image missing</div>
-      <div class="cta"><button class="choose" type="button" aria-hidden="true">Choose</button></div>
     </figure>
     <div class="meta">
       <h3>${g.name}</h3>
       <p>${g.blurb}</p>
+      <div class="enter">
+        <button class="btn" type="button">Enter ${g.name}'s Room</button>
+      </div>
     </div>
   </article>
 `).join("");
 
-/* Graceful fallback if a file doesn’t exist */
+/* Fallback if an image is missing */
 document.querySelectorAll(".card").forEach(card => {
   const img = card.querySelector("img");
   const ph  = card.querySelector(".placeholder");
   img.addEventListener("error", () => { img.hidden = true; ph.hidden = false; }, {once:true});
 });
 
-function choose(id){
+/* Save choice -> go to chat */
+function enter(id){
   try { localStorage.setItem("bb.character", id); } catch(e){}
-  location.href = "/chat.html"; // we’ll add this next
+  location.href = "/chat.html"; // next step we’ll ship this file
 }
-
 grid.addEventListener("click", e => {
   const card = e.target.closest(".card");
-  if (card) choose(card.dataset.id);
+  if (card) enter(card.dataset.id);
 });
 grid.addEventListener("keydown", e => {
   if (e.key === "Enter" || e.key === " ") {
     const card = e.target.closest(".card");
-    if (card) { e.preventDefault(); choose(card.dataset.id); }
+    if (card) { e.preventDefault(); enter(card.dataset.id); }
   }
 });
 </script>

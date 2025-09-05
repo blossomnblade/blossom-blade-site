@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blossom n Blade • Assets Check</title>
+  <style>
+    :root{
+      /* brand-ish dark plum & wine */
+      --bg:#0e0a0d;
+      --card:#171017;
+      --ink:#e9e3ea;
+      --plum:#4b1f3c;
+      --wine:#6e0f2e;
+      --ok:#1f7a3e;
+      --warn:#b53d3d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    header{padding:20px 16px;border-bottom:1px solid #2a1a25;background:linear-gradient(180deg,#140d14,transparent)}
+    h1{margin:0;font-size:18px;letter-spacing:.3px}
+    .sub{opacity:.8;font-size:13px}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
+    .card{border:1px solid #2a1a25;border-radius:14px;background:var(--card);overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.25)}
+    .head{padding:12px 14px;background:linear-gradient(180deg,#1a121a,#120a11)}
+    .name{margin:0;font-weight:700}
+    .vibe{margin:2px 0 0;font-size:12px;opacity:.8}
+    .imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px 14px}
+    .imgbox{position:relative;border:1px solid #322132;border-radius:10px;overflow:hidden;background:#0b090b}
+    .imgbox.large{grid-column:1 / -1}
+    .imgbox img{width:100%;height:100%;display:block;object-fit:cover}
+    .tag{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);font-size:11px;padding:3px 6px;border-radius:999px;border:1px solid #413041}
+    .status{position:absolute;right:6px;top:6px;font-size:11px;padding:3px 6px;border-radius:999px;border:1px solid #213921;background:rgba(0,0,0,.5)}
+    .missing .status{border-color:#612020;background:#3a1010}
+    .missing .status::before{content:"MISSING"}
+    .ok .status::before{content:"OK"}
+    .note{padding:10px 14px;border-top:1px dashed #2d1c2d;font-size:12px;opacity:.85}
+    .legend{display:flex;gap:10px;align-items:center;font-size:12px;opacity:.9;margin-top:8px}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot.ok{background:var(--ok)}
+    .dot.miss{background:var(--warn)}
+    a{color:#d8a8d3}
+    footer{padding:18px 16px;border-top:1px solid #2a1a25;opacity:.9;text-align:center;font-size:12px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Blossom n Blade — Image Assets Check</h1>
+  <div class="sub">Goal: verify file names/paths <strong>before</strong> we wire the landing grid.</div>
+</header>
+
+<div class="wrap">
+  <div class="legend">
+    <div class="dot ok"></div> OK
+    <div class="dot miss"></div> Missing (check folder/name)
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>
+  Expected paths: <code>/images/characters/&lt;name&gt;/&lt;name&gt;_card.jpg</code>,
+  <code>_bg.jpg</code>, <code>_avatar.jpg</code>.
+</footer>
+
+<script>
+/* If your repo uses a /public folder, published URLs still start at "/" */
+const BASE = "/images/characters/";
+
+/* The six men (IDs = folder + filename stems). Feel free to rename displayName later. */
+const GUYS = [
+  { id:"blade",     displayName:"Blade",     vibe:"Ghostface-inspired; stage knife; shirtless in-room" },
+  { id:"dylan",     displayName:"Dylan",     vibe:"Garage/mechanic; masked" },
+  { id:"grayson",   displayName:"Grayson",   vibe:"COD-style mask/balaclava; 'tongue mask lift' planned" },
+  { id:"silas",     displayName:"Silas",     vibe:"Rocker; button-up; stage lights / guitar neck fade" },
+  { id:"alexander", displayName:"Alexander", vibe:"Suit on landing → rolled sleeves inside; boardroom skyline" },
+  { id:"jesse",     displayName:"Jesse",     vibe:"Rodeo; barn/hay; vintage haze" },
+];
+
+/* Build cards */
+const grid = document.getElementById("grid");
+grid.innerHTML = GUYS.map(g => `
+  <section class="card" data-id="${g.id}">
+    <div class="head">
+      <h3 class="name">${g.displayName}</h3>
+      <p class="vibe">${g.vibe}</p>
+    </div>
+    <div class="imgs">
+      <div class="imgbox large" data-kind="card">
+        <span class="tag">card (900×1200)</span>
+        <span class="status"></span>
+        <img alt="${g.displayName} card" loading="lazy"
+             src="${BASE + g.id + '/' + g.id + '_card.jpg'}" />
+      </div>
+      <div class="imgbox" data-kind="bg">
+        <span class="tag">bg (1920×1080)</span>
+        <span class="status"></span>
+        <img alt="${g.displayName} bg" loading="lazy"
+             src="${BASE + g.id + '/' + g.id + '_bg.jpg'}" />
+      </div>
+      <div class="imgbox" data-kind="avatar">
+        <span class="tag">avatar (240×240)</span>
+        <span class="status"></span>
+        <img alt="${g.displayName} avatar" loading="lazy"
+             src="${BASE + g.id + '/' + g.id + '_avatar.jpg'}" />
+      </div>
+    </div>
+    <div class="note">
+      Folder must exist: <code>/images/characters/${g.id}/</code>
+    </div>
+  </section>
+`).join("");
+
+/* Mark missing/ok without breaking the page */
+document.querySelectorAll(".imgbox img").forEach(img => {
+  img.addEventListener("error", () => {
+    const box = img.closest(".imgbox");
+    box.parentElement.parentElement.classList.add("missing");
+    box.classList.add("missing");
+    // Show a tiny placeholder so layout stays intact
+    img.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'>
+         <rect width='120' height='80' fill='#2b1a28'/>
+         <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+           fill='#e2d0df' font-size='10' font-family='system-ui'>missing</text>
+       </svg>`
+    );
+  }, {once:true});
+  img.addEventListener("load", () => {
+    const box = img.closest(".imgbox");
+    box.classList.add("ok");
+  }, {once:true});
+});
+</script>
+</body>
+</html>

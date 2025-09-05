@@ -41,6 +41,7 @@
   .note{margin-top:12px; text-align:center; color:var(--muted); font-size:12px}
   .tiny{margin-top:8px; text-align:center; color:#9a8997; font-size:12px}
   .hidden{display:none}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px}
 </style>
 </head>
 <body>
@@ -53,7 +54,7 @@
 </header>
 
 <main class="wrap">
-  <!-- Normal verify card -->
+  <!-- Verify (always requires a click) -->
   <section id="verify" class="card">
     <h2>Adults only inside</h2>
     <p class="sub">Please confirm you’re 18+ before continuing.</p>
@@ -68,81 +69,132 @@
     </div>
     <div class="actions">
       <button id="continueBtn" class="btn" disabled>Continue</button>
+      <button id="viewReceipt" class="btn softer" type="button">View saved receipt</button>
     </div>
     <div class="note">We don’t sell images or videos. This is words, warmth, and consent-first fantasy chat.</div>
     <div class="tiny"><a id="forgetLink" href="#">Reset age check on this device</a></div>
   </section>
 
-  <!-- Auto-skip interstitial (shows when already verified) -->
-  <section id="auto" class="card hidden" aria-live="polite">
-    <h2>Verified — continuing…</h2>
-    <p class="sub">You’ve already confirmed 18+. We’ll take you to the next step.</p>
+  <!-- Already verified: still requires explicit click -->
+  <section id="verified" class="card hidden" aria-live="polite">
+    <h2>Verified — you’re good</h2>
+    <p class="sub">You’ve already confirmed 18+. Continue when ready.</p>
     <div class="actions">
-      <a id="autoNow" class="btn" href="#">Continue now</a>
-      <a id="autoForget" class="btn softer" href="#">Reset & verify again</a>
+      <a id="goNext" class="btn" href="#">Continue</a>
+      <button id="seeReceipt" class="btn softer" type="button">View saved receipt</button>
+      <a id="resetAgain" class="btn softer" href="#">Reset & verify again</a>
+    </div>
+  </section>
+
+  <!-- Receipt viewer -->
+  <section id="receipt" class="card hidden">
+    <h2>Age Verification Receipt</h2>
+    <p class="sub">Stored on this device for your records.</p>
+    <pre id="receiptPre" class="mono" style="white-space:pre-wrap;margin:0"></pre>
+    <div class="actions" style="margin-top:12px">
+      <button id="printRec" class="btn softer" type="button">Print / Save PDF</button>
+      <button id="closeRec" class="btn" type="button">Close</button>
     </div>
   </section>
 </main>
 
 <script>
-/* Params and helpers */
+/* Params & routing */
 const qs = new URLSearchParams(location.search);
 const idRaw = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
 const plan = (qs.get("plan") || "").toLowerCase().trim(); // "day" | "month" | "coins"
 const nextParam = qs.get("next"); // optional explicit next path
-
 function buildNext(){
   let url = "/pay.html";
   const p = new URLSearchParams();
   if (idRaw) p.set("man", idRaw);
-  if (p.toString()) url += `?${p}`;
+  const q = p.toString(); if (q) url += `?${q}`;
   if (plan === "day") url += "#day";
   else if (plan === "month") url += "#month";
   return url;
 }
 function sanitizeNext(n){
   if(!n) return null;
-  try{
-    const u = new URL(n, location.origin);
-    if(u.origin === location.origin) return u.pathname + u.search + u.hash;
-  }catch(e){}
+  try{ const u = new URL(n, location.origin);
+       if(u.origin === location.origin) return u.pathname + u.search + u.hash; }catch(e){}
   return null;
 }
 const NEXT = sanitizeNext(nextParam) || buildNext();
 
-/* Reset via ?forget=1 or link */
-if (qs.get("forget") === "1") {
-  try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+/* Elements */
+const verifiedCard = document.getElementById("verified");
+const verifyCard   = document.getElementById("verify");
+const receiptBox   = document.getElementById("receipt");
+const receiptPre   = document.getElementById("receiptPre");
+
+/* Helpers */
+function nowIso(){ return new Date().toISOString(); }
+function plusDaysISO(d){ return new Date(Date.now()+d*864e5).toISOString(); }
+function tz(){ try{return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";}catch(e){return "UTC";} }
+function token(){ return "bb-" + Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36); }
+
+function saveReceipt(days){
+  const rec = {
+    version: 1,
+    token: localStorage.getItem("bb.ageConsentToken") || token(),
+    accepted_at: nowIso(),
+    expires_at: plusDaysISO(days),
+    timezone: tz(),
+    user_agent: navigator.userAgent || "",
+    man: idRaw || null,
+    plan: plan || null,
+    referer: document.referrer || null
+  };
+  localStorage.setItem("bb.ageConsent", JSON.stringify(rec));
+  localStorage.setItem("bb.ageConsentToken", rec.token);
+  // also store the enforcement flag
+  const until = Date.now() + days*864e5;
+  localStorage.setItem("bb.ageVerifiedUntil", String(until));
+  return rec;
 }
-const forgetLink = document.getElementById("forgetLink");
-forgetLink.addEventListener("click", (e)=>{
+function getReceipt(){
+  try{ const r = JSON.parse(localStorage.getItem("bb.ageConsent") || "null"); return r || null; }
+  catch(e){ return null; }
+}
+function showReceipt(){
+  const r = getReceipt();
+  receiptPre.textContent = r ? JSON.stringify(r, null, 2)
+                             : "No receipt stored on this device yet.";
+  receiptBox.classList.remove("hidden");
+}
+function hideReceipt(){ receiptBox.classList.add("hidden"); }
+
+/* Reset links */
+document.getElementById("forgetLink").addEventListener("click",(e)=>{
   e.preventDefault();
-  try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+  try{
+    localStorage.removeItem("bb.ageVerifiedUntil");
+    localStorage.removeItem("bb.ageConsent");
+    localStorage.removeItem("bb.ageConsentToken");
+  }catch(e){}
   alert("Age check reset. You can verify again now.");
   location.reload();
 });
 
-/* Interstitial vs. verify form */
-const now = Date.now();
+/* Already-verified vs verify flow — but NEVER auto-redirect */
 const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
-const cardVerify = document.getElementById("verify");
-const cardAuto   = document.getElementById("auto");
-const autoNow    = document.getElementById("autoNow");
-const autoForget = document.getElementById("autoForget");
-
-if (until && until > now) {
-  // Already verified: show short interstitial instead of instant flash
-  cardVerify.classList.add("hidden");
-  cardAuto.classList.remove("hidden");
-  autoNow.href = NEXT;
-  autoForget.addEventListener("click", (e)=>{
+const nowMs = Date.now();
+if (until && until > nowMs) {
+  verifyCard.classList.add("hidden");
+  verifiedCard.classList.remove("hidden");
+  document.getElementById("goNext").href = NEXT;
+  document.getElementById("resetAgain").addEventListener("click",(e)=>{
     e.preventDefault();
-    try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+    try{
+      localStorage.removeItem("bb.ageVerifiedUntil");
+      localStorage.removeItem("bb.ageConsent");
+      localStorage.removeItem("bb.ageConsentToken");
+    }catch(e){}
     location.reload();
   });
-  setTimeout(()=>{ location.replace(NEXT); }, 1200);
+  document.getElementById("seeReceipt").addEventListener("click", showReceipt);
 } else {
-  // Normal verify flow
+  // Need verification
   const chkAge = document.getElementById("chkAge");
   const chkTerms = document.getElementById("chkTerms");
   const chkRemember = document.getElementById("chkRemember");
@@ -152,11 +204,17 @@ if (until && until > now) {
   chkTerms.addEventListener("change", update);
   btn.addEventListener("click", ()=>{
     const days = chkRemember.checked ? 30 : 1;
-    const until = Date.now() + days*24*60*60*1000;
-    try { localStorage.setItem("bb.ageVerifiedUntil", String(until)); } catch(e){}
+    const rec = saveReceipt(days);
+    // Optional: show the token briefly so users can note it (we keep it simple)
+    alert("Verified. Token: " + rec.token);
     location.href = NEXT;
   });
+  document.getElementById("viewReceipt").addEventListener("click", showReceipt);
 }
+
+/* Receipt actions */
+document.getElementById("printRec").addEventListener("click", ()=> window.print());
+document.getElementById("closeRec").addEventListener("click", hideReceipt);
 </script>
 </body>
 </html>

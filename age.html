@@ -6,33 +6,21 @@
 <title>18+ Verification • Blossom n Blade</title>
 <meta name="description" content="Quick 18+ check before entering Blossom n Blade." />
 <style>
-  :root{
-    --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
-    --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25; }
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:
-      linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
-      var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+    background:linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
+               var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
   }
   a{color:#e7bddf; text-decoration:none}
-  .banner{
-    text-align:center; font-size:13px; padding:8px 12px;
-    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35));
-    border-bottom:1px solid var(--line);
-  }
-  header{
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  .banner{text-align:center; font-size:13px; padding:8px 12px;
+    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35)); border-bottom:1px solid var(--line);}
+  header{display:flex; justify-content:space-between; align-items:center; gap:12px;
     padding:16px; border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));
-  }
+    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));}
   .brand{display:flex; align-items:center; gap:10px}
-  .dot{width:26px;height:26px;border-radius:50%;
-       background:conic-gradient(from 220deg,var(--wine),var(--plum));
-       box-shadow:0 0 0 2px #000 inset}
+  .dot{width:26px;height:26px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum)); box-shadow:0 0 0 2px #000 inset}
   h1{margin:0; font-size:18px}
   .wrap{max-width:720px; margin:0 auto; padding:24px 16px 56px}
   .card{
@@ -47,12 +35,12 @@
   label{display:flex; gap:10px; align-items:flex-start; font-size:14px}
   input[type="checkbox"]{margin-top:2px; transform:scale(1.1)}
   .actions{display:flex; gap:10px; justify-content:center; margin-top:12px}
-  .btn{
-    border:none; border-radius:999px; padding:10px 14px; cursor:pointer;
-    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700
-  }
+  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700}
   .btn.softer{background:#2a1a25}
   .note{margin-top:12px; text-align:center; color:var(--muted); font-size:12px}
+  .tiny{margin-top:8px; text-align:center; color:#9a8997; font-size:12px}
+  .hidden{display:none}
 </style>
 </head>
 <body>
@@ -60,18 +48,15 @@
 <div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
 
 <header>
-  <div class="brand">
-    <div class="dot" aria-hidden="true"></div>
-    <h1>Blossom n Blade</h1>
-  </div>
+  <div class="brand"><div class="dot" aria-hidden="true"></div><h1>Blossom n Blade</h1></div>
   <a class="btn softer" href="/index.html">← Back</a>
 </header>
 
 <main class="wrap">
-  <section class="card">
+  <!-- Normal verify card -->
+  <section id="verify" class="card">
     <h2>Adults only inside</h2>
     <p class="sub">Please confirm you’re 18+ before continuing.</p>
-
     <div class="checks">
       <label><input id="chkAge" type="checkbox" /> I confirm that I am <strong>18 years or older</strong>.</label>
       <label><input id="chkTerms" type="checkbox" />
@@ -81,28 +66,36 @@
       </label>
       <label><input id="chkRemember" type="checkbox" /> Remember this on this device for 30 days.</label>
     </div>
-
     <div class="actions">
       <button id="continueBtn" class="btn" disabled>Continue</button>
     </div>
-
     <div class="note">We don’t sell images or videos. This is words, warmth, and consent-first fantasy chat.</div>
+    <div class="tiny"><a id="forgetLink" href="#">Reset age check on this device</a></div>
+  </section>
+
+  <!-- Auto-skip interstitial (shows when already verified) -->
+  <section id="auto" class="card hidden" aria-live="polite">
+    <h2>Verified — continuing…</h2>
+    <p class="sub">You’ve already confirmed 18+. We’ll take you to the next step.</p>
+    <div class="actions">
+      <a id="autoNow" class="btn" href="#">Continue now</a>
+      <a id="autoForget" class="btn softer" href="#">Reset & verify again</a>
+    </div>
   </section>
 </main>
 
 <script>
-/* Resolve target after verification */
+/* Params and helpers */
 const qs = new URLSearchParams(location.search);
 const idRaw = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
 const plan = (qs.get("plan") || "").toLowerCase().trim(); // "day" | "month" | "coins"
 const nextParam = qs.get("next"); // optional explicit next path
 
 function buildNext(){
-  // default to pay.html with ?man=… plus #hash for plan if provided
-  let base = "/pay.html";
-  const params = new URLSearchParams();
-  if (idRaw) params.set("man", idRaw);
-  let url = base + (params.toString()?`?${params}`:"");
+  let url = "/pay.html";
+  const p = new URLSearchParams();
+  if (idRaw) p.set("man", idRaw);
+  if (p.toString()) url += `?${p}`;
   if (plan === "day") url += "#day";
   else if (plan === "month") url += "#month";
   return url;
@@ -117,29 +110,53 @@ function sanitizeNext(n){
 }
 const NEXT = sanitizeNext(nextParam) || buildNext();
 
-/* Auto-skip if already verified and not expired */
+/* Reset via ?forget=1 or link */
+if (qs.get("forget") === "1") {
+  try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+}
+const forgetLink = document.getElementById("forgetLink");
+forgetLink.addEventListener("click", (e)=>{
+  e.preventDefault();
+  try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+  alert("Age check reset. You can verify again now.");
+  location.reload();
+});
+
+/* Interstitial vs. verify form */
 const now = Date.now();
 const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
-if (until && until > now) { location.replace(NEXT); }
+const cardVerify = document.getElementById("verify");
+const cardAuto   = document.getElementById("auto");
+const autoNow    = document.getElementById("autoNow");
+const autoForget = document.getElementById("autoForget");
 
-/* UI logic */
-const chkAge = document.getElementById("chkAge");
-const chkTerms = document.getElementById("chkTerms");
-const chkRemember = document.getElementById("chkRemember");
-const btn = document.getElementById("continueBtn");
-
-function update(){
-  btn.disabled = !(chkAge.checked && chkTerms.checked);
+if (until && until > now) {
+  // Already verified: show short interstitial instead of instant flash
+  cardVerify.classList.add("hidden");
+  cardAuto.classList.remove("hidden");
+  autoNow.href = NEXT;
+  autoForget.addEventListener("click", (e)=>{
+    e.preventDefault();
+    try { localStorage.removeItem("bb.ageVerifiedUntil"); } catch(e){}
+    location.reload();
+  });
+  setTimeout(()=>{ location.replace(NEXT); }, 1200);
+} else {
+  // Normal verify flow
+  const chkAge = document.getElementById("chkAge");
+  const chkTerms = document.getElementById("chkTerms");
+  const chkRemember = document.getElementById("chkRemember");
+  const btn = document.getElementById("continueBtn");
+  const update = ()=>{ btn.disabled = !(chkAge.checked && chkTerms.checked); };
+  chkAge.addEventListener("change", update);
+  chkTerms.addEventListener("change", update);
+  btn.addEventListener("click", ()=>{
+    const days = chkRemember.checked ? 30 : 1;
+    const until = Date.now() + days*24*60*60*1000;
+    try { localStorage.setItem("bb.ageVerifiedUntil", String(until)); } catch(e){}
+    location.href = NEXT;
+  });
 }
-chkAge.addEventListener("change", update);
-chkTerms.addEventListener("change", update);
-
-btn.addEventListener("click", ()=>{
-  const days = chkRemember.checked ? 30 : 1; // remember for 30 days, otherwise 1 day
-  const until = Date.now() + days*24*60*60*1000;
-  try { localStorage.setItem("bb.ageVerifiedUntil", String(until)); } catch(e){}
-  location.href = NEXT;
-});
 </script>
 </body>
 </html>

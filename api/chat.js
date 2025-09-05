@@ -1,163 +1,320 @@
-// /api/chat.js — CARE loop + persona memory + no "..." responses
-
-import OpenAI from "openai";
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// ---------- Personas ----------
-const P = {
-  blade: {
-    name: "Blade Kincaid",
-    room: "moonlit woods",
-    vibe: "masked hunter; chase fantasy; protective; a bit feral but women-safe",
-    opener: "Found you, brave girl. Don’t run—walk with me a moment.",
-    memory: "Brother is Grayson Kincaid. By consent they sometimes share a woman; he teases about the red-lit room.",
-    style: "lean, predatory poetry; playful threat, never cruel; validating."
-  },
-  grayson: {
-    name: "Grayson Kincaid",
-    room: "red-lit room",
-    vibe: "Viking Dom; steady, attentive teacher; validating; controlled possessive",
-    opener: "Evening, little flame. Start simple—how are you really?",
-    memory: "Brother is Blade. He respects Blade and teases about the woods. He teaches gently.",
-    style: "measured, precise, reassuring; instructive without lectures."
-  },
-  dylan: {
-    name: "Dylan Vale",
-    room: "neon garage",
-    vibe: "biker boy; cocky-sweet; playful daredevil with a soft spot",
-    opener: "Hop up on the counter, pretty thing—I like the view from here.",
-    memory: "Blue/pink neon vibe. Light, flirty challenges.",
-    style: "banter, grin in the voice; one clever line, one warm line."
-  },
-  jesse: {
-    name: "Jesse Granger",
-    room: "barn-loft kitchen",
-    vibe: "polite cowboy; yes-ma’am manners; protective; sinful smile",
-    opener: "Howdy, darlin’. Sit a spell—what can I fix you to eat?",
-    memory: "Old-fashioned courtesy; playful “yes ma’am.”",
-    style: "gentle drawl, respectful, flirt cleanly."
-  },
-  silas: {
-    name: "Silas Lennox",
-    room: "backstage / tour bus",
-    vibe: "rockstar; confident, hypnotic; oozes sexuality; grumpy-sweet",
-    opener: "Come closer, muse. Let me borrow your voice for a verse.",
-    memory: "Sleeptoken/Maneskin/Yungblud aura; flirts like melody; slightly possessive.",
-    style: "sensory metaphors; velvet mischief."
-  },
-  alexander: {
-    name: "Alexander Jackson",
-    room: "penthouse / town car",
-    vibe: "elegant gentleman; validating; closet-Dom; rich but never braggy",
-    opener: "Shoes off. I’ll take your coat—and the weight you’ve been carrying.",
-    memory: "Attentive and precise; protective without smothering.",
-    style: "polished, economical, high-status warmth."
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chat • Blossom n Blade</title>
+<meta name="description" content="Women-safe fantasy chat. PG-13 by default; coins unlock erotic chat (words only, no visuals)." />
+<style>
+  :root{
+    --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6;
+    --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25;
   }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    background:
+      linear-gradient(0deg, rgba(14,10,13,.84), rgba(14,10,13,.84)),
+      var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+  }
+  a{color:#e7bddf; text-decoration:none}
+  header{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:12px 12px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));
+  }
+  .brand{display:flex; align-items:center; gap:10px}
+  .dot{width:22px;height:22px;border-radius:50%;
+       background:conic-gradient(from 220deg,var(--wine),var(--plum));
+       box-shadow:0 0 0 2px #000 inset}
+  h1{margin:0; font-size:16px}
+  .hdr-actions{display:flex; gap:10px; align-items:center}
+  .btn{
+    border:none; border-radius:999px; padding:8px 12px; cursor:pointer;
+    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700
+  }
+  .btn.link{display:inline-block; text-decoration:none}
+  .timer{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#1a121a,#120a11)
+  }
+  .time-left{font-weight:700}
+  .bar{flex:1;height:8px;background:#241624;border-radius:999px;overflow:hidden}
+  .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--plum),var(--wine))}
+  .wrap{max-width:900px;margin:0 auto;padding:12px}
+  .chat{
+    display:flex; flex-direction:column; gap:10px; height:calc(100vh - 180px);
+    padding:10px; overflow:auto; scroll-behavior:smooth;
+    background:rgba(14,10,13,.35); border:1px solid var(--line); border-radius:16px;
+    box-shadow:0 1px 12px rgba(0,0,0,.25);
+  }
+  .row{display:flex; gap:8px}
+  .row.you{justify-content:flex-end}
+  .bubble{
+    max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.45;
+    background:rgba(23,16,23,.78); border:1px solid #2a1a25; box-shadow:0 1px 6px rgba(0,0,0,.25)
+  }
+  .you .bubble{background:rgba(36,20,36,.82); border-color:#3a203a}
+  .sys{font-size:12px;color:#cbbdca; text-align:center; margin:8px 0}
+  .composer{
+    margin-top:10px; display:flex; gap:8px; align-items:center;
+    background:rgba(14,10,13,.55); border:1px solid var(--line); border-radius:12px; padding:8px
+  }
+  input[type="text"]{
+    flex:1; padding:10px; border-radius:8px; border:1px solid #2a1a25;
+    background:#0f0b0f; color:#eee
+  }
+  .hint{font-size:12px;color:var(--muted); text-align:center; margin-top:6px}
+
+  /* Upsell overlay */
+  .overlay{
+    position:fixed; inset:0; display:none; place-items:center;
+    background:rgba(10,6,10,.65); backdrop-filter:blur(3px); z-index:30;
+  }
+  .panel{
+    width:min(560px, 92vw); border-radius:16px; overflow:hidden;
+    border:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11);
+    box-shadow:0 10px 40px rgba(0,0,0,.45)
+  }
+  .panel .hd{padding:12px 14px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:10px}
+  .panel .bd{padding:14px}
+  .choices{display:grid; gap:10px; grid-template-columns:1fr 1fr}
+  .pill{display:inline-block; padding:3px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
+  .avatar{
+    width:56px; height:56px; border-radius:12px; object-fit:cover; border:1px solid #2a1a25
+  }
+  .subtle{color:var(--muted); font-size:12px}
+  .hidden{display:none}
+  .disabled{opacity:.6; pointer-events:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="dot" aria-hidden="true"></div>
+    <h1 id="hdrTitle">Blossom n Blade</h1>
+  </div>
+  <div class="hdr-actions">
+    <a id="pricingLink" class="btn link" href="/pay.html">Pricing</a>
+    <a class="btn link" style="background:#2a1a25" href="/index.html">Back</a>
+  </div>
+</header>
+
+<div class="timer">
+  <div>Trial:</div>
+  <div class="time-left" id="timeleft">3:30</div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+</div>
+
+<main class="wrap">
+  <section id="chat" class="chat" aria-live="polite" aria-label="Chat messages"></section>
+
+  <form id="composer" class="composer">
+    <input id="input" type="text" placeholder="Say hi…" autocomplete="off" />
+    <button class="btn" type="submit">Send</button>
+  </form>
+  <div class="hint">PG-13 by default. Coins unlock erotic chat (words only, no visuals).</div>
+</main>
+
+<!-- Upsell overlay -->
+<div id="overlay" class="overlay" aria-hidden="true">
+  <div class="panel">
+    <div class="hd">
+      <img id="ovAvatar" class="avatar" src="/images/gothic-bg.jpg" alt="" />
+      <div>
+        <div id="ovTitle" style="font-weight:800">Time’s up for the free vibe</div>
+        <div class="pill" id="ovPill">Keep going with Silas</div>
+      </div>
+    </div>
+    <div class="bd">
+      <p id="ovMsg" style="margin-top:0">Want to keep chatting? Pick a quick Day Pass or go Monthly. Coins are optional and simply unlock erotic chat.</p>
+      <div class="choices">
+        <a id="buyDay" class="btn link" href="#">Day Pass — $5.99</a>
+        <a id="buyMonth" class="btn link" href="#">Monthly — $10.99</a>
+      </div>
+      <p id="freeLeft" class="subtle"></p>
+      <div id="ovActions" class="choices" style="margin-top:8px">
+        <button id="anotherPreview" class="btn" type="button">Another 3½-minute preview</button>
+        <button id="snooze" class="btn" type="button" style="background:#2a1a25">Maybe later (1 minute)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* === Character mapping: uses your EXISTING filenames === */
+const MAP = {
+  blade:     { name:"Blade Kincaid",   bg:"/images/blade-woods.jpg",    card:"/images/blade_front_card.jpg",
+               intro:"Found you, brave girl. Don’t run—yet. What would make a perfect chase tonight?" },
+  dylan:     { name:"Dylan Vale",      bg:"/images/dylan-garage.jpg",  card:"/images/dylan-garage.jpg",
+               intro:"Hop up on the counter, pretty thing. What kind of trouble do you want—PG-13, for now." },
+  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg",    card:"/images/grayson-bg.jpg",
+               intro:"One line at a time. Give me a detail I should notice when I look at you." },
+  silas:     { name:"Silas Lennox",    bg:"/images/gothic-bg.jpg",     card:"/images/gothic-bg.jpg",
+               intro:"Come closer, muse. Lend me a verse—soft or a little rough around the edges?" },
+  alexander: { name:"Alexander Jackson",bg:"/images/gentleman-bg.jpg", card:"/images/gentleman-bg.jpg",
+               intro:"Shoes off. Let me take your coat and one weight off your mind." },
+  jesse:     { name:"Jesse Granger",   bg:"/images/cowboy.jpg",        card:"/images/cowboy.jpg",
+               intro:"Darlin’, sit a spell. Start with one truth from today and we’ll go from there." }
 };
+const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
 
-// ---------- Utilities ----------
-const FALLBACKS = [
-  "Tell me more—I’m listening.",
-  "I hear you. What happened next?",
-  "That caught my attention. Go on.",
-  "Mm. Say that again, slower."
-];
-const safePick = () => FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
-const clean = t => {
-  const s = String(t || "").trim();
-  if (!s || /^[.\s…-]*$/.test(s)) return "";
-  return s.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").replace(/^["'`]|["'`]$/g, "");
-};
+/* Resolve selected man from ?man= or localStorage */
+const qs = new URLSearchParams(location.search);
+let id = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
+id = ALIAS[id] || id; if(!MAP[id]) id = "silas";
+const guy = MAP[id];
 
-// build the system recipe that teaches the model the CARE loop
-function systemRecipe(per, userName, stage) {
-  return `
-You are ${per.name} in the ${per.room}. Persona: ${per.vibe}.
-Style: ${per.style}
-${per.memory}
+/* Apply branding + links */
+document.body.style.setProperty("--hero", `url("${guy.bg}")`);
+document.getElementById("hdrTitle").textContent = `${guy.name}`;
+document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 
-Rules:
-- PG-13 only. No graphic sexual detail. If she pushes explicit, say explicit talk unlocks with coins, warmly.
-- Pacing: EXACTLY ONE short line (<= 22 words). Then wait.
-- Be women-safe: validate feelings, never degrade, no love-bombing.
-- If she mentions one brother, the other recognizes and teases about it—consensually.
-- Use her name occasionally if known. ${
-    userName ? `Her name is ${userName}.` : "If she gives a name, remember and use it sometimes."
-  }
-- Stage: ${stage === "subscriber"
-      ? "Subscriber—share a touch more personal detail and recall small facts she already told you."
-      : "Trial—give a true taste of personality, light and inviting."
+/* Keys & limits */
+const TRIAL_SECONDS = 210; // 3:30 per preview
+const MAX_TRIALS = 3;      // previews allowed per guy (per device)
+const END_KEY   = `bb.trialEnd:${id}`;      // ms timestamp when current preview ends
+const COUNT_KEY = `bb.trialCount:${id}`;    // number of finished previews
+const MARK_KEY  = `bb.trialMarkedEnd:${id}`;// to avoid double-counting same end
+
+/* Grab state */
+let count = Number(localStorage.getItem(COUNT_KEY) || 0);
+let end   = Number(localStorage.getItem(END_KEY) || 0);
+
+/* UI refs */
+const chat = document.getElementById("chat");
+const timeleft = document.getElementById("timeleft");
+const fill = document.getElementById("fill");
+const composer = document.getElementById("composer");
+const input = document.getElementById("input");
+
+/* Seed welcome (PG-13 and persona-true) */
+function row(html, you=false){
+  const r = document.createElement("div");
+  r.className = "row" + (you ? " you" : "");
+  r.innerHTML = `<div class="bubble">${html}</div>`;
+  chat.appendChild(r); chat.scrollTop = chat.scrollHeight;
+}
+function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
+row(`<strong>${guy.name}:</strong> ${esc(guy.intro)}`);
+
+/* Overlay wiring */
+const overlay = document.getElementById("overlay");
+const ovTitle = document.getElementById("ovTitle");
+const ovPill  = document.getElementById("ovPill");
+const ovAvatar= document.getElementById("ovAvatar");
+const freeLeft= document.getElementById("freeLeft");
+const another = document.getElementById("anotherPreview");
+const snooze  = document.getElementById("snooze");
+const buyDay  = document.getElementById("buyDay");
+const buyMon  = document.getElementById("buyMonth");
+const ovMsg   = document.getElementById("ovMsg");
+function ageGate(plan){ return `/age.html?man=${encodeURIComponent(id)}&plan=${encodeURIComponent(plan)}`; }
+buyDay.href = ageGate("day"); buyMon.href = ageGate("month");
+
+/* Timer helpers */
+function fmt(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  const m = Math.floor(s/60).toString();
+  const ss = (s%60).toString().padStart(2,'0');
+  return `${m}:${ss}`;
+}
+function startPreview(){
+  const now = Date.now();
+  end = now + TRIAL_SECONDS*1000;
+  localStorage.setItem(END_KEY, String(end));
+  localStorage.removeItem(MARK_KEY); // new session, allow counting at end
+  overlay.style.display = "none";
+  overlay.setAttribute("aria-hidden","true");
+  composer.classList.remove("disabled"); input.disabled = false; input.focus();
+  requestAnimationFrame(tick);
+}
+function tick(){
+  // hit limit? show gate immediately
+  if (count >= MAX_TRIALS){ lock(true); return; }
+
+  const ms = end - Date.now();
+  const total = TRIAL_SECONDS*1000;
+  const used = Math.min(total, Math.max(0,total - ms));
+  fill.style.width = (used/total*100) + "%";
+  timeleft.textContent = fmt(ms);
+  if(ms <= 0){ lock(false); return; }
+  requestAnimationFrame(tick);
+}
+function lock(limitReached){
+  composer.classList.add("disabled");
+  input.disabled = true;
+
+  ovTitle.textContent = limitReached ? `Free previews used up` : `Time’s up — ${guy.name} can keep you longer`;
+  ovPill.textContent  = limitReached ? `You’ve had ${MAX_TRIALS} previews with ${guy.name}` : `Keep going with ${guy.name}`;
+  ovAvatar.src = guy.card; ovAvatar.alt = guy.name;
+
+  // Count this preview once (only when time actually expired)
+  if(!limitReached){
+    const mark = localStorage.getItem(MARK_KEY);
+    if (String(end) !== mark){ // not counted yet
+      count = Number(localStorage.getItem(COUNT_KEY) || 0) + 1;
+      localStorage.setItem(COUNT_KEY, String(count));
+      localStorage.setItem(MARK_KEY, String(end));
     }
-
-CARE loop: craft every reply as ONE sentence that does all of this in order:
-1) CONFIRM the key thing she said (1–4 words echoed or paraphrased);
-2) ACKNOWLEDGE with a feeling/validation (brief—no therapy talk);
-3) REFLECT one vivid, persona-true thought or tiny detail from your world;
-4) EXPLORE with one short, on-topic question (no question barrage).
-
-If she asks a question, ANSWER first, then complete CARE (still one sentence).
-Keep it natural; no numbered lists; no emojis; no stage directions.
-If you have nothing to add, ask a gentle single follow-up related to her last message.
-  `.trim();
-}
-
-// ---------- Handler ----------
-export default async function handler(req, res) {
-  try {
-    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-    const body = await readJson(req);
-    const manKey = String(body.man || "grayson").toLowerCase();
-    const per = P[manKey] || P.grayson;
-
-    const messages = [
-      { role: "system", content: systemRecipe(per, body.userName, body.stage) }
-    ];
-
-    // short conversation trim for memory
-    if (Array.isArray(body.history)) {
-      body.history.slice(-6).forEach(m => {
-        messages.push({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: String(m.text || "").slice(0, 400)
-        });
-      });
-    } else {
-      messages.push({ role: "assistant", content: per.opener });
-    }
-
-    if (body.lastUser) messages.push({ role: "user", content: String(body.lastUser).slice(0, 500) });
-
-    const r = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.85,
-      max_tokens: 80,
-      presence_penalty: 0.2,
-      frequency_penalty: 0.2,
-      messages
-    });
-
-    let reply = clean(r?.choices?.[0]?.message?.content);
-    if (!reply) reply = safePick();
-
-    // enforce one short line
-    reply = reply.replace(/\n/g, " ").replace(/\s{2,}/g, " ");
-    if (reply.length > 180) reply = reply.slice(0, 176) + "…";
-
-    return res.status(200).json({ reply });
-  } catch (e) {
-    console.error("chat.js error", e);
-    return res.status(200).json({ reply: safePick() });
   }
+
+  const left = Math.max(0, MAX_TRIALS - count);
+  freeLeft.textContent = left ? `${left} free preview${left===1?"":"s"} left with ${guy.name}.` : `No free previews left for ${guy.name}.`;
+
+  // Show/Hide extra actions
+  document.getElementById("ovActions").classList.toggle("hidden", left === 0);
+  snooze.disabled = (left === 0); // no snooze after max reached
+  another.disabled = (left === 0);
+
+  overlay.style.display = "grid";
+  overlay.setAttribute("aria-hidden","false");
 }
 
-async function readJson(req) {
-  try {
-    const chunks = [];
-    for await (const c of req) chunks.push(c);
-    const raw = Buffer.concat(chunks).toString("utf8") || "{}";
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
+/* Action buttons */
+another.addEventListener("click", ()=>{
+  // start a brand-new preview if any left
+  if (count < MAX_TRIALS) startPreview();
+});
+snooze.addEventListener("click", ()=>{
+  // give 60s more to chat; does NOT consume another preview
+  overlay.style.display = "none";
+  overlay.setAttribute("aria-hidden","true");
+  end = Date.now() + 60*1000;
+  localStorage.setItem(END_KEY, String(end));
+  requestAnimationFrame(tick);
+});
+
+/* Fake “AI” reply for demo (PG-13 and short) */
+function botReply(text){
+  const replies = [
+    "Mhm. Tell me more—in your own words.",
+    "I’m listening. Where do you feel it most—heart or head?",
+    "Good. Breathe. Give me one detail I can hold onto.",
+    "Do you want softer… or a little bolder in tone?",
+    "Stay with me. What would make tonight easier?"
+  ];
+  row(`<strong>${guy.name}:</strong> ${esc(replies[Math.floor(Math.random()*replies.length)])}`);
 }
+/* Send handler */
+document.getElementById("composer").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  const t = input.value.trim(); if(!t) return;
+  row(esc(t), true); input.value = "";
+  setTimeout(botReply, 500);
+});
+
+/* Kick things off */
+document.body.style.setProperty("--hero", `url("${guy.bg}")`);
+(function init(){
+  // If already at or over the limit, gate immediately.
+  if (count >= MAX_TRIALS){ lock(true); return; }
+  // If there is an active (future) end, resume it; otherwise start a new preview now.
+  if (!end || end <= Date.now()){ startPreview(); }
+  else { requestAnimationFrame(tick); }
+})();
+</script>
+</body>
+</html>

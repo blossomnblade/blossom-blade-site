@@ -134,13 +134,13 @@
 </div>
 
 <script>
-/* ===== helpers ===== */
+/* ========= small utils ========= */
 const qs = new URLSearchParams(location.search);
 const chat = document.getElementById("chat");
 const row = (html, you=false)=>{ const r=document.createElement("div"); r.className="row"+(you?" you":""); r.innerHTML=`<div class="bubble">${html}</div>`; chat.appendChild(r); chat.scrollTop=chat.scrollHeight; };
 const esc = s => (s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
-/* ===== age-gate ===== */
+/* ========= age gate redirect ========= */
 (function(){
   const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
   if (!until || until <= Date.now()){
@@ -150,7 +150,7 @@ const esc = s => (s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
   }
 })();
 
-/* ===== characters ===== */
+/* ========= character mapping ========= */
 const MAP = {
   blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
   dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
@@ -168,27 +168,39 @@ document.getElementById("hdrTitle").textContent = guy.name;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 localStorage.setItem("bb.character", id);
 
-/* ===== coins + turns ===== */
+/* ========= COINS + TURNS (fixed, robust) ========= */
 const COIN_KEY = "bb.coins";
 const TURNS_KEY = `bb.eroticTurns:${id}`;
-const getCoins=()=>Math.max(0,Number(localStorage.getItem(COIN_KEY)||0));
-const setCoins=n=>{localStorage.setItem(COIN_KEY,String(Math.max(0,n))); document.getElementById("coinBadge").textContent=`Coins: ${getCoins()}`;};
-const addCoins=n=>setCoins(getCoins()+n);
-const getTurns=()=>Math.max(0, Number(localStorage.getItem(TURNS_KEY)||0));
-const setTurns=n=>localStorage.setItem(TURNS_KEY, String(Math.max(0,n)));
-document.getElementById("coinBadge").textContent=`Coins: ${getCoins()}`;
-
+function toInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>0 ? n : 0; }
+function getCoins(){ return toInt(localStorage.getItem(COIN_KEY)); }
+function setCoins(n){
+  const val = Math.max(0, toInt(n));
+  localStorage.setItem(COIN_KEY, String(val));
+  document.getElementById("coinBadge").textContent = `Coins: ${val}`;
+}
+function addCoins(n){ setCoins(getCoins() + toInt(n)); }
+function getTurns(){ return toInt(localStorage.getItem(TURNS_KEY)); }
+function setTurns(n){ localStorage.setItem(TURNS_KEY, String(Math.max(0, toInt(n)))); }
+// draw badge and fix any prior NaN
+setCoins(getCoins());
+// allow quick inject: ?coins=25
+if (qs.get("coins")) addCoins(qs.get("coins"));
+// popup
 const coinPopup=document.getElementById("coinPopup");
 const showCoins=()=>coinPopup.classList.remove("hidden");
 const hideCoins=()=>coinPopup.classList.add("hidden");
-document.getElementById("coinClose").addEventListener("click",e=>{e.preventDefault();hideCoins();});
-coinPopup.addEventListener("click",e=>{
-  const btn=e.target.closest(".coinbtn"); if(!btn) return;
-  const pack=Number(btn.getAttribute("data-pack")||"0");
-  addCoins(pack); alert(`Added ${pack} coins (demo).`); hideCoins();
+document.getElementById("coinClose").addEventListener("click",(e)=>{e.preventDefault();hideCoins();});
+[...document.querySelectorAll(".coinbtn")].forEach(btn=>{
+  btn.addEventListener("click",(e)=>{
+    e.preventDefault();
+    const pack = toInt(btn.getAttribute("data-pack") || "0");
+    addCoins(pack);
+    row(`<em class="sys">Added ${pack} test coins.</em>`);
+    hideCoins();
+  });
 });
 
-/* ===== preview timer ===== */
+/* ========= trial timer ========= */
 const TRIAL_SECONDS=210, MAX_TRIALS=3;
 const END_KEY=`bb.trialEnd:${id}`, COUNT_KEY=`bb.trialCount:${id}`, MARK_KEY=`bb.trialMarkedEnd:${id}`;
 let count=Number(localStorage.getItem(COUNT_KEY)||0);
@@ -215,50 +227,52 @@ function lock(limitReached){
 }
 if(Number(localStorage.getItem(`bb.trialCount:${id}`)||0) >= 3){ lock(true); } else { if(!end || end<=Date.now()) startPreview(); else requestAnimationFrame(tick); }
 
-/* ===== severity + "hotness" detector ===== */
-const HARD = ["lick me","eat me","suck","go down","blow","hand job","cum","finish in me","rail me","bend me over"];
-const MED  = ["kiss","kiss my","ride","spank","grind","dirty","turn me on","touch me","desk","counter","tie me","take me","pin me","good girl","obedience","command"];
+/* ========= severity + hotness check ========= */
+const HARD = ["lick me","eat me","suck","go down","blow","hand job","cum","finish in me","rail me","bend me over","tie me","pin me"];
+const MED  = ["kiss","ride","spank","grind","dirty","turn me on","touch me","desk","counter","obedience","command","good girl","naughty"];
 function userSeverity(t){const s=t.toLowerCase(); if(HARD.some(w=>s.includes(w))) return 2; if(MED.some(w=>s.includes(w))) return 1; return 0;}
-
-// Heuristic to see if the **assistant** reply is actually hotter (suggestive/commandy)
-// No graphic detail—just confident, escalatory language.
-const HOT_SIGNS = ["come here","hands on","on the desk","on the wall","closer","good girl","i’ll lead","tell me where","show me how","i want you","you want me","my mouth","i’ll take the lead","look at me","be still","answer me","choose where"];
+const HOT_SIGNS = ["come here","hands on","on the desk","on the wall","closer","good girl","i’ll lead","tell me where","show me how","i want you","you want me","my mouth","i’ll take the lead","look at me","be still","answer me","choose where","kneel","behave for me"];
 function replyIsHot(t){
   const s=t.toLowerCase();
-  if(s.includes("let’s keep it playful") || s.includes("keep it pg") || s.includes("let’s keep it respectful")) return false;
+  if(s.includes("keep it pg") || s.includes("let’s keep it respectful") || s.includes("keep it playful and respectful")) return false;
   return HOT_SIGNS.some(w=>s.includes(w));
 }
 
-/* ===== brain hookup ===== */
+/* ========= talk to our brain ========= */
 const history = [];
 let mediumCount = 0;
 let lastAssistant = "";
 
 async function callBrain(mode, extraHistory=[]){
   try{
-    const r = await fetch("/api/brain", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ guy:id, mode, history:[...history, ...extraHistory] }) });
+    const r = await fetch("/api/brain", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ guy:id, mode, history:[...history, ...extraHistory] })
+    });
     const j = await r.json().catch(()=>null) || {};
-    return (j.reply || "Say more—I’m listening.").toString();
+    return (j.reply || "Say more—I'm listening.").toString();
   }catch(e){ console.error(e); return "Network’s acting up. Try one more line for me."; }
 }
 
 function pushAssistant(text, actuallyHot=false){
   if(!text) return;
   const trimmed = text.trim();
-  if(trimmed === lastAssistant.trim()) return; // no dup loop
+  if(trimmed === lastAssistant.trim()) return; // prevent obvious loops
   lastAssistant = trimmed;
   history.push({role:"assistant", content:trimmed});
   row(`<strong>${esc(guy.name)}:</strong> ${esc(trimmed)}`);
-  // decrement only if truly hot
-  if(actuallyHot && getTurns()>0){ const left=getTurns()-1; setTurns(left); if(left<=0){ row(`<em class="sys">Your 10 hot replies are used—back to PG-13.</em>`); } }
+  if(actuallyHot && getTurns()>0){
+    const left=getTurns()-1; setTurns(left);
+    if(left<=0) row(`<em class="sys">Your 10 hot replies are used—back to PG-13.</em>`);
+  }
 }
 
 function seedIntro(){
-  const line = `In character, start with one short opener and a concrete question. Keep it PG.`;
-  history.push({role:"user", content:line});
+  history.push({role:"user", content:"In character, start with one short opener and a concrete question. Keep it PG."});
 }
 
-/* ===== send handling ===== */
+/* ========= send handling ========= */
 document.getElementById("composer").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const t=input.value.trim(); if(!t) return;
@@ -277,7 +291,7 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
 
   const hot = tryErotic && replyIsHot(reply);
 
-  // If we don't already have turns and the reply actually came in hot → spend 1 coin now and grant 10 turns.
+  // Hot reply but we had no turns → spend 1 coin now and grant 10 turns.
   if(hot && !haveTurns){
     if(getCoins()<=0){
       row(`<em class="sys">Coins unlock the hotter mode. Grab a small pack to keep that going.</em>`);
@@ -289,7 +303,7 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
     }
   }
 
-  // If we tried to unlock but reply is PG → don’t spend, don’t decrement, show popup
+  // Tried erotic, but reply stayed PG and we have no turns → no spend, nudge popup.
   if(tryErotic && !hot && !haveTurns){
     showCoins();
     row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only).</em>`);
@@ -298,14 +312,10 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
   pushAssistant(reply, hot);
 });
 
-/* ===== kickoff ===== */
+/* ========= kickoff ========= */
 seedIntro();
-
-// pricing links carry man
 document.getElementById("buyDay")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=day`);
 document.getElementById("buyMonth")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=month`);
-
-// snooze/another preview
 document.getElementById("anotherPreview")?.addEventListener("click", ()=>{ location.reload(); });
 document.getElementById("snooze")?.addEventListener("click", ()=>{ document.getElementById("overlay").style.display="none"; end=Date.now()+60*1000; localStorage.setItem(END_KEY,String(end)); requestAnimationFrame(tick); });
 </script>

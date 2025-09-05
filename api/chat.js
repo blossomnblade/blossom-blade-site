@@ -34,7 +34,7 @@
   .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--plum),var(--wine))}
   .wrap{max-width:900px;margin:0 auto;padding:12px}
   .chat{
-    display:flex; flex-direction:column; gap:10px; height:calc(100vh - 180px);
+    display:flex; flex-direction:column; gap:10px; height:calc(100vh - 220px);
     padding:10px; overflow:auto; scroll-behavior:smooth;
     background:rgba(14,10,13,.35); border:1px solid var(--line); border-radius:16px;
     box-shadow:0 1px 12px rgba(0,0,0,.25);
@@ -49,6 +49,9 @@
             background:rgba(14,10,13,.55); border:1px solid var(--line); border-radius:12px; padding:8px}
   input[type="text"]{flex:1; padding:10px; border-radius:8px; border:1px solid #2a1a25; background:#0f0b0f; color:#eee}
   .hint{font-size:12px;color:var(--muted); text-align:center; margin-top:6px}
+  .badge{font-size:12px; color:#e9d4e6; background:#241624; border:1px solid #2a1a25; border-radius:999px; padding:6px 10px; white-space:nowrap}
+
+  /* Upsell overlay */
   .overlay{position:fixed; inset:0; display:none; place-items:center;
            background:rgba(10,6,10,.65); backdrop-filter:blur(3px); z-index:30;}
   .panel{width:min(560px,92vw); border-radius:16px; overflow:hidden; border:1px solid var(--line);
@@ -61,6 +64,26 @@
   .subtle{color:var(--muted); font-size:12px}
   .hidden{display:none}
   .disabled{opacity:.6; pointer-events:none}
+
+  /* — Coin popup (bottom-right) — */
+  .coinpop{
+    position:fixed; right:14px; bottom:92px; z-index:40;
+    width:290px; max-width:95vw;
+    border-radius:16px; padding:12px;
+    border:1px solid #2a1a25;
+    background:radial-gradient(120% 120% at 10% 10%, rgba(110,15,46,.35), rgba(75,31,60,.25) 60%, rgba(14,10,13,.9) 100%),
+               linear-gradient(180deg, #1a121a, #120a11);
+    box-shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+  .coinpop h4{margin:0 0 6px; font:800 14px/1.2 system-ui}
+  .coinpacks{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
+  .coinbtn{
+    display:block; text-align:center; padding:8px 10px; border-radius:12px; font-weight:800;
+    border:1px dashed #3a2239; background:#160f16; color:#fff; cursor:pointer
+  }
+  .coinmeta{font-size:12px; color:#bba9b6; margin-top:6px}
+  .coinclose{margin-top:8px; text-align:center}
+  .coinclose a{color:#bba9b6; font-size:12px; text-decoration:underline}
 </style>
 </head>
 <body>
@@ -68,6 +91,7 @@
 <header>
   <div class="brand"><div class="dot" aria-hidden="true"></div><h1 id="hdrTitle">Blossom n Blade</h1></div>
   <div class="hdr-actions">
+    <span id="coinBadge" class="badge" title="Coins available">Coins: 0</span>
     <a id="pricingLink" class="btn link" href="/pay.html">Pricing</a>
     <a class="btn link" style="background:#2a1a25" href="/index.html">Back</a>
   </div>
@@ -87,7 +111,7 @@
   <div class="hint">PG-13 by default. Coins unlock erotic chat (words only, no visuals).</div>
 </main>
 
-<!-- Upsell overlay -->
+<!-- Upsell overlay (time limit) -->
 <div id="overlay" class="overlay" aria-hidden="true">
   <div class="panel">
     <div class="hd">
@@ -112,6 +136,19 @@
   </div>
 </div>
 
+<!-- Tiny coin popup -->
+<div id="coinPopup" class="coinpop hidden" role="dialog" aria-modal="false" aria-label="Buy coins">
+  <h4>Unlock erotic chat</h4>
+  <div class="coinpacks">
+    <a data-pack="5"   class="coinbtn">5 coins — $1</a>
+    <a data-pack="25"  class="coinbtn">25 coins — $5</a>
+    <a data-pack="60"  class="coinbtn">60 coins — $10</a>
+    <a data-pack="150" class="coinbtn">150 coins — $20</a>
+  </div>
+  <div class="coinmeta">Triggers naturally by convo prompts—never pushy.</div>
+  <div class="coinclose"><a href="#" id="coinClose">Not now</a></div>
+</div>
+
 <script>
 /* === Character mapping === */
 const MAP = {
@@ -130,45 +167,93 @@ const MAP = {
 };
 const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
 
-/* Resolve selected man from ?man= or localStorage */
+/* Require age verification before entry */
+(function enforceAgeGate(){
+  const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
+  if (!until || until <= Date.now()){
+    const nextHere = location.pathname + location.search + location.hash;
+    location.replace(`/age.html?man=${encodeURIComponent((new URLSearchParams(location.search).get("man")||"").toLowerCase())}&next=${encodeURIComponent(nextHere)}`);
+  }
+})();
+
+/* Resolve selected man */
 const qs = new URLSearchParams(location.search);
 let id = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
 id = ALIAS[id] || id; if(!MAP[id]) id = "silas";
 const guy = MAP[id];
 
-/* === HARD GATE: require age click before entering rooms === */
-(function enforceAgeGate(){
-  const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
-  if (!until || until <= Date.now()){
-    const nextHere = location.pathname + location.search + location.hash;
-    location.replace(`/age.html?man=${encodeURIComponent(id)}&next=${encodeURIComponent(nextHere)}`);
-  }
-})();
-
-/* Apply branding + links */
+/* Branding + links */
 document.body.style.setProperty("--hero", `url("${guy.bg}")`);
 document.getElementById("hdrTitle").textContent = `${guy.name}`;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 
-/* Keys & limits */
+/* === Coins (local balance + popup) === */
+const COIN_KEY = "bb.coins";
+function getCoins(){ return Math.max(0, Number(localStorage.getItem(COIN_KEY) || 0)); }
+function setCoins(n){ localStorage.setItem(COIN_KEY, String(Math.max(0,n))); updateBadge(); }
+function addCoins(n){ setCoins(getCoins() + n); }
+function spendCoin(){ const c=getCoins(); if(c>0){ setCoins(c-1); return true; } return false; }
+function updateBadge(){ document.getElementById("coinBadge").textContent = `Coins: ${getCoins()}`; }
+updateBadge();
+
+/* Stripe hookup (optional, later):
+   If you have Stripe Checkout links, paste them here. If left empty, we just add coins locally for demo. */
+const STRIPE_LINKS = {
+  "5":   "", // e.g. "https://buy.stripe.com/..."
+  "25":  "",
+  "60":  "",
+  "150": ""
+};
+
+const coinPopup = document.getElementById("coinPopup");
+function showCoins(reason){
+  coinPopup.classList.remove("hidden");
+  // mark that we showed at least once
+  try { localStorage.setItem("bb.coinPopupShown","1"); } catch(e){}
+}
+function hideCoins(){ coinPopup.classList.add("hidden"); }
+document.getElementById("coinClose").addEventListener("click", e=>{ e.preventDefault(); hideCoins(); });
+
+coinPopup.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".coinbtn");
+  if(!btn) return;
+  const pack = btn.getAttribute("data-pack");
+  const link = STRIPE_LINKS[pack] || "";
+  if(link){
+    // Real checkout: send to Stripe (returns after payment if you set success_url back to this page)
+    location.href = link;
+  }else{
+    // Demo/local: just grant coins immediately
+    addCoins(Number(pack));
+    alert(`Added ${pack} coins.`);
+    hideCoins();
+  }
+});
+
+/* When to suggest coins:
+   - If message looks "spicy" and user has 0 coins
+   - Show once the first time they try (bb.coinPopupShown flag) */
+function looksSpicy(text){
+  const t = text.toLowerCase();
+  const triggers = ["erotic","explicit","spicy","dirty","nsfw","more","go further","turn up","coin","unlock"];
+  return triggers.some(k => t.includes(k));
+}
+
+/* === Free-trial timer & overlay === */
 const TRIAL_SECONDS = 210; // 3:30 per preview
-const MAX_TRIALS = 3;      // previews allowed per guy (per device)
+const MAX_TRIALS = 3;
 const END_KEY   = `bb.trialEnd:${id}`;
 const COUNT_KEY = `bb.trialCount:${id}`;
 const MARK_KEY  = `bb.trialMarkedEnd:${id}`;
-
-/* State */
 let count = Number(localStorage.getItem(COUNT_KEY) || 0);
 let end   = Number(localStorage.getItem(END_KEY) || 0);
 
-/* UI refs */
 const chat = document.getElementById("chat");
 const timeleft = document.getElementById("timeleft");
 const fill = document.getElementById("fill");
 const composer = document.getElementById("composer");
 const input = document.getElementById("input");
 
-/* Seed welcome (PG-13, persona-true) */
 function row(html, you=false){
   const r = document.createElement("div");
   r.className = "row" + (you ? " you" : "");
@@ -178,21 +263,15 @@ function row(html, you=false){
 function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
 row(`<strong>${guy.name}:</strong> ${esc(guy.intro)}`);
 
-/* Overlay wiring */
 const overlay = document.getElementById("overlay");
-const ovTitle = document.getElementById("ovTitle");
-const ovPill  = document.getElementById("ovPill");
-const ovAvatar= document.getElementById("ovAvatar");
 const freeLeft= document.getElementById("freeLeft");
 const another = document.getElementById("anotherPreview");
 const snooze  = document.getElementById("snooze");
 const buyDay  = document.getElementById("buyDay");
 const buyMon  = document.getElementById("buyMonth");
-const ovMsg   = document.getElementById("ovMsg");
 function ageGate(plan){ return `/age.html?man=${encodeURIComponent(id)}&plan=${encodeURIComponent(plan)}`; }
 buyDay.href = ageGate("day"); buyMon.href = ageGate("month");
 
-/* Timer helpers */
 function fmt(ms){
   const s = Math.max(0, Math.ceil(ms/1000));
   const m = Math.floor(s/60).toString();
@@ -220,12 +299,10 @@ function tick(){
   requestAnimationFrame(tick);
 }
 function lock(limitReached){
-  composer.classList.add("disabled");
-  input.disabled = true;
-
-  ovTitle.textContent = limitReached ? `Free previews used up` : `Time’s up — ${guy.name} can keep you longer`;
-  ovPill.textContent  = limitReached ? `You’ve had ${MAX_TRIALS} previews with ${guy.name}` : `Keep going with ${guy.name}`;
-  ovAvatar.src = guy.card; ovAvatar.alt = guy.name;
+  composer.classList.add("disabled"); input.disabled = true;
+  document.getElementById("ovTitle").textContent = limitReached ? `Free previews used up` : `Time’s up — ${guy.name} can keep you longer`;
+  document.getElementById("ovPill").textContent  = limitReached ? `You’ve had ${MAX_TRIALS} previews with ${guy.name}` : `Keep going with ${guy.name}`;
+  document.getElementById("ovAvatar").src = guy.card; document.getElementById("ovAvatar").alt = guy.name;
 
   if(!limitReached){
     const mark = localStorage.getItem(MARK_KEY);
@@ -235,26 +312,19 @@ function lock(limitReached){
       localStorage.setItem(MARK_KEY, String(end));
     }
   }
-
   const left = Math.max(0, MAX_TRIALS - count);
   freeLeft.textContent = left ? `${left} free preview${left===1?"":"s"} left with ${guy.name}.` : `No free previews left for ${guy.name}.`;
   document.getElementById("ovActions").classList.toggle("hidden", left === 0);
-  snooze.disabled = (left === 0);
-  another.disabled = (left === 0);
-
-  overlay.style.display = "grid";
-  overlay.setAttribute("aria-hidden","false");
+  snooze.disabled = (left === 0); another.disabled = (left === 0);
+  overlay.style.display = "grid"; overlay.setAttribute("aria-hidden","false");
 }
-
-/* Actions */
 another.addEventListener("click", ()=>{ if (count < MAX_TRIALS) startPreview(); });
 snooze.addEventListener("click", ()=>{
   overlay.style.display = "none"; overlay.setAttribute("aria-hidden","true");
-  end = Date.now() + 60*1000; localStorage.setItem(END_KEY, String(end));
-  requestAnimationFrame(tick);
+  end = Date.now() + 60*1000; localStorage.setItem(END_KEY, String(end)); requestAnimationFrame(tick);
 });
 
-/* Demo auto-replies (PG-13) */
+/* Demo reply (PG-13) */
 function botReply(){
   const replies = [
     "Mhm. Tell me more—in your own words.",
@@ -265,10 +335,26 @@ function botReply(){
   ];
   row(`<strong>${guy.name}:</strong> ${esc(replies[Math.floor(Math.random()*replies.length)])}`);
 }
+
+/* Send handler + coin trigger */
 document.getElementById("composer").addEventListener("submit", (e)=>{
   e.preventDefault();
   const t = input.value.trim(); if(!t) return;
   row(esc(t), true); input.value = "";
+
+  // If the message looks like it's escalating: require a coin
+  if (looksSpicy(t)){
+    if (getCoins() <= 0){
+      // first-time hint? show popup
+      showCoins("need");
+      row(`<em class="sys">Coins unlock erotic chat (words only). Grab a small pack to continue that direction.</em>`);
+      return; // don't reply yet; let them decide
+    } else {
+      spendCoin();
+      updateBadge();
+      row(`<em class="sys">Spent 1 coin to unlock erotic tone for this message.</em>`);
+    }
+  }
   setTimeout(botReply, 500);
 });
 
@@ -276,6 +362,10 @@ document.getElementById("composer").addEventListener("submit", (e)=>{
 (function init(){
   if (Number(localStorage.getItem("bb.trialCount:"+id)||0) >= MAX_TRIALS){ lock(true); return; }
   if (!end || end <= Date.now()){ startPreview(); } else { requestAnimationFrame(tick); }
+
+  // Nudge: if no coins and they've never seen the popup, show gently once
+  const seen = localStorage.getItem("bb.coinPopupShown");
+  if (!seen && getCoins()===0){ setTimeout(()=>showCoins("intro"), 1200); }
 })();
 </script>
 </body>

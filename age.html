@@ -4,228 +4,163 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>18+ Verification • Blossom n Blade</title>
-<meta name="description" content="Quick 18+ check before entering Blossom n Blade." />
 <style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25; }
+  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
   *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:linear-gradient(0deg, rgba(14,10,13,.85), rgba(14,10,13,.85)),
-               var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+    margin:0; color:var(--ink); font:600 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    background:linear-gradient(0deg, rgba(14,10,13,.88), rgba(14,10,13,.88)),
+               url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
   }
-  a{color:#e7bddf; text-decoration:none}
-  .banner{text-align:center; font-size:13px; padding:8px 12px;
-    background:linear-gradient(90deg, rgba(110,15,46,.35), rgba(75,31,60,.35)); border-bottom:1px solid var(--line);}
-  header{display:flex; justify-content:space-between; align-items:center; gap:12px;
-    padding:16px; border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));}
-  .brand{display:flex; align-items:center; gap:10px}
-  .dot{width:26px;height:26px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum)); box-shadow:0 0 0 2px #000 inset}
+  header{padding:14px 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11)}
+  .wrap{max-width:760px; margin:40px auto; padding:0 14px}
+  .card{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#1a121a,#120a11);
+        box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .hd{padding:16px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:12px}
+  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum))}
   h1{margin:0; font-size:18px}
-  .wrap{max-width:720px; margin:0 auto; padding:24px 16px 56px}
-  .card{
-    max-width:560px; margin:16px auto; padding:18px 16px;
-    border:1px solid var(--line); border-radius:16px;
-    background:linear-gradient(180deg, rgba(23,16,23,.95), rgba(23,16,23,.92));
-    box-shadow:0 1px 12px rgba(0,0,0,.28);
-  }
-  h2{margin:0 0 8px; font-size:22px; text-align:center}
-  p.sub{margin:0 0 14px; color:var(--muted); text-align:center; font-size:14px}
-  .checks{display:grid; gap:10px; margin:14px 0}
-  label{display:flex; gap:10px; align-items:flex-start; font-size:14px}
-  input[type="checkbox"]{margin-top:2px; transform:scale(1.1)}
-  .actions{display:flex; gap:10px; justify-content:center; margin-top:12px}
-  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer;
-    background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700}
-  .btn.softer{background:#2a1a25}
-  .note{margin-top:12px; text-align:center; color:var(--muted); font-size:12px}
-  .tiny{margin-top:8px; text-align:center; color:#9a8997; font-size:12px}
-  .hidden{display:none}
-  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px}
+  .bd{padding:18px}
+  .row{display:flex; align-items:flex-start; gap:10px; margin:10px 0}
+  input[type="checkbox"]{width:20px; height:20px; margin-top:2px}
+  label{font-weight:500; color:#e7d4e6}
+  .muted{color:var(--muted); font-size:13px}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
+  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:800; color:white;
+       background:linear-gradient(90deg,var(--plum),var(--wine))}
+  .btn.ghost{background:#2a1a25}
+  .note{margin-top:10px; font-size:13px; color:#cbbdca}
+  .ok{padding:10px 12px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123}
+  .warn{padding:10px 12px; border-radius:10px; background:#2a1a25; color:#f6d7ef; border:1px dashed #3a203a}
+  a{color:#e7bddf; text-decoration:underline}
 </style>
 </head>
 <body>
+<header>$1 of every subscription goes to a Domestic Violence charity.</header>
 
-<div class="banner">$1 of every subscription goes to a Domestic Violence charity.</div>
+<div class="wrap">
+  <div class="card">
+    <div class="hd"><div class="dot" aria-hidden="true"></div><h1>18+ Verification</h1></div>
+    <div class="bd">
+      <div id="status" class="ok" style="display:none;">Verified — you’re good. Click **Continue** below.</div>
 
-<header>
-  <div class="brand"><div class="dot" aria-hidden="true"></div><h1>Blossom n Blade</h1></div>
-  <a class="btn softer" href="/index.html">← Back</a>
-</header>
+      <form id="form">
+        <div class="row">
+          <input id="c1" type="checkbox" />
+          <label for="c1">I confirm I’m **18 or older**.</label>
+        </div>
+        <div class="row">
+          <input id="c2" type="checkbox" />
+          <label for="c2">I accept the site’s **rules & policies** (PG-13 by default; words-only erotic chat via coins).</label>
+        </div>
 
-<main class="wrap">
-  <!-- First-time verify -->
-  <section id="verify" class="card">
-    <h2>Adults only inside</h2>
-    <p class="sub">Please confirm you’re 18+ before continuing.</p>
-    <div class="checks">
-      <label><input id="chkAge" type="checkbox" /> I confirm that I am <strong>18 years or older</strong>.</label>
-      <label><input id="chkTerms" type="checkbox" />
-        I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and
-        <a href="/guidelines.html" target="_blank" rel="noopener">Community Standards</a>
-        (PG-13 by default; no explicit images; coins unlock erotic chat — words only).
-      </label>
-      <label><input id="chkRemember" type="checkbox" /> Remember this on this device for 30 days.</label>
-    </div>
-    <div class="actions">
-      <button id="continueBtn" class="btn" disabled>Continue</button>
-      <button id="viewReceipt" class="btn softer" type="button">View saved receipt</button>
-    </div>
-    <div class="note">We don’t sell images or videos. This is words, warmth, and consent-first fantasy chat.</div>
-    <div class="tiny"><a id="forgetLink" href="#">Reset age check on this device</a></div>
-  </section>
+        <div class="actions">
+          <button id="go" class="btn" type="submit" disabled>Continue</button>
+          <button id="reset" class="btn ghost" type="button">Reset & verify again</button>
+        </div>
+        <div class="note muted">We store a local receipt for 30 days.</div>
+      </form>
 
-  <!-- Already verified: must re-acknowledge with checkboxes -->
-  <section id="verified" class="card hidden" aria-live="polite">
-    <h2>Verified — one more check</h2>
-    <p class="sub">For everyone’s safety, please re-acknowledge to continue.</p>
-    <div class="checks">
-      <label><input id="vChkAge" type="checkbox" /> I confirm that I am <strong>18 years or older</strong>.</label>
-      <label><input id="vChkTerms" type="checkbox" />
-        I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and
-        <a href="/guidelines.html" target="_blank" rel="noopener">Community Standards</a>.
-      </label>
+      <div id="receipt" class="muted" style="margin-top:10px"></div>
+      <div id="loopwarn" class="warn" style="display:none; margin-top:10px">
+        If you keep bouncing back here, your browser may be blocking local storage. Try a hard refresh (Ctrl/Cmd+F5).
+      </div>
     </div>
-    <div class="actions">
-      <button id="goNextBtn" class="btn" disabled>Continue</button>
-      <button id="seeReceipt" class="btn softer" type="button">View saved receipt</button>
-      <a id="resetAgain" class="btn softer" href="#">Reset & verify again</a>
-    </div>
-  </section>
-
-  <!-- Receipt viewer -->
-  <section id="receipt" class="card hidden">
-    <h2>Age Verification Receipt</h2>
-    <p class="sub">Stored on this device for your records.</p>
-    <pre id="receiptPre" class="mono" style="white-space:pre-wrap;margin:0"></pre>
-    <div class="actions" style="margin-top:12px">
-      <button id="printRec" class="btn softer" type="button">Print / Save PDF</button>
-      <button id="closeRec" class="btn" type="button">Close</button>
-    </div>
-  </section>
-</main>
+  </div>
+</div>
 
 <script>
-/* Params & routing */
+/* unified key so ALL pages agree */
+const KEY_MAIN = "bb.ageVerifiedUntil";
+/* write to legacy names too (so older pages won’t loop) */
+const KEY_LEG1 = "bb.age_verified_until";
+const KEY_FLAG = "bb.ageVerified";
+
 const qs = new URLSearchParams(location.search);
-const idRaw = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
-const plan = (qs.get("plan") || "").toLowerCase().trim(); // "day" | "month" | "coins"
-const nextParam = qs.get("next"); // optional explicit next path
-function buildNext(){
-  let url = "/pay.html";
-  const p = new URLSearchParams();
-  if (idRaw) p.set("man", idRaw);
-  const q = p.toString(); if (q) url += `?${q}`;
-  if (plan === "day") url += "#day"; else if (plan === "month") url += "#month";
-  return url;
-}
-function sanitizeNext(n){
-  if(!n) return null;
-  try{ const u=new URL(n,location.origin); if(u.origin===location.origin) return u.pathname+u.search+u.hash; }catch(e){}
-  return null;
-}
-const NEXT = sanitizeNext(nextParam) || buildNext();
+const man  = (qs.get("man")||"").toLowerCase();
+const plan = (qs.get("plan")||"").toLowerCase();
+const next = qs.get("next"); // exact URL to return to, if provided
 
-/* Elements */
-const verifyCard   = document.getElementById("verify");
-const verifiedCard = document.getElementById("verified");
-const receiptBox   = document.getElementById("receipt");
-const receiptPre   = document.getElementById("receiptPre");
+const untilNow = Number(localStorage.getItem(KEY_MAIN) || 0);
+const status = document.getElementById("status");
+const form = document.getElementById("form");
+const c1 = document.getElementById("c1");
+const c2 = document.getElementById("c2");
+const go = document.getElementById("go");
+const resetBtn = document.getElementById("reset");
+const receipt = document.getElementById("receipt");
+const loopwarn = document.getElementById("loopwarn");
 
-/* Helpers */
-function nowIso(){ return new Date().toISOString(); }
-function plusDaysISO(d){ return new Date(Date.now()+d*864e5).toISOString(); }
-function tz(){ try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";}catch(e){return"UTC";} }
-function token(){ return "bb-" + Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36); }
-
-function saveReceipt(days){
-  const rec = {
-    version: 1,
-    token: localStorage.getItem("bb.ageConsentToken") || token(),
-    accepted_at: nowIso(),
-    expires_at: plusDaysISO(days),
-    timezone: tz(),
-    user_agent: navigator.userAgent || "",
-    man: idRaw || null,
-    plan: plan || null,
-    referer: document.referrer || null
-  };
-  localStorage.setItem("bb.ageConsent", JSON.stringify(rec));
-  localStorage.setItem("bb.ageConsentToken", rec.token);
-  const until = Date.now() + days*864e5; // enforcement flag
-  localStorage.setItem("bb.ageVerifiedUntil", String(until));
-  return rec;
+function saveVerification(days=30){
+  const until = Date.now() + days*24*60*60*1000;
+  /* write to all keys */
+  localStorage.setItem(KEY_MAIN, String(until));
+  localStorage.setItem(KEY_LEG1, String(until));
+  localStorage.setItem(KEY_FLAG, "1");
+  return until;
 }
-function getReceipt(){
-  try{ return JSON.parse(localStorage.getItem("bb.ageConsent") || "null"); } catch(e){ return null; }
-}
-function showReceipt(){ const r=getReceipt(); receiptPre.textContent=r?JSON.stringify(r,null,2):"No receipt stored."; receiptBox.classList.remove("hidden"); }
-function hideReceipt(){ receiptBox.classList.add("hidden"); }
 
-/* Reset links */
-document.getElementById("forgetLink").addEventListener("click",(e)=>{
+function targetURL(){
+  if (next) return next;
+  if (plan) return `/pay.html?man=${encodeURIComponent(man)}&plan=${encodeURIComponent(plan)}`;
+  return "/index.html";
+}
+
+function updateUIFromSaved(){
+  if (untilNow && untilNow > Date.now()){
+    status.style.display = "block";
+    const when = new Date(untilNow).toLocaleString();
+    receipt.textContent = `Saved receipt expires: ${when}`;
+    go.disabled = false;
+  }
+}
+
+function redirectIfVerified(){
+  if (untilNow && untilNow > Date.now()){
+    // already verified → let them through immediately if coming back
+    // from pay/chat. Only auto-redirect if we were invoked with next/plan.
+    if (next || plan) location.replace(targetURL());
+  }
+}
+
+function storageWorks(){
+  try {
+    const probe = "__bb_probe__";
+    localStorage.setItem(probe, "1");
+    const ok = localStorage.getItem(probe) === "1";
+    localStorage.removeItem(probe);
+    return ok;
+  } catch(e){ return false; }
+}
+
+/* enable button when both boxes are checked */
+function toggleGo(){ go.disabled = !(c1.checked && c2.checked); }
+c1.addEventListener("change", toggleGo);
+c2.addEventListener("change", toggleGo);
+
+/* submit */
+form.addEventListener("submit",(e)=>{
   e.preventDefault();
-  try{
-    localStorage.removeItem("bb.ageVerifiedUntil");
-    localStorage.removeItem("bb.ageConsent");
-    localStorage.removeItem("bb.ageConsentToken");
-  }catch(e){}
-  alert("Age check reset. You can verify again now.");
+  const until = saveVerification(30);
+  const when = new Date(until).toLocaleString();
+  status.style.display = "block";
+  receipt.textContent = `Saved receipt expires: ${when}`;
+  go.disabled = false;
+  // go straight to the intended page
+  location.replace(targetURL());
+});
+
+/* manual reset */
+resetBtn.addEventListener("click", ()=>{
+  localStorage.removeItem(KEY_MAIN);
+  localStorage.removeItem(KEY_LEG1);
+  localStorage.removeItem(KEY_FLAG);
   location.reload();
 });
 
-/* Show correct flow (never auto-redirect; both flows need checkboxes) */
-const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
-const nowMs = Date.now();
-if (until && until > nowMs) {
-  verifyCard.classList.add("hidden");
-  verifiedCard.classList.remove("hidden");
-
-  const vAge = document.getElementById("vChkAge");
-  const vTerms = document.getElementById("vChkTerms");
-  const goNextBtn = document.getElementById("goNextBtn");
-  const updateV = ()=>{ goNextBtn.disabled = !(vAge.checked && vTerms.checked); };
-  vAge.addEventListener("change", updateV);
-  vTerms.addEventListener("change", updateV);
-  goNextBtn.addEventListener("click", ()=>{
-    // store a quick reaffirmation stamp
-    const ack = { at: nowIso(), token: localStorage.getItem("bb.ageConsentToken") || token(), man:idRaw||null, plan:plan||null };
-    localStorage.setItem("bb.ageReack", JSON.stringify(ack));
-    location.href = NEXT;
-  });
-
-  document.getElementById("seeReceipt").addEventListener("click", showReceipt);
-  document.getElementById("resetAgain").addEventListener("click",(e)=>{
-    e.preventDefault();
-    try{
-      localStorage.removeItem("bb.ageVerifiedUntil");
-      localStorage.removeItem("bb.ageConsent");
-      localStorage.removeItem("bb.ageConsentToken");
-      localStorage.removeItem("bb.ageReack");
-    }catch(e){}
-    location.reload();
-  });
-} else {
-  // First-time verify
-  const chkAge = document.getElementById("chkAge");
-  const chkTerms = document.getElementById("chkTerms");
-  const chkRemember = document.getElementById("chkRemember");
-  const btn = document.getElementById("continueBtn");
-  const update = ()=>{ btn.disabled = !(chkAge.checked && chkTerms.checked); };
-  chkAge.addEventListener("change", update);
-  chkTerms.addEventListener("change", update);
-  btn.addEventListener("click", ()=>{
-    const days = chkRemember.checked ? 30 : 1;
-    const rec = saveReceipt(days); // stores flag + receipt
-    alert("Verified. Token: " + rec.token);
-    location.href = NEXT;
-  });
-  document.getElementById("viewReceipt").addEventListener("click", showReceipt);
-}
-
-/* Receipt actions */
-document.getElementById("printRec").addEventListener("click", ()=> window.print());
-document.getElementById("closeRec").addEventListener("click", hideReceipt);
+/* first paint */
+updateUIFromSaved();
+redirectIfVerified();
+if (!storageWorks()) loopwarn.style.display = "block";
 </script>
 </body>
 </html>

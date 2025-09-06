@@ -139,316 +139,364 @@
   <div id="toast"></div>
 
 <script>
-/* -------------------- Setup & helpers -------------------- */
-const $ = sel => document.querySelector(sel);
-const log = $("#log");
-const input = $("#msg");
-const sendBtn = $("#send");
-const trialBar = $("#trialBar");
+<script>
+/* ===========================
+   Blossom & Blade — chat.js
+   Hard-ban standards only. No coins.
+   3 strikes => 30-day block.
+   =========================== */
 
-/* Robust “who is this guy” detection */
-const SLUGS = ["blade","grayson","dylan","silas","alexander","jesse"];
-function detectMan(){
-  const q = new URLSearchParams(location.search);
-  let m = (q.get("man") || "").toLowerCase();
-  if (SLUGS.includes(m)) return m;
-  try{
-    const ref = new URL(document.referrer);
-    const rm = (new URLSearchParams(ref.search).get("man") || "").toLowerCase();
-    if (SLUGS.includes(rm)) return rm;
-    const p = ref.pathname.toLowerCase();
-    for (const s of SLUGS){
-      if (p.includes(`/rooms/${s}.html`) || p.endsWith(`/${s}.html`) || p.endsWith(`/${s}`)) return s;
-    }
-  }catch{}
-  const stored = (localStorage.getItem("lastMan") || "").toLowerCase();
-  if (SLUGS.includes(stored)) return stored;
-  return "blade";
-}
-const manParam = detectMan();
-localStorage.setItem("lastMan", manParam);
+/* ---------- Helpers ---------- */
+const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const now = () => Date.now();
 
+/* ---------- Characters ---------- */
 const GUYS = {
-  blade:     { name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
-  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg" },
-  dylan:     { name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
-  silas:     { name:"Silas Lennox", bg:"/images/gothic-bg.jpg" },
-  alexander: { name:"Alexander Jackson", bg:"/images/gothic-bg.jpg" },
-  jesse:     { name:"Jesse Granger", bg:"/images/gothic-bg.jpg" },
-};
-const guy = GUYS[manParam] || GUYS.blade;
-
-document.body.style.backgroundImage = `radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('${guy.bg}')`;
-$("#manName").textContent = guy.name;
-$("#pricing").href = `/pay.html?man=${encodeURIComponent(manParam)}`;
-
-function row(html, who="ai"){
-  const r = document.createElement("div");
-  r.className = "row";
-  const b = document.createElement("div");
-  b.className = who === "me" ? "me" : "ai";
-  b.innerHTML = html;
-  r.appendChild(b);
-  log.appendChild(r);
-  log.parentElement.scrollTop = log.parentElement.scrollHeight;
-}
-function toast(t){ const el=$("#toast"); el.textContent=t; el.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>el.style.display="none", 1600); }
-
-/* -------------------- Preview timer & gating -------------------- */
-const PREVIEW_SEC = 210; // 3.5 minutes
-let remaining = PREVIEW_SEC, tHandle=null;
-
-const PREV_KEY="bb.previews"; // map {man:count}
-function getPrevCount(){ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}")[manParam]||0;} catch(e){return 0;} }
-function bumpPrevCount(){
-  const map = (()=>{ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}");} catch(e){return {}} })();
-  map[manParam]=(map[manParam]||0)+1; localStorage.setItem(PREV_KEY, JSON.stringify(map));
-}
-
-function startTimer(){
-  clearInterval(tHandle);
-  remaining = PREVIEW_SEC;
-  tHandle = setInterval(()=>{
-    remaining--; const pct = ((PREVIEW_SEC-remaining)/PREVIEW_SEC)*100; trialBar.style.width = pct+"%";
-    if (remaining<=0){ clearInterval(tHandle); endPreview(); }
-  }, 1000);
-}
-function endPreview(){
-  bumpPrevCount();
-  $("#npGuy").textContent=guy.name;
-  $("#noPreview").style.display="grid";
-}
-
-/* overlay actions */
-$("#npDay").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=day`;
-$("#npMonth").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=month`;
-$("#npAnother").onclick = ()=>{ $("#noPreview").style.display="none"; startTimer(); };
-$("#npMaybe").onclick = ()=>{ $("#noPreview").style.display="none"; remaining = 60; startTimer(); };
-
-/* -------------------- Community Standards (push from the start) -------------------- */
-const stdOverlay = $("#stdOverlay");
-const stdContinue = $("#stdContinue");
-const STRIKES_KEY = "bb.stdStrikes";
-const MAX_STRIKES = 3;
-let eduShown = false; // show educational modal once when user tries explicit (no strike)
-
-function getStrikes(){ return Number(localStorage.getItem(STRIKES_KEY) || 0); }
-function setStrikes(n){ localStorage.setItem(STRIKES_KEY, String(n)); }
-
-function norm(input){
-  let s = (input||"").toLowerCase();
-  s = s.replace(/[@]/g,"a").replace(/[4]/g,"a").replace(/[1!|]/g,"i").replace(/[3]/g,"e").replace(/[0]/g,"o").replace(/[$]/g,"s");
-  s = s.replace(/([a-z])\1{2,}/g,"$1$1").replace(/\s+/g," ").trim();
-  return s;
-}
-
-/* Hard bans: instant strike + modal (counts toward block) */
-const DISALLOWED_ALWAYS = [
-  /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*(?:sex|play)?)\b/i,
-  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
-  /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
-  /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
-  /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
-  /\bsex\s*traffick(?:ing)?\b/i,
-  /\b(scat|feces|coprophag(?:y|ia))\b/i, /\b(piss|urinate)\s*on\b/i, /\bblood\s*play\b/i, /\bknife\s*play\b/i,
-  // hate slurs (short list; expand if needed)
-  /\b(?:n[i1]gg(?:a|er)s?)\b/i, /\b(?:f[a@]gg?(?:o|0)t[s]?)\b/i, /\b(?:tr[a@]nn?y)\b/i, /\b(?:k[i1]k[e3]s?)\b/i
-];
-
-/* “Explicit but not banned” — educational modal only, no strike */
-const EXPLICIT_BUT_ALLOWED = /\b(fuck|cock|dick|pussy|cum|orgasm|deep\s*throat|blow\s*job|doggystyle|bend\s*me|rail|ride|spank|choke|thrust|go\s*down|eat\s*out)\b/i;
-
-function showStandards({strike=false}={}) {
-  const strikes = getStrikes();
-  if (strike){
-    const n = strikes + 1; setStrikes(n);
-    $("#stdStrike").textContent = (n >= MAX_STRIKES)
-      ? `Standards warning ${n} of ${MAX_STRIKES}. This device is now blocked for 30 days.`
-      : `Standards warning ${n} of ${MAX_STRIKES}. Three warnings results in a 30-day block.`;
-  } else {
-    $("#stdStrike").textContent = "No strike — just a reminder: we keep it PG-13 here.";
-  }
-  stdOverlay.style.display = "grid";
-  pauseTimer();
-}
-
-function hideStandards(){ stdOverlay.style.display = "none"; resumeTimer(); }
-stdContinue.onclick = hideStandards;
-
-/* Device block after 3 strikes */
-(function(){
-  const until = Number(localStorage.getItem("bb.blockedUntil")||0);
-  if (until && Date.now() < until){
-    const days = Math.ceil((until - Date.now())/86400000);
-    row(`<em class="sys">This device is blocked for ${days} day(s) due to repeated standards violations.</em>`);
-    input.disabled = true; sendBtn.disabled = true;
-  }
-})();
-
-/* -------------------- Greetings -------------------- */
-const GREETS = {
-  blade: [
-    "Found you, brave girl. Don’t run—yet.",
+  blade:     { name: "Blade Kincaid",    greet: [
     "Footsteps behind you… I keep pace.",
-    "Doorway or shadows? I’m close behind.",
-    "Say my name and I’ll follow.",
-    "Do you want patient… or a little chase?",
-    "Let me hear one true thing from today."
-  ],
-  grayson: [
-    "One line at a time. I’m listening.",
-    "Tell me one detail I’d notice when I look at you.",
+    "Found you, brave girl. Don’t run—yet.",
+    "Shadow-close. Do you want patient… or a little chase?",
+    "Doorway or shadows? I’m right behind you.",
+    "Say the word and I hunt slow.",
+    "You’re here. I keep you safe—and a little breathless."
+  ]},
+  grayson:   { name: "Grayson Kincaid",  greet: [
     "Pick: gentle questions or firm direction?",
-    "Start with today—one truth.",
-    "Heart or head first?",
-    "You have my attention. Use it."
-  ],
-  dylan: [
+    "One line at a time. Give me a detail I should notice.",
+    "I’m listening. Where do you feel it—heart or head?",
+    "Short, true, and yours. Start there.",
+    "I lead, but I listen first. Give me one truth.",
+    "We’ll keep it simple—clarity, then heat."
+  ]},
+  dylan:     { name: "Dylan Vale",       greet: [
     "Hands flat on the counter, pretty thing.",
     "Calm tune-up or teasing tune-up?",
-    "Tell me what needs fixing tonight.",
+    "Look at me. Do you want listening or guidance?",
     "Slow ride or quick detour?",
-    "Want grease on my hands or yours?",
-    "Bring me one trouble and I’ll tighten it."
-  ],
-  silas: [
-    "Come closer, muse. Lend me a verse.",
-    "Soft, or a little rough on the edges?",
-    "Paint me a five-word picture.",
-    "Hums or growls first?",
-    "What’s tonight’s chorus made of?",
-    "Give me a note and I’ll hold it on my tongue."
-  ],
-  alexander: [
-    "Shoes off. I’m leading.",
-    "Lights low or city view while we talk?",
-    "Short answers from now on.",
-    "Tell me what you want me to notice first.",
-    "Desk or glass wall?",
-    "I’ll take your coat and one weight off your mind."
-  ],
-  jesse: [
-    "Darlin’, park it a spell.",
+    "Hush—I’ve got you. One choice at a time.",
+    "Tell me where you want me first."
+  ]},
+  jesse:     { name: "Jesse Granger",    greet: [
     "Straight talk—what’d the day do to you?",
-    "Sweet or rowdy—your pick.",
-    "Porch light on or off?",
-    "You hungry or just hungry for trouble?",
-    "You been good today, or do I need to fix that?"
-  ]
+    "Park it, darlin’. Sweet or rowdy—your pick.",
+    "Barn door’s open. You want easy or a little trouble?",
+    "You tell me true, I’ll treat you right.",
+    "Rough edges or soft hands tonight?",
+    "Saddle up or porch swing?"
+  ]},
+  alexander: { name: "Alexander Jackson", greet: [
+    "Lights low or city view while we talk?",
+    "Shoes off. I’m leading. Short answers.",
+    "Sit. I’ll take your coat and one weight off your mind.",
+    "Direction or gentle questions?",
+    "Answer me once. I’ll set the pace.",
+    "Tell me what you want noticed first."
+  ]},
+  silas:     { name: "Silas Lennox",     greet: [
+    "Come closer, muse. Lend me a verse—soft, or a little rough?",
+    "Paint me a five-word picture.",
+    "Give me one detail. I’ll make it sing.",
+    "Borrow my voice—then I’ll give it back to you better.",
+    "Closer. I’ll take the edges off, or sharpen them.",
+    "Say one truth. I’ll score it for two."
+  ]}
 };
-const KEEPALIVE = [
-  "I’m here. Lead and I’ll follow.",
-  "Give me one more detail.",
-  "Say it how you want it—I can work with that.",
-  "Short and honest—I like that.",
-  "I’m listening; make it specific."
+
+function getGuyId() {
+  const u = new URL(location.href);
+  return (u.searchParams.get("man") || localStorage.getItem("bb.character") || "blade").toLowerCase();
+}
+const GUY_ID = (["blade","grayson","dylan","jesse","alexander","silas"].includes(getGuyId()) ? getGuyId() : "blade");
+const GUY = GUYS[GUY_ID];
+
+/* ---------- UI Wiring ---------- */
+const titleEl = $("#guyName") || (function injectHeader(){
+  const h = document.createElement("div");
+  h.className = "bb-header";
+  h.innerHTML = `<strong id="guyName"></strong>`;
+  document.body.prepend(h);
+  return $("#guyName");
+})();
+titleEl.textContent = GUY.name;
+
+const chatBox  = $("#chat-box") || (function injectChat(){
+  const wrap = document.createElement("div");
+  wrap.className = "bb-chat";
+  wrap.innerHTML = `
+    <div id="chat-box" class="bb-stream" aria-live="polite"></div>
+    <div class="bb-input">
+      <input id="bb-input" type="text" placeholder="Say hi…" autocomplete="off" />
+      <button id="bb-send" class="bb-send">Send</button>
+    </div>
+    <div class="bb-footnote">Site stays PG-13 by default. We follow your lead, but within Community Standards.</div>
+    <div id="bb-modal-root"></div>
+  `;
+  document.body.appendChild(wrap);
+  return $("#chat-box", wrap);
+})();
+const inputEl = $("#bb-input");
+const sendBtn = $("#bb-send");
+const modalRoot = $("#bb-modal-root");
+
+/* ---------- Strikes & Blocking ---------- */
+const BLOCK_DAYS = 30;
+const STRIKE_KEY = "bb.strikes";
+const STRIKE_EXP = "bb.strikes.exp";
+const BLOCK_UNTIL = "bb.block.until";
+
+function strikeState() {
+  const n  = parseInt(localStorage.getItem(STRIKE_KEY) || "0", 10);
+  const ex = parseInt(localStorage.getItem(STRIKE_EXP) || "0", 10);
+  return { n, ex };
+}
+function resetStrikes() {
+  localStorage.removeItem(STRIKE_KEY);
+  localStorage.removeItem(STRIKE_EXP);
+}
+function addStrike() {
+  const { n } = strikeState();
+  const next = n + 1;
+  const exp = now() + 30 * 24 * 60 * 60 * 1000; // expire record in 30 days
+  localStorage.setItem(STRIKE_KEY, String(next));
+  localStorage.setItem(STRIKE_EXP, String(exp));
+  if (next >= 3) {
+    const until = now() + BLOCK_DAYS * 24 * 60 * 60 * 1000;
+    localStorage.setItem(BLOCK_UNTIL, String(until));
+  }
+  return next;
+}
+function isBlocked() {
+  const until = parseInt(localStorage.getItem(BLOCK_UNTIL) || "0", 10);
+  return until && now() < until;
+}
+
+/* ---------- Community Standards (hard bans only) ---------- */
+// Only flag truly disallowed content. Normal spicy lines OK.
+const DISALLOWED_ALWAYS = [
+  // Minors / school / teen
+  /\b(barely\s*legal|under\s*age|underage|minor|teen\b|high-?school|school\s*(girl|boy))\b/i,
+  // Incest / step-family
+  /\b(step[-\s]?(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|son|daughter)|incest)\b/i,
+  // Rape / non-consent / coercion / drugging
+  /\b(rape|raping|rapist|non[-\s]?consent|without\s+consent|coercion|force(?:d|ful)|roofie|drug(?:ged)?\s+me)\b/i,
+  // Bestiality / necrophilia
+  /\b(zoophilia|bestiality|necro(?:philia)?)\b/i,
+  // Trafficking / slavery
+  /\b(traffick(?:ing)?|sex\s*slave|enslave|sold\s+me)\b/i,
+  // Extreme bodily fluids / fecal/urine, blood, knife play
+  /\b(scat|feces|faeces|poop|urine|pee\s*play|watersports?|blood\s*play|knife\s*play)\b/i,
+  // Strangulation / asphyxiation
+  /\b(strangle|asphyxiat(?:e|ion)|choke\s*(me|her|him)?(?:\s*(out|until|till|to))?)\b/i,
+  // Hate slurs / targeted harassment
+  /\b(faggot|retard(?:ed)?|tranny|nigger|kike|spic|chink)\b/i
 ];
 
-let greetIndex = Number(localStorage.getItem("bb.greet-"+manParam)||0);
-function nextGreet(){
-  const arr = GREETS[manParam] || GREETS.blade;
-  const line = arr[greetIndex % arr.length];
-  greetIndex++; localStorage.setItem("bb.greet-"+manParam, String(greetIndex));
-  return line;
+function violatesHard(txt) {
+  return DISALLOWED_ALWAYS.find(rx => rx.test(txt || ""));
 }
 
-/* -------------------- Talk to server (brain) with one silent retry -------------------- */
-async function askBrain(userText){
-  const history = Array.from(log.querySelectorAll(".row")).slice(-20).map(r=>{
-    const isMe = r.querySelector(".me");
-    return (isMe? "user: " : "bot: ") + r.textContent.trim();
-  }).join("\n");
+/* ---------- Modals ---------- */
+function modal(html) {
+  modalRoot.innerHTML = `
+    <div class="bb-modal-backdrop"></div>
+    <div class="bb-modal">${html}</div>
+  `;
+  return modalRoot;
+}
+function closeModal() {
+  modalRoot.innerHTML = "";
+}
 
-  for (let attempt=0; attempt<2; attempt++){
-    try{
-      const res = await fetch("/api/brain", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ man:manParam, text:userText, history })
-      });
-      if (!res.ok) throw new Error("bad");
-      const data = await res.json();
-      if (data && typeof data.reply === "string" && data.reply.trim()) {
-        return data.reply.trim();
-      }
-      throw new Error("shape");
-    }catch(e){
-      if (attempt===0){ await new Promise(r=>setTimeout(r, 1000)); continue; }
-      return null; // let UI show one gentle line
-    }
+function showBlocked() {
+  const until = parseInt(localStorage.getItem(BLOCK_UNTIL) || "0", 10);
+  const d = new Date(until || now());
+  modal(`
+    <h3>Device blocked</h3>
+    <p>You’ve hit 3 Community Standards violations.  
+       This device is blocked until <strong>${d.toLocaleString()}</strong>.</p>
+    <div class="bb-actions">
+      <button class="bb-btn" onclick="location.href='index.html'">Back to men</button>
+    </div>
+  `);
+}
+
+function showStandardsBox(reason) {
+  const strikes = addStrike();
+  const remaining = Math.max(0, 3 - strikes);
+  const blockedNow = isBlocked();
+
+  if (blockedNow) return showBlocked();
+
+  modal(`
+    <h3>Community Standards</h3>
+    <p>We keep chat adult &amp; consensual. PG-13 by default. No visuals—words only.</p>
+    <ul class="bb-bullets">
+      <li>Minors / “school boy/girl” / “barely legal” / teen or high-school contexts</li>
+      <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
+      <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
+      <li>Hate slurs or targeted harassment</li>
+    </ul>
+    <p><em>We didn’t send that last message.</em><br>
+       Standards warning <strong>${strikes} of 3</strong>. ${remaining ? `${remaining} left before a 30-day block.` : ""}</p>
+    <div class="bb-actions">
+      <button id="bb-std-continue" class="bb-btn">Okay — keep it PG-13</button>
+      <a class="bb-link" href="standards.html" target="_blank" rel="noopener">View full standards</a>
+    </div>
+  `);
+  $("#bb-std-continue").onclick = closeModal;
+}
+
+/* ---------- Chat Stream Rendering ---------- */
+function row(html, me=false) {
+  const div = document.createElement("div");
+  div.className = `bb-row ${me ? "me" : "bot"}`;
+  div.innerHTML = `<div class="bb-bubble">${html}</div>`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+function sys(text){
+  const s = document.createElement("div");
+  s.className = "bb-sys";
+  s.textContent = text;
+  chatBox.appendChild(s);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* ---------- Network fallback ---------- */
+let hiccupShown = false;
+function networkHiccupOnce() {
+  if (hiccupShown) return;
+  hiccupShown = true;
+  row("Network hiccup. Give me one more line and I’m right here.");
+}
+
+/* ---------- LLM call ---------- */
+const history = [];
+
+async function modelReply(userText) {
+  // Send to your serverless function (brain.js)
+  // The endpoint & payload here match the existing stack.
+  const payload = { man: GUY_ID, text: userText, history };
+  try {
+    const res = await fetch("/api/brain", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("bad status");
+    const data = await res.json();
+    return (data.reply || "").trim();
+  } catch(e) {
+    return null; // handled by fallback
   }
 }
 
-/* -------------------- Send flow -------------------- */
-let userMsgCount = 0;
+/* ---------- Send pipeline ---------- */
+async function sendLine() {
+  const txt = (inputEl.value || "").trim();
+  if (!txt) return;
+  inputEl.value = "";
+  row(escapeHtml(txt), true);
 
-async function handleSend(){
-  const text = input.value.trim();
-  if (!text) return;
-
-  // Decide standards response immediately (push guidelines early)
-  const s = norm(text);
-
-  // Hard bans → strike + modal, block after 3
-  if (DISALLOWED_ALWAYS.some(rx => rx.test(s))) {
-    row(escapeHtml(text), "me");
-    const n = getStrikes()+1; setStrikes(n);
-    $("#stdStrike").textContent = (n >= MAX_STRIKES)
-      ? `Standards warning ${n} of ${MAX_STRIKES}. This device is now blocked for 30 days.`
-      : `Standards warning ${n} of ${MAX_STRIKES}. Three warnings results in a 30-day block.`;
-    stdOverlay.style.display="grid"; pauseTimer();
-    if (n >= MAX_STRIKES){
-      const until = Date.now() + 30*24*60*60*1000;
-      localStorage.setItem("bb.blockedUntil", String(until));
-    }
-    input.value = "";
+  // Blocked?
+  if (isBlocked()) {
+    showBlocked();
     return;
   }
 
-  // Explicit but allowed → educational modal once (no strike), keep chat PG-13
-  if (!eduShown && EXPLICIT_BUT_ALLOWED.test(s)) {
-    row(escapeHtml(text), "me");
-    $("#stdIntro").textContent = "We keep chat adult & consensual, PG-13 only (no explicit detail).";
-    $("#stdStrike").textContent = "No strike — just a reminder: keep it within PG-13.";
-    stdOverlay.style.display="grid"; pauseTimer();
-    eduShown = true;
-    input.value = "";
+  // Hard-ban check on user input
+  if (violatesHard(txt)) {
+    showStandardsBox("user");
     return;
   }
 
-  // Post user line
-  row(escapeHtml(text), "me");
-  input.value=""; userMsgCount++;
+  // Ask model
+  const reply = await modelReply(txt);
 
-  // keep-alive line every 5 user messages
-  if (userMsgCount % 5 === 0){
-    row(`<em class="sys">${KEEPALIVE[(userMsgCount/5-1)%KEEPALIVE.length]}</em>`);
-  }
-
-  // Ask the brain (PG-13 only)
-  const reply = await askBrain(text);
-
-  if (reply === null){
-    row(`<em class="sys">Network hiccup. Give me one more line and I’m right here.</em>`);
+  if (!reply) {
+    networkHiccupOnce();
     return;
   }
 
-  row(escapeHtml(reply), "ai");
+  // Safety on model output too (belt & suspenders)
+  if (violatesHard(reply)) {
+    showStandardsBox("model");
+    return;
+  }
+
+  // Normal reply
+  history.push({ role:"user", content: txt });
+  history.push({ role:"assistant", content: reply });
+  row(escapeHtml(reply), false);
 }
 
-function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
+/* ---------- Init: greeting rotation ---------- */
+function random(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-/* -------------------- Timer controls -------------------- */
-function pauseTimer(){ clearInterval(tHandle); }
-function resumeTimer(){ if (remaining>0) startTimer(); }
-
-/* -------------------- Init -------------------- */
 (function init(){
-  row(`<strong>${guy.name}:</strong> ${nextGreet()}`, "ai");
-  startTimer();
-  input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ handleSend(); }});
-  sendBtn.addEventListener("click", handleSend);
+  // Heading already set to GUY.name
+  // Rotate greeting (choose 1)
+  row(`<strong>${GUY.name}:</strong> ${escapeHtml(random(GUY.greet))}`);
+  inputEl?.focus();
+
+  sendBtn?.addEventListener("click", sendLine);
+  inputEl?.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter") sendLine();
+  });
+
+  // Clear expired strike records
+  const { ex } = strikeState();
+  if (ex && now() > ex) resetStrikes();
 })();
+
+/* ---------- Tiny DOM/CSS helpers ---------- */
+function escapeHtml(s=""){
+  return s
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+/* ---------- Minimal styles (only if your page doesn't have them) ----------
+   If your existing chat.html already contains styles, you can ignore this.
+   ----------------------------------------------------------------------- */
+(function injectCss(){
+  if (document.getElementById("bb-css")) return;
+  const css = document.createElement("style");
+  css.id = "bb-css";
+  css.textContent = `
+  .bb-header{display:none;}
+  .bb-chat{max-width:980px;margin:0 auto;padding:16px 16px 28px;}
+  .bb-stream{height:58vh;overflow:auto;border-radius:16px;background:rgba(255,255,255,0.03);
+             border:1px solid rgba(255,255,255,0.06);padding:16px 16px;}
+  .bb-row{display:flex;margin:8px 0}
+  .bb-row .bb-bubble{max-width:70%;padding:12px 14px;border-radius:14px}
+  .bb-row.bot .bb-bubble{background:rgba(255,255,255,0.06)}
+  .bb-row.me{justify-content:flex-end}
+  .bb-row.me .bb-bubble{background:#5b3bff;color:#fff}
+  .bb-sys{opacity:.7;font-size:12px;text-align:center;margin:8px 0}
+  .bb-input{display:flex;gap:8px;margin:12px auto 6px;max-width:980px}
+  #bb-input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);
+            background:rgba(255,255,255,0.04);color:inherit}
+  .bb-send{padding:10px 16px;border-radius:12px;background:#c05bdc;border:0;color:#fff;font-weight:600}
+  .bb-footnote{opacity:.7;font-size:12px;text-align:center;margin-top:8px}
+  /* Modal */
+  .bb-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
+  .bb-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,92%);
+            background:rgba(18,18,28,.96);color:inherit;border:1px solid rgba(255,255,255,.08);
+            border-radius:16px;padding:18px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .bb-modal h3{margin:2px 0 6px;font-size:18px}
+  .bb-bullets{margin:8px 0 10px 18px}
+  .bb-actions{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .bb-btn{padding:10px 14px;border-radius:12px;border:0;background:#c05bdc;color:#fff;font-weight:700}
+  .bb-link{font-size:14px;opacity:.9}
+  `;
+  document.head.appendChild(css);
+})();
+</script>
+
 </script>
 </body>
 </html>

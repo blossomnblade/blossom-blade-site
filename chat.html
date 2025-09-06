@@ -545,6 +545,120 @@ function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;
   input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ handleSend(); }});
   sendBtn.addEventListener("click", handleSend);
 })();
+</script><!-- BEGIN: Blossom & Blade chat logic patch v1 -->
+<script>
+(() => {
+  // --- Settings you asked for ---
+  window.HOTTER_BUNDLE = 25;            // each coin unlocks 25 advanced replies
+  const MIN_USER_MSGS_FOR_COINS = 5;    // wait for at least 5 user messages
+  const COIN_GRACE_MS = 45_000;         // and at least 45 seconds since room entry
+  const HEAT_SCORE_THRESHOLD = 3;       // accumulated "spice" points before offering
+
+  // --- Internal state ---
+  let enteredAt = Date.now();
+  let userMsgCount = 0;
+  let coinOfferShown = false;
+  const heatWindow = []; // rolling spice scores of the last few user lines
+
+  // Score a user line (soft list, totally PG-13 safe)
+  function heatScore(text) {
+    let s = 0;
+    if (/(fuck|cock|dick|pussy|cum|orgasm|blowjob|deep\s*throat)/i.test(text)) s += 2;
+    if (/(rail|ride|spank|pin|thrust|grind|naked|condom|lick|suck|hard(er)?|wet|beg|moan)/i.test(text)) s += 1;
+    return s;
+  }
+
+  // Exposed so existing code can call it (we also auto-hook the Send button below)
+  window.noteUserMessageForCoins = function(text) {
+    userMsgCount++;
+    heatWindow.push(heatScore(text || ""));
+    if (heatWindow.length > 6) heatWindow.shift();
+  };
+
+  function shouldOfferCoinsNow(isAdvancedActive) {
+    if (coinOfferShown) return false;                                   // only once
+    if (isAdvancedActive) return false;                                  // already hot
+    if (Date.now() - enteredAt < COIN_GRACE_MS) return false;            // time gate
+    if (userMsgCount < MIN_USER_MSGS_FOR_COINS) return false;            // count gate
+    const total = heatWindow.reduce((a, b) => a + b, 0);
+    return total >= HEAT_SCORE_THRESHOLD;
+  }
+
+  // Wrap whatever your site uses to show the popup
+  function openCoinsPopup() {
+    if (typeof window.showCoins === "function") return window.showCoins();
+    alert("Unlock advanced chat by purchasing coins."); // safe fallback
+  }
+
+  // Make it available; call after each send
+  window.maybeShowCoins = function(isAdvancedActive) {
+    if (shouldOfferCoinsNow(!!isAdvancedActive)) {
+      coinOfferShown = true;
+      openCoinsPopup();
+    }
+  };
+
+  // ---- Network hiccup: add 1 automatic retry with backoff ----
+  // If your code already has sendToAI, we wrap/upgrade it. Otherwise we provide a default.
+  const originalSend = window.sendToAI;
+  async function defaultSend(payload) {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return (data && typeof data.reply === 'string') ? data.reply : '';
+  }
+
+  window.sendToAI = async function(payload) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await (originalSend ? originalSend(payload) : defaultSend(payload));
+      } catch (e) {
+        if (attempt === 0) {
+          await new Promise(r => setTimeout(r, 1200)); // brief backoff then retry once
+        } else {
+          throw e; // let your UI show the gentle "one more line" message
+        }
+      }
+    }
+  };
+
+  // ---- Auto-hook the Send so you don’t have to edit handlers elsewhere ----
+  const input = document.querySelector('textarea, input[type="text"]');
+  const sendBtn =
+    document.querySelector('#send, button[type="submit"], .send, [data-send]');
+
+  function hookSend() {
+    if (!sendBtn) return;
+    const oldOnClick = sendBtn.onclick;
+    sendBtn.onclick = function (ev) {
+      const t = (input && input.value) ? String(input.value) : '';
+      if (t) window.noteUserMessageForCoins(t);
+      // consider current advanced mode (if your page tracks it)
+      const adv = (window.advancedRepliesLeft && window.advancedRepliesLeft > 0);
+      window.maybeShowCoins(adv);
+      if (oldOnClick) return oldOnClick.call(this, ev);
+    };
+  }
+  hookSend();
+
+  // also watch Enter key if your UI uses it
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const t = input.value || '';
+        if (t.trim()) window.noteUserMessageForCoins(t);
+        const adv = (window.advancedRepliesLeft && window.advancedRepliesLeft > 0);
+        window.maybeShowCoins(adv);
+      }
+    });
+  }
+})();
 </script>
+<!-- END: Blossom & Blade chat logic patch v1 -->
+
 </body>
 </html>

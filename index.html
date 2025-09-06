@@ -129,7 +129,8 @@ document.querySelectorAll(".card").forEach(card => {
 /* Save choice -> go to chat */
 function enter(id){
   try { localStorage.setItem("bb.character", id); } catch(e){}
-  location.href = "/chat.html"; // next step we’ll ship this file
+  location.href = "chat.html?man=" + encodeURIComponent(id);
+ // next step we’ll ship this file
 }
 grid.addEventListener("click", e => {
   const card = e.target.closest(".card");

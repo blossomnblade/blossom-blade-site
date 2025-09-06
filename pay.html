@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Choose Your Plan • Blossom n Blade</title>
-<meta name="description" content="Adults only. PG-13 chat by default; coins unlock erotic chat (words only).">
+<meta name="description" content="Adults only. PG-13 (flirty) subscriptions; optional coins unlock Advanced chat (words only).">
 <style>
   :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
   *{box-sizing:border-box} html,body{height:100%}
@@ -34,10 +34,22 @@
   .pill{display:inline-block; padding:4px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
   .footer{margin:16px auto 28px; text-align:center; color:#bba9b6; font-size:13px}
   .ok{padding:8px 10px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123; display:none; margin:10px 0}
+
+  /* Consent modal */
+  .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(10,6,10,.65); backdrop-filter:blur(2px); z-index:40;}
+  .panel{width:min(560px,92vw); border-radius:16px; overflow:hidden; border:1px solid var(--line);
+         background:linear-gradient(180deg,#1a121a,#120a11); box-shadow:0 10px 40px rgba(0,0,0,.45)}
+  .phd{padding:12px 14px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:10px}
+  .pbd{padding:14px}
+  .plist{margin:8px 0 10px; display:grid; gap:10px}
+  .plist label{display:flex; gap:10px; align-items:flex-start; color:#e7d4e6; font-size:14px}
+  .plist input{width:18px; height:18px; margin-top:2px}
+  .pactions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+  .btn.secondary{background:#2a1a25}
 </style>
 
 <script>
-// ---------- Unified age gate (same keys as age.html + chat.html) ----------
+/* ---------- Unified age gate (same keys as age.html + chat.html) ---------- */
 (function(){
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man")||"").toLowerCase();
@@ -62,7 +74,7 @@
 
 <div class="wrap">
   <div class="notice">
-    <div class="pill">Adults only</div>
+    <div class="pill">Seasonally changing characters · PG-13 (flirty)</div>
     <div id="ageReceipt" class="ok">Verified — you’re good to purchase.</div>
   </div>
 
@@ -71,13 +83,13 @@
     <div class="card">
       <div class="hd">
         <div class="title">Day Pass — $5.99</div>
-        <div class="pill">3½-minute preview per guy</div>
+        <div class="pill">Unlimited PG chat with 1 guy</div>
       </div>
       <div class="bd">
         <ul class="muted">
-          <li>Unlocks one guy of your choice for the day</li>
-          <li>PG-13 chat by default</li>
-          <li>Coins can unlock erotic chat (words only)</li>
+          <li>Unlimited AI chat for 24 hours with your choice</li>
+          <li>PG-13 by default; optional coins unlock “Advanced” replies (words only)</li>
+          <li>$1 donated to a DV charity per subscription</li>
         </ul>
         <a id="buyDay" class="btn" href="#">Continue to checkout</a>
       </div>
@@ -87,13 +99,13 @@
     <div class="card">
       <div class="hd">
         <div class="title">Monthly — $10.99</div>
-        <div class="pill">Includes 3 coin packs free</div>
+        <div class="pill">All guys unlocked</div>
       </div>
       <div class="bd">
         <ul class="muted">
-          <li>All guys unlocked</li>
-          <li>PG-13 chat by default</li>
-          <li>Coins unlock erotic chat (words only); 3 packs included</li>
+          <li>Unlimited AI chat with all characters</li>
+          <li>PG-13 by default; optional coins unlock “Advanced” replies (words only)</li>
+          <li>Includes 3 starter coin packs</li>
         </ul>
         <a id="buyMonth" class="btn" href="#">Continue to checkout</a>
       </div>
@@ -103,16 +115,36 @@
   <div class="footer">$1 of every subscription goes to a Domestic Violence charity.</div>
 </div>
 
+<!-- Consent modal -->
+<div id="consent" class="overlay" aria-hidden="true" role="dialog" aria-label="Purchase consent">
+  <div class="panel">
+    <div class="phd"><strong>Before you continue</strong></div>
+    <div class="pbd">
+      <div class="muted" style="margin-bottom:8px">
+        Please confirm the following:
+      </div>
+      <div class="plist">
+        <label><input type="checkbox" id="ck18"> I confirm I am <strong>18+</strong>.</label>
+        <label><input type="checkbox" id="ckadv"> I understand optional <strong>“Advanced” chat</strong> may include erotic language (words only) and is for consenting adults.</label>
+        <label><input type="checkbox" id="cknr"> I understand <strong>chat/coin purchases are non-refundable once delivered</strong>.</label>
+        <label><input type="checkbox" id="cktos"> I agree to the site’s <a href="/terms.html" target="_blank">Terms</a> &amp; <a href="/privacy.html" target="_blank">Privacy</a>.</label>
+      </div>
+      <div class="pactions">
+        <button id="agreeGo" class="btn" disabled>Agree & continue</button>
+        <button id="cancelConsent" class="btn secondary" type="button">Cancel</button>
+      </div>
+      <div class="muted" style="margin-top:8px">We remember this for 30 days on this device.</div>
+    </div>
+  </div>
+</div>
+
 <script>
-// carry the "man" in links and send them through a last sanity check on age gate
+// carry the "man" in links and send them through age-verified checkout pages
 const qs = new URLSearchParams(location.search);
 const man = (qs.get("man")||"").toLowerCase();
 const addMan = url => url + (url.includes("?") ? "&" : "?") + "man=" + encodeURIComponent(man);
 
-document.getElementById("buyDay").setAttribute("href", addMan("/checkout-day.html"));
-document.getElementById("buyMonth").setAttribute("href", addMan("/checkout-month.html"));
-
-// show verified receipt if key is present
+// Unified “verified” receipt
 (function(){
   const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || localStorage.getItem("bb.age_verified_until") || 0);
   const flag  = localStorage.getItem("bb.ageVerified");
@@ -120,6 +152,62 @@ document.getElementById("buyMonth").setAttribute("href", addMan("/checkout-month
     document.getElementById("ageReceipt").style.display = "block";
   }
 })();
+
+// Build target URLs
+const dayURL   = addMan("/checkout-day.html");
+const monthURL = addMan("/checkout-month.html");
+
+// --- Consent remembering (30 days) ---
+const CONSENT_KEY = "bb.purchaseConsentUntil";
+function hasConsent(){
+  const until = Number(localStorage.getItem(CONSENT_KEY) || 0);
+  return until && until > Date.now();
+}
+function giveConsent(days=30){
+  const until = Date.now() + days*24*60*60*1000;
+  localStorage.setItem(CONSENT_KEY, String(until));
+}
+
+// --- Modal helpers ---
+const modal = document.getElementById("consent");
+const ck18  = document.getElementById("ck18");
+const ckadv = document.getElementById("ckadv");
+const cknr  = document.getElementById("cknr");
+const cktos = document.getElementById("cktos");
+const agree = document.getElementById("agreeGo");
+const cancel= document.getElementById("cancelConsent");
+
+function openConsent(nextUrl){
+  modal.dataset.next = nextUrl;
+  modal.style.display = "grid";
+  updateAgree();
+}
+function closeConsent(){
+  modal.style.display = "none";
+}
+function updateAgree(){
+  agree.disabled = !(ck18.checked && ckadv.checked && cknr.checked && cktos.checked);
+}
+[ck18, ckadv, cknr, cktos].forEach(el => el.addEventListener("change", updateAgree));
+
+agree.addEventListener("click", ()=>{
+  if (agree.disabled) return;
+  giveConsent(30);
+  const next = modal.dataset.next || "/pay.html";
+  closeConsent();
+  location.href = next;
+});
+cancel.addEventListener("click", closeConsent);
+
+// Intercept Day/Month clicks
+document.getElementById("buyDay").addEventListener("click", (e)=>{
+  e.preventDefault();
+  if (hasConsent()) location.href = dayURL; else openConsent(dayURL);
+});
+document.getElementById("buyMonth").addEventListener("click", (e)=>{
+  e.preventDefault();
+  if (hasConsent()) location.href = monthURL; else openConsent(monthURL);
+});
 </script>
 </body>
 </html>

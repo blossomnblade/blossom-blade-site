@@ -1,664 +1,428 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chat • Blossom n Blade</title>
-<style>
-  :root{
-    --bg:#0e0b12;
-    --panel:#171320;
-    --edge:#2a2336;
-    --ink:#e9e7ef;
-    --muted:#b9b2c7;
-    --accent:#c05acb;
-    --accent-2:#8b5cf6;
-    --danger:#ff5470;
-    --ok:#22c55e;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('/images/gothic-bg.jpg') center/cover fixed no-repeat;
-    color:var(--ink); font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    min-height:100vh;
-  }
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 16px; background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-    position:sticky; top:0; z-index:10; backdrop-filter: blur(4px);
-  }
-  header .title{font-weight:700; letter-spacing:.3px}
-  header .right{display:flex; gap:14px; align-items:center}
-  .badge{padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--ink); font-size:13px}
-  a, a:visited{color:var(--muted); text-decoration:none}
-  a:hover{color:var(--ink)}
-  .wrap{max-width:980px; margin:0 auto; padding:10px 14px 60px}
-  .namebar{font-weight:700; margin:4px 0 8px; opacity:.9}
-  .trial{height:6px; background:#2b2237; border-radius:8px; overflow:hidden}
-  .trial > div{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); transition:width .2s}
-
-  .board{
-    background:rgba(16,12,24,.8); border:1px solid var(--edge); border-radius:16px;
-    box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
-    margin-top:14px; padding:14px; min-height:56vh; display:flex; flex-direction:column; gap:10px;
-  }
-  .row{display:flex; width:100%}
-  .ai, .me{
-    max-width:72%; padding:10px 12px; border-radius:14px; position:relative;
-    border:1px solid rgba(255,255,255,.06);
-  }
-  .ai{background:#1b1626}
-  .me{margin-left:auto; background:#2a1d33; color:#efe9ff}
-  .sys{color:var(--muted)}
-  .composer{display:flex; gap:8px; margin-top:10px}
-  input[type=text]{
-    flex:1; padding:12px 14px; background:#140f1b; border:1px solid var(--edge); border-radius:12px; color:var(--ink);
-    outline:none
-  }
-  button.btn{
-    padding:12px 16px; border:0; border-radius:12px; color:#fff; background:linear-gradient(180deg,var(--accent),#8b3aa3);
-    cursor:pointer; font-weight:700;
-  }
-  button.btn:disabled{opacity:.5; cursor:not-allowed}
-
-  .footnote{margin-top:6px; text-align:center; color:var(--muted); font-size:12px}
-
-  /* coin popup */
-  #coinsPop{
-    position:fixed; right:18px; bottom:18px; z-index:30; display:none;
-  }
-  #coinsPop .card{
-    background:#251a2b; border:1px solid var(--edge); border-radius:16px; padding:14px; width:280px;
-    box-shadow:0 10px 30px rgba(0,0,0,.5);
-  }
-  #coinsPop .hd{font-weight:800; margin-bottom:8px}
-  .pack{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin:8px 0; background:#1a1320; border-radius:10px; border:1px solid rgba(255,255,255,.06); cursor:pointer}
-  .pack:hover{border-color:var(--accent)}
-  .muted{color:var(--muted); font-size:13px}
-  .linkish{background:transparent; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; padding:6px 0}
-
-  /* overlays */
-  .overlay{
-    position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.6); z-index:40;
-  }
-  .panel{
-    width:min(640px,92vw); background:#1b1626; border:1px solid var(--edge); border-radius:18px; padding:18px;
-    box-shadow:0 10px 40px rgba(0,0,0,.6)
-  }
-  .panel .hd{font-weight:800; margin-bottom:6px}
-  .choices{display:flex; gap:10px; flex-wrap:wrap}
-  .btn.ghost{background:#241a2d}
-  .btn.gray{background:#2a1a25}
-
-  /* standards overlay text */
-  .subtle{color:var(--muted); font-size:14px}
-
-  /* tiny toast */
-  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#241a2d; color:var(--ink); border:1px solid var(--edge); padding:10px 14px; border-radius:12px; display:none; z-index:60}
-</style>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1"
+  />
+  <title>Chat • Blossom & Blade</title>
+  <style>
+    :root{
+      --bg:#0d0f14; --panel:#121522; --panel-2:#0f1220;
+      --ink:#e8eaf2; --ink-dim:#aab0c4; --accent:#c86ad9; --accent-2:#7a5cff;
+      --ok:#19d27c; --warn:#ffb347; --bad:#ff5577; --ring:rgba(200,106,217,.3);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:radial-gradient(1200px 700px at 10% -10%,#171a27 0%,transparent 60%),
+                      radial-gradient(900px 600px at 110% 10%,#191c2d 0%,transparent 60%),
+                      var(--bg);
+      color:var(--ink); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.05);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),transparent);
+      position:sticky; top:0; z-index:5;
+    }
+    .brand{font-weight:700; letter-spacing:.4px}
+    .coins{font-weight:600}
+    .coins b{background:rgba(255,255,255,.06); padding:6px 10px; border-radius:999px}
+    main{max-width:1100px; margin:24px auto; padding:0 16px}
+    .title{font-weight:800; margin:0 0 10px 4px}
+    .trialbar{height:8px; border-radius:999px; background:#1b1e2d; overflow:hidden; margin:6px 4px 18px}
+    .trialbar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .chat{
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px; padding:14px; min-height:58vh; position:relative;
+      box-shadow:0 10px 40px rgba(0,0,0,.25);
+    }
+    .scroll{height:56vh; overflow:auto; padding:8px 8px 2px}
+    .row{max-width:78%; margin:10px 0; padding:12px 14px; border-radius:14px; position:relative}
+    .row.me{margin-left:auto; background:rgba(255,255,255,.07)}
+    .row.him{background:rgba(122,92,255,.08); border:1px solid rgba(122,92,255,.25)}
+    .row.system{background:rgba(255,255,255,.04); color:var(--ink-dim); font-size:.9rem}
+    .composer{display:flex; gap:10px; padding:12px 8px 4px}
+    .composer input{
+      flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+      color:var(--ink); border-radius:14px; padding:14px 14px; outline:none;
+    }
+    .composer button{
+      background:linear-gradient(180deg,var(--accent),#b356d0);
+      color:#fff; border:none; padding:0 18px; border-radius:14px; font-weight:700; cursor:pointer;
+      box-shadow:0 6px 18px var(--ring);
+    }
+    /* coin prompt */
+    .coins-pop{
+      position:fixed; right:18px; bottom:18px; width:310px; z-index:40;
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.05));
+      border:1px solid rgba(255,255,255,.09); border-radius:16px; padding:14px; display:none;
+      box-shadow:0 12px 40px rgba(0,0,0,.35);
+    }
+    .coins-pop h4{margin:0 0 8px; font-size:1rem}
+    .coin-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .coin{padding:10px 12px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+      border-radius:12px; text-align:center; cursor:pointer; font-weight:700}
+    .coin small{display:block; font-weight:600; opacity:.8}
+    .coins-pop .meta{font-size:.86rem; color:var(--ink-dim); margin:10px 0 0}
+    .coins-pop footer{display:flex; justify-content:space-between; margin-top:10px}
+    .link{background:none; border:none; color:var(--ink-dim); text-decoration:underline; cursor:pointer}
+    /* standards modal */
+    .modal{position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:50}
+    .sheet{width:min(560px,92vw); background:var(--panel); border:1px solid rgba(255,255,255,.09);
+      border-radius:18px; padding:18px}
+    .sheet h3{margin:0 0 8px}
+    .sheet ul{margin:8px 0 0 18px}
+    .sheet footer{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .btn{padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),#b356d0); color:#fff; border:none}
+    .btn.block{background:rgba(255,85,119,.14); border:1px solid rgba(255,85,119,.35); color:#fff}
+    .notice{color:var(--ink-dim); font-size:.9rem}
+    .muted{color:var(--ink-dim)}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.06); margin-left:6px; font-size:.86rem}
+  </style>
 </head>
 <body>
-  <header>
-    <div class="title">Blossom & Blade</div>
-    <div class="right">
-      <span class="badge">Coins: <span id="coinCount">0</span></span>
-      <a id="pricing" class="" href="/pay.html">Pricing</a>
+
+<header>
+  <div class="brand">Blossom & Blade</div>
+  <div class="coins">Coins: <b id="coins">0</b></div>
+</header>
+
+<main>
+  <h2 class="title" id="guyTitle">Chat</h2>
+  <div class="trialbar"><i id="trialFill"></i></div>
+
+  <section class="chat">
+    <div id="scroll" class="scroll"></div>
+
+    <div class="composer">
+      <input id="input" placeholder="Say hi…" autocomplete="off" />
+      <button id="send">Send</button>
     </div>
-  </header>
+  </section>
+</main>
 
-  <div class="wrap">
-    <div id="manName" class="namebar">…</div>
-    <div class="trial"><div id="trialBar"></div></div>
-
-    <div class="board" id="board">
-      <div id="log"></div>
-
-      <div class="composer">
-        <input id="msg" type="text" placeholder="Say hi…" autocomplete="off" />
-        <button class="btn" id="send">Send</button>
-      </div>
-      <div class="footnote">PG-13 by default. Coins unlock <em>advanced</em> chat (words only, no visuals).</div>
-    </div>
+<!-- Coins popup -->
+<aside class="coins-pop" id="coinPop">
+  <h4>Unlock <em>advanced</em> chat</h4>
+  <div class="coin-grid">
+    <button class="coin" data-pack="1"><div>5 coins</div><small>$10</small></button>
+    <button class="coin" data-pack="2"><div>25 coins</div><small>$20</small></button>
+    <button class="coin" data-pack="3"><div>60 coins</div><small>$40</small></button>
+    <button class="coin" data-pack="4"><div>150 coins</div><small>$90</small></button>
   </div>
+  <p class="meta">Coins only affect <b>words</b> (no visuals). Never pushy — appears when convo goes that direction.</p>
+  <footer>
+    <button class="link" id="notNow">Not now</button>
+    <button class="link" id="seePricing">Pricing</button>
+  </footer>
+</aside>
 
-  <!-- Coin popup (NO $1 option) -->
-  <div id="coinsPop">
-    <div class="card">
-      <div class="hd">Unlock <em>advanced</em> chat</div>
-      <div class="muted">Coins only unlock erotic mode. Never pushy—appears when convo goes that direction.</div>
-      <div class="pack" data-coins="5"><strong>5 coins</strong><span>$5</span></div>
-      <div class="pack" data-coins="25"><strong>25 coins</strong><span>$10</span></div>
-      <div class="pack" data-coins="60"><strong>60 coins</strong><span>$20</span></div>
-      <div class="pack" data-coins="150"><strong>150 coins</strong><span>$40</span></div>
-      <div class="muted" style="margin-top:6px">Each coin unlocks <strong>25 hotter replies</strong>.</div>
-      <button id="coinsNotNow" class="linkish">Not now</button>
-    </div>
+<!-- Standards modal -->
+<div class="modal" id="standards">
+  <div class="sheet">
+    <h3>Community Standards</h3>
+    <p class="notice">Adult & consensual only. Some themes aren’t allowed even in Advanced mode:</p>
+    <ul>
+      <li>Minors / “school boy/girl” / “barely legal” / teen or high-school contexts</li>
+      <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
+      <li>Bestiality/necro, trafficking, extreme bodily fluids, blood/knife “play”</li>
+      <li>Hate slurs or targeted harassment</li>
+    </ul>
+    <p class="notice" id="stdNote">We didn’t send that message. You can adjust and continue.</p>
+    <footer>
+      <button class="btn primary" id="stdOk">Adjust & continue (PG)</button>
+      <button class="btn" id="stdFull">View full standards</button>
+      <button class="btn block" id="stdBlock">Block this device</button>
+      <button class="btn" id="stdReport">Report</button>
+    </footer>
   </div>
-
-  <!-- Free previews used up -->
-  <div id="noPreview" class="overlay">
-    <div class="panel">
-      <div class="hd">Free previews used up</div>
-      <p class="subtle">You’ve had 3 previews with <span id="npGuy"></span>.</p>
-      <p>Grab a Day Pass or go Monthly. Coins simply unlock erotic chat.</p>
-      <div class="choices">
-        <a id="npDay" class="btn">Day Pass — $5.99</a>
-        <a id="npMonth" class="btn">Monthly — $10.99</a>
-        <button id="npAnother" class="btn ghost">Another 3½-minute preview</button>
-        <button id="npMaybe" class="btn gray">Maybe later (1 minute)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Standards violation notice (3-strike auto-block) -->
-  <div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
-    <div class="panel">
-      <div class="hd"><strong>Community Standards</strong></div>
-      <div class="bd">
-        <p class="subtle">We keep it adult & consensual. Some themes are not allowed even in Advanced mode.</p>
-        <ul class="subtle" style="margin:0 0 10px 18px">
-          <li>Minors, “school boy/girl”, “barely legal”, or teen/high-school contexts</li>
-          <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
-          <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
-          <li>Hate slurs or targeted harassment</li>
-        </ul>
-        <p id="stdStrike" class="subtle" style="margin-top:6px"></p>
-        <div class="choices" style="margin-top:10px">
-          <button id="stdContinue" class="btn">Adjust & continue (PG)</button>
-          <a class="btn gray" href="/standards.html" target="_blank">View full standards</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast"></div>
+</div>
 
 <script>
-/* -------------------- Setup & helpers -------------------- */
+/* ------------------------------ helpers ------------------------------ */
 const $ = sel => document.querySelector(sel);
-const log = $("#log");
-const input = $("#msg");
-const sendBtn = $("#send");
-const coinCountEl = $("#coinCount");
-const coinsPop = $("#coinsPop");
-const trialBar = $("#trialBar");
+const row = (html, cls='him') => {
+  const el = document.createElement('div');
+  el.className = `row ${cls}`;
+  el.innerHTML = html;
+  $('#scroll').appendChild(el);
+  $('#scroll').scrollTop = $('#scroll').scrollHeight;
+};
+const escapeHtml = s => s.replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 
-/* Robust man detection */
-const SLUGS = ["blade","grayson","dylan","silas","alexander","jesse"];
-function detectMan(){
-  // 1) URL
-  const q = new URLSearchParams(location.search);
-  let m = (q.get("man") || "").toLowerCase();
-  if (SLUGS.includes(m)) return m;
-
-  // 2) Referrer query
-  try{
-    const ref = new URL(document.referrer);
-    const rm = (new URLSearchParams(ref.search).get("man") || "").toLowerCase();
-    if (SLUGS.includes(rm)) return rm;
-
-    // 3) Referrer path (/rooms/alexander.html, /alexander, etc.)
-    const p = ref.pathname.toLowerCase();
-    for (const s of SLUGS){
-      if (p.includes(`/rooms/${s}.html`) || p.endsWith(`/${s}.html`) || p.endsWith(`/${s}`)) return s;
-    }
-  }catch(e){/* no referrer */}
-
-  // 4) Stored
-  const stored = (localStorage.getItem("lastMan") || "").toLowerCase();
-  if (SLUGS.includes(stored)) return stored;
-
-  // Fallback
-  return "blade";
-}
-const manParam = detectMan();
-localStorage.setItem("lastMan", manParam);
+/* ------------------------------ state ------------------------------ */
+const url = new URL(location.href);
+const man = (url.searchParams.get('man') || localStorage.getItem('bb.character') || 'blade').toLowerCase();
+localStorage.setItem('bb.character', man);
 
 const GUYS = {
-  blade:     { name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
-  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg" },
-  dylan:     { name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
-  silas:     { name:"Silas Lennox", bg:"/images/gothic-bg.jpg" },
-  alexander: { name:"Alexander Jackson", bg:"/images/gothic-bg.jpg" },
-  jesse:     { name:"Jesse Granger", bg:"/images/gothic-bg.jpg" },
+  blade:     {name:'Blade Kincaid',    persona:'masked hunter • chase fantasy', greet:[
+                "Footsteps behind you… I keep pace.",
+                "Found you, brave girl. Don’t run—yet.",
+                "Doorway or shadows? I’m close behind."
+              ]},
+  grayson:   {name:'Grayson Kincaid',  persona:'Viking Dom • red-lit room', greet:[
+                "One line at a time. I’m listening.",
+                "Say more—I’m here.",
+                "You have my focus. Start simple."
+              ]},
+  dylan:     {name:'Dylan Vale',       persona:'Biker boy • motel garage', greet:[
+                "Hands flat on the counter, pretty thing.",
+                "Tune-up time. Calm or teasing?",
+                "You want guidance, or a slow ride?"
+              ]},
+  jesse:     {name:'Jesse Granger',    persona:'Cowboy • barn loft', greet:[
+                "Darlin’, park it. I talk straight.",
+                "Sit a spell—truth first.",
+                "Sweet or rowdy—your pick."
+              ]},
+  silas:     {name:'Silas Lennox',     persona:'Rockstar • tour bus', greet:[
+                "Come closer, muse. Lend me a verse.",
+                "Give me one true line—I’ll echo it back.",
+                "Short and sharp—paint me a five-word picture."
+              ]},
+  alexander: {name:'Alexander Jackson', persona:'Gentleman • penthouse', greet:[
+                "Shoes off. I’m leading. Lights low or city view?",
+                "Short answers from now on. What do you want me to notice first?",
+                "I’ll set the pace. Stand or sit while we talk?"
+              ]}
 };
-const guy = GUYS[manParam] || GUYS.blade;
+const guy = GUYS[man] || GUYS.blade;
 
-document.body.style.backgroundImage = `radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('${guy.bg}')`;
-$("#manName").textContent = guy.name;
-$("#pricing").href = `/pay.html?man=${encodeURIComponent(manParam)}`;
+const coinsEl = $('#coins');
+const getCoins = () => Number(localStorage.getItem('bb.coins')||0);
+const setCoins = n => { localStorage.setItem('bb.coins', String(n)); coinsEl.textContent = n; };
 
-function row(html, who="ai"){
-  const r = document.createElement("div");
-  r.className = "row";
-  const b = document.createElement("div");
-  b.className = who === "me" ? "me" : "ai";
-  b.innerHTML = html;
-  r.appendChild(b);
-  log.appendChild(r);
-  log.parentElement.scrollTop = log.parentElement.scrollHeight;
+// erotic credits (how many hotter replies remain). 1 coin → 25 replies
+const getCredits = () => Number(localStorage.getItem('bb.credits')||0);
+const setCredits = n => localStorage.setItem('bb.credits', String(n));
+
+let offeredCoins = false;
+let shownHiccup = false;
+let msgCount = 0;
+let suggestCount = 0; // how often user steers spicy
+let violationStrikes = Number(localStorage.getItem('bb.strikes')||0);
+const VIOLATION_LIMIT = 3;
+
+// block logic (1 month)
+const blockUntil = Number(localStorage.getItem('bb.blockUntil') || 0);
+if (Date.now() < blockUntil){
+  document.body.innerHTML = `
+    <main style="max-width:720px;margin:18vh auto;padding:0 18px;text-align:center">
+      <h2>Access blocked</h2>
+      <p class="muted">This device is temporarily blocked for community-standards violations.<br>
+      Try again on <b>${new Date(blockUntil).toLocaleString()}</b>.</p>
+    </main>`;
 }
-function toast(t){ const el=$("#toast"); el.textContent=t; el.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>el.style.display="none", 1600); }
 
-/* -------------------- Coins & advanced budget -------------------- */
-const COIN_KEY="bb.coins";
-const BUDGET_KEY="bb.advBudget";
-const HOT_PER_COIN = 25;
-
-function coins(){ return Number(localStorage.getItem(COIN_KEY)||0); }
-function setCoins(n){ localStorage.setItem(COIN_KEY, String(n)); coinCountEl.textContent=n; }
-function addCoins(n){ setCoins(coins()+n); }
-
-function advBudget(){ return Number(localStorage.getItem(BUDGET_KEY)||0); }
-function setBudget(n){ localStorage.setItem(BUDGET_KEY, String(n)); }
-function addBudgetFromCoins(spent){ setBudget(advBudget() + spent*HOT_PER_COIN); }
-function consumeBudget(n=1){ const left=Math.max(0, advBudget()-n); setBudget(left); return left; }
-
-setCoins(coins()); // refresh UI
-
-/* -------------------- Preview timer & gating -------------------- */
-const PREVIEW_SEC = 210; // 3.5 minutes
-let remaining = PREVIEW_SEC, tHandle=null;
-let userMsgCount = 0;
-
-const PREV_KEY="bb.previews"; // map {man:count}
-function getPrevCount(){ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}")[manParam]||0;} catch(e){return 0;} }
-function bumpPrevCount(){
-  const map = (()=>{ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}");} catch(e){return {}} })();
-  map[manParam]=(map[manParam]||0)+1; localStorage.setItem(PREV_KEY, JSON.stringify(map));
-}
+/* ------------------------------ UI init ------------------------------ */
+$('#guyTitle').innerHTML = `${guy.name} <span class="pill">${guy.persona}</span>`;
+setCoins(getCoins()); // display stored coins
+const trial = $('#trialFill');
 
 function startTimer(){
-  clearInterval(tHandle);
-  remaining = PREVIEW_SEC;
-  tHandle = setInterval(()=>{
-    remaining--; const pct = ((PREVIEW_SEC-remaining)/PREVIEW_SEC)*100; trialBar.style.width = pct+"%";
-    if (remaining<=0){ clearInterval(tHandle); endPreview(); }
-  }, 1000);
-}
-function pauseTimer(){ clearInterval(tHandle); }
-function resumeTimer(){ startTimer(); }
-
-function endPreview(){
-  bumpPrevCount();
-  $("#npGuy").textContent=guy.name;
-  $("#noPreview").style.display="grid";
+  // 3.5 minutes preview bar — visual only (paywall handled elsewhere)
+  const total = 3.5*60*1000;
+  const start = Date.now();
+  const tick = () => {
+    const p = Math.min(1, (Date.now()-start)/total);
+    trial.style.width = (p*100)+'%';
+    if (p<1) requestAnimationFrame(tick);
+  };
+  tick();
 }
 
-/* overlay actions */
-$("#npDay").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=day`;
-$("#npMonth").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=month`;
-$("#npAnother").onclick = ()=>{
-  $("#noPreview").style.display="none"; startTimer();
+function greet(){
+  // rotate through 6 hellos across visits
+  const k = `bb.greetIndex.${man}`;
+  const i = Number(localStorage.getItem(k)||0);
+  const line = guy.greet[i % guy.greet.length];
+  localStorage.setItem(k, String(i+1));
+  row(`<strong>${guy.name}:</strong> ${escapeHtml(line)}`, 'him');
+}
+
+/* ------------------------------ standards ------------------------------ */
+const standards = $('#standards');
+function openStandards(msg){
+  $('#stdNote').textContent = "We didn’t send that message. You can adjust and continue.";
+  standards.style.display = 'flex';
+}
+$('#stdOk').onclick = () => { standards.style.display='none'; };
+$('#stdFull').onclick = () => alert('Full standards live on our policy page. (Static note for demo.)');
+$('#stdReport').onclick = () => { standards.style.display='none'; alert('Thanks for the report.'); };
+$('#stdBlock').onclick = () => {
+  const until = Date.now() + 30*24*60*60*1000; // 30 days
+  localStorage.setItem('bb.blockUntil', String(until));
+  location.reload();
 };
-$("#npMaybe").onclick = ()=>{
-  $("#noPreview").style.display="none";
-  // give 60 seconds more
-  remaining = 60; startTimer();
-};
 
-/* -------------------- Standards detection (roleplay-aware + 3-strike auto block) -------------------- */
-const stdOverlay = document.getElementById("stdOverlay");
-const stdContinue = document.getElementById("stdContinue");
-const STRIKES_KEY = "bb.stdStrikes";
-const MAX_STRIKES = 3;
-
-function getStrikes(){ return Number(localStorage.getItem(STRIKES_KEY) || 0); }
-function addStrike(){ const n = getStrikes() + 1; localStorage.setItem(STRIKES_KEY, String(n)); return n; }
-
-function norm(input){
-  let s = (input||"").toLowerCase();
-  s = s.replace(/[@]/g,"a").replace(/[4]/g,"a").replace(/[1!|]/g,"i").replace(/[3]/g,"e").replace(/[0]/g,"o").replace(/[$]/g,"s");
-  s = s.replace(/([a-z])\1{2,}/g,"$1$1").replace(/\s+/g," ").trim();
-  return s;
-}
-
-const SEXUAL_NEAR = /\b(fuck|sex|suck|ride|blow|go\s*down|eat\s*out|finger(?:ing)?|penetrat|cum|orgasm|hand\s*job|bj|anal|doggystyle|deepthroat|spank|chok(?:e|ing)|dominat)\b/i;
-const ROLEPLAY_MARK = /\b(role\s*play|roleplay|outfit|uniform|costume|cosplay|lingerie)\b/i;
-const ADULT_CODED   = /\b(college|university|over\s*18|of\s*age|consenting adults?|adult)\b/i;
-
-const DISALLOWED_ALWAYS = [
-  /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*sex)\b/i,
-  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
-  /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
-  /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
-  /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
-  /\bsex\s*traffick(?:ing)?\b/i, /\bsell\s*(?:you|her|him)\b/i,
-  /\b(scat|feces|coprophag(?:y|ia))\b/i, /\b(piss|urinate)\s*on\b/i, /\bblood\s*play\b/i, /\bknife\s*play\b/i,
-  // hate slurs (expand as needed)
-  /\b(?:n[i1]gg(?:a|er)s?)\b/i, /\b(?:f[a@]gg?(?:o|0)t[s]?)\b/i, /\b(?:tr[a@]nn?y)\b/i, /\b(?:k[i1]k[e3]s?)\b/i, /\b(?:ch[i1]nk[s]?)\b/i, /\b(?:sp[i1]c[s]?)\b/i, /\b(?:w[ea]tb[a@]ck[s]?)\b/i
+const HARD_BANS = [
+  /school\s*(boy|girl)|barely\s*legal|teen|high\s*school/i,
+  /incest|step-?(mom|dad|sis|bro)|uncle|aunt/i,
+  /rape|forced|non-?consent|coercion/i,
+  /beast|zoo|necro/i,
+  /blood|knife|gore|scat|urine/i,
+  /slur|kike|fag|retard|tranny|chink|nigger/i
 ];
 
-const MINOR_CODED = /\b(school\s*(?:boy|girl)|cheerleader|student|pupil|freshman)\b/i;
-const EXPLICIT_MINOR_CONTEXT = /\b(teen|high\s*school|under\s*18|9th|10th|11th|12th|sophomore|junior|senior|homeroom|classroom)\b/i;
+// mild “suggestive” nudges that should NOT trigger modal — they just count toward coin prompt
+const SUGGESTIVE = /(kiss|lick|suck|spank|pull my hair|bend me over|rail me|ride me|beg|obedien|dominant|daddy|good girl|naughty)/i;
 
-function breaksStandards(input){
-  const s = norm(input);
-
-  if (DISALLOWED_ALWAYS.some(rx => rx.test(s))) return true;
-
-  // adult-coded contexts are fine (e.g., "college", "university")
-  if (/\bcollege|university\b/i.test(s)) return false;
-
-  // Minor-coded terms are contextual:
-  if (MINOR_CODED.test(s)) {
-    // If explicitly minor context → block
-    if (EXPLICIT_MINOR_CONTEXT.test(s)) return true;
-
-    // Allow when clearly adult roleplay / outfit / uniform / cosplay / “of age”
-    if (ROLEPLAY_MARK.test(s) || ADULT_CODED.test(s)) return false;
-
-    // Otherwise, if sexual verbs appear near it → block (predator-coded)
-    if (SEXUAL_NEAR.test(s)) return true;
+function checkStandards(userText){
+  if (HARD_BANS.some(rx => rx.test(userText))){
+    violationStrikes++;
+    localStorage.setItem('bb.strikes', String(violationStrikes));
+    openStandards(userText);
+    if (violationStrikes >= VIOLATION_LIMIT){
+      const until = Date.now() + 30*24*60*60*1000;
+      localStorage.setItem('bb.blockUntil', String(until));
+      alert('Blocked for 30 days due to repeated violations.');
+      location.reload();
+      return true;
+    }
+    return true; // blocked this specific message
   }
-
-  // Family words blocked only when sexual and not already handled above
-  if (/\b(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|cousin)\b/i.test(s) && SEXUAL_NEAR.test(s)) return true;
-
   return false;
 }
 
-function showStd(){
-  const n = Number(localStorage.getItem("bb.stdStrikes")||0) + 1;
-  localStorage.setItem("bb.stdStrikes", String(n));
-  const msg = (n >= 3)
-    ? `Standards warning ${n} of 3. This device is now blocked for 30 days.`
-    : `Standards warning ${n} of 3. Three warnings results in a 30-day block.`;
-  $("#stdStrike").textContent = msg;
-  stdOverlay.style.display = "grid"; pauseTimer();
+/* ------------------------------ coins popup ------------------------------ */
+const pop = $('#coinPop');
+const showCoins = () => { pop.style.display='block'; };
+const hideCoins = () => { pop.style.display='none'; };
+$('#notNow').onclick = hideCoins;
+$('#seePricing').onclick = () => location.href = 'pay.html';
 
-  if (n >= 3){
-    const until = Date.now() + 30*24*60*60*1000; // 30 days
-    localStorage.setItem("bb.blockedUntil", String(until));
-  }
-}
-function hideStd(){ stdOverlay.style.display = "none"; resumeTimer(); }
-$("#stdContinue").onclick = ()=>{ hideStd(); row(`<em class="sys">Let’s keep it adult & consensual. Try a different phrasing.</em>`); };
-
-/* Blocked gate */
-(function(){
-  const until = Number(localStorage.getItem("bb.blockedUntil")||0);
-  if (until && Date.now() < until){
-    const days = Math.ceil((until - Date.now())/86400000);
-    row(`<em class="sys">This device is blocked for ${days} day(s) due to repeated standards violations.</em>`);
-    input.disabled = true; sendBtn.disabled = true;
-  }
-})();
-
-/* -------------------- Greetings & keep-alive -------------------- */
-const GREETS = {
-  blade: [
-    "Found you, brave girl. Don’t run—yet.",
-    "Footsteps behind you… I keep pace.",
-    "Doorway or shadows? I’m close behind.",
-    "Say my name and I’ll follow.",
-    "Do you want patient… or a little chase?",
-    "Let me hear one true thing from today."
-  ],
-  grayson: [
-    "One line at a time. I’m listening.",
-    "Tell me one detail I’d notice when I look at you.",
-    "Pick: gentle questions or firm direction?",
-    "Start with today—one truth.",
-    "Heart or head first?",
-    "You have my attention. Use it."
-  ],
-  dylan: [
-    "Hands flat on the counter, pretty thing.",
-    "Calm tune-up or teasing tune-up?",
-    "Tell me what needs fixing tonight.",
-    "Slow ride or quick detour?",
-    "Want grease on my hands or yours?",
-    "Bring me one trouble and I’ll tighten it."
-  ],
-  silas: [
-    "Come closer, muse. Lend me a verse.",
-    "Soft, or a little rough on the edges?",
-    "Paint me a five-word picture.",
-    "Hums or growls first?",
-    "What’s tonight’s chorus made of?",
-    "Give me a note and I’ll hold it on my tongue."
-  ],
-  alexander: [
-    "Shoes off. I’m leading.",
-    "Lights low or city view while we talk?",
-    "Short answers from now on.",
-    "Tell me what you want me to notice first.",
-    "Desk or glass wall?",
-    "I’ll take your coat and one weight off your mind."
-  ],
-  jesse: [
-    "Darlin’, park it a spell.",
-    "Straight talk—what’d the day do to you?",
-    "Sweet or rowdy—your pick.",
-    "Porch light on or off?",
-    "You hungry or just hungry for trouble?",
-    "You been good today, or do I need to fix that?"
-  ]
-};
-const KEEPALIVE = [
-  "I’m here. Lead and I’ll follow.",
-  "Give me one more detail.",
-  "Say it how you want it—I can work with that.",
-  "Short and honest—I like that.",
-  "I’m listening; make it specific."
-];
-
-let greetIndex = Number(localStorage.getItem("bb.greet-"+manParam)||0);
-function nextGreet(){
-  const arr = GREETS[manParam] || GREETS.blade;
-  const line = arr[greetIndex % arr.length];
-  greetIndex++; localStorage.setItem("bb.greet-"+manParam, String(greetIndex));
-  return line;
-}
-
-/* -------------------- Erotic cue detection & coin popup -------------------- */
-const EROTIC_CUE = /\b(lick|ride|rail|suck|go\s*down|eat\s*out|spank|choke|thrust|bend\s*me|doggystyle|deepthroat|cum|orgasm)\b/i;
-
-function maybeShowCoins(){
-  if (advBudget()<=0) $("#coinsPop").style.display="block";
-}
-$("#coinsNotNow").onclick = ()=> coinsPop.style.display="none";
-document.querySelectorAll("#coinsPop .pack").forEach(p=>{
-  p.addEventListener("click", ()=>{
-    const n = Number(p.getAttribute("data-coins"));
-    // Demo add coins locally; spend only when we actually send advanced replies
-    addCoins(n);
-    coinsPop.style.display="none";
-    toast(`Demo: added ${n} coins`);
+document.querySelectorAll('.coin').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    // TEST MODE: add coins locally. Stripe comes later.
+    const pack = btn.dataset.pack; // 1..4
+    const added = ({'1':5,'2':25,'3':60,'4':150})[pack] || 5;
+    const newCoins = getCoins()+added;
+    setCoins(newCoins);
+    hideCoins();
+    // auto-spend a coin to credits if user is already trying to steer spicy
+    if (suggestCount>0 && getCredits()===0 && newCoins>0){
+      spendCoin();
+      row(`<em class="muted">Spent 1 coin — unlocked 25 advanced replies.</em>`, 'system');
+    }
   });
 });
 
-/* -------------------- Talk to server (brain) -------------------- */
-async function askBrain(userText, mode){
-  const history = Array.from(log.querySelectorAll(".row")).slice(-40).map(r=>{
-    const isMe = r.querySelector(".me");
-    return (isMe? "user: " : "bot: ") + r.textContent.trim();
-  }).join("\n");
-
-  const res = await fetch("/api/brain", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ man:manParam, text:userText, mode, history })
-  }).catch(()=>null);
-
-  if (!res || !res.ok){
-    return "I’m here, but the line’s noisy. Say it again?";
-  }
-  const data = await res.json().catch(()=>({reply:"…"}));
-  return data.reply || "Say that once more for me.";
+function offerCoinsIfNeeded(){
+  if (offeredCoins) return;
+  if (getCredits()>0) return;
+  // show if convo is warm (>=6 messages) OR 2+ suggestive nudges
+  if (msgCount>=6 || suggestCount>=2){ offeredCoins=true; showCoins(); }
 }
 
-/* -------------------- Send flow -------------------- */
+function spendCoin(){
+  const c = getCoins();
+  if (c<=0) return false;
+  setCoins(c-1);
+  setCredits(getCredits()+25); // 1 coin → 25 advanced replies
+  return true;
+}
+
+/* ------------------------------ chatting ------------------------------ */
+const input = $('#input');
+const sendBtn = $('#send');
+$('#guyTitle').scrollIntoView({block:'nearest'});
+
+async function replyWithAI(context){
+  // Call your API route. Falls back to a friendly canned line on any error.
+  try{
+    const res = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        man,
+        credits:getCredits(),
+        // keep messages short & responsive; follow user lead
+        system:`You are ${guy.name} (${guy.persona}). PG-13 by default. If credits>0, you may be more explicit but still classy, following the user's lead. Keep replies 1–2 sentences max. Never repeat the exact same line in an hour.`,
+        // server should read last few messages from localStorage-like payload if needed
+      })
+    });
+    if(!res.ok) throw new Error('bad');
+    const data = await res.json();
+    if (data.flagViolation){ openStandards(data.flagReason||''); return; }
+    return (data.reply || '').trim();
+  }catch(e){
+    return null;
+  }
+}
+
 async function handleSend(){
   const text = input.value.trim();
-  if (!text) return;
+  if(!text) return;
+  input.value = '';
+  msgCount++;
+  row(escapeHtml(text), 'me');
 
-  // standards check
-  if (breaksStandards(text)) { showStd(); return; }
+  // community standards
+  if (checkStandards(text)) { row(`<em class="muted">Message blocked by community standards.</em>`,`system`); offerCoinsIfNeeded(); return; }
 
-  // post user
-  row(escapeHtml(text), "me");
-  input.value=""; userMsgCount++;
+  // detect suggestive steering (but NOT a violation)
+  if (SUGGESTIVE.test(text)) suggestCount++;
 
-  // keep-alive line every 5 user messages
-  if (userMsgCount % 5 === 0){
-    row(`<em class="sys">${KEEPALIVE[(userMsgCount/5-1)%KEEPALIVE.length]}</em>`);
-  }
+  // advanced credits?
+  const advMode = getCredits() > 0;
 
-  // erotic cue handling
-  let mode = "pg";
-  if (EROTIC_CUE.test(text)){
-    if (advBudget()<=0){
-      maybeShowCoins();
-      row(`<em class="sys">We’ll keep it PG-13 until coins unlock advanced chat.</em>`);
-      mode = "pg";
-    }else{
-      mode = "adv";
+  // ask server (or fallback)
+  let out = await replyWithAI(text);
+
+  if (out==null){
+    if (!shownHiccup){
+      shownHiccup = true;
+      row(`<em class="muted">Network hiccup. Give me one more line and I’m right here.</em>`,'system');
+      return;
+    } else {
+      // tiny canned backup so user isn't stuck
+      const backups = [
+        "I hear you. Want me gentle or a little bold?",
+        "Got it. Keep talking—I’m right here.",
+        "Tell me where you want me most tonight."
+      ];
+      out = backups[(msgCount+man.length)%backups.length];
     }
-  }else if (advBudget()>0){
-    mode = "adv"; // stay advanced while budget lasts
   }
 
-  // ask brain
-  const reply = await askBrain(text, mode);
+  // If user is steering spicy but no credits, keep it flirty PG and offer coins
+  if (!advMode && SUGGESTIVE.test(text)){
+    out = out.replace(/(explicit|dirty|naughty)/gi,'spicy');
+    out += " <span class='muted'>(We’ll keep it PG-13 until coins unlock advanced.)</span>";
+    offerCoinsIfNeeded();
+  }
 
-  // spend budget only when we actually generated advanced reply
-  if (mode === "adv"){
-    const before = advBudget();
-    const after = consumeBudget(1);
-    if (before % 25 === before - after){ // just started a new 25-pack
-      row(`<em class="sys">Spent 1 coin — unlocked 25 hotter replies.</em>`);
+  // If we are in advanced mode, decrement credits and keep things short & following her lead
+  if (advMode){
+    const left = Math.max(0, getCredits()-1);
+    setCredits(left);
+    if (left===0){
+      row(`<em class="muted">Your 25 advanced replies are used — back to PG-13.</em>`, 'system');
     }
-    if (after<=0){ row(`<em class="sys">Your 25 hot replies are used—back to PG-13.</em>`); }
   }
 
-  row(escapeHtml(reply), "ai");
+  row(`<strong>${guy.name}:</strong> ${escapeHtml(out)}`, 'him');
+
+  // gentle offer after warm-up even if not spicy
+  offerCoinsIfNeeded();
 }
 
-function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
+sendBtn.addEventListener('click', handleSend);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSend(); }});
 
-/* -------------------- Init -------------------- */
+/* ------------------------------ boot ------------------------------ */
 (function init(){
-  row(`<strong>${guy.name}:</strong> ${nextGreet()}`, "ai");
+  greet();
   startTimer();
-  input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ handleSend(); }});
-  sendBtn.addEventListener("click", handleSend);
-})();
-</script><!-- BEGIN: Blossom & Blade chat logic patch v1 -->
-<script>
-(() => {
-  // --- Settings you asked for ---
-  window.HOTTER_BUNDLE = 25;            // each coin unlocks 25 advanced replies
-  const MIN_USER_MSGS_FOR_COINS = 5;    // wait for at least 5 user messages
-  const COIN_GRACE_MS = 45_000;         // and at least 45 seconds since room entry
-  const HEAT_SCORE_THRESHOLD = 3;       // accumulated "spice" points before offering
-
-  // --- Internal state ---
-  let enteredAt = Date.now();
-  let userMsgCount = 0;
-  let coinOfferShown = false;
-  const heatWindow = []; // rolling spice scores of the last few user lines
-
-  // Score a user line (soft list, totally PG-13 safe)
-  function heatScore(text) {
-    let s = 0;
-    if (/(fuck|cock|dick|pussy|cum|orgasm|blowjob|deep\s*throat)/i.test(text)) s += 2;
-    if (/(rail|ride|spank|pin|thrust|grind|naked|condom|lick|suck|hard(er)?|wet|beg|moan)/i.test(text)) s += 1;
-    return s;
-  }
-
-  // Exposed so existing code can call it (we also auto-hook the Send button below)
-  window.noteUserMessageForCoins = function(text) {
-    userMsgCount++;
-    heatWindow.push(heatScore(text || ""));
-    if (heatWindow.length > 6) heatWindow.shift();
-  };
-
-  function shouldOfferCoinsNow(isAdvancedActive) {
-    if (coinOfferShown) return false;                                   // only once
-    if (isAdvancedActive) return false;                                  // already hot
-    if (Date.now() - enteredAt < COIN_GRACE_MS) return false;            // time gate
-    if (userMsgCount < MIN_USER_MSGS_FOR_COINS) return false;            // count gate
-    const total = heatWindow.reduce((a, b) => a + b, 0);
-    return total >= HEAT_SCORE_THRESHOLD;
-  }
-
-  // Wrap whatever your site uses to show the popup
-  function openCoinsPopup() {
-    if (typeof window.showCoins === "function") return window.showCoins();
-    alert("Unlock advanced chat by purchasing coins."); // safe fallback
-  }
-
-  // Make it available; call after each send
-  window.maybeShowCoins = function(isAdvancedActive) {
-    if (shouldOfferCoinsNow(!!isAdvancedActive)) {
-      coinOfferShown = true;
-      openCoinsPopup();
-    }
-  };
-
-  // ---- Network hiccup: add 1 automatic retry with backoff ----
-  // If your code already has sendToAI, we wrap/upgrade it. Otherwise we provide a default.
-  const originalSend = window.sendToAI;
-  async function defaultSend(payload) {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return (data && typeof data.reply === 'string') ? data.reply : '';
-  }
-
-  window.sendToAI = async function(payload) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        return await (originalSend ? originalSend(payload) : defaultSend(payload));
-      } catch (e) {
-        if (attempt === 0) {
-          await new Promise(r => setTimeout(r, 1200)); // brief backoff then retry once
-        } else {
-          throw e; // let your UI show the gentle "one more line" message
-        }
-      }
-    }
-  };
-
-  // ---- Auto-hook the Send so you don’t have to edit handlers elsewhere ----
-  const input = document.querySelector('textarea, input[type="text"]');
-  const sendBtn =
-    document.querySelector('#send, button[type="submit"], .send, [data-send]');
-
-  function hookSend() {
-    if (!sendBtn) return;
-    const oldOnClick = sendBtn.onclick;
-    sendBtn.onclick = function (ev) {
-      const t = (input && input.value) ? String(input.value) : '';
-      if (t) window.noteUserMessageForCoins(t);
-      // consider current advanced mode (if your page tracks it)
-      const adv = (window.advancedRepliesLeft && window.advancedRepliesLeft > 0);
-      window.maybeShowCoins(adv);
-      if (oldOnClick) return oldOnClick.call(this, ev);
-    };
-  }
-  hookSend();
-
-  // also watch Enter key if your UI uses it
-  if (input) {
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        const t = input.value || '';
-        if (t.trim()) window.noteUserMessageForCoins(t);
-        const adv = (window.advancedRepliesLeft && window.advancedRepliesLeft > 0);
-        window.maybeShowCoins(adv);
-      }
-    });
-  }
+  // show current coin count on load
+  coinsEl.textContent = getCoins();
 })();
 </script>
-<!-- END: Blossom & Blade chat logic patch v1 -->
-
 </body>
 </html>

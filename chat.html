@@ -1,145 +1,117 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chat • Blossom & Blade</title>
-  <style>
-    :root {
-      --bg:#0f1116; --panel:#151926; --panel-2:#111523;
-      --line:rgba(255,255,255,.08); --text:#e7e9ef; --muted:#9aa3b2;
-      --accent:#c05bdc; --accent-2:#7d5bff;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 800px at 50% -10%, #1c2032 0%, #0f1116 50%) fixed; color:var(--text); font:16px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
-    a{color:inherit}
-    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
-    .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;opacity:.9}
-    .brand{font-weight:700;letter-spacing:.3px}
-    .crumbs{font-size:14px;opacity:.8}
-    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,.35); padding:14px 14px 18px;}
-    .title{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-weight:700}
-    .title .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent-2)); box-shadow:0 0 20px rgba(192,91,220,.6)}
-    .stream{height:58vh;overflow:auto;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);padding:14px}
-    .row{display:flex;margin:8px 0}
-    .bubble{max-width:72%;padding:11px 13px;border-radius:13px; background:rgba(255,255,255,.06)}
-    .me{justify-content:flex-end}
-    .me .bubble{background:var(--accent-2);color:#fff}
-    .sys{font-size:12px;opacity:.7;text-align:center;margin:8px 0}
-    .inputbar{display:flex;gap:8px;margin:12px 4px 4px}
-    input[type=text]{flex:1;background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--text); border-radius:12px; padding:12px 14px; outline:none}
-    button{background:var(--accent); border:0; color:#fff; font-weight:700; padding:10px 16px; border-radius:12px; cursor:pointer}
-    .foot{font-size:12px;opacity:.75;text-align:center;margin-top:8px}
-    /* Modal */
-    #modalRoot:empty{display:none}
-    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
-    .modal{position:fixed;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%); width:min(520px,92%); background:rgba(16,18,28,.98); border:1px solid var(--line); border-radius:16px; padding:18px}
-    .modal h3{margin:4px 0 6px}
-    .bullets{margin:8px 0 10px 18px}
-    .actions{display:flex;gap:10px;align-items:center;margin-top:10px}
-    .link{font-size:14px;opacity:.9}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat • Blossom & Blade</title>
+<style>
+  :root{
+    --bg:#0f1116;--panel:#151926;--panel2:#111523;--line:rgba(255,255,255,.08);
+    --text:#e7e9ef;--muted:#9aa3b2;--accent:#c05bdc;--accent2:#7d5bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 800px at 50% -10%,#1c2032 0%,#0f1116 50%) fixed;color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  a{color:inherit}
+  .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+  .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;opacity:.9}
+  .brand{font-weight:700}
+  .crumbs{font-size:14px;opacity:.85}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.35);padding:14px 14px 18px}
+  .title{display:flex;align-items:center;gap:8px;margin:2px 4px 8px;font-weight:700}
+  .title .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent2));box-shadow:0 0 20px rgba(192,91,220,.6)}
+  /* trial bar */
+  .trial{display:flex;align-items:center;gap:10px;margin:6px 4px 10px}
+  .tlabel{font-size:13px;opacity:.9;min-width:110px}
+  .tbar{flex:1;height:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .tfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:100%}
+  .stream{height:56vh;overflow:auto;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);padding:14px}
+  .row{display:flex;margin:8px 0}
+  .bubble{max-width:72%;padding:11px 13px;border-radius:13px;background:rgba(255,255,255,.06)}
+  .me{justify-content:flex-end}
+  .me .bubble{background:var(--accent2);color:#fff}
+  .sys{font-size:12px;opacity:.75;text-align:center;margin:8px 0}
+  .inputbar{display:flex;gap:8px;margin:12px 4px 4px}
+  input[type=text]{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;outline:none}
+  button{background:var(--accent);border:0;color:#fff;font-weight:700;padding:10px 16px;border-radius:12px;cursor:pointer}
+  .foot{font-size:12px;opacity:.8;text-align:center;margin-top:8px}
+  /* modal */
+  #modalRoot:empty{display:none}
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
+  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,92%);background:rgba(16,18,28,.98);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .modal h3{margin:4px 0 6px}
+  .bullets{margin:8px 0 10px 18px}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  .btn{background:var(--accent);border:0;color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+  .ghost{background:transparent;border:1px solid var(--line)}
+  .link{font-size:14px;opacity:.9}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topline">
-      <div class="brand">Blossom &amp; Blade</div>
-      <div class="crumbs"><a href="index.html">Back</a></div>
-    </div>
-
-    <div class="panel">
-      <div class="title"><div class="dot"></div><span id="guyName">…</span></div>
-      <div id="stream" class="stream" aria-live="polite"></div>
-      <div class="inputbar">
-        <input id="in" type="text" placeholder="Say hi…" autocomplete="off" />
-        <button id="send">Send</button>
-      </div>
-      <div class="foot">Site stays PG-13. We follow your lead, but within Community Standards.</div>
-    </div>
+<div class="wrap">
+  <div class="topline">
+    <div class="brand">Blossom &amp; Blade</div>
+    <div class="crumbs"><a href="index.html">Back</a></div>
   </div>
 
-  <div id="modalRoot"></div>
+  <div class="panel">
+    <div class="title"><div class="dot"></div><span id="guyName">…</span></div>
+
+    <div class="trial">
+      <div class="tlabel" id="trialLabel">Trial: 3:30</div>
+      <div class="tbar"><div class="tfill" id="trialFill" style="width:100%"></div></div>
+    </div>
+
+    <div id="stream" class="stream" aria-live="polite"></div>
+
+    <div class="inputbar">
+      <input id="in" type="text" placeholder="Say hi…" autocomplete="off" />
+      <button id="send">Send</button>
+    </div>
+
+    <div class="foot">Site stays PG-13. We follow your lead, but within Community Standards.</div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
 
 <script>
 (() => {
   "use strict";
+  /* ------------ helpers ------------ */
+  const $=(s,el=document)=>el.querySelector(s);
+  const stream=$("#stream"), input=$("#in"), sendBtn=$("#send"), modalRoot=$("#modalRoot");
+  const trialLabel=$("#trialLabel"), trialFill=$("#trialFill"), nameEl=$("#guyName");
+  const row=(html,me=false)=>{const w=document.createElement("div");w.className="row"+(me?" me":"");w.innerHTML=`<div class="bubble">${html}</div>`;stream.appendChild(w);stream.scrollTop=stream.scrollHeight;};
+  const sys=t=>{const d=document.createElement("div");d.className="sys";d.textContent=t;stream.appendChild(d);stream.scrollTop=stream.scrollHeight;};
+  const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const now=()=>Date.now();
 
-  /* ---------- tiny helpers ---------- */
-  const $ = (s, el=document) => el.querySelector(s);
-  const row = (html, me=false) => {
-    const wrap = document.createElement("div");
-    wrap.className = "row" + (me ? " me" : "");
-    wrap.innerHTML = `<div class="bubble">${html}</div>`;
-    stream.appendChild(wrap);
-    stream.scrollTop = stream.scrollHeight;
+  /* ------------ men ------------ */
+  const MEN={
+    blade:{name:"Blade Kincaid",greet:["Footsteps behind you… I keep pace.","Found you, brave girl. Don’t run—yet.","Shadow-close. Patient… or a little chase?","Doorway or shadows? I’m right behind you.","Say the word and I hunt slow.","You’re here. I keep you safe—and a little breathless."]},
+    grayson:{name:"Grayson Kincaid",greet:["Pick: gentle questions or firm direction?","One line at a time. Give me a detail I should notice.","I’m listening. Where do you feel it—heart or head?","Short, true, and yours. Start there.","I lead, but I listen first. Give me one truth.","We’ll keep it simple—clarity, then heat."]},
+    dylan:{name:"Dylan Vale",greet:["Hands flat on the counter, pretty thing.","Calm tune-up or teasing tune-up?","Look at me. Do you want listening or guidance?","Slow ride or quick detour?","Hush—I’ve got you. One choice at a time.","Tell me where you want me first."]},
+    jesse:{name:"Jesse Granger",greet:["Straight talk—what’d the day do to you?","Park it, darlin’. Sweet or rowdy—your pick.","Barn door’s open. Easy or a little trouble?","You tell me true, I’ll treat you right.","Rough edges or soft hands tonight?","Saddle up or porch swing?"]},
+    alexander:{name:"Alexander Jackson",greet:["Lights low or city view while we talk?","Shoes off. I’m leading. Short answers.","Sit. I’ll take your coat and one weight off your mind.","Direction or gentle questions?","Answer me once. I’ll set the pace.","Tell me what you want noticed first."]},
+    silas:{name:"Silas Lennox",greet:["Come closer, muse. Soft, or a little rough on the edges?","Paint me a five-word picture.","Give me one detail. I’ll make it sing.","Borrow my voice—then I’ll give it back better.","Closer. I’ll take the edges off, or sharpen them.","Say one truth. I’ll score it for two."]}
   };
-  const sys = t => { const d=document.createElement("div"); d.className="sys"; d.textContent=t; stream.appendChild(d); stream.scrollTop=stream.scrollHeight; };
-  const esc = (s="") => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  const now = () => Date.now();
+  const allowed=Object.keys(MEN);
+  const url=new URL(location.href);
+  let man=(url.searchParams.get("man")||localStorage.getItem("bb.character")||"blade").toLowerCase();
+  if(!allowed.includes(man)) man="blade";
+  const GUY=MEN[man];
 
-  /* ---------- men ---------- */
-  const MEN = {
-    blade:{name:"Blade Kincaid", greet:[
-      "Footsteps behind you… I keep pace.","Found you, brave girl. Don’t run—yet.",
-      "Shadow-close. Patient… or a little chase?","Doorway or shadows? I’m right behind you.",
-      "Say the word and I hunt slow.","You’re here. I keep you safe—and a little breathless."
-    ]},
-    grayson:{name:"Grayson Kincaid", greet:[
-      "Pick: gentle questions or firm direction?","One line at a time. Give me a detail I should notice.",
-      "I’m listening. Where do you feel it—heart or head?","Short, true, and yours. Start there.",
-      "I lead, but I listen first. Give me one truth.","We’ll keep it simple—clarity, then heat."
-    ]},
-    dylan:{name:"Dylan Vale", greet:[
-      "Hands flat on the counter, pretty thing.","Calm tune-up or teasing tune-up?",
-      "Look at me. Do you want listening or guidance?","Slow ride or quick detour?",
-      "Hush—I’ve got you. One choice at a time.","Tell me where you want me first."
-    ]},
-    jesse:{name:"Jesse Granger", greet:[
-      "Straight talk—what’d the day do to you?","Park it, darlin’. Sweet or rowdy—your pick.",
-      "Barn door’s open. Easy or a little trouble?","You tell me true, I’ll treat you right.",
-      "Rough edges or soft hands tonight?","Saddle up or porch swing?"
-    ]},
-    alexander:{name:"Alexander Jackson", greet:[
-      "Lights low or city view while we talk?","Shoes off. I’m leading. Short answers.",
-      "Sit. I’ll take your coat and one weight off your mind.","Direction or gentle questions?",
-      "Answer me once. I’ll set the pace.","Tell me what you want noticed first."
-    ]},
-    silas:{name:"Silas Lennox", greet:[
-      "Come closer, muse. Soft, or a little rough on the edges?","Paint me a five-word picture.",
-      "Give me one detail. I’ll make it sing.","Borrow my voice—then I’ll give it back better.",
-      "Closer. I’ll take the edges off, or sharpen them.","Say one truth. I’ll score it for two."
-    ]},
-  };
-  const allowed = Object.keys(MEN);
-  const url = new URL(location.href);
-  let man = (url.searchParams.get("man") || localStorage.getItem("bb.character") || "blade").toLowerCase();
-  if (!allowed.includes(man)) man = "blade";
-  const GUY = MEN[man];
-
-  /* ---------- UI refs ---------- */
-  const nameEl = $("#guyName");
-  const stream = $("#stream");
-  const input = $("#in");
-  const sendBtn = $("#send");
-  const modalRoot = $("#modalRoot");
-
-  /* ---------- strikes / blocking ---------- */
+  /* ------------ strikes / blocking ------------ */
   const STRIKE_KEY="bb.strikes", STRIKE_EXP="bb.strikes.exp", BLOCK_UNTIL="bb.block.until";
-  const BLOCK_DAYS = 30;
-  const strikes = () => parseInt(localStorage.getItem(STRIKE_KEY)||"0",10);
-  const resetStrikes = () => { localStorage.removeItem(STRIKE_KEY); localStorage.removeItem(STRIKE_EXP); };
-  const addStrike = () => {
-    const n = strikes() + 1;
-    localStorage.setItem(STRIKE_KEY, String(n));
-    localStorage.setItem(STRIKE_EXP, String(now() + 30*24*60*60*1000));
-    if (n>=3) localStorage.setItem(BLOCK_UNTIL, String(now()+BLOCK_DAYS*24*60*60*1000));
-    return n;
-  };
-  const blocked = () => { const u=parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10); return u && now()<u; };
+  const BLOCK_DAYS=30;
+  const strikes=()=>parseInt(localStorage.getItem(STRIKE_KEY)||"0",10);
+  const resetStrikes=()=>{localStorage.removeItem(STRIKE_KEY);localStorage.removeItem(STRIKE_EXP);};
+  const addStrike=()=>{const n=strikes()+1;localStorage.setItem(STRIKE_KEY,String(n));localStorage.setItem(STRIKE_EXP,String(now()+30*24*60*60*1000));if(n>=3)localStorage.setItem(BLOCK_UNTIL,String(now()+BLOCK_DAYS*24*60*60*1000));return n;};
+  const blocked=()=>{const u=parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10);return u && now()<u;};
 
-  /* ---------- hard-ban rules only ---------- */
-  const BAN = [
+  /* ------------ hard-ban rules only ------------ */
+  const BAN=[
     /\b(barely\s*legal|under\s*age|underage|minor|teen\b|high-?school|school\s*(girl|boy))\b/i,
     /\b(step[-\s]?(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|son|daughter)|incest)\b/i,
     /\b(rape|raping|rapist|non[-\s]?consent|without\s+consent|coercion|force(?:d|ful)|roofie|drug(?:ged)?\s+me)\b/i,
@@ -149,14 +121,16 @@
     /\b(strangle|asphyxiat(?:e|ion)|choke\s*(me|her|him)?(?:\s*(out|until|till|to))?)\b/i,
     /\b(faggot|retard(?:ed)?|tranny|nigger|kike|spic|chink)\b/i
   ];
-  const violates = t => BAN.find(rx=>rx.test(t||""));
+  const violates=t=>BAN.find(rx=>rx.test(t||""));
 
-  function showModal(html){ modalRoot.innerHTML = `<div class="backdrop"></div><div class="modal">${html}</div>`; }
-  function closeModal(){ modalRoot.innerHTML = ""; }
-  function showStandards() {
-    const n = addStrike();
-    if (blocked()) return showBlocked();
-    const remain = Math.max(0, 3-n);
+  /* ------------ modal helpers ------------ */
+  function showModal(html){modalRoot.innerHTML=`<div class="backdrop"></div><div class="modal">${html}</div>`;}
+  function closeModal(){modalRoot.innerHTML="";}
+
+  function showStandards(){
+    const n=addStrike();
+    if(blocked()) return showBlocked();
+    const remain=Math.max(0,3-n);
     showModal(`
       <h3>Community Standards</h3>
       <p>We keep chat adult &amp; consensual. PG-13 by default. No visuals — words only.</p>
@@ -172,70 +146,139 @@
         <a class="link" href="standards.html" target="_blank" rel="noopener">View full standards</a>
       </div>
     `);
-    $("#ok").onclick = closeModal;
+    $("#ok").onclick=closeModal;
   }
+
   function showBlocked(){
-    const until = parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10);
+    const until=parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10);
     showModal(`
       <h3>Device blocked</h3>
       <p>You’ve hit 3 violations. This device is blocked until <strong>${new Date(until).toLocaleString()}</strong>.</p>
-      <div class="actions"><button id="back">Back to men</button></div>
+      <div class="actions"><button id="back" class="btn">Back to men</button></div>
     `);
-    $("#back").onclick = () => location.href="index.html";
+    $("#back").onclick=()=>location.href="index.html";
   }
 
-  /* ---------- network fallback (one-time) ---------- */
+  /* ------------ trial timer (3.5 minutes, 3 previews) ------------ */
+  const DURATION=210;               // seconds
+  const PREV_MAX=3;
+  const PREV_KEY=id=>`bb.prev.${id}`;
+  const COOLDOWN_KEY="bb.prev.cooldown.until";
+
+  const subscribed = () => (localStorage.getItem("bb.sub")==="day" || localStorage.getItem("bb.sub")==="month");
+  let secondsLeft=DURATION, timerId=null, previewUsed=false;
+
+  function format(mm){const m=Math.floor(mm/60), s=mm%60; return `${m}:${String(s).padStart(2,"0")}`;}
+  function startTimer(){
+    if(subscribed()) { trialLabel.textContent="Unlimited"; trialFill.style.width="100%"; return; }
+    secondsLeft=DURATION;
+    updateBar();
+    timerId=setInterval(()=>{
+      secondsLeft--; updateBar();
+      if(secondsLeft<=0){ clearInterval(timerId); onTrialEnd(); }
+    },1000);
+  }
+  function updateBar(){
+    trialLabel.textContent=`Trial: ${format(secondsLeft)}`;
+    trialFill.style.width=`${Math.max(0,(secondsLeft/DURATION)*100)}%`;
+  }
+
+  function onTrialEnd(){
+    // record a used preview
+    const used=parseInt(localStorage.getItem(PREV_KEY(man))||"0",10)+1;
+    localStorage.setItem(PREV_KEY(man), String(used));
+    previewUsed=true;
+
+    // cooldown option always available (1 minute)
+    const cooldownBtn = `<button id="later" class="btn ghost">Maybe later (1 minute)</button>`;
+
+    if(used < PREV_MAX){
+      showModal(`
+        <h3>Time’s up</h3>
+        <p>You’ve had ${used} of ${PREV_MAX} free previews with ${MEN[man].name}.</p>
+        <div class="actions">
+          <button id="again" class="btn">Another 3½-minute preview</button>
+          ${cooldownBtn}
+        </div>
+      `);
+      $("#again").onclick=()=>{ closeModal(); resetRoom(); };
+    } else {
+      showModal(`
+        <h3>Free previews used up</h3>
+        <p>No free previews left for ${MEN[man].name}. Grab a pass to keep chatting.</p>
+        <div class="actions">
+          <a class="btn" href="pay.html?man=${encodeURIComponent(man)}">Day Pass or Monthly</a>
+          ${cooldownBtn}
+        </div>
+      `);
+    }
+    $("#later").onclick=()=>{
+      localStorage.setItem(COOLDOWN_KEY, String(now()+60*1000));
+      closeModal(); sys("Preview paused — try again in about a minute.");
+    };
+  }
+
+  function resetRoom(){
+    // new trial; clear the stream but keep standards strikes memory
+    stream.innerHTML="";
+    greet();
+    startTimer();
+  }
+
+  /* ------------ network fallback ------------ */
   let hiccupShown=false;
   function hiccup(){ if(hiccupShown) return; hiccupShown=true; row("Network hiccup. Give me one more line and I’m right here."); }
 
-  /* ---------- LLM call ---------- */
-  const history = [];
+  /* ------------ LLM call ------------ */
+  const history=[];
   async function askLLM(text){
     try{
-      const res = await fetch("/api/brain", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({man, text, history})
-      });
+      const res=await fetch("/api/brain",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({man,text,history})});
       if(!res.ok) throw new Error("bad status");
-      const data = await res.json();
+      const data=await res.json();
       return (data.reply||"").trim();
     }catch(e){ return null; }
   }
 
-  /* ---------- send pipeline ---------- */
+  /* ------------ send pipeline ------------ */
   async function send(){
-    const txt = (input.value||"").trim();
+    const txt=(input.value||"").trim();
     if(!txt) return;
-    input.value = "";
-    row(esc(txt), true);
+    input.value=""; row(esc(txt),true);
 
-    if (blocked()){ showBlocked(); return; }
-    if (violates(txt)){ showStandards(); return; }
+    if(blocked()){ showBlocked(); return; }
+    if(violates(txt)){ showStandards(); return; }
 
-    const reply = await askLLM(txt);
-    if (!reply){ hiccup(); return; }
-    if (violates(reply)){ showStandards(); return; }
+    const reply=await askLLM(txt);
+    if(!reply){ hiccup(); return; }
+    if(violates(reply)){ showStandards(); return; }
 
-    history.push({role:"user", content:txt});
-    history.push({role:"assistant", content:reply});
-    row(esc(reply), false);
+    history.push({role:"user",content:txt});
+    history.push({role:"assistant",content:reply});
+    row(esc(reply),false);
   }
 
-  /* ---------- init ---------- */
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  (function init(){
-    nameEl.textContent = MEN[man].name;
-    // greeting
+  /* ------------ init ------------ */
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+  function greet(){
+    nameEl.textContent=MEN[man].name;
     row(`<strong>${MEN[man].name}:</strong> ${esc(pick(MEN[man].greet))}`);
+  }
+
+  (function init(){
+    // cooldown check
+    const cd=parseInt(localStorage.getItem(COOLDOWN_KEY)||"0",10);
+    if(cd && now()<cd){ const secs=Math.max(1,Math.ceil((cd-now())/1000)); trialLabel.textContent=`Cooldown: ${format(secs)}`; trialFill.style.width="0%"; }
+    greet();
     input.focus();
+    sendBtn.addEventListener("click",send);
+    input.addEventListener("keydown",e=>{ if(e.key==="Enter") send(); });
 
-    sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", e=>{ if(e.key==="Enter") send(); });
+    // clear expired strike history
+    const exp=parseInt(localStorage.getItem("bb.strikes.exp")||"0",10); if(exp && now()>exp) resetStrikes();
 
-    // clear expired strike record
-    const exp = parseInt(localStorage.getItem("bb.strikes.exp")||"0",10);
-    if (exp && now()>exp) resetStrikes();
+    // start timer unless subscribed or in cooldown
+    if(!(cd && now()<cd)) startTimer();
   })();
 })();
 </script>

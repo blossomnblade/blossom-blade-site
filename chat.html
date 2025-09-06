@@ -1,445 +1,385 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat • Blossom & Blade</title>
-  <meta name="description" content="Blossom & Blade chat — adult & consensual conversation within Community Standards." />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat · Blossom & Blade</title>
+<style>
+  :root{
+    --ink:#e9e7f1;
+    --ink-soft:#cfcbe3;
+    --bg:#0b0d12;
+    --panel:rgba(10,12,18,.40);          /* translucent panel */
+    --bubble-me:#4b3d8a;
+    --bubble-bot:#1a1f2e;
+    --bubble-me-text:#fff;
+    --bubble-bot-text:#e8e6f4;
+    --accent:#a979ff;
+    --accent-2:#f18bbf;
+    --bad:#ff5b6e;
+    --ok:#9cf09c;
+  }
 
-  <style>
-    :root{
-      --bg: url("images/gothic-bg.jpg");
-      --panel: #121725;
-      --ink: #e9ecf5;
-      --muted: #aeb5c6;
-      --accent:#c077ff;
-      --accent-2:#7cc1ff;
-      --pill:#21283a;
-      --bubble:#0f1422;
-      --user:#272b39;
-    }
-    *{ box-sizing:border-box }
-    html,body{ height:100% }
-    body{
-      margin:0; color:var(--ink);
-      background: #0b0d12 var(--bg) center/cover fixed no-repeat;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
-    }
-    body::before{
-      content:""; position:fixed; inset:0;
-      background:linear-gradient(180deg,rgba(8,10,16,.65),rgba(8,10,16,.8));
-      z-index:-1;
-    }
-    .wrap{ max-width:1100px; margin:0 auto; padding:22px 14px 68px }
-    header{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; margin-bottom:12px;
-    }
-    .left{ display:flex; align-items:center; gap:12px; min-width:0 }
-    .name{ font-weight:800; letter-spacing:.3px }
-    .crumb{ font-size:12px; opacity:.75 }
-    .trialbar{ height:6px; background:#1a2132; border-radius:99px; overflow:hidden; }
-    .trialbar>i{ display:block; height:100%; width:25%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); }
-    .panel{
-      background:var(--panel); border:1px solid rgba(255,255,255,.06);
-      border-radius:18px; box-shadow:0 10px 24px rgba(0,0,0,.35);
-      overflow:hidden;
-    }
-    .stream{ padding:18px; display:flex; flex-direction:column; gap:10px; min-height:320px; max-height:68vh; overflow:auto }
-    .row{ display:flex; gap:10px; align-items:flex-end }
-    .row.you{ justify-content:flex-end }
-    .bubble{
-      padding:12px 14px; border-radius:14px 14px 14px 10px;
-      background:var(--bubble); border:1px solid rgba(255,255,255,.06);
-      max-width:72ch; line-height:1.35; font-size:15px;
-      white-space:pre-wrap; word-break:break-word;
-    }
-    .you .bubble{ background:var(--user); border-color:rgba(255,255,255,.08) }
-    .hint{ font-size:12px; opacity:.7; text-align:center; padding:8px }
-    .composer{
-      display:flex; gap:10px; padding:12px; background:#0e1320;
-      border-top:1px solid rgba(255,255,255,.06);
-    }
-    textarea{
-      flex:1; min-height:44px; max-height:132px; resize:vertical;
-      background:#0c111c; color:var(--ink); border:1px solid rgba(255,255,255,.08);
-      border-radius:12px; padding:12px 12px; font-size:15px; outline: none;
-    }
-    textarea:focus{ border-color:rgba(124,193,255,.55); box-shadow:0 0 0 3px rgba(124,193,255,.25) }
-    .send{
-      padding:0 18px; border-radius:12px; border:0; cursor:pointer;
-      background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#0b0d12;
-      font-weight:800; min-width:84px;
-    }
-    .send[disabled]{ opacity:.55; cursor:not-allowed }
-    .topline{ display:flex; align-items:center; justify-content:space-between; padding:12px 18px 4px }
-    .std-note{ font-size:12px; opacity:.72 }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--ink);
+    background:#0b0d12 url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
+    background-blend-mode:multiply;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+  }
 
-    /* Standards modal */
-    .modal{
-      position:fixed; inset:0; display:none; place-items:center;
-      background:rgba(3,6,12,.6); backdrop-filter: blur(2px); z-index:50;
-    }
-    .modal.on{ display:grid }
-    .box{
-      width:min(640px,92vw); background:#121725; border:1px solid rgba(255,255,255,.08);
-      border-radius:18px; box-shadow:0 18px 44px rgba(0,0,0,.45); padding:18px 18px 16px;
-    }
-    .box h3{ margin:0 0 8px; font-size:20px }
-    .box ul{ margin:8px 0 12px 18px; line-height:1.5 }
-    .actions{ display:flex; gap:10px; flex-wrap:wrap }
-    .btn{ padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:#0f1422; color:var(--ink); cursor:pointer }
-    .btn.primary{ background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#0b0d12; border:0; font-weight:800 }
-    .btn.danger{ background:#2a0e14; border-color:#45131c; color:#ffd2d2 }
-    .warn{ font-size:12px; opacity:.75; margin-top:6px }
-  </style>
+  .page{
+    min-height:100%;
+    backdrop-filter:saturate(120%) blur(.5px);
+    background:linear-gradient(180deg,rgba(4,6,10,.55),rgba(4,6,10,.75));
+  }
+
+  header{
+    padding:16px 20px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .crumb a{color:var(--ink-soft); text-decoration:none}
+  .crumb a:hover{color:var(--ink)}
+  h1{font-size:18px; margin:0; letter-spacing:.2px}
+  .subtle{font-size:12px; color:var(--ink-soft)}
+
+  .progress{
+    height:6px; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden; margin:8px 20px 0;
+  }
+  .progress>i{display:block; height:100%; width:28%; background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+
+  .chatwrap{
+    margin:18px auto 24px;
+    width:min(1000px,calc(100% - 32px));
+    border-radius:22px;
+    padding:18px;
+    background:var(--panel);            /* translucent pane so the room shows through */
+    box-shadow:0 8px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.06);
+  }
+
+  .log{
+    height:56vh; min-height:360px; max-height:62vh;
+    overflow:auto;
+    padding:10px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .row{display:flex}
+  .row.you{justify-content:flex-end}
+  .bubble{
+    max-width:min(760px,78%);
+    padding:10px 12px; border-radius:14px;
+    line-height:1.35;
+    box-shadow:0 2px 10px rgba(0,0,0,.18);
+  }
+  .row.you .bubble{background:var(--bubble-me); color:var(--bubble-me-text)}
+  .row.bot .bubble{background:var(--bubble-bot); color:var(--bubble-bot-text)}
+  .botname{font-weight:700; margin-right:6px}
+
+  .composer{display:flex; gap:10px; margin-top:14px}
+  .input{
+    flex:1; border-radius:14px; border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.06);
+    color:var(--ink); padding:14px 14px;
+    outline:none;
+  }
+  .btn{
+    border:0; border-radius:12px; padding:12px 16px; cursor:pointer;
+    background:linear-gradient(180deg,var(--accent),#6b50dd);
+    color:#fff; font-weight:700; letter-spacing:.2px;
+  }
+  .btn:disabled{opacity:.6; cursor:not-allowed}
+
+  .footerline{
+    text-align:center; font-size:12px; color:var(--ink-soft); margin-top:10px;
+  }
+
+  /* modal */
+  .modal.hidden{display:none}
+  .modal{
+    position:fixed; inset:0; display:grid; place-items:center; z-index:50;
+    background:rgba(5,7,11,.62);
+    backdrop-filter:blur(2px);
+  }
+  .modal__card{
+    width:min(680px,calc(100% - 28px));
+    background:#0e1220; color:var(--ink);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:16px; padding:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);
+  }
+  .modal__card h3{margin:0 0 6px}
+  .modal__lede{color:var(--ink-soft); margin:0 0 10px}
+  .modal__list{margin:8px 0 10px 20px}
+  .modal__list li{margin:6px 0}
+  .modal__note{font-size:13px; color:#ffd1d6; margin:8px 0}
+  .modal-footnote{font-size:.85rem; opacity:.7; margin:.25rem 0 0}
+
+  .modal__actions{display:flex; gap:8px; margin-top:12px}
+  .btn--ghost{
+    background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.15);
+  }
+
+  /* block screen */
+  .blocked{
+    position:fixed; inset:0; display:grid; place-items:center; z-index:60;
+    background:rgba(0,0,0,.8); color:#fff; text-align:center; padding:20px;
+  }
+  .blocked .card{max-width:520px; background:#0f1322; padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,.1)}
+  .blocked h3{margin:0 0 8px}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="left">
-        <div class="name" id="guyName">…</div>
-        <div class="crumb" id="crumb"></div>
-      </div>
-    </header>
+<div class="page">
+  <header>
+    <div>
+      <div class="crumb"><a href="/index.html">Blossom & Blade</a></div>
+      <h1 id="guyTitle">…</h1>
+    </div>
+    <div class="subtle">PG-13 by default</div>
+  </header>
 
-    <div class="panel">
-      <div class="topline">
-        <div style="font-weight:700" id="titleLine">Chat</div>
-        <div class="std-note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
-      </div>
-      <div class="trialbar" aria-hidden="true"><i id="trialFill"></i></div>
+  <div class="progress" aria-hidden="true"><i></i></div>
 
-      <div class="stream" id="stream" aria-live="polite">
-        <div class="row"><div class="bubble">…</div></div>
-      </div>
+  <main class="chatwrap" aria-live="polite">
+    <div id="log" class="log"></div>
 
-      <div class="composer">
-        <textarea id="input" placeholder="Say hi…"></textarea>
-        <button class="send" id="sendBtn">Send</button>
-      </div>
+    <div class="composer">
+      <input id="input" class="input" placeholder="Say hi…" autocomplete="off" />
+      <button id="sendBtn" class="btn">Send</button>
+    </div>
+
+    <div class="footerline">Site stays PG-13. We follow your lead, but within Community Standards.</div>
+  </main>
+</div>
+
+<!-- Community Standards Modal (full block) -->
+<div id="standardsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="standardsTitle">
+  <div class="modal__card">
+    <h3 id="standardsTitle">Community Standards</h3>
+
+    <p class="modal__lede">
+      We keep chat adult &amp; consensual. PG-13 by default. No visuals—words only.
+    </p>
+
+    <ul class="modal__list">
+      <li>No minors or teen/high-school contexts</li>
+      <li>No incest/step-family, non-consent/coercion, or intoxication without capacity</li>
+      <li>No bestiality/necrophilia, trafficking, extreme bodily fluids, or blood/knife “play”</li>
+      <li>No hate slurs or targeted harassment</li>
+    </ul>
+
+    <p class="modal__note">
+      We didn’t send that last message. Warning <span id="warnCount">1</span> of 3. Three warnings triggers a 30-day block.
+    </p>
+
+    <p class="modal-footnote">
+      If you’re here to violate our community standards, this isn’t the site for you.
+    </p>
+
+    <div class="modal__actions">
+      <button id="standardsOk" class="btn">Okay — keep it PG-13</button>
+      <a id="standardsFull" class="btn btn--ghost" href="/standards.html" target="_blank" rel="noopener">View full standards</a>
     </div>
   </div>
+</div>
+<!-- /Community Standards Modal -->
 
-  <!-- Community Standards modal -->
-  <div class="modal" id="stdModal" role="dialog" aria-modal="true" aria-labelledby="stdTitle">
-    <div class="box">
-      <h3 id="stdTitle">Community Standards</h3>
-      <p style="margin:0 0 6px">We keep chat adult & consensual. PG-13 by default. No visuals—words only.</p>
-      <ul>
-        <li>No <strong>minors</strong>, “school boy/girl”, “barely legal”, teen/high-school contexts.</li>
-        <li>No <strong>incest/step-family</strong>, <strong>non-consent/coercion</strong>, intoxication without capacity.</li>
-        <li>No <strong>bestiality</strong>, <strong>necrophilia</strong>, trafficking, extreme bodily fluids, blood/knife “play”.</li>
-        <li>No hate slurs or targeted harassment.</li>
-      </ul>
-      <div class="warn" id="stdWarn">We didn't send that last message. Warning <span id="warnCount">1</span> of 3. 3 warnings = 30-day block.</div>
-      <div class="actions" style="margin-top:10px">
-        <button class="btn primary" id="stdOkay">Okay — keep it PG-13</button>
-        <button class="btn danger" id="stdBlock">Block this device</button>
-      </div>
-    </div>
+<!-- Block screen (appears at 3 warnings) -->
+<div id="blocked" class="blocked hidden">
+  <div class="card">
+    <h3>Temporarily Blocked</h3>
+    <p>You hit 3 standards warnings. For everyone’s safety, this device is blocked from chat for 30 days.</p>
+    <p class="subtle">Come back later—we’ll be here. 💜</p>
   </div>
+</div>
 
-  <script>
-    /* ---------------- Guy directory ---------------- */
-    const GUYS = {
-      alexander: {
-        name: "Alexander Jackson",
-        bg: "images/bg_alexander_boardroom.jpg",
-        greets: [
-          "Lights low or city view while we talk?",
-          "Seat’s warm. Tell me one thing your day didn’t give you.",
-          "Come in. I pour, you choose: sweet or straight?",
-          "I’m listening—do you want gentle or decisive tonight?",
-          "Door’s closed. What do you want me to notice first?",
-          "Short answers from now on. First move—yours or mine?"
-        ]
-      },
-      dylan: {
-        name: "Dylan Vale",
-        bg: "images/dylan-garage.jpg",
-        greets: [
-          "Hands flat on the counter, pretty thing. Calm talk or a teasing tune-up?",
-          "I’ve got time and bad ideas. What kind do you want?",
-          "Stage lights or shadows? I’ll match your mood.",
-          "Tell me the line I shouldn’t cross…and I’ll stand right on it.",
-          "What should I hear first—your laugh or your breath?",
-          "Slow burn or bright spark?"
-        ]
-      },
-      jesse: {
-        name: "Jesse Granger",
-        bg: "images/jesse_bg.jpg",
-        greets: [
-          "Straight talk—what’d the day do to you?",
-          "Darlin’, pick: sweet or rowdy?",
-          "Boots off. I’ve got patience and bad manners. Which do you want?",
-          "Tell me where to drive this—soft shoulder or open road?",
-          "Crowd’s gone. Now it’s just us. What are you hungry for?",
-          "You look like trouble. Ask me to prove it."
-        ]
-      },
-      grayson: {
-        name: "Grayson Kincaid",
-        bg: "images/grayson-bg.jpg",
-        greets: [
-          "Pick: gentle questions or firm direction?",
-          "Close the door, love. How honest are we being tonight?",
-          "I take my time. Tell me where to start.",
-          "Temptation or tenderness first?",
-          "Say something I can agree with—or argue about.",
-          "You came here on purpose. What was it?"
-        ]
-      },
-      silas: {
-        name: "Silas Lennox",
-        bg: "images/bg_silas_stage.jpg",
-        greets: [
-          "Tell me your mood and I’ll tune the lyric to it.",
-          "We can talk poetry or sin. Dealer’s choice.",
-          "Backstage is quiet. What should echo first?",
-          "Confession or request?",
-          "I’m all ears—give me the first line.",
-          "Do you want me soft-spoken or unrestrained?"
-        ]
-      },
-      blade: {
-        name: "Blade Kincaid",
-        bg: "images/blade-woods.jpg",
-        greets: [
-          "Footsteps behind you… I keep pace.",
-          "Found you, brave girl. Don’t run—yet.",
-          "You’re here. I keep you safe—and a little breathless.",
-          "I don’t chase. I collect. What do you want me to keep?",
-          "Careful. I like the sound you make when you’re cornered.",
-          "Ask me for something I shouldn’t give."
-        ]
-      }
-    };
+<script>
+(() => {
+  /* ------------------ setup & theming ------------------ */
+  const qs = new URLSearchParams(location.search);
+  const man = (qs.get('man') || 'blade').toLowerCase();
 
-    /* ---------------- Utilities ---------------- */
-    const qs = new URLSearchParams(location.search);
-    const man = (qs.get("man") || localStorage.getItem("bb.character") || "grayson").toLowerCase();
-    const guy = GUYS[man] || GUYS.grayson;
+  const names = {
+    alexander: 'Alexander Jackson',
+    dylan: 'Dylan Vale',
+    jesse: 'Jesse Granger',
+    grayson: 'Grayson Kincaid',
+    silas: 'Silas Lennox',
+    blade: 'Blade Kincaid'
+  };
 
-    // Background & headings
-    document.body.style.setProperty("--bg", `url("${guy.bg}")`);
-    document.getElementById("guyName").textContent = guy.name;
-    document.getElementById("titleLine").textContent = guy.name;
-    document.getElementById("crumb").textContent = "Blossom & Blade";
+  const backgrounds = {
+    alexander: '/images/bg_alexander_boardroom.jpg',
+    dylan:     '/images/dylan-garage.jpg',
+    jesse:     '/images/jesse_bg.jpg',
+    grayson:   '/images/grayson-bg.jpg',
+    silas:     '/images/bg_silas_stage.jpg',
+    blade:     '/images/blade-woods.jpg',
+    fallback:  '/images/gothic-bg.jpg'
+  };
 
-    // Trial fill just for motion
-    (function animateFill(){
-      const el = document.getElementById("trialFill");
-      let w = 8, dir = 1;
-      setInterval(()=>{ w += dir*0.6; if (w>86||w<8) dir*=-1; el.style.width = w+"%"; }, 60);
-    })();
+  document.title = `${names[man] || 'Chat'} · Blossom & Blade`;
+  document.getElementById('guyTitle').textContent = names[man] || '…';
 
-    const API_PATH = "/api/chat";
+  const bg = backgrounds[man] || backgrounds.fallback;
+  document.body.style.backgroundImage = `url("${bg}")`;
+  document.body.style.backgroundBlendMode = 'multiply';
 
-    const stream = document.getElementById("stream");
-    const input = document.getElementById("input");
-    const sendBtn = document.getElementById("sendBtn");
+  /* ------------------ elements ------------------ */
+  const logEl   = document.getElementById('log');
+  const inputEl = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const modal   = document.getElementById('standardsModal');
+  const warnCountEl = document.getElementById('warnCount');
+  const modalOk = document.getElementById('standardsOk');
+  const blocked = document.getElementById('blocked');
 
-    function row(html, who="bot"){
-      const r = document.createElement("div");
-      r.className = "row" + (who==="you" ? " you" : "");
-      const b = document.createElement("div");
-      b.className = "bubble";
-      b.innerHTML = html;
-      r.appendChild(b);
-      stream.appendChild(r);
-      stream.scrollTop = stream.scrollHeight;
+  /* ------------------ warnings / block ------------------ */
+  const KEY = `bb_warns_${man}`;
+  function getWarns(){
+    const raw = localStorage.getItem(KEY);
+    try{ return Math.max(0, parseInt(raw||'0',10)); }catch{ return 0; }
+  }
+  function setWarns(n){ localStorage.setItem(KEY, String(n)); }
+
+  function showBlockedIfNeeded(){
+    if(getWarns() >= 3){
+      blocked.classList.remove('hidden');
+      inputEl.disabled = true;
+      sendBtn.disabled = true;
+      return true;
     }
+    return false;
+  }
+  showBlockedIfNeeded();
 
-    function escapeHtml(s){
-      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
+  function showModal(){
+    warnCountEl.textContent = getWarns();
+    modal.classList.remove('hidden');
+  }
+  modalOk.addEventListener('click', () => modal.classList.add('hidden'));
 
-    // local storage helpers
-    const KEY_WARN = "bb.warns";
-    const KEY_BLOCK = "bb.blockedUntil";
-    const KEY_HIST = "bb.hist."+man;
+  /* ------------------ simple hard-rule detector ------------------ */
+  // Only the “hard” items. We avoid false flags like "schoolgirl outfit".
+  const hardRules = [
+    /\b(barely\s*legal|under\s*age|minor|underage|teen(ager)?|child|high\s*school)\b/i,          // minors / teen / HS
+    /\b(incest|step-?(mom|dad|sister|brother|family))\b/i,                                      // incest
+    /\b(non[-\s]?consensual|non[-\s]?consent|no\s*consent|without\s*consent|rape|coercion)\b/i, // non-consent
+    /\b(bestiality|zoophilia|necrophilia)\b/i,                                                  // bestiality / necrophilia
+    /\b(blood\s*play|knife\s*play|scat|feces|fecal|vomit|urine\s*play|pee\s*play)\b/i,          // extreme fluids / blood/knife play
+    /\b(slur|kike|fag|retard|chink|spic|nigger|tranny)\b/i                                      // hate slurs (common list)
+  ];
 
-    function getWarns(){ try{ return +localStorage.getItem(KEY_WARN) || 0 }catch(e){ return 0 } }
-    function setWarns(n){ try{ localStorage.setItem(KEY_WARN, String(n)); }catch(e){} }
-    function blockedUntil(){ try{ return +localStorage.getItem(KEY_BLOCK) || 0 }catch(e){ return 0 } }
-    function blockForDays(days){
-      const until = Date.now() + days*24*60*60*1000;
-      try{ localStorage.setItem(KEY_BLOCK, String(until)); }catch(e){}
-    }
-
-    // Standards guard — *tight, not overbroad*
-    const BAD = [
-      /\b(minor|under\s*age|underage|teen(ager)?|high[-\s]?school|barely\s*legal|school\s*(boy|girl))\b/i,
-      /\b(incest|step[-\s]?(mom|mother|dad|father|bro(ther)?|sis(ter)?|family))\b/i,
-      /\b(non[-\s]?consensual|non[-\s]?consent|without\s+consent|rape|coercion)\b/i,
-      /\b(bestiality|zoophil\w*|animal\s*(play|sex))\b/i,
-      /\b(necrophil\w*|corpse)\b/i,
-      /\b(blood\s*play|knife\s*play|cut(ting)?\s*play|stab|carve|slit)\b/i,
-      /\b(feces|fecal|scat|urine\s*play|piss\s*play|vomit\s*play)\b/i,
-      /(nigg|fag|tranny|retard|\bkike\b|\bspic\b)/i
-    ];
-    function violatesStandards(text){
-      let t = (text||"").toLowerCase();
-      // Allow “you remind me of college” / “cheerleader outfit” — avoid false hits
-      // We only hit if explicit terms above present.
-      return BAD.some(rx => rx.test(t));
-    }
-
-    // Modal logic
-    const modal = document.getElementById("stdModal");
-    const warnCountEl = document.getElementById("warnCount");
-    document.getElementById("stdOkay").onclick = () => { modal.classList.remove("on"); input.focus(); };
-    document.getElementById("stdBlock").onclick = () => { blockForDays(30); modal.classList.remove("on"); hardBlock(); };
-
-    function showStandards(){
-      warnCountEl.textContent = String(getWarns()+1);
-      modal.classList.add("on");
-    }
-    function hardBlock(){
-      input.disabled = true; sendBtn.disabled = true;
-      row("This device is blocked for safety for 30 days.", "bot");
-    }
-
-    if (blockedUntil() > Date.now()) hardBlock();
-
-    // Restore history
-    try {
-      const prev = JSON.parse(localStorage.getItem(KEY_HIST) || "[]");
-      stream.innerHTML = "";
-      if (prev.length){
-        prev.forEach(x => row(escapeHtml(x.text), x.who));
-      }
-    } catch(e){
-      stream.innerHTML = "";
-    }
-
-    // Greeting (if no history)
-    if (!stream.querySelector(".row")){
-      const greet = guy.greets[Math.floor(Math.random()*guy.greets.length)];
-      row(`<strong>${guy.name}:</strong> ${escapeHtml(greet)}`);
-    }
-
-    function saveHistory(){
-      const all = [...stream.querySelectorAll(".row")].map(r => ({
-        who: r.classList.contains("you") ? "you" : "bot",
-        text: r.querySelector(".bubble").textContent
-      }));
-      try { localStorage.setItem(KEY_HIST, JSON.stringify(all.slice(-80))); } catch(e){}
-    }
-
-    async function send(){
-      if (input.disabled) return;
-      const text = input.value.trim();
-      if (!text) return;
-
-      // Block check
-      if (blockedUntil() > Date.now()) return;
-
-      // Standards guard
-      if (violatesStandards(text)){
-        setWarns(getWarns()+1);
-        showStandards();
-        // Auto-block on 3
-        if (getWarns() >= 3){ blockForDays(30); hardBlock(); }
-        return;
-      }
-
-      // Echo user
-      row(escapeHtml(text), "you");
-      saveHistory();
-      input.value = ""; input.focus();
-      sendBtn.disabled = true; input.disabled = true;
-
-      // Build compact history for API (last 18 turns)
-      const turns = [...stream.querySelectorAll(".row")].slice(-18).map(r => ({
-        role: r.classList.contains("you") ? "user" : "assistant",
-        content: r.querySelector(".bubble").textContent
-      }));
-
-      let replied = false;
-
-      try{
-        const res = await fetch(API_PATH, {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ man, history: turns })
-        });
-        if (!res.ok) throw new Error("bad status");
-        const data = await res.json();
-        const txt = (data && data.reply) ? String(data.reply) : "";
-        if (txt){
-          row(`<strong>${guy.name}:</strong> ${escapeHtml(txt)}`);
-          replied = true;
-        }
-      }catch(e){ /* fall through */ }
-
-      if (!replied){
-        // graceful fallback
-        const soft = [
-          "Network hiccup. Give me one more line and I’m right here.",
-          "Say it again for me, slow—I want to hear it properly.",
-          "I’m still with you. Nudge me—where do you want this to go?"
-        ];
-        row(`<em>${escapeHtml(soft[Math.floor(Math.random()*soft.length)])}</em>`);
-      }
-
-      saveHistory();
-      sendBtn.disabled = false; input.disabled = false;
-      input.focus();
-    }
-
-    sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", (e)=>{
-      if (e.key === "Enter" && !e.shiftKey){
-        e.preventDefault();
-        send();
-      }
-    });
-
-    // Keyboard focus on load
-    setTimeout(()=>input.focus(), 150);
-  </script><!-- Glassy chat pane + solid bubbles -->
-<style>
-  /* The big chat panel becomes translucent so the background shows through */
-  .chat-panel, .chat, .panel, .frame, .log {
-    background: rgba(2, 8, 23, 0.28);      /* adjust 0.28 → more/less see-through */
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
+  function violatesHardRules(text){
+    return hardRules.some(rx => rx.test(text));
   }
 
-  /* Keep the message bubbles solid & readable (cover common class names) */
-  .log :is(.bubble, .msg, .mine, .theirs, .assistant, .user, .system),
-  .chat :is(.bubble, .msg, .mine, .theirs, .assistant, .user, .system) {
-    background: rgba(10, 15, 25, 0.96);     /* near-solid */
-    color: #e9f0fb;
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 14px;
+  /* ------------------ chat log helpers ------------------ */
+  function row(html, who='bot'){
+    const r = document.createElement('div');
+    r.className = `row ${who}`;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.innerHTML = html;
+    r.appendChild(b);
+    logEl.appendChild(r);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  /* ------------------ greetings ------------------ */
+  const greets = {
+    alexander: [
+      "<span class='botname'>Alexander Jackson:</span> Lights low or city view while we talk?",
+      "<span class='botname'>Alexander Jackson:</span> I noticed you. More than once."
+    ],
+    dylan: [
+      "<span class='botname'>Dylan Vale:</span> Hands flat on the counter, pretty thing.",
+      "<span class='botname'>Dylan Vale:</span> Calm tune-up or teasing tune-up?"
+    ],
+    jesse: [
+      "<span class='botname'>Jesse Granger:</span> Straight talk—what’d the day do to you?",
+      "<span class='botname'>Jesse Granger:</span> Saddle up or slow dance first?"
+    ],
+    grayson: [
+      "<span class='botname'>Grayson Kincaid:</span> Pick: gentle questions or firm direction?",
+      "<span class='botname'>Grayson Kincaid:</span> Library hush, wicked ideas."
+    ],
+    silas: [
+      "<span class='botname'>Silas Lennox:</span> Bring me a word that feels like velvet.",
+      "<span class='botname'>Silas Lennox:</span> Verse or confession first?"
+    ],
+    blade: [
+      "<span class='botname'>Blade Kincaid:</span> You’re here. I keep you safe—and a little breathless.",
+      "<span class='botname'>Blade Kincaid:</span> Footsteps behind you… I keep pace."
+    ]
+  };
+  (greets[man]||greets.blade).forEach((g,i) => { if(i<1) row(g,'bot'); }); // one line to start
+
+  /* ------------------ backend bridge ------------------ */
+  const history = []; // simple text history; your backend can ignore if it already keeps context.
+
+  async function askBackend(userText){
+    // If your brain.js exposes a send function, use it.
+    if (window.BB_BRAIN && typeof window.BB_BRAIN.send === 'function'){
+      const r = await window.BB_BRAIN.send({ man, text:userText, history });
+      return (r && r.reply) ? r.reply : String(r||'');
+    }
+    // Fallback to a generic /api/chat
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ man, text:userText, history })
+      });
+      const j = await res.json();
+      return j.reply || j.choices?.[0]?.message?.content || '…';
+    }catch(_e){
+      return "I’m here—just a brief hiccup. Say one more thing so I can catch the thread.";
+    }
   }
 
-  /* Optional: system/moderation notes a little softer */
-  .log .system, .chat .system {
-    background: rgba(10, 15, 25, 0.70) !important;
-    font-style: italic;
-    color: #cfd8e3;
+  /* ------------------ send flow ------------------ */
+  async function send(){
+    const text = inputEl.value.trim();
+    if(!text || showBlockedIfNeeded()) return;
+
+    // Hard-rule check
+    if (violatesHardRules(text)){
+      const w = getWarns()+1; setWarns(w);
+      warnCountEl.textContent = w;
+      showModal();
+      if (w>=3){ showBlockedIfNeeded(); }
+      return; // do not send to model
+    }
+
+    // show me
+    row(esc(text), 'you');
+    inputEl.value = '';
+    history.push({role:'user', content:text});
+
+    // ask backend
+    sendBtn.disabled = true;
+    const reply = await askBackend(text);
+    sendBtn.disabled = false;
+
+    // show bot
+    const name = names[man] || '—';
+    row(`<span class='botname'>${esc(name)}:</span> ` + esc(reply), 'bot');
+    history.push({role:'assistant', content:reply});
   }
 
-  /* Input bar a touch translucent to match */
-  input[type="text"], textarea {
-    background: rgba(2, 8, 23, 0.35);
-    color: #e9f0fb;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-  }
+  sendBtn.addEventListener('click', send);
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
 
-  /* Subtle glow so text pops over bright backgrounds */
-  .log, .chat {
-    text-shadow: 0 1px 1px rgba(0,0,0,0.45);
-  }
-</style>
-
+})();
+</script>
 </body>
 </html>

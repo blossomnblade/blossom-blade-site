@@ -400,6 +400,46 @@
 
     // Keyboard focus on load
     setTimeout(()=>input.focus(), 150);
-  </script>
+  </script><!-- Glassy chat pane + solid bubbles -->
+<style>
+  /* The big chat panel becomes translucent so the background shows through */
+  .chat-panel, .chat, .panel, .frame, .log {
+    background: rgba(2, 8, 23, 0.28);      /* adjust 0.28 → more/less see-through */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+  }
+
+  /* Keep the message bubbles solid & readable (cover common class names) */
+  .log :is(.bubble, .msg, .mine, .theirs, .assistant, .user, .system),
+  .chat :is(.bubble, .msg, .mine, .theirs, .assistant, .user, .system) {
+    background: rgba(10, 15, 25, 0.96);     /* near-solid */
+    color: #e9f0fb;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+  }
+
+  /* Optional: system/moderation notes a little softer */
+  .log .system, .chat .system {
+    background: rgba(10, 15, 25, 0.70) !important;
+    font-style: italic;
+    color: #cfd8e3;
+  }
+
+  /* Input bar a touch translucent to match */
+  input[type="text"], textarea {
+    background: rgba(2, 8, 23, 0.35);
+    color: #e9f0fb;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+  }
+
+  /* Subtle glow so text pops over bright backgrounds */
+  .log, .chat {
+    text-shadow: 0 1px 1px rgba(0,0,0,0.45);
+  }
+</style>
+
 </body>
 </html>

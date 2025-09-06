@@ -4,151 +4,229 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade</title>
-  <meta name="description" content="Blossom & Blade — choose your man and start chatting." />
+  <meta name="theme-color" content="#0b0f17" />
 
-  <!-- THEME (landing background) -->
-  <style id="bb-theme">
-    :root { --bb-bg: url("images/gothic-bg.jpg"); }
+  <style>
+    :root{
+      --page-pad: 22px;
+      --card-h: 170px;
+      --card-radius: 16px;
+      --card-glass: rgba(18,22,32,.45); /* slightly lighter than before */
+      --card-glass-hover: rgba(18,22,32,.58);
+      --soft-border: rgba(255,255,255,.08);
+      --text: #dee6ff;
+      --muted: #a7b0c3;
+      --accent: #d38fe8;
+    }
+
+    /* base */
+    *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
-      color:#eaeaf0;
-      background:#0b0d12 var(--bb-bg) center/cover fixed no-repeat;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      background:#0b0f17;
+      overflow-y:scroll;
     }
+
+    /* landing background — lightly darkened so the room vibe shows through */
     body::before{
-      content:""; position:fixed; inset:0;
-      background:linear-gradient(180deg, rgba(5,7,12,.70), rgba(5,7,12,.85));
-      pointer-events:none; z-index:-1;
+      content:"";
+      position:fixed; inset:0; z-index:-2;
+      background: url("images/gothic-bg.jpg") center/cover no-repeat fixed;
+      filter: none;
     }
+    /* subtle dark veil (lightened vs. previous) */
+    body::after{
+      content:"";
+      position:fixed; inset:0; z-index:-1;
+      background:
+        radial-gradient(120% 120% at 50% 20%, rgba(0,0,0,.18) 0%, rgba(0,0,0,.38) 60%, rgba(0,0,0,.48) 100%);
+      pointer-events:none;
+    }
+
     .wrap{
-      max-width:1100px; margin:0 auto; padding:28px 16px 64px;
+      max-width:1200px;
+      margin:0 auto;
+      padding: calc(var(--page-pad) + 8px) var(--page-pad) 60px;
     }
+
     header{
       display:flex; align-items:center; justify-content:space-between;
-      gap:16px; margin-bottom:18px;
+      margin-bottom: 14px;
     }
     .brand{
-      font-weight:700; letter-spacing:.5px; font-size:20px;
+      font-weight:700; letter-spacing:.3px; font-size:20px;
+      text-shadow:0 1px 0 rgba(0,0,0,.25);
     }
-    .hint{ opacity:.75; font-size:13px; }
+    .note{
+      font-size:13px; color:var(--muted);
+      opacity:.95;
+    }
+
+    /* grid: 1 col mobile, 2 col tablet, 3 col desktop */
     .grid{
-      display:grid; gap:14px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      display:grid; gap:18px;
+      grid-template-columns: 1fr;
     }
+    @media (min-width:680px){
+      .grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width:1080px){
+      .grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+
     .card{
-      position:relative; overflow:hidden; border-radius:18px;
-      min-height:180px; padding:16px;
-      background:#131722;
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 8px 22px rgba(0,0,0,.35);
+      position:relative;
+      height: var(--card-h);
+      border-radius: var(--card-radius);
+      overflow:hidden;
+      border:1px solid var(--soft-border);
+      background: var(--card-glass);
       cursor:pointer;
-      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
       outline:none;
     }
-    .card:focus-visible{ box-shadow:0 0 0 3px rgba(130,200,255,.55); }
-    .card:hover{ transform: translateY(-2px); border-color: rgba(255,255,255,.18); }
-    .card::before{
-      /* allow per-card background via style="--bg:url(...)" */
-      content:""; position:absolute; inset:0;
-      background: var(--bg) center/cover no-repeat;
-      opacity:.35; filter:saturate(1.1);
+    .card:focus-visible{ box-shadow:0 0 0 2px #7aa2ff; }
+    .card:hover{ transform: translateY(-1px); background:var(--card-glass-hover); border-color:rgba(255,255,255,.12); }
+
+    .card img{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      filter: saturate(.95) brightness(.82);
+      opacity:.9;
     }
-    .card::after{
-      content:""; position:absolute; inset:0;
-      background: linear-gradient(180deg, rgba(8,10,16,.25), rgba(8,10,16,.75) 70%);
+    .card .shade{
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(6,9,14,.35) 0%, rgba(6,9,14,.55) 70%);
     }
-    .title, .sub{ position:relative; z-index:1; }
-    .title{ font-size:20px; font-weight:800; margin:0 0 6px; }
-    .sub{ font-size:13px; opacity:.85; }
-    footer{ margin-top:18px; opacity:.7; font-size:12px; text-align:center; }
-    .sr{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .card .inner{
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; justify-content:flex-end;
+      padding:16px;
+      gap:6px;
+    }
+    .card .name{ font-weight:700; letter-spacing:.2px; }
+    .card .sub{ color:var(--muted); font-size:13px; }
+
+    .hint{
+      text-align:center; color:var(--muted);
+      margin-top:14px; font-size:12px;
+    }
+
+    /* small “press Enter” helper visible on keyboard users */
+    .kbd-hint{ display:block; margin-top:4px; opacity:.9; }
+
+    /* tiny help tag in the top right of each card (optional) */
+    .tag{
+      position:absolute; top:10px; right:10px;
+      font-size:11px; color:#eee; background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.1);
+      padding:2px 6px; border-radius:999px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* make sure cards keep same visual size even when 3 across */
+    @media (min-width:1080px){
+      .card{ height: 190px; }
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
       <div class="brand">Blossom &amp; Blade</div>
-      <div class="hint">PG-13 by default. We follow your lead, within Community Standards.</div>
+      <div class="note">PG-13 by default. We follow your lead, within Community Standards.</div>
     </header>
 
-    <main>
-      <div class="grid" id="men-grid">
-        <!-- Each card sets localStorage and routes to chat.html?man=ID -->
-        <button class="card"
-          data-id="alexander"
-          style="--bg:url('images/bg_alexander_boardroom.jpg')">
-          <h3 class="title">Alexander Jackson</h3>
-          <p class="sub">Boardroom heat, velvet control.</p>
-        </button>
+    <main class="grid" id="grid">
+      <!-- ALEXANDER -->
+      <article class="card" tabindex="0" data-id="alexander" aria-label="Alexander Jackson">
+        <img src="images/bg_alexander_boardroom.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Alexander Jackson</div>
+          <div class="sub">Power, polish, late-night city lights</div>
+        </div>
+      </article>
 
-        <button class="card"
-          data-id="dylan"
-          style="--bg:url('images/dylan-garage.jpg')">
-          <h3 class="title">Dylan Vale</h3>
-          <p class="sub">Neon, guitar, slow-burn tease.</p>
-        </button>
+      <!-- DYLAN -->
+      <article class="card" tabindex="0" data-id="dylan" aria-label="Dylan Vale">
+        <img src="images/dylan-garage.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Dylan Vale</div>
+          <div class="sub">Neon, guitar, slow burn to heat</div>
+        </div>
+      </article>
 
-        <button class="card"
-          data-id="jesse"
-          style="--bg:url('images/jesse_bg.jpg')">
-          <h3 class="title">Jesse Granger</h3>
-          <p class="sub">Country drawl, salty and sweet.</p>
-        </button>
+      <!-- JESSE -->
+      <article class="card" tabindex="0" data-id="jesse" aria-label="Jesse Granger">
+        <img src="images/jesse_bg.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Jesse Granger</div>
+          <div class="sub">Rodeo grit, dusty gold hour</div>
+        </div>
+      </article>
 
-        <button class="card"
-          data-id="grayson"
-          style="--bg:url('images/grayson-bg.jpg')">
-          <h3 class="title">Grayson Kincaid</h3>
-          <p class="sub">Dark romance, gentleman edge.</p>
-        </button>
+      <!-- GRAYSON -->
+      <article class="card" tabindex="0" data-id="grayson" aria-label="Grayson Kincaid">
+        <img src="images/grayson-bg.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Grayson Kincaid</div>
+          <div class="sub">Silk words, library hush</div>
+        </div>
+      </article>
 
-        <button class="card"
-          data-id="silas"
-          style="--bg:url('images/bg_silas_stage.jpg')">
-          <h3 class="title">Silas Lennox</h3>
-          <p class="sub">Lyric mind, poet hands.</p>
-        </button>
+      <!-- SILAS -->
+      <article class="card" tabindex="0" data-id="silas" aria-label="Silas Lennox">
+        <img src="images/bg_silas_stage.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Silas Lennox</div>
+          <div class="sub">Lyric mind, poet hands</div>
+        </div>
+      </article>
 
-        <button class="card"
-          data-id="blade"
-          style="--bg:url('images/blade-woods.jpg')">
-          <h3 class="title">Blade Kincaid</h3>
-          <p class="sub">Predatory charm, forest night.</p>
-        </button>
-      </div>
+      <!-- BLADE -->
+      <article class="card" tabindex="0" data-id="blade" aria-label="Blade Kincaid">
+        <img src="images/blade-woods.jpg" alt="">
+        <div class="shade"></div>
+        <div class="inner">
+          <div class="name">Blade Kincaid</div>
+          <div class="sub">Predatory charm, forest night</div>
+        </div>
+      </article>
     </main>
 
-    <footer>Tip: press <strong>Enter</strong> when a card is focused.</footer>
+    <p class="hint">Tip: press <strong>Enter</strong> when a card is focused.</p>
   </div>
 
-  <noscript><p class="sr">JavaScript is required to start chat.</p></noscript>
-
   <script>
-    // Prefetch chat page to feel snappier
-    try {
-      const l = document.createElement('link');
-      l.rel = 'prefetch'; l.href = '/chat.html';
-      document.head.appendChild(l);
-    } catch(e){}
-
-    function go(id){
-      try { localStorage.setItem('bb.character', id); } catch(e){}
-      const url = '/chat.html?man=' + encodeURIComponent(id);
-      location.href = url;
+    // Save choice -> go to chat
+    function enter(id){
+      try { localStorage.setItem("bb.character", id); } catch(e){}
+      location.href = "/chat.html?man=" + encodeURIComponent(id);
     }
 
-    const grid = document.getElementById('men-grid');
+    const grid = document.getElementById('grid');
 
-    grid.addEventListener('click', (e)=>{
+    // mouse/touch
+    grid.addEventListener('click', e=>{
       const card = e.target.closest('.card');
-      if (card) go(card.dataset.id);
+      if (card) enter(card.dataset.id);
     });
 
-    grid.addEventListener('keydown', (e)=>{
+    // keyboard
+    grid.addEventListener('keydown', e=>{
       if (e.key === 'Enter' || e.key === ' ') {
         const card = e.target.closest('.card');
-        if (card) { e.preventDefault(); go(card.dataset.id); }
+        if (card) { e.preventDefault(); enter(card.dataset.id); }
       }
     });
   </script>

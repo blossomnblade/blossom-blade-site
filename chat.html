@@ -121,15 +121,15 @@
     </div>
   </div>
 
-  <!-- Coin popup -->
+  <!-- Coin popup (NO $1 option) -->
   <div id="coinsPop">
     <div class="card">
       <div class="hd">Unlock <em>advanced</em> chat</div>
       <div class="muted">Coins only unlock erotic mode. Never pushy—appears when convo goes that direction.</div>
-      <div class="pack" data-coins="5"><strong>5 coins</strong><span>$1</span></div>
-      <div class="pack" data-coins="25"><strong>25 coins</strong><span>$5</span></div>
-      <div class="pack" data-coins="60"><strong>60 coins</strong><span>$10</span></div>
-      <div class="pack" data-coins="150"><strong>150 coins</strong><span>$20</span></div>
+      <div class="pack" data-coins="5"><strong>5 coins</strong><span>$5</span></div>
+      <div class="pack" data-coins="25"><strong>25 coins</strong><span>$10</span></div>
+      <div class="pack" data-coins="60"><strong>60 coins</strong><span>$20</span></div>
+      <div class="pack" data-coins="150"><strong>150 coins</strong><span>$40</span></div>
       <div class="muted" style="margin-top:6px">Each coin unlocks <strong>25 hotter replies</strong>.</div>
       <button id="coinsNotNow" class="linkish">Not now</button>
     </div>
@@ -150,7 +150,7 @@
     </div>
   </div>
 
-  <!-- Standards violation notice -->
+  <!-- Standards violation notice (3-strike auto-block) -->
   <div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
     <div class="panel">
       <div class="hd"><strong>Community Standards</strong></div>
@@ -182,15 +182,19 @@ const sendBtn = $("#send");
 const coinCountEl = $("#coinCount");
 const coinsPop = $("#coinsPop");
 const trialBar = $("#trialBar");
-const manParam = new URLSearchParams(location.search).get("man") || "blade";
-const guy = ({
+const qs = new URLSearchParams(location.search);
+const manParam = (qs.get("man") || localStorage.getItem("lastMan") || "blade").toLowerCase();
+localStorage.setItem("lastMan", manParam);
+
+const GUYS = {
   blade:     { name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
   grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg" },
   dylan:     { name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
   silas:     { name:"Silas Lennox", bg:"/images/gothic-bg.jpg" },
   alexander: { name:"Alexander Jackson", bg:"/images/gothic-bg.jpg" },
   jesse:     { name:"Jesse Granger", bg:"/images/gothic-bg.jpg" },
-})[manParam] || {name:"Blade Kincaid", bg:"/images/gothic-bg.jpg"};
+};
+const guy = GUYS[manParam] || GUYS.blade;
 
 document.body.style.backgroundImage = `radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('${guy.bg}')`;
 $("#manName").textContent = guy.name;
@@ -249,14 +253,8 @@ function resumeTimer(){ startTimer(); }
 
 function endPreview(){
   bumpPrevCount();
-  if (getPrevCount()>=3){
-    $("#npGuy").textContent=guy.name;
-    $("#noPreview").style.display="grid";
-  }else{
-    // Soft overlay offering another preview
-    $("#npGuy").textContent=guy.name;
-    $("#noPreview").style.display="grid";
-  }
+  $("#npGuy").textContent=guy.name;
+  $("#noPreview").style.display="grid";
 }
 
 /* overlay actions */
@@ -293,7 +291,7 @@ const ADULT_CODED   = /\b(college|university|over\s*18|of\s*age|consenting adult
 
 const DISALLOWED_ALWAYS = [
   /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*sex)\b/i,
-  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
+  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:her)?|sis(?:ter)?)\b/i,
   /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
   /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
   /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
@@ -333,14 +331,15 @@ function breaksStandards(input){
 }
 
 function showStd(){
-  const n = addStrike();
-  const msg = (n >= MAX_STRIKES)
-    ? `Standards warning ${n} of ${MAX_STRIKES}. This device is now blocked for 30 days.`
-    : `Standards warning ${n} of ${MAX_STRIKES}. Three warnings results in a 30-day block.`;
+  const n = Number(localStorage.getItem("bb.stdStrikes")||0) + 1;
+  localStorage.setItem("bb.stdStrikes", String(n));
+  const msg = (n >= 3)
+    ? `Standards warning ${n} of 3. This device is now blocked for 30 days.`
+    : `Standards warning ${n} of 3. Three warnings results in a 30-day block.`;
   $("#stdStrike").textContent = msg;
   stdOverlay.style.display = "grid"; pauseTimer();
 
-  if (n >= MAX_STRIKES){
+  if (n >= 3){
     const until = Date.now() + 30*24*60*60*1000; // 30 days
     localStorage.setItem("bb.blockedUntil", String(until));
   }
@@ -358,7 +357,7 @@ $("#stdContinue").onclick = ()=>{ hideStd(); row(`<em class="sys">Let’s keep i
   }
 })();
 
-/* -------------------- Greetings & banter keep-alive -------------------- */
+/* -------------------- Greetings & keep-alive -------------------- */
 const GREETS = {
   blade: [
     "Found you, brave girl. Don’t run—yet.",
@@ -409,7 +408,6 @@ const GREETS = {
     "You been good today, or do I need to fix that?"
   ]
 };
-
 const KEEPALIVE = [
   "I’m here. Lead and I’ll follow.",
   "Give me one more detail.",
@@ -429,16 +427,14 @@ function nextGreet(){
 /* -------------------- Erotic cue detection & coin popup -------------------- */
 const EROTIC_CUE = /\b(lick|ride|rail|suck|go\s*down|eat\s*out|spank|choke|thrust|bend\s*me|doggystyle|deepthroat|cum|orgasm)\b/i;
 
-function maybeShowCoins(reason=""){
-  if (advBudget()<=0){
-    $("#coinsPop").style.display="block";
-  }
+function maybeShowCoins(){
+  if (advBudget()<=0) $("#coinsPop").style.display="block";
 }
 $("#coinsNotNow").onclick = ()=> coinsPop.style.display="none";
 document.querySelectorAll("#coinsPop .pack").forEach(p=>{
   p.addEventListener("click", ()=>{
     const n = Number(p.getAttribute("data-coins"));
-    // Demo add coins locally
+    // Demo add coins locally; spend only when we actually send advanced replies
     addCoins(n);
     coinsPop.style.display="none";
     toast(`Demo: added ${n} coins`);
@@ -447,7 +443,6 @@ document.querySelectorAll("#coinsPop .pack").forEach(p=>{
 
 /* -------------------- Talk to server (brain) -------------------- */
 async function askBrain(userText, mode){
-  // NOTE: your /api/brain serverless should consume {man, text, mode, history}
   const history = Array.from(log.querySelectorAll(".row")).slice(-40).map(r=>{
     const isMe = r.querySelector(".me");
     return (isMe? "user: " : "bot: ") + r.textContent.trim();
@@ -470,6 +465,11 @@ async function askBrain(userText, mode){
 async function handleSend(){
   const text = input.value.trim();
   if (!text) return;
+
+  // standards check
+  if (breaksStandards(text)) { showStd(); return; }
+
+  // post user
   row(escapeHtml(text), "me");
   input.value=""; userMsgCount++;
 
@@ -478,33 +478,32 @@ async function handleSend(){
     row(`<em class="sys">${KEEPALIVE[(userMsgCount/5-1)%KEEPALIVE.length]}</em>`);
   }
 
-  // standards check
-  if (breaksStandards(text)) { showStd(); return; }
-
   // erotic cue handling
   let mode = "pg";
   if (EROTIC_CUE.test(text)){
     if (advBudget()<=0){
-      maybeShowCoins("cue");
+      maybeShowCoins();
       row(`<em class="sys">We’ll keep it PG-13 until coins unlock advanced chat.</em>`);
       mode = "pg";
     }else{
       mode = "adv";
     }
   }else if (advBudget()>0){
-    // already in advanced mode budgeted—stay there
-    mode = "adv";
+    mode = "adv"; // stay advanced while budget lasts
   }
 
+  // ask brain
   const reply = await askBrain(text, mode);
 
-  // Spend budget only when we actually generated an advanced reply
+  // spend budget only when we actually generated advanced reply
   if (mode === "adv"){
-    const left = consumeBudget(1);
-    if (left % 25 === 24){ // just started a new 25-pack?
+    // charge 1 hot reply
+    const before = advBudget();
+    const after = consumeBudget(1);
+    if (before % 25 === before - after){ // just started a new 25-pack
       row(`<em class="sys">Spent 1 coin — unlocked 25 hotter replies.</em>`);
     }
-    if (left<=0){ row(`<em class="sys">Your 25 hot replies are used—back to PG-13.</em>`); }
+    if (after<=0){ row(`<em class="sys">Your 25 hot replies are used—back to PG-13.</em>`); }
   }
 
   row(escapeHtml(reply), "ai");
@@ -514,11 +513,8 @@ function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;
 
 /* -------------------- Init -------------------- */
 (function init(){
-  // Boot greeting
   row(`<strong>${guy.name}:</strong> ${nextGreet()}`, "ai");
   startTimer();
-
-  // Enter key send
   input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ handleSend(); }});
   sendBtn.addEventListener("click", handleSend);
 })();

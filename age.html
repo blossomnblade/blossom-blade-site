@@ -1,159 +1,113 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>18+ Verification • Blossom n Blade</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>18+ Verification • Blossom &amp; Blade</title>
 <style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0; color:var(--ink); font:600 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:linear-gradient(0deg, rgba(14,10,13,.88), rgba(14,10,13,.88)),
-               url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
+  :root{
+    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
   }
-  header{padding:14px 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11)}
-  .wrap{max-width:760px; margin:40px auto; padding:0 14px}
-  .card{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#1a121a,#120a11);
-        box-shadow:0 12px 30px rgba(0,0,0,.45)}
-  .hd{padding:16px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:12px}
-  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum))}
-  h1{margin:0; font-size:18px}
-  .bd{padding:18px}
-  .row{display:flex; align-items:flex-start; gap:10px; margin:10px 0}
-  input[type="checkbox"]{width:20px; height:20px; margin-top:2px}
-  label{font-weight:500; color:#e7d4e6}
-  .muted{color:var(--muted); font-size:13px}
-  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
-  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:800; color:white;
-       background:linear-gradient(90deg,var(--plum),var(--wine))}
-  .btn.ghost{background:#2a1a25}
-  .note{margin-top:10px; font-size:13px; color:#cbbdca}
-  .ok{padding:10px 12px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123}
-  .warn{padding:10px 12px; border-radius:10px; background:#2a1a25; color:#f6d7ef; border:1px dashed #3a203a}
-  a{color:#e7bddf; text-decoration:underline}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
+  .wrap{max-width:880px;margin:48px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .ribbon{font-size:12px;color:#ffe;opacity:.8}
+  h1{margin:8px 0 6px;font-size:28px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .row{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+  .row input{width:20px;height:20px;margin-top:2px}
+  .muted{color:var(--muted)}
+  .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .warn{display:none; background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
 </style>
 </head>
 <body>
-<header>$1 of every subscription goes to a Domestic Violence charity.</header>
+  <div class="wrap">
+    <header>
+      <strong>Blossom &amp; Blade</strong>
+      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    </header>
 
-<div class="wrap">
-  <div class="card">
-    <div class="hd"><div class="dot" aria-hidden="true"></div><h1>18+ Verification</h1></div>
-    <div class="bd">
-      <div id="status" class="ok" style="display:none;">Verified — you’re good. Click **Continue** below.</div>
+    <h1>Adults only</h1>
+    <p class="muted">Please confirm to proceed. We’ll save a receipt (date &amp; time) locally so you only do this once on this device.</p>
 
-      <form id="form">
-        <div class="row">
-          <input id="c1" type="checkbox" />
-          <label for="c1">I confirm I’m **18 or older**.</label>
-        </div>
-        <div class="row">
-          <input id="c2" type="checkbox" />
-          <label for="c2">I accept the site’s **rules & policies** (PG-13 by default; words-only erotic chat unlocked by coins).</label>
-        </div>
+    <div class="card">
+      <div class="row">
+        <input id="chk18" type="checkbox">
+        <label for="chk18"><strong>I am 18 or older.</strong></label>
+      </div>
+      <div class="row">
+        <input id="chkRules" type="checkbox">
+        <label for="chkRules"><strong>I accept the Community Standards.</strong>
+          <div class="muted" style="margin-top:6px">
+            No minors/“school boy or girl”/“barely legal”; no incest/step-family; no non-consent/coercion or intoxication without capacity;
+            no bestiality/necrophilia/trafficking/extreme bodily fluids/blood/knife “play”; no hate slurs or targeted harassment.
+          </div>
+        </label>
+      </div>
 
-        <div class="actions">
-          <button id="go" class="btn" type="submit" disabled>Continue</button>
-          <button id="reset" class="btn ghost" type="button">Reset & verify again</button>
-        </div>
-        <div class="note muted">We store a local receipt for 30 days.</div>
-      </form>
+      <div id="ok" class="ok" style="display:none;">Verified — you’re good to continue.</div>
+      <div id="warn" class="warn">Please check both boxes to continue.</div>
 
-      <div id="receipt" class="muted" style="margin-top:10px"></div>
-      <div id="loopwarn" class="warn" style="display:none; margin-top:10px">
-        If you keep bouncing back here, your browser may be blocking local storage. Try a hard refresh (Ctrl/Cmd+F5).
+      <div class="btns">
+        <button id="btnContinue" class="primary" disabled>Continue</button>
+        <button id="btnReceipt" class="ghost">View saved receipt</button>
+        <button id="btnReset" class="ghost">Reset &amp; verify again</button>
       </div>
     </div>
   </div>
-</div>
 
 <script>
-/* --- unified keys (ALL pages read these) --- */
-const KEY_MAIN = "bb.ageVerifiedUntil";
-const KEY_LEG1 = "bb.age_verified_until";
-const KEY_FLAG = "bb.ageVerified";
+  const qs = new URLSearchParams(location.search);
+  const man  = qs.get('man')  || 'blade';
+  const next = qs.get('next') || 'chat'; // 'chat' or 'pay'
 
-const qs = new URLSearchParams(location.search);
-const man  = (qs.get("man")||"").toLowerCase();
-const plan = (qs.get("plan")||"").toLowerCase();
-const next = qs.get("next"); // may be /alexander or /rooms/alexander etc.
+  const chk18 = document.getElementById('chk18');
+  const chkRules = document.getElementById('chkRules');
+  const btn = document.getElementById('btnContinue');
+  const ok = document.getElementById('ok');
+  const warn = document.getElementById('warn');
 
-const untilNow = Number(localStorage.getItem(KEY_MAIN) || 0);
-const status = document.getElementById("status");
-const form = document.getElementById("form");
-const c1 = document.getElementById("c1");
-const c2 = document.getElementById("c2");
-const go = document.getElementById("go");
-const resetBtn = document.getElementById("reset");
-const receipt = document.getElementById("receipt");
-const loopwarn = document.getElementById("loopwarn");
-
-/* normalizes pretty paths to real files so we don't 404 */
-function normalizeNext(n){
-  if (!n) return null;
-  try{
-    const u = new URL(n, location.origin);
-    const p = u.pathname.replace(/\/+$/,'').toLowerCase();
-    const m = p.match(/^\/(?:rooms\/)?(alexander|blade|dylan|grayson|silas|jesse)$/i);
-    if (m){
-      return `/chat.html?man=${m[1].toLowerCase()}`;
-    }
-    return u.pathname + u.search + u.hash;
-  }catch(e){ return n; }
-}
-function storageWorks(){
-  try{ localStorage.setItem("__bbprobe","1"); const ok=localStorage.getItem("__bbprobe")==="1"; localStorage.removeItem("__bbprobe"); return ok; }
-  catch(e){ return false; }
-}
-function saveVerification(days=30){
-  const until = Date.now() + days*24*60*60*1000;
-  localStorage.setItem(KEY_MAIN, String(until));
-  localStorage.setItem(KEY_LEG1, String(until));
-  localStorage.setItem(KEY_FLAG, "1");
-  return until;
-}
-function targetURL(){
-  const normalized = normalizeNext(next);
-  if (normalized) return normalized;
-  if (plan) return `/pay.html?man=${encodeURIComponent(man)}&plan=${encodeURIComponent(plan)}`;
-  if (man)  return `/chat.html?man=${encodeURIComponent(man)}`;
-  return "/index.html";
-}
-function updateUIFromSaved(){
-  if (untilNow && untilNow > Date.now()){
-    status.style.display = "block";
-    const when = new Date(untilNow).toLocaleString();
-    receipt.textContent = `Saved receipt expires: ${when}`;
-    go.disabled = false;
+  function update(){
+    const ready = chk18.checked && chkRules.checked;
+    btn.disabled = !ready;
+    warn.style.display = ready ? 'none' : 'block';
   }
-}
-function redirectIfVerified(){
-  if (untilNow && untilNow > Date.now()){
-    if (next || plan || man){ location.replace(targetURL()); }
-  }
-}
-function toggleGo(){ go.disabled = !(c1.checked && c2.checked); }
-c1.addEventListener("change", toggleGo);
-c2.addEventListener("change", toggleGo);
-form.addEventListener("submit",(e)=>{
-  e.preventDefault();
-  const until = saveVerification(30);
-  const when = new Date(until).toLocaleString();
-  status.style.display = "block";
-  receipt.textContent = `Saved receipt expires: ${when}`;
-  go.disabled = false;
-  location.replace(targetURL());
-});
-resetBtn.addEventListener("click", ()=>{
-  localStorage.removeItem(KEY_MAIN);
-  localStorage.removeItem(KEY_LEG1);
-  localStorage.removeItem(KEY_FLAG);
-  location.reload();
-});
-updateUIFromSaved();
-redirectIfVerified();
-if (!storageWorks()) loopwarn.style.display = "block";
+  chk18.addEventListener('change', update);
+  chkRules.addEventListener('change', update);
+
+  // If already verified on this device, show success but still require button click
+  if (localStorage.getItem('bb.ageVerified') === 'true') ok.style.display = 'inline-flex';
+
+  document.getElementById('btnReceipt').onclick = () => {
+    const r = localStorage.getItem('bb.ageReceipt');
+    alert(r ? `Saved:\n${r}` : 'No receipt saved on this device.');
+  };
+  document.getElementById('btnReset').onclick = () => {
+    localStorage.removeItem('bb.ageVerified');
+    localStorage.removeItem('bb.ageReceipt');
+    ok.style.display = 'none';
+    chk18.checked = false; chkRules.checked = false; update();
+  };
+
+  btn.onclick = () => {
+    if (!(chk18.checked && chkRules.checked)) { update(); return; }
+    localStorage.setItem('bb.ageVerified','true');
+    localStorage.setItem('bb.ageReceipt', new Date().toString());
+    ok.style.display = 'inline-flex';
+
+    const dest = next === 'pay' ? `pay.html?man=${encodeURIComponent(man)}` :
+                                  `chat.html?man=${encodeURIComponent(man)}`;
+    location.href = dest;
+  };
 </script>
 </body>
 </html>

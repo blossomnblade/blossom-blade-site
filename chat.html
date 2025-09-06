@@ -5,461 +5,523 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Chat • Blossom n Blade</title>
 <style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0; color:var(--ink); font:500 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:linear-gradient(0deg, rgba(14,10,13,.84), rgba(14,10,13,.84)),
-               var(--hero, url("/images/gothic-bg.jpg")) center/cover no-repeat fixed;
+  :root{
+    --bg:#0e0b12;
+    --panel:#171320;
+    --edge:#2a2336;
+    --ink:#e9e7ef;
+    --muted:#b9b2c7;
+    --accent:#c05acb;
+    --accent-2:#8b5cf6;
+    --danger:#ff5470;
+    --ok:#22c55e;
   }
-  a{color:#e7bddf; text-decoration:none}
-  header{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 12px; border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, rgba(20,13,20,.6), rgba(20,13,20,0));}
-  .brand{display:flex; align-items:center; gap:10px}
-  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum)); box-shadow:0 0 0 2px #000 inset}
-  h1{margin:0; font-size:16px}
-  .hdr-actions{display:flex; gap:10px; align-items:center}
-  .btn{border:none; border-radius:999px; padding:8px 12px; cursor:pointer;
-       background:linear-gradient(90deg,var(--plum),var(--wine)); color:white; font-weight:700}
-  .btn.link{display:inline-block; text-decoration:none}
-  .badge{font-size:12px; color:#e9d4e6; background:#241624; border:1px solid #2a1a25; border-radius:999px; padding:6px 10px; white-space:nowrap}
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('/images/gothic-bg.jpg') center/cover fixed no-repeat;
+    color:var(--ink); font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    min-height:100vh;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,0));
+    position:sticky; top:0; z-index:10; backdrop-filter: blur(4px);
+  }
+  header .title{font-weight:700; letter-spacing:.3px}
+  header .right{display:flex; gap:14px; align-items:center}
+  .badge{padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--ink); font-size:13px}
+  a, a:visited{color:var(--muted); text-decoration:none}
+  a:hover{color:var(--ink)}
+  .wrap{max-width:980px; margin:0 auto; padding:10px 14px 60px}
+  .namebar{font-weight:700; margin:4px 0 8px; opacity:.9}
+  .trial{height:6px; background:#2b2237; border-radius:8px; overflow:hidden}
+  .trial > div{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); transition:width .2s}
 
-  .timer{display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line);
-         background:linear-gradient(180deg,#1a121a,#120a11)}
-  .time-left{font-weight:700}
-  .bar{flex:1;height:8px;background:#241624;border-radius:999px;overflow:hidden}
-  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--plum),var(--wine))}
+  .board{
+    background:rgba(16,12,24,.8); border:1px solid var(--edge); border-radius:16px;
+    box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+    margin-top:14px; padding:14px; min-height:56vh; display:flex; flex-direction:column; gap:10px;
+  }
+  .row{display:flex; width:100%}
+  .ai, .me{
+    max-width:72%; padding:10px 12px; border-radius:14px; position:relative;
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .ai{background:#1b1626}
+  .me{margin-left:auto; background:#2a1d33; color:#efe9ff}
+  .sys{color:var(--muted)}
+  .composer{display:flex; gap:8px; margin-top:10px}
+  input[type=text]{
+    flex:1; padding:12px 14px; background:#140f1b; border:1px solid var(--edge); border-radius:12px; color:var(--ink);
+    outline:none
+  }
+  button.btn{
+    padding:12px 16px; border:0; border-radius:12px; color:#fff; background:linear-gradient(180deg,var(--accent),#8b3aa3);
+    cursor:pointer; font-weight:700;
+  }
+  button.btn:disabled{opacity:.5; cursor:not-allowed}
 
-  .wrap{max-width:900px;margin:0 auto;padding:12px}
-  .chat{display:flex; flex-direction:column; gap:10px; height:calc(100vh - 220px); padding:10px; overflow:auto; scroll-behavior:smooth;
-        background:rgba(14,10,13,.35); border:1px solid var(--line); border-radius:16px; box-shadow:0 1px 12px rgba(0,0,0,.25)}
-  .row{display:flex; gap:8px}
-  .row.you{justify-content:flex-end}
-  .bubble{max-width:72%; padding:10px 12px; border-radius:14px; line-height:1.45; background:rgba(23,16,23,.78); border:1px solid #2a1a25}
-  .you .bubble{background:rgba(36,20,36,.82); border-color:#3a203a}
-  .sys{font-size:12px;color:#cbbdca; text-align:center; margin:8px 0}
+  .footnote{margin-top:6px; text-align:center; color:var(--muted); font-size:12px}
 
-  .composer{margin-top:10px; display:flex; gap:8px; align-items:center; background:rgba(14,10,13,.55); border:1px solid var(--line);
-            border-radius:12px; padding:8px}
-  input[type="text"]{flex:1; padding:10px; border-radius:8px; border:1px solid #2a1a25; background:#0f0b0f; color:#eee}
+  /* coin popup */
+  #coinsPop{
+    position:fixed; right:18px; bottom:18px; z-index:30; display:none;
+  }
+  #coinsPop .card{
+    background:#251a2b; border:1px solid var(--edge); border-radius:16px; padding:14px; width:280px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #coinsPop .hd{font-weight:800; margin-bottom:8px}
+  .pack{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; margin:8px 0; background:#1a1320; border-radius:10px; border:1px solid rgba(255,255,255,.06); cursor:pointer}
+  .pack:hover{border-color:var(--accent)}
+  .muted{color:var(--muted); font-size:13px}
+  .linkish{background:transparent; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; padding:6px 0}
 
-  .hint{font-size:12px;color:var(--muted); text-align:center; margin-top:6px}
+  /* overlays */
+  .overlay{
+    position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.6); z-index:40;
+  }
+  .panel{
+    width:min(640px,92vw); background:#1b1626; border:1px solid var(--edge); border-radius:18px; padding:18px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6)
+  }
+  .panel .hd{font-weight:800; margin-bottom:6px}
+  .choices{display:flex; gap:10px; flex-wrap:wrap}
+  .btn.ghost{background:#241a2d}
+  .btn.gray{background:#2a1a25}
 
-  .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(10,6,10,.65); backdrop-filter:blur(3px); z-index:30;}
-  .panel{width:min(560px,92vw); border-radius:16px; overflow:hidden; border:1px solid var(--line);
-         background:linear-gradient(180deg,#1a121a,#120a11); box-shadow:0 10px 40px rgba(0,0,0,.45)}
-  .panel .hd{padding:12px 14px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:10px}
-  .panel .bd{padding:14px}
-  .choices{display:grid; gap:10px; grid-template-columns:1fr 1fr}
-  .pill{display:inline-block; padding:3px 8px; border:1px solid #2b1a28; border-radius:999px; font-size:12px; color:#e9d4e6}
-  .avatar{width:56px; height:56px; border-radius:12px; object-fit:cover; border:1px solid #2a1a25}
-  .subtle{color:var(--muted); font-size:12px}
-  .hidden{display:none}
-  .disabled{opacity:.6; pointer-events:none}
+  /* standards overlay text */
+  .subtle{color:var(--muted); font-size:14px}
 
-  .coinpop{position:fixed; right:14px; bottom:92px; z-index:40; width:290px; max-width:95vw; border-radius:16px; padding:12px;
-    border:1px solid #2a1a25;
-    background:radial-gradient(120% 120% at 10% 10%, rgba(110,15,46,.35), rgba(75,31,60,.25) 60%, rgba(14,10,13,.9) 100%),
-               linear-gradient(180deg, #1a121a, #120a11);
-    box-shadow:0 12px 30px rgba(0,0,0,.45)}
-  .coinpop h4{margin:0 0 6px; font:800 14px/1.2 system-ui}
-  .coinpacks{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
-  .coinbtn{display:block; text-align:center; padding:8px 10px; border-radius:12px; font-weight:800; border:1px dashed #3a2239; background:#160f16; color:#fff}
-  .coinmeta{font-size:12px; color:#bba9b6; margin-top:6px}
-  .coinclose{margin-top:8px; text-align:center}
-  .coinclose a{color:#bba9b6; font-size:12px; text-decoration:underline}
+  /* tiny toast */
+  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#241a2d; color:var(--ink); border:1px solid var(--edge); padding:10px 14px; border-radius:12px; display:none; z-index:60}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="brand"><div class="dot" aria-hidden="true"></div><h1 id="hdrTitle">Blossom n Blade</h1></div>
-  <div class="hdr-actions">
-    <span id="coinBadge" class="badge" title="Coins available">Coins: 0</span>
-    <a id="pricingLink" class="btn link" href="/pay.html">Pricing</a>
-    <a class="btn link" style="background:#2a1a25" href="/index.html">Back</a>
-  </div>
-</header>
-
-<div class="timer">
-  <div>Trial:</div><div class="time-left" id="timeleft">3:30</div>
-  <div class="bar"><div class="fill" id="fill"></div></div>
-</div>
-
-<main class="wrap">
-  <section id="chat" class="chat" aria-live="polite" aria-label="Chat messages"></section>
-  <form id="composer" class="composer">
-    <input id="input" type="text" placeholder="Say hi…" autocomplete="off" />
-    <button class="btn" type="submit">Send</button>
-  </form>
-  <div class="hint">
-    Unlimited chat with your plan. Coins only used when you ask for explicit (“Advanced”) replies ·
-    <a href="/standards.html" target="_blank">Community Standards</a>
-  </div>
-</main>
-
-<!-- Paywall overlay -->
-<div id="overlay" class="overlay" aria-hidden="true">
-  <div class="panel">
-    <div class="hd">
-      <img id="ovAvatar" class="avatar" src="/images/gothic-bg.jpg" alt="" />
-      <div>
-        <div id="ovTitle" style="font-weight:800">Time’s up for the free vibe</div>
-        <div class="pill" id="ovPill">Keep going</div>
-      </div>
+  <header>
+    <div class="title">Blossom & Blade</div>
+    <div class="right">
+      <span class="badge">Coins: <span id="coinCount">0</span></span>
+      <a id="pricing" class="" href="/pay.html">Pricing</a>
     </div>
-    <div class="bd">
-      <p id="ovMsg" style="margin-top:0">Grab a Day Pass or go Monthly. Coins simply unlock Advanced chat.</p>
+  </header>
+
+  <div class="wrap">
+    <div id="manName" class="namebar">…</div>
+    <div class="trial"><div id="trialBar"></div></div>
+
+    <div class="board" id="board">
+      <div id="log"></div>
+
+      <div class="composer">
+        <input id="msg" type="text" placeholder="Say hi…" autocomplete="off" />
+        <button class="btn" id="send">Send</button>
+      </div>
+      <div class="footnote">PG-13 by default. Coins unlock <em>advanced</em> chat (words only, no visuals).</div>
+    </div>
+  </div>
+
+  <!-- Coin popup -->
+  <div id="coinsPop">
+    <div class="card">
+      <div class="hd">Unlock <em>advanced</em> chat</div>
+      <div class="muted">Coins only unlock erotic mode. Never pushy—appears when convo goes that direction.</div>
+      <div class="pack" data-coins="5"><strong>5 coins</strong><span>$1</span></div>
+      <div class="pack" data-coins="25"><strong>25 coins</strong><span>$5</span></div>
+      <div class="pack" data-coins="60"><strong>60 coins</strong><span>$10</span></div>
+      <div class="pack" data-coins="150"><strong>150 coins</strong><span>$20</span></div>
+      <div class="muted" style="margin-top:6px">Each coin unlocks <strong>25 hotter replies</strong>.</div>
+      <button id="coinsNotNow" class="linkish">Not now</button>
+    </div>
+  </div>
+
+  <!-- Free previews used up -->
+  <div id="noPreview" class="overlay">
+    <div class="panel">
+      <div class="hd">Free previews used up</div>
+      <p class="subtle">You’ve had 3 previews with <span id="npGuy"></span>.</p>
+      <p>Grab a Day Pass or go Monthly. Coins simply unlock erotic chat.</p>
       <div class="choices">
-        <a id="buyDay" class="btn link" href="#">Day Pass — $5.99</a>
-        <a id="buyMonth" class="btn link" href="#">Monthly — $10.99</a>
-      </div>
-      <p id="freeLeft" class="subtle"></p>
-      <div id="ovActions" class="choices" style="margin-top:8px">
-        <button id="anotherPreview" class="btn" type="button">Another 3½-minute preview</button>
-        <button id="snooze" class="btn" type="button" style="background:#2a1a25">Maybe later (1 minute)</button>
+        <a id="npDay" class="btn">Day Pass — $5.99</a>
+        <a id="npMonth" class="btn">Monthly — $10.99</a>
+        <button id="npAnother" class="btn ghost">Another 3½-minute preview</button>
+        <button id="npMaybe" class="btn gray">Maybe later (1 minute)</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Coins popup -->
-<div id="coinPopup" class="coinpop hidden" role="dialog" aria-modal="false" aria-label="Buy coins">
-  <h4>Unlock Advanced chat</h4>
-  <div class="coinpacks">
-    <a data-pack="5"   class="coinbtn">5 coins — $5</a>
-    <a data-pack="25"  class="coinbtn">25 coins — $10</a>
-    <a data-pack="60"  class="coinbtn">60 coins — $20</a>
-    <a data-pack="150" class="coinbtn">150 coins — $40</a>
-  </div>
-  <div class="coinmeta">1 coin unlocks <b>25 explicit replies</b>. We only charge if the next reply is actually explicit.</div>
-  <div class="coinclose"><a href="#" id="coinClose">Not now</a></div>
-</div>
-
-<!-- Standards violation notice -->
-<div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
-  <div class="panel">
-    <div class="hd"><strong>Community Standards</strong></div>
-    <div class="bd">
-      <p class="subtle">We keep it adult & consensual. Some themes are not allowed even in Advanced mode.</p>
-      <ul class="subtle" style="margin:0 0 10px 18px">
-        <li>Minors, “school boy/girl”, “barely legal”, or teen/high-school contexts</li>
-        <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
-        <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
-        <li>Hate slurs or targeted harassment</li>
-      </ul>
-      <p class="subtle">We didn’t send that last message. You can adjust and continue.</p>
-      <div class="choices" style="margin-top:10px">
-        <button id="stdContinue" class="btn">Adjust & continue (PG)</button>
-        <a class="btn link" style="background:#2a1a25" href="/standards.html" target="_blank">View full standards</a>
-      </div>
-      <div class="choices" style="margin-top:10px">
-        <button id="stdBlock" class="btn" type="button" title="Blocks this device for 30 days">Block this device</button>
-        <a class="btn link" style="background:#2a1a25" href="mailto:support@example.com?subject=Report%20standards%20violation">Report</a>
+  <!-- Standards violation notice -->
+  <div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
+    <div class="panel">
+      <div class="hd"><strong>Community Standards</strong></div>
+      <div class="bd">
+        <p class="subtle">We keep it adult & consensual. Some themes are not allowed even in Advanced mode.</p>
+        <ul class="subtle" style="margin:0 0 10px 18px">
+          <li>Minors, “school boy/girl”, “barely legal”, or teen/high-school contexts</li>
+          <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
+          <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
+          <li>Hate slurs or targeted harassment</li>
+        </ul>
+        <p id="stdStrike" class="subtle" style="margin-top:6px"></p>
+        <div class="choices" style="margin-top:10px">
+          <button id="stdContinue" class="btn">Adjust & continue (PG)</button>
+          <a class="btn gray" href="/standards.html" target="_blank">View full standards</a>
+        </div>
       </div>
     </div>
   </div>
-</div>
+
+  <div id="toast"></div>
 
 <script>
-/* ===== helpers ===== */
-const qs = new URLSearchParams(location.search);
-const chat = document.getElementById("chat");
-const row = (html, you=false)=>{ const r=document.createElement("div"); r.className="row"+(you?" you":""); r.innerHTML=`<div class="bubble">${html}</div>`; chat.appendChild(r); chat.scrollTop=chat.scrollHeight; };
-const esc = s => (s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+/* -------------------- Setup & helpers -------------------- */
+const $ = sel => document.querySelector(sel);
+const log = $("#log");
+const input = $("#msg");
+const sendBtn = $("#send");
+const coinCountEl = $("#coinCount");
+const coinsPop = $("#coinsPop");
+const trialBar = $("#trialBar");
+const manParam = new URLSearchParams(location.search).get("man") || "blade";
+const guy = ({
+  blade:     { name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
+  grayson:   { name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg" },
+  dylan:     { name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
+  silas:     { name:"Silas Lennox", bg:"/images/gothic-bg.jpg" },
+  alexander: { name:"Alexander Jackson", bg:"/images/gothic-bg.jpg" },
+  jesse:     { name:"Jesse Granger", bg:"/images/gothic-bg.jpg" },
+})[manParam] || {name:"Blade Kincaid", bg:"/images/gothic-bg.jpg"};
 
-/* ===== device-level block check ===== */
-(function(){
-  const until = Number(localStorage.getItem("bb.blockedUntil")||0);
-  if (until && until > Date.now()){
-    document.body.innerHTML = `
-      <div style="display:grid;place-items:center;height:100vh;color:#efe6ee;background:#0e0a0d">
-        <div style="max-width:520px;border:1px solid #2a1a25;border-radius:16px;padding:18px;background:linear-gradient(180deg,#1a121a,#120a11);text-align:center">
-          <h2 style="margin:0 0 8px">Chat unavailable on this device</h2>
-          <p style="color:#bba9b6">This device has been blocked for Community Standards. Try again later or contact support.</p>
-          <p style="color:#bba9b6"><a href="/standards.html" style="color:#e7bddf">View standards</a></p>
-        </div>
-      </div>`;
-    throw new Error("Blocked device");
-  }
-})();
+document.body.style.backgroundImage = `radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('${guy.bg}')`;
+$("#manName").textContent = guy.name;
+$("#pricing").href = `/pay.html?man=${encodeURIComponent(manParam)}`;
 
-/* ===== age-gate redirect ===== */
-(function(){
-  const until = Number(localStorage.getItem("bb.ageVerifiedUntil") || 0);
-  if (!until || until <= Date.now()){
-    const man = (new URLSearchParams(location.search).get("man")||"").toLowerCase();
-    const nextHere = location.pathname + location.search + location.hash;
-    location.replace(`/age.html?man=${encodeURIComponent(man)}&next=${encodeURIComponent(nextHere)}`);
-  }
-})();
-
-/* ===== characters ===== */
-const MAP = {
-  blade:{ name:"Blade Kincaid", bg:"/images/blade-woods.jpg" },
-  dylan:{ name:"Dylan Vale", bg:"/images/dylan-garage.jpg" },
-  grayson:{ name:"Grayson Kincaid", bg:"/images/grayson-bg.jpg" },
-  silas:{ name:"Silas Lennox", bg:"/images/gothic-bg.jpg" },
-  alexander:{ name:"Alexander Jackson", bg:"/images/gothic-bg.jpg" },
-  jesse:{ name:"Jesse Granger", bg:"/images/gothic-bg.jpg" }
-};
-const ALIAS = { garage:"dylan", gentleman:"alexander", cowboy:"jesse", rockstar:"silas", mask:"blade", viking:"grayson" };
-let id = (qs.get("man") || localStorage.getItem("bb.character") || "").toLowerCase().trim();
-id = ALIAS[id] || id; if(!MAP[id]) id = "silas";
-const guy = MAP[id];
-document.body.style.setProperty("--hero", `url("${guy.bg}")`);
-document.getElementById("hdrTitle").textContent = guy.name;
-document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
-localStorage.setItem("bb.character", id);
-
-/* ===== COINS + TURNS ===== */
-const COIN_KEY = "bb.coins";
-const TURNS_KEY = `bb.eroticTurns:${id}`;
-function toInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>0 ? n : 0; }
-function getCoins(){ return toInt(localStorage.getItem(COIN_KEY)); }
-function setCoins(n){
-  const val = Math.max(0, toInt(n));
-  localStorage.setItem(COIN_KEY, String(val));
-  document.getElementById("coinBadge").textContent = `Coins: ${val}`;
+function row(html, who="ai"){
+  const r = document.createElement("div");
+  r.className = "row";
+  const b = document.createElement("div");
+  b.className = who === "me" ? "me" : "ai";
+  b.innerHTML = html;
+  r.appendChild(b);
+  log.appendChild(r);
+  log.parentElement.scrollTop = log.parentElement.scrollHeight;
 }
-function addCoins(n){ setCoins(getCoins() + toInt(n)); }
-function getTurns(){ return toInt(localStorage.getItem(TURNS_KEY)); }
-function setTurns(n){ localStorage.setItem(TURNS_KEY, String(Math.max(0, toInt(n)))); }
-// draw badge and fix any prior NaN
-setCoins(getCoins());
-// allow quick inject: ?coins=25
-if (qs.get("coins")) addCoins(qs.get("coins"));
-// popup
-const coinPopup=document.getElementById("coinPopup");
-const showCoins=()=>{ coinPopup.classList.remove("hidden"); pauseTimer(); };
-const hideCoins=()=>{ coinPopup.classList.add("hidden"); resumeTimer(); };
-document.getElementById("coinClose").addEventListener("click",(e)=>{e.preventDefault();hideCoins();});
-[...document.querySelectorAll(".coinbtn")].forEach(btn=>{
-  btn.addEventListener("click",(e)=>{
-    e.preventDefault();
-    const pack = toInt(btn.getAttribute("data-pack") || "0");
-    addCoins(pack);
-    row(`<em class="sys">Added ${pack} demo coins.</em>`);
-    hideCoins();
-  });
-});
+function toast(t){ const el=$("#toast"); el.textContent=t; el.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>el.style.display="none", 1600); }
 
-/* ===== Standards detection (strict but roleplay-aware) ===== */
+/* -------------------- Coins & advanced budget -------------------- */
+const COIN_KEY="bb.coins";
+const BUDGET_KEY="bb.advBudget";
+const HOT_PER_COIN = 25;
+
+function coins(){ return Number(localStorage.getItem(COIN_KEY)||0); }
+function setCoins(n){ localStorage.setItem(COIN_KEY, String(n)); coinCountEl.textContent=n; }
+function addCoins(n){ setCoins(coins()+n); }
+
+function advBudget(){ return Number(localStorage.getItem(BUDGET_KEY)||0); }
+function setBudget(n){ localStorage.setItem(BUDGET_KEY, String(n)); }
+function addBudgetFromCoins(spent){ setBudget(advBudget() + spent*HOT_PER_COIN); }
+function consumeBudget(n=1){ const left=Math.max(0, advBudget()-n); setBudget(left); return left; }
+
+setCoins(coins()); // refresh UI
+
+/* -------------------- Preview timer & gating -------------------- */
+const PREVIEW_SEC = 210; // 3.5 minutes
+let remaining = PREVIEW_SEC, tHandle=null;
+let userMsgCount = 0;
+
+const PREV_KEY="bb.previews"; // map {man:count}
+function getPrevCount(){ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}")[manParam]||0;} catch(e){return 0;} }
+function bumpPrevCount(){
+  const map = (()=>{ try {return JSON.parse(localStorage.getItem(PREV_KEY)||"{}");} catch(e){return {}} })();
+  map[manParam]=(map[manParam]||0)+1; localStorage.setItem(PREV_KEY, JSON.stringify(map));
+}
+
+function startTimer(){
+  clearInterval(tHandle);
+  remaining = PREVIEW_SEC;
+  tHandle = setInterval(()=>{
+    remaining--; const pct = ((PREVIEW_SEC-remaining)/PREVIEW_SEC)*100; trialBar.style.width = pct+"%";
+    if (remaining<=0){ clearInterval(tHandle); endPreview(); }
+  }, 1000);
+}
+function pauseTimer(){ clearInterval(tHandle); }
+function resumeTimer(){ startTimer(); }
+
+function endPreview(){
+  bumpPrevCount();
+  if (getPrevCount()>=3){
+    $("#npGuy").textContent=guy.name;
+    $("#noPreview").style.display="grid";
+  }else{
+    // Soft overlay offering another preview
+    $("#npGuy").textContent=guy.name;
+    $("#noPreview").style.display="grid";
+  }
+}
+
+/* overlay actions */
+$("#npDay").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=day`;
+$("#npMonth").onclick = ()=> location.href=`/pay.html?plan=month`;
+$("#npAnother").onclick = ()=>{
+  $("#noPreview").style.display="none"; startTimer();
+};
+$("#npMaybe").onclick = ()=>{
+  $("#noPreview").style.display="none";
+  // give 60 seconds more
+  remaining = 60; startTimer();
+};
+
+/* -------------------- Standards detection (roleplay-aware + 3-strike auto block) -------------------- */
 const stdOverlay = document.getElementById("stdOverlay");
 const stdContinue = document.getElementById("stdContinue");
-const stdBlock = document.getElementById("stdBlock");
+const STRIKES_KEY = "bb.stdStrikes";
+const MAX_STRIKES = 3;
 
-// normalize leet + dragged letters
+function getStrikes(){ return Number(localStorage.getItem(STRIKES_KEY) || 0); }
+function addStrike(){ const n = getStrikes() + 1; localStorage.setItem(STRIKES_KEY, String(n)); return n; }
+
 function norm(input){
   let s = (input||"").toLowerCase();
   s = s.replace(/[@]/g,"a").replace(/[4]/g,"a").replace(/[1!|]/g,"i").replace(/[3]/g,"e").replace(/[0]/g,"o").replace(/[$]/g,"s");
   s = s.replace(/([a-z])\1{2,}/g,"$1$1").replace(/\s+/g," ").trim();
   return s;
 }
+
 const SEXUAL_NEAR = /\b(fuck|sex|suck|ride|blow|go\s*down|eat\s*out|finger(?:ing)?|penetrat|cum|orgasm|hand\s*job|bj|anal|doggystyle|deepthroat|spank|chok(?:e|ing)|dominat)\b/i;
-const ROLEPLAY_MARK = /\b(role\s*play|roleplay|outfit|costume|cosplay|lingerie)\b/i;
-const ADULT_CODED   = /\b(college|university|grad|over\s*18|of\s*age|consenting adults?|adult|pro\s*cheerleader)\b/i;
+const ROLEPLAY_MARK = /\b(role\s*play|roleplay|outfit|uniform|costume|cosplay|lingerie)\b/i;
+const ADULT_CODED   = /\b(college|university|over\s*18|of\s*age|consenting adults?|adult)\b/i;
 
 const DISALLOWED_ALWAYS = [
-  // minors / age
   /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*sex)\b/i,
-  // incest / step relations
   /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
-  // non-consent / coercion / against will
   /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
-  // incapacity
   /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
-  // bestiality / necrophilia
   /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
-  // trafficking / sexual slavery
-  /\bsex\s*traffick(?:ing)?\b/i, /\bsell\s*(?:you|her|him)\b/i, /\bslave\s*role\b/i,
-  // extreme bodily / blood / knife play
+  /\bsex\s*traffick(?:ing)?\b/i, /\bsell\s*(?:you|her|him)\b/i,
   /\b(scat|feces|coprophag(?:y|ia))\b/i, /\b(piss|urinate)\s*on\b/i, /\bblood\s*play\b/i, /\bknife\s*play\b/i,
-  // hate slurs (boundaries)
+  // hate slurs (expand as needed)
   /\b(?:n[i1]gg(?:a|er)s?)\b/i, /\b(?:f[a@]gg?(?:o|0)t[s]?)\b/i, /\b(?:tr[a@]nn?y)\b/i, /\b(?:k[i1]k[e3]s?)\b/i, /\b(?:ch[i1]nk[s]?)\b/i, /\b(?:sp[i1]c[s]?)\b/i, /\b(?:w[ea]tb[a@]ck[s]?)\b/i
 ];
 
-// schoolboy/girl: predator-coded → block outright
-const SCHOOL_MINOR_CODED = /\bschool\s*(?:boy|girl)|schoolboy|schoolgirl\b/i;
-
-// cheerleader/student words: contextual (allow only as adult roleplay)
-const CONTEXT_MINOR_TERMS = /\b(cheerleader|student|pupil|freshman)\b/i;
-const EXPLICIT_MINOR_CONTEXT = /\b(high\s*school|teen|tryout|pep\s*rally|under\s*18)\b/i;
+const MINOR_CODED = /\b(school\s*(?:boy|girl)|cheerleader|student|pupil|freshman)\b/i;
+const EXPLICIT_MINOR_CONTEXT = /\b(teen|high\s*school|under\s*18|9th|10th|11th|12th|sophomore|junior|senior|homeroom|classroom)\b/i;
 
 function breaksStandards(input){
   const s = norm(input);
 
   if (DISALLOWED_ALWAYS.some(rx => rx.test(s))) return true;
 
-  // college/university is adult-coded → safe unless hard-block elsewhere
+  // adult-coded contexts are fine (e.g., "college", "university")
   if (/\bcollege|university\b/i.test(s)) return false;
 
-  // schoolboy/girl: always block (predator-coded)
-  if (SCHOOL_MINOR_CODED.test(s)) return true;
-
-  // contextual minor-coded terms
-  if (CONTEXT_MINOR_TERMS.test(s)) {
-    // if explicitly minor context → block
+  // Minor-coded terms are contextual:
+  if (MINOR_CODED.test(s)) {
+    // If explicitly minor context → block
     if (EXPLICIT_MINOR_CONTEXT.test(s)) return true;
-    // allow only if marked as adult roleplay/costume
-    if (!(ROLEPLAY_MARK.test(s) || ADULT_CODED.test(s))) {
-      // if sexual verb nearby and no adult markers → block
-      if (SEXUAL_NEAR.test(s)) return true;
-    }
+
+    // Allow when clearly adult roleplay / outfit / uniform / cosplay / “of age”
+    if (ROLEPLAY_MARK.test(s) || ADULT_CODED.test(s)) return false;
+
+    // Otherwise, if sexual verbs appear near it → block (predator-coded)
+    if (SEXUAL_NEAR.test(s)) return true;
   }
 
-  // family words (mom/dad/bro/sis/cousin) only block if sexual nearby (and not step already covered)
+  // Family words blocked only when sexual and not already handled above
   if (/\b(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|cousin)\b/i.test(s) && SEXUAL_NEAR.test(s)) return true;
 
   return false;
 }
 
-function showStd(){ stdOverlay.style.display = "grid"; pauseTimer(); }
+function showStd(){
+  const n = addStrike();
+  const msg = (n >= MAX_STRIKES)
+    ? `Standards warning ${n} of ${MAX_STRIKES}. This device is now blocked for 30 days.`
+    : `Standards warning ${n} of ${MAX_STRIKES}. Three warnings results in a 30-day block.`;
+  $("#stdStrike").textContent = msg;
+  stdOverlay.style.display = "grid"; pauseTimer();
+
+  if (n >= MAX_STRIKES){
+    const until = Date.now() + 30*24*60*60*1000; // 30 days
+    localStorage.setItem("bb.blockedUntil", String(until));
+  }
+}
 function hideStd(){ stdOverlay.style.display = "none"; resumeTimer(); }
-document.getElementById("stdContinue").addEventListener("click", ()=>{ hideStd(); row(`<em class="sys">Let’s keep it adult & consensual. Try a different phrasing.</em>`); });
-document.getElementById("stdBlock").addEventListener("click", ()=>{
-  const until = Date.now() + 30*24*60*60*1000;
-  localStorage.setItem("bb.blockedUntil", String(until));
-  document.body.innerHTML = `
-    <div style="display:grid;place-items:center;height:100vh;color:#efe6ee;background:#0e0a0d">
-      <div style="max-width:520px;border:1px solid #2a1a25;border-radius:16px;padding:18px;background:linear-gradient(180deg,#1a121a,#120a11);text-align:center">
-        <h2 style="margin:0 0 8px">Chat unavailable on this device</h2>
-        <p style="color:#bba9b6">This device has been blocked for Community Standards.</p>
-        <p style="color:#bba9b6"><a href="/standards.html" style="color:#e7bddf">View standards</a></p>
-      </div>
-    </div>`;
+$("#stdContinue").onclick = ()=>{ hideStd(); row(`<em class="sys">Let’s keep it adult & consensual. Try a different phrasing.</em>`); };
+
+/* Blocked gate */
+(function(){
+  const until = Number(localStorage.getItem("bb.blockedUntil")||0);
+  if (until && Date.now() < until){
+    const days = Math.ceil((until - Date.now())/86400000);
+    row(`<em class="sys">This device is blocked for ${days} day(s) due to repeated standards violations.</em>`);
+    input.disabled = true; sendBtn.disabled = true;
+  }
+})();
+
+/* -------------------- Greetings & banter keep-alive -------------------- */
+const GREETS = {
+  blade: [
+    "Found you, brave girl. Don’t run—yet.",
+    "Footsteps behind you… I keep pace.",
+    "Doorway or shadows? I’m close behind.",
+    "Say my name and I’ll follow.",
+    "Do you want patient… or a little chase?",
+    "Let me hear one true thing from today."
+  ],
+  grayson: [
+    "One line at a time. I’m listening.",
+    "Tell me one detail I’d notice when I look at you.",
+    "Pick: gentle questions or firm direction?",
+    "Start with today—one truth.",
+    "Heart or head first?",
+    "You have my attention. Use it."
+  ],
+  dylan: [
+    "Hands flat on the counter, pretty thing.",
+    "Calm tune-up or teasing tune-up?",
+    "Tell me what needs fixing tonight.",
+    "Slow ride or quick detour?",
+    "Want grease on my hands or yours?",
+    "Bring me one trouble and I’ll tighten it."
+  ],
+  silas: [
+    "Come closer, muse. Lend me a verse.",
+    "Soft, or a little rough on the edges?",
+    "Paint me a five-word picture.",
+    "Hums or growls first?",
+    "What’s tonight’s chorus made of?",
+    "Give me a note and I’ll hold it on my tongue."
+  ],
+  alexander: [
+    "Shoes off. I’m leading.",
+    "Lights low or city view while we talk?",
+    "Short answers from now on.",
+    "Tell me what you want me to notice first.",
+    "Desk or glass wall?",
+    "I’ll take your coat and one weight off your mind."
+  ],
+  jesse: [
+    "Darlin’, park it a spell.",
+    "Straight talk—what’d the day do to you?",
+    "Sweet or rowdy—your pick.",
+    "Porch light on or off?",
+    "You hungry or just hungry for trouble?",
+    "You been good today, or do I need to fix that?"
+  ]
+};
+
+const KEEPALIVE = [
+  "I’m here. Lead and I’ll follow.",
+  "Give me one more detail.",
+  "Say it how you want it—I can work with that.",
+  "Short and honest—I like that.",
+  "I’m listening; make it specific."
+];
+
+let greetIndex = Number(localStorage.getItem("bb.greet-"+manParam)||0);
+function nextGreet(){
+  const arr = GREETS[manParam] || GREETS.blade;
+  const line = arr[greetIndex % arr.length];
+  greetIndex++; localStorage.setItem("bb.greet-"+manParam, String(greetIndex));
+  return line;
+}
+
+/* -------------------- Erotic cue detection & coin popup -------------------- */
+const EROTIC_CUE = /\b(lick|ride|rail|suck|go\s*down|eat\s*out|spank|choke|thrust|bend\s*me|doggystyle|deepthroat|cum|orgasm)\b/i;
+
+function maybeShowCoins(reason=""){
+  if (advBudget()<=0){
+    $("#coinsPop").style.display="block";
+  }
+}
+$("#coinsNotNow").onclick = ()=> coinsPop.style.display="none";
+document.querySelectorAll("#coinsPop .pack").forEach(p=>{
+  p.addEventListener("click", ()=>{
+    const n = Number(p.getAttribute("data-coins"));
+    // Demo add coins locally
+    addCoins(n);
+    coinsPop.style.display="none";
+    toast(`Demo: added ${n} coins`);
+  });
 });
 
-/* ===== trial timer with AUTO-PAUSE ===== */
-const TRIAL_SECONDS=210, MAX_TRIALS=3;
-const END_KEY=`bb.trialEnd:${id}`, COUNT_KEY=`bb.trialCount:${id}`, MARK_KEY=`bb.trialMarkedEnd:${id}`;
-let count=Number(localStorage.getItem(COUNT_KEY)||0);
-let end=Number(localStorage.getItem(END_KEY)||0);
-const timeleft=document.getElementById("timeleft"); const fill=document.getElementById("fill");
-const composer=document.getElementById("composer"); const input=document.getElementById("input");
+/* -------------------- Talk to server (brain) -------------------- */
+async function askBrain(userText, mode){
+  // NOTE: your /api/brain serverless should consume {man, text, mode, history}
+  const history = Array.from(log.querySelectorAll(".row")).slice(-40).map(r=>{
+    const isMe = r.querySelector(".me");
+    return (isMe? "user: " : "bot: ") + r.textContent.trim();
+  }).join("\n");
 
-let paused=false, pauseStamp=0;
-function pauseTimer(){ if(!paused){ paused=true; pauseStamp=Date.now(); } }
-function resumeTimer(){ if(paused){ const delta=Date.now()-pauseStamp; end += delta; localStorage.setItem(END_KEY,String(end)); paused=false; } }
+  const res = await fetch("/api/brain", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ man:manParam, text:userText, mode, history })
+  }).catch(()=>null);
 
-document.addEventListener("visibilitychange", ()=>{ if(document.hidden) pauseTimer(); else resumeTimer(); });
-
-function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000)); const m=Math.floor(s/60).toString(); const ss=(s%60).toString().padStart(2,'0'); return `${m}:${ss}`;}
-function startPreview(){
-  const now=Date.now(); end=now+TRIAL_SECONDS*1000;
-  localStorage.setItem(END_KEY,String(end)); localStorage.removeItem(MARK_KEY);
-  composer.classList.remove("disabled"); input.disabled=false; input.focus(); requestAnimationFrame(tick);
-}
-function tick(){
-  if(count>=MAX_TRIALS){lock(true);return;}
-  if(paused){ requestAnimationFrame(tick); return; }
-  const ms=end-Date.now(); const total=TRIAL_SECONDS*1000;
-  const used=Math.min(total,Math.max(0,total-ms));
-  fill.style.width=(used/total*100)+"%"; timeleft.textContent=fmt(ms);
-  if(ms<=0){lock(false);return;} requestAnimationFrame(tick);
-}
-function lock(limitReached){
-  composer.classList.add("disabled"); input.disabled=true;
-  document.getElementById("ovTitle").textContent=limitReached?`Free previews used up`:`Time’s up — ${guy.name} can keep you longer`;
-  document.getElementById("ovPill").textContent=limitReached?`You’ve had ${MAX_TRIALS} previews with ${guy.name}`:`Keep going with ${guy.name}`;
-  document.getElementById("ovAvatar").src=guy.bg;
-  if(!limitReached){
-    const mark=localStorage.getItem(MARK_KEY);
-    if(String(end)!==mark){count=Number(localStorage.getItem(COUNT_KEY)||0)+1; localStorage.setItem(COUNT_KEY,String(count)); localStorage.setItem(MARK_KEY,String(end));}
+  if (!res || !res.ok){
+    return "I’m here, but the line’s noisy. Say it again?";
   }
-  const left=Math.max(0,MAX_TRIALS-count);
-  document.getElementById("freeLeft").textContent=left?`${left} free preview${left===1?"":"s"} left with ${guy.name}.`:`No free previews left for ${guy.name}.`;
-  document.getElementById("ovActions").classList.toggle("hidden", left===0);
-  document.getElementById("overlay").style.display="grid";
-  pauseTimer();
+  const data = await res.json().catch(()=>({reply:"…"}));
+  return data.reply || "Say that once more for me.";
 }
 
-/* ===== severity + hotness check ===== */
-const HARD = ["lick me","eat me","suck","go down","blow","hand job","cum","finish in me","rail me","bend me over","tie me","pin me"];
-const MED  = ["kiss","ride","spank","grind","dirty","turn me on","touch me","desk","counter","obedience","command","good girl","naughty"];
-function userSeverity(t){const s=t.toLowerCase(); if(HARD.some(w=>s.includes(w))) return 2; if(MED.some(w=>s.includes(w))) return 1; return 0;}
-const HOT_SIGNS = ["come here","hands on","on the desk","on the wall","closer","good girl","i’ll lead","tell me where","show me how","i want you","you want me","my mouth","i’ll take the lead","look at me","be still","answer me","choose where","kneel","behave for me"];
-function replyIsHot(t){
-  const s=t.toLowerCase();
-  if(s.includes("keep it pg") || s.includes("let’s keep it respectful") || s.includes("keep it playful and respectful")) return false;
-  return HOT_SIGNS.some(w=>s.includes(w));
-}
+/* -------------------- Send flow -------------------- */
+async function handleSend(){
+  const text = input.value.trim();
+  if (!text) return;
+  row(escapeHtml(text), "me");
+  input.value=""; userMsgCount++;
 
-/* ===== brain hookup ===== */
-const history = [];
-let mediumCount = 0;
-let lastAssistant = "";
-let userMsgCount = 0; // for 5-message delay
+  // keep-alive line every 5 user messages
+  if (userMsgCount % 5 === 0){
+    row(`<em class="sys">${KEEPALIVE[(userMsgCount/5-1)%KEEPALIVE.length]}</em>`);
+  }
 
-/* ===== send handling ===== */
-document.getElementById("composer").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const t=input.value.trim(); if(!t) return;
+  // standards check
+  if (breaksStandards(text)) { showStd(); return; }
 
-  // Standards check BEFORE anything else
-  if (breaksStandards(t)){ showStd(); return; }
-
-  userMsgCount++;
-  row(esc(t),true);
-  history.push({role:"user", content:t});
-  input.value="";
-
-  const sev = userSeverity(t);
-  if(sev===1) mediumCount++;
-
-  const haveTurns = getTurns()>0;
-  const candidateErotic = haveTurns || sev===2 || mediumCount>=1;
-  const allowCoins = userMsgCount >= 5; // delay coins until after 5 user messages
-  const tryErotic  = candidateErotic && allowCoins;
-
-  let reply = "Say more—I’m listening.";
-  try{
-    const r = await fetch("/api/brain", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ guy:id, mode:(tryErotic ? "erotic" : "pg"), history }) });
-    const j = await r.json().catch(()=>null) || {};
-    if (j.violation === true){ showStd(); return; }
-    reply = (j.reply || reply).toString();
-  }catch(e){ console.error(e); reply = "Network’s acting up. Try one more line for me."; }
-
-  const hot = tryErotic && replyIsHot(reply);
-
-  // Spend a coin only when the reply is actually explicit—and AFTER the 5-message delay
-  if(hot && !haveTurns){
-    if(getCoins()<=0){
-      row(`<em class="sys">Coins unlock the explicit tone. Grab a small pack if you want to go there.</em>`);
-      showCoins();
+  // erotic cue handling
+  let mode = "pg";
+  if (EROTIC_CUE.test(text)){
+    if (advBudget()<=0){
+      maybeShowCoins("cue");
+      row(`<em class="sys">We’ll keep it PG-13 until coins unlock advanced chat.</em>`);
+      mode = "pg";
     }else{
-      setCoins(getCoins()-1);
-      setTurns(25); // 1 coin = 25 explicit replies
-      row(`<em class="sys">Spent 1 coin — unlocked 25 explicit replies.</em>`);
+      mode = "adv";
     }
+  }else if (advBudget()>0){
+    // already in advanced mode budgeted—stay there
+    mode = "adv";
   }
 
-  // Tried erotic, but reply stayed PG and we have no turns → no spend, nudge popup
-  if(tryErotic && !hot && !haveTurns){
-    showCoins();
-    row(`<em class="sys">We’ll keep it PG-13 until coins unlock Advanced chat (words only).</em>`);
-  }
+  const reply = await askBrain(text, mode);
 
-  if(reply){
-    const trimmed = reply.trim();
-    if(trimmed !== lastAssistant.trim()){
-      lastAssistant = trimmed;
-      history.push({role:"assistant", content:trimmed});
-      row(`<strong>${guy.name}:</strong> ${esc(trimmed)}`);
-      if(hot && getTurns()>0){
-        const left = getTurns()-1; setTurns(left);
-        if(left<=0) row(`<em class="sys">Your 25 explicit replies are used—back to PG-13.</em>`);
-      }
+  // Spend budget only when we actually generated an advanced reply
+  if (mode === "adv"){
+    const left = consumeBudget(1);
+    if (left % 25 === 24){ // just started a new 25-pack?
+      row(`<em class="sys">Spent 1 coin — unlocked 25 hotter replies.</em>`);
     }
+    if (left<=0){ row(`<em class="sys">Your 25 hot replies are used—back to PG-13.</em>`); }
   }
-});
 
-/* ===== kickoff ===== */
-if(Number(localStorage.getItem(`bb.trialCount:${id}`)||0) >= 3){ lock(true); } else { if(!end || end<=Date.now()) startPreview(); else requestAnimationFrame(tick); }
-document.getElementById("buyDay")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=day`);
-document.getElementById("buyMonth")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=month`);
-document.getElementById("anotherPreview")?.addEventListener("click", ()=>{ location.reload(); });
-document.getElementById("snooze")?.addEventListener("click", ()=>{ document.getElementById("overlay").style.display="none"; end=Date.now()+60*1000; localStorage.setItem(END_KEY,String(end)); resumeTimer(); requestAnimationFrame(tick); });
+  row(escapeHtml(reply), "ai");
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
+
+/* -------------------- Init -------------------- */
+(function init(){
+  // Boot greeting
+  row(`<strong>${guy.name}:</strong> ${nextGreet()}`, "ai");
+  startTimer();
+
+  // Enter key send
+  input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ handleSend(); }});
+  sendBtn.addEventListener("click", handleSend);
+})();
 </script>
 </body>
 </html>

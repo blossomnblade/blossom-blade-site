@@ -1,106 +1,58 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Day Pass Checkout (demo) • Blossom n Blade</title>
-<style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0; color:var(--ink); font:600 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:linear-gradient(0deg, rgba(14,10,13,.88), rgba(14,10,13,.88)),
-               url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
-  }
-  header{padding:14px 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11)}
-  .wrap{max-width:760px; margin:28px auto; padding:0 14px}
-  .card{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#1a121a,#120a11);
-        box-shadow:0 12px 30px rgba(0,0,0,.45)}
-  .hd{padding:16px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:12px}
-  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum))}
-  h1{margin:0; font-size:18px}
-  .bd{padding:18px}
-  .muted{color:var(--muted); font-size:13px}
-  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
-  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:800; color:white;
-       background:linear-gradient(90deg,var(--plum),var(--wine))}
-  .btn.ghost{background:#2a1a25}
-  .ok{padding:8px 10px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123; display:none; margin-bottom:10px}
-  .warn{padding:8px 10px; border-radius:10px; background:#2a1a25; color:#f6d7ef; border:1px dashed #3a203a; display:none; margin-top:10px}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Day Pass — Checkout (Demo)</title>
+  <style>
+    :root{--bg:#0f0f14;--panel:#1c1b22;--ink:#e9e7f2;--muted:#b9b5cc;--accent:#b84fb8;}
+    body{margin:0;background:var(--bg) url('/images/gothic-bg.jpg') center/cover fixed no-repeat;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    .wrap{max-width:920px;margin:60px auto;padding:0 16px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 40px rgba(0,0,0,.45);backdrop-filter:blur(6px);border-radius:18px;padding:24px}
+    h1{margin:0 0 8px 0;font-size:26px}
+    .ok{display:inline-block;background:#164a2e;color:#bdf7cf;border:1px solid #2a8250;padding:6px 10px;border-radius:10px;font-size:14px;margin:12px 0}
+    ul{line-height:1.7;color:var(--muted)}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:999px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#343245;color:#e3def7}
+    .note{color:var(--muted);font-size:13px;margin-top:12px}
+  </style>
 </head>
 <body>
-<header>Day Pass checkout (demo). Adults only.</header>
-
-<div class="wrap">
-  <div class="card">
-    <div class="hd"><div class="dot" aria-hidden="true"></div><h1>Day Pass — $5.99</h1></div>
-    <div class="bd">
-      <div id="ageok" class="ok">Age verified — good to go.</div>
-      <p class="muted">
-        This page is a demo placeholder so you can keep testing flow.
-        Clicking <b>Complete purchase (demo)</b> will simulate success and drop you in the chat.
-      </p>
-      <ul class="muted">
+  <div class="wrap">
+    <div class="card">
+      <h1>Day Pass — $5.99</h1>
+      <div id="ageStatus" class="ok">Age verified — good to go.</div>
+      <p class="note">This page is a demo so you can finish the flow. “Complete purchase (demo)” will pretend success and drop you in the correct room.</p>
+      <ul>
         <li>Unlocks one guy of your choice for the day</li>
-        <li>PG-13 by default; coins can unlock erotic chat (words only)</li>
+        <li>PG-13 by default; coins can unlock <em>advanced</em> chat (words only)</li>
       </ul>
-      <div class="actions">
+      <div class="row">
         <button id="complete" class="btn">Complete purchase (demo)</button>
-        <a id="back" class="btn ghost" href="/pay.html">Back to plans</a>
+        <a href="/pay.html" class="btn secondary">Back to plans</a>
       </div>
-      <div id="warn" class="warn">Your browser blocked local storage. If you bounce to age-check again, hard refresh (Ctrl/Cmd + F5).</div>
+      <div class="note" id="who"></div>
     </div>
   </div>
-</div>
 
-<script>
-/* ---- helpers ---- */
-const qs   = new URLSearchParams(location.search);
-const man  = (qs.get("man")||"").toLowerCase();
+  <script>
+    // Read chosen man from URL or fallback to the last one the user picked
+    const qs = new URLSearchParams(location.search);
+    let man = (qs.get('man') || localStorage.getItem('lastMan') || 'blade').toLowerCase();
+    // Keep it around for later pages too
+    localStorage.setItem('lastMan', man);
 
-function storageWorks(){
-  try{ localStorage.setItem("__bbprobe","1"); const ok=localStorage.getItem("__bbprobe")==="1"; localStorage.removeItem("__bbprobe"); return ok; }
-  catch(e){ return false; }
-}
+    // tiny UI hint
+    const names = {blade:'Blade Kincaid', grayson:'Grayson Kincaid', dylan:'Dylan Vale', silas:'Silas Lennox', alexander:'Alexander Jackson', jesse:'Jesse Granger'};
+    document.getElementById('who').textContent = `Purchasing access for: ${names[man] || 'Blade Kincaid'}.`;
 
-/* ---- honor age gate (same keys used elsewhere) ---- */
-const KEY_MAIN = "bb.ageVerifiedUntil";
-const KEY_FLAG = "bb.ageVerified";
-const until = Number(localStorage.getItem(KEY_MAIN) || 0);
-const flag  = localStorage.getItem(KEY_FLAG) === "1";
-
-if (!((until && until > Date.now()) || flag)){
-  const next = location.pathname + location.search + location.hash;
-  location.replace(`/age.html?man=${encodeURIComponent(man)}&plan=day&next=${encodeURIComponent(next)}`);
-}
-
-if (until && until > Date.now()) document.getElementById("ageok").style.display = "block";
-if (!storageWorks()) document.getElementById("warn").style.display = "block";
-
-/* ---- demo “success” : set a 24h Day Pass + clear preview locks ---- */
-document.getElementById("complete").addEventListener("click", ()=>{
-  try{
-    const passUntil = Date.now() + 24*60*60*1000; // 24h
-    if (man) localStorage.setItem(`bb.pass:day:${man}`, String(passUntil));
-    localStorage.setItem("bb.pass:last", man||"");
-    localStorage.setItem("bb.pass:active", "day");
-    localStorage.setItem("bb.demoDayPass", "1");
-
-    // Clear any preview/loop locks so chat won’t block after purchase
-    const keys = [];
-    for (let i=0;i<localStorage.length;i++){ keys.push(localStorage.key(i)); }
-    keys.forEach(k=>{
-      if (/^bb\.(preview|trial|loops?)/i.test(k)) localStorage.removeItem(k);
+    // DEMO purchase: mark day pass, return to chat WITH the correct ?man=
+    document.getElementById('complete').addEventListener('click', () => {
+      localStorage.setItem('sub', 'day');            // simple flag the chat can read
+      const url = `/chat.html?man=${encodeURIComponent(man)}&sub=day`;
+      location.href = url;
     });
-  }catch(e){}
-
-  const target = man ? `/chat.html?man=${encodeURIComponent(man)}` : "/index.html";
-  location.replace(target);
-});
-
-// keep guy in the back link
-document.getElementById("back").href = man ? `/pay.html?man=${encodeURIComponent(man)}` : "/pay.html";
-</script>
+  </script>
 </body>
 </html>

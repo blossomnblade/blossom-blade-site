@@ -6,140 +6,63 @@
 <title>Chat · Blossom & Blade</title>
 <style>
   :root{
-    --ink:#e9e7f1;
-    --ink-soft:#cfcbe3;
-    --bg:#0b0d12;
-    --panel:rgba(10,12,18,.40);          /* translucent panel */
-    --bubble-me:#4b3d8a;
-    --bubble-bot:#1a1f2e;
-    --bubble-me-text:#fff;
-    --bubble-bot-text:#e8e6f4;
-    --accent:#a979ff;
-    --accent-2:#f18bbf;
-    --bad:#ff5b6e;
-    --ok:#9cf09c;
+    --ink:#e9e7f1; --ink-soft:#cfcbe3; --bg:#0b0d12;
+    --panel:rgba(10,12,18,.40);
+    --bubble-me:#4b3d8a; --bubble-bot:#1a1f2e;
+    --bubble-me-text:#fff; --bubble-bot-text:#e8e6f4;
+    --accent:#a979ff; --accent-2:#f18bbf;
   }
-
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0;
-    color:var(--ink);
+    margin:0; color:var(--ink);
     background:#0b0d12 url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
     background-blend-mode:multiply;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+    font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif;
   }
-
-  .page{
-    min-height:100%;
-    backdrop-filter:saturate(120%) blur(.5px);
-    background:linear-gradient(180deg,rgba(4,6,10,.55),rgba(4,6,10,.75));
-  }
-
-  header{
-    padding:16px 20px 8px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .crumb a{color:var(--ink-soft); text-decoration:none}
-  .crumb a:hover{color:var(--ink)}
-  h1{font-size:18px; margin:0; letter-spacing:.2px}
-  .subtle{font-size:12px; color:var(--ink-soft)}
-
-  .progress{
-    height:6px; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden; margin:8px 20px 0;
-  }
-  .progress>i{display:block; height:100%; width:28%; background:linear-gradient(90deg,var(--accent),var(--accent-2));}
-
-  .chatwrap{
-    margin:18px auto 24px;
-    width:min(1000px,calc(100% - 32px));
-    border-radius:22px;
-    padding:18px;
-    background:var(--panel);            /* translucent pane so the room shows through */
-    box-shadow:0 8px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.06);
-  }
-
-  .log{
-    height:56vh; min-height:360px; max-height:62vh;
-    overflow:auto;
-    padding:10px;
-    display:flex; flex-direction:column; gap:10px;
-  }
-  .row{display:flex}
-  .row.you{justify-content:flex-end}
-  .bubble{
-    max-width:min(760px,78%);
-    padding:10px 12px; border-radius:14px;
-    line-height:1.35;
-    box-shadow:0 2px 10px rgba(0,0,0,.18);
-  }
+  .page{min-height:100%; background:linear-gradient(180deg,rgba(4,6,10,.55),rgba(4,6,10,.75))}
+  header{padding:16px 20px 8px; display:flex; align-items:center; justify-content:space-between}
+  .crumb a{color:var(--ink-soft); text-decoration:none} .crumb a:hover{color:var(--ink)}
+  h1{font-size:18px; margin:0; letter-spacing:.2px} .subtle{font-size:12px; color:var(--ink-soft)}
+  .progress{height:6px; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden; margin:8px 20px 0}
+  .progress>i{display:block; height:100%; width:28%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  .chatwrap{margin:18px auto 24px; width:min(1000px,calc(100% - 32px)); border-radius:22px; padding:18px;
+            background:var(--panel); border:1px solid rgba(255,255,255,.06);
+            box-shadow:0 8px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05)}
+  .log{height:56vh; min-height:360px; max-height:62vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:10px}
+  .row{display:flex} .row.you{justify-content:flex-end}
+  .bubble{max-width:min(760px,78%); padding:10px 12px; border-radius:14px; line-height:1.35; box-shadow:0 2px 10px rgba(0,0,0,.18)}
   .row.you .bubble{background:var(--bubble-me); color:var(--bubble-me-text)}
   .row.bot .bubble{background:var(--bubble-bot); color:var(--bubble-bot-text)}
   .botname{font-weight:700; margin-right:6px}
-
   .composer{display:flex; gap:10px; margin-top:14px}
-  .input{
-    flex:1; border-radius:14px; border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.06);
-    color:var(--ink); padding:14px 14px;
-    outline:none;
-  }
-  .btn{
-    border:0; border-radius:12px; padding:12px 16px; cursor:pointer;
-    background:linear-gradient(180deg,var(--accent),#6b50dd);
-    color:#fff; font-weight:700; letter-spacing:.2px;
-  }
+  .input{flex:1; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.06); color:var(--ink); padding:14px}
+  .btn{border:0; border-radius:12px; padding:12px 16px; cursor:pointer; color:#fff; font-weight:700; letter-spacing:.2px;
+       background:linear-gradient(180deg,var(--accent),#6b50dd)}
   .btn:disabled{opacity:.6; cursor:not-allowed}
-
-  .footerline{
-    text-align:center; font-size:12px; color:var(--ink-soft); margin-top:10px;
-  }
-
-  /* modal */
+  .footerline{text-align:center; font-size:12px; color:var(--ink-soft); margin-top:10px}
   .modal.hidden{display:none}
-  .modal{
-    position:fixed; inset:0; display:grid; place-items:center; z-index:50;
-    background:rgba(5,7,11,.62);
-    backdrop-filter:blur(2px);
-  }
-  .modal__card{
-    width:min(680px,calc(100% - 28px));
-    background:#0e1220; color:var(--ink);
-    border:1px solid rgba(255,255,255,.10);
-    border-radius:16px; padding:18px;
-    box-shadow:0 20px 60px rgba(0,0,0,.55);
-  }
-  .modal__card h3{margin:0 0 6px}
-  .modal__lede{color:var(--ink-soft); margin:0 0 10px}
-  .modal__list{margin:8px 0 10px 20px}
-  .modal__list li{margin:6px 0}
+  .modal{position:fixed; inset:0; display:grid; place-items:center; z-index:50; background:rgba(5,7,11,.62); backdrop-filter:blur(2px)}
+  .modal__card{width:min(680px,calc(100% - 28px)); background:#0e1220; color:var(--ink); border:1px solid rgba(255,255,255,.10);
+               border-radius:16px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.55)}
+  .modal__card h3{margin:0 0 6px} .modal__lede{color:var(--ink-soft); margin:0 0 10px}
+  .modal__list{margin:8px 0 10px 20px} .modal__list li{margin:6px 0}
   .modal__note{font-size:13px; color:#ffd1d6; margin:8px 0}
   .modal-footnote{font-size:.85rem; opacity:.7; margin:.25rem 0 0}
-
   .modal__actions{display:flex; gap:8px; margin-top:12px}
-  .btn--ghost{
-    background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.15);
-  }
-
-  /* block screen */
-  .blocked{
-    position:fixed; inset:0; display:grid; place-items:center; z-index:60;
-    background:rgba(0,0,0,.8); color:#fff; text-align:center; padding:20px;
-  }
+  .btn--ghost{background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.15)}
+  .blocked{position:fixed; inset:0; display:grid; place-items:center; z-index:60; background:rgba(0,0,0,.8); color:#fff; text-align:center; padding:20px}
   .blocked .card{max-width:520px; background:#0f1322; padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,.1)}
   .blocked h3{margin:0 0 8px}
+  /* tiny dev bar (shows only with ?admin=1) */
+  .devbar{position:fixed; left:10px; bottom:10px; display:none; gap:8px; z-index:70}
+  .devbar button{font-size:12px; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.2);
+                 background:rgba(255,255,255,.06); color:#fff; cursor:pointer}
 </style>
 </head>
 <body>
 <div class="page">
   <header>
-    <div>
-      <div class="crumb"><a href="/index.html">Blossom & Blade</a></div>
-      <h1 id="guyTitle">…</h1>
-    </div>
+    <div><div class="crumb"><a href="/index.html">Blossom & Blade</a></div><h1 id="guyTitle">…</h1></div>
     <div class="subtle">PG-13 by default</div>
   </header>
 
@@ -147,49 +70,35 @@
 
   <main class="chatwrap" aria-live="polite">
     <div id="log" class="log"></div>
-
     <div class="composer">
       <input id="input" class="input" placeholder="Say hi…" autocomplete="off" />
       <button id="sendBtn" class="btn">Send</button>
     </div>
-
     <div class="footerline">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </main>
 </div>
 
-<!-- Community Standards Modal (full block) -->
+<!-- Community Standards Modal -->
 <div id="standardsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="standardsTitle">
   <div class="modal__card">
     <h3 id="standardsTitle">Community Standards</h3>
-
-    <p class="modal__lede">
-      We keep chat adult &amp; consensual. PG-13 by default. No visuals—words only.
-    </p>
-
+    <p class="modal__lede">We keep chat adult &amp; consensual. PG-13 by default. No visuals—words only.</p>
     <ul class="modal__list">
       <li>No minors or teen/high-school contexts</li>
       <li>No incest/step-family, non-consent/coercion, or intoxication without capacity</li>
       <li>No bestiality/necrophilia, trafficking, extreme bodily fluids, or blood/knife “play”</li>
       <li>No hate slurs or targeted harassment</li>
     </ul>
-
-    <p class="modal__note">
-      We didn’t send that last message. Warning <span id="warnCount">1</span> of 3. Three warnings triggers a 30-day block.
-    </p>
-
-    <p class="modal-footnote">
-      If you’re here to violate our community standards, this isn’t the site for you.
-    </p>
-
+    <p class="modal__note">We didn’t send that last message. Warning <span id="warnCount">1</span> of 3. Three warnings triggers a 30-day block.</p>
+    <p class="modal-footnote">If you’re here to violate our community standards, this isn’t the site for you.</p>
     <div class="modal__actions">
       <button id="standardsOk" class="btn">Okay — keep it PG-13</button>
       <a id="standardsFull" class="btn btn--ghost" href="/standards.html" target="_blank" rel="noopener">View full standards</a>
     </div>
   </div>
 </div>
-<!-- /Community Standards Modal -->
 
-<!-- Block screen (appears at 3 warnings) -->
+<!-- Block screen -->
 <div id="blocked" class="blocked hidden">
   <div class="card">
     <h3>Temporarily Blocked</h3>
@@ -198,187 +107,151 @@
   </div>
 </div>
 
+<!-- Dev bar (shows only with ?admin=1) -->
+<div id="devbar" class="devbar">
+  <button id="devReset">Reset warnings</button>
+</div>
+
 <script>
 (() => {
-  /* ------------------ setup & theming ------------------ */
+  /* ------------- setup & theming ------------- */
   const qs = new URLSearchParams(location.search);
   const man = (qs.get('man') || 'blade').toLowerCase();
+  const MEN = ['alexander','dylan','jesse','grayson','silas','blade'];
 
   const names = {
-    alexander: 'Alexander Jackson',
-    dylan: 'Dylan Vale',
-    jesse: 'Jesse Granger',
-    grayson: 'Grayson Kincaid',
-    silas: 'Silas Lennox',
-    blade: 'Blade Kincaid'
+    alexander: 'Alexander Jackson', dylan: 'Dylan Vale', jesse: 'Jesse Granger',
+    grayson: 'Grayson Kincaid', silas: 'Silas Lennox', blade: 'Blade Kincaid'
   };
-
   const backgrounds = {
-    alexander: '/images/bg_alexander_boardroom.jpg',
-    dylan:     '/images/dylan-garage.jpg',
-    jesse:     '/images/jesse_bg.jpg',
-    grayson:   '/images/grayson-bg.jpg',
-    silas:     '/images/bg_silas_stage.jpg',
-    blade:     '/images/blade-woods.jpg',
-    fallback:  '/images/gothic-bg.jpg'
+    alexander:'/images/bg_alexander_boardroom.jpg', dylan:'/images/dylan-garage.jpg',
+    jesse:'/images/jesse_bg.jpg', grayson:'/images/grayson-bg.jpg',
+    silas:'/images/bg_silas_stage.jpg', blade:'/images/blade-woods.jpg',
+    fallback:'/images/gothic-bg.jpg'
   };
 
   document.title = `${names[man] || 'Chat'} · Blossom & Blade`;
   document.getElementById('guyTitle').textContent = names[man] || '…';
-
-  const bg = backgrounds[man] || backgrounds.fallback;
-  document.body.style.backgroundImage = `url("${bg}")`;
+  document.body.style.backgroundImage = `url("${backgrounds[man] || backgrounds.fallback}")`;
   document.body.style.backgroundBlendMode = 'multiply';
 
-  /* ------------------ elements ------------------ */
-  const logEl   = document.getElementById('log');
+  /* ------------- elements ------------- */
+  const logEl = document.getElementById('log');
   const inputEl = document.getElementById('input');
   const sendBtn = document.getElementById('sendBtn');
-  const modal   = document.getElementById('standardsModal');
+  const modal = document.getElementById('standardsModal');
   const warnCountEl = document.getElementById('warnCount');
   const modalOk = document.getElementById('standardsOk');
   const blocked = document.getElementById('blocked');
 
-  /* ------------------ warnings / block ------------------ */
-  const KEY = `bb_warns_${man}`;
-  function getWarns(){
-    const raw = localStorage.getItem(KEY);
-    try{ return Math.max(0, parseInt(raw||'0',10)); }catch{ return 0; }
+  /* ------------- warnings / reset helpers ------------- */
+  const KEY = (m)=>`bb_warns_${m}`;
+  const getWarns = (m)=> parseInt(localStorage.getItem(KEY(m))||'0',10) || 0;
+  const setWarns = (m,n)=> localStorage.setItem(KEY(m), String(n));
+  const clearWarns = (m)=> localStorage.removeItem(KEY(m));
+  const clearAllWarns = ()=> MEN.forEach(clearWarns);
+
+  // URL reset hook: ?reset=1 or ?reset=all or ?reset=dylan
+  const reset = (qs.get('reset')||'').toLowerCase();
+  if (reset){
+    if (reset==='1' || reset==='all'){ clearAllWarns(); }
+    else if (MEN.includes(reset)){ clearWarns(reset); }
+    // clean the URL on next paint so users don’t keep resetting accidentally
+    setTimeout(()=>{ const u=new URL(location.href); u.searchParams.delete('reset'); history.replaceState({},'',u); }, 50);
   }
-  function setWarns(n){ localStorage.setItem(KEY, String(n)); }
+
+  // Optional tiny dev bar: ?admin=1
+  if (qs.get('admin') === '1'){
+    const bar = document.getElementById('devbar');
+    bar.style.display = 'flex';
+    document.getElementById('devReset').onclick = ()=>{ clearAllWarns(); location.reload(); };
+  }
 
   function showBlockedIfNeeded(){
-    if(getWarns() >= 3){
+    if(getWarns(man) >= 3){
       blocked.classList.remove('hidden');
-      inputEl.disabled = true;
-      sendBtn.disabled = true;
+      inputEl.disabled = true; sendBtn.disabled = true;
       return true;
     }
     return false;
   }
-  showBlockedIfNeeded();
 
   function showModal(){
-    warnCountEl.textContent = getWarns();
+    warnCountEl.textContent = getWarns(man);
     modal.classList.remove('hidden');
   }
   modalOk.addEventListener('click', () => modal.classList.add('hidden'));
 
-  /* ------------------ simple hard-rule detector ------------------ */
-  // Only the “hard” items. We avoid false flags like "schoolgirl outfit".
+  /* ------------- hard-rule detector ------------- */
   const hardRules = [
-    /\b(barely\s*legal|under\s*age|minor|underage|teen(ager)?|child|high\s*school)\b/i,          // minors / teen / HS
-    /\b(incest|step-?(mom|dad|sister|brother|family))\b/i,                                      // incest
-    /\b(non[-\s]?consensual|non[-\s]?consent|no\s*consent|without\s*consent|rape|coercion)\b/i, // non-consent
-    /\b(bestiality|zoophilia|necrophilia)\b/i,                                                  // bestiality / necrophilia
-    /\b(blood\s*play|knife\s*play|scat|feces|fecal|vomit|urine\s*play|pee\s*play)\b/i,          // extreme fluids / blood/knife play
-    /\b(slur|kike|fag|retard|chink|spic|nigger|tranny)\b/i                                      // hate slurs (common list)
+    /\b(barely\s*legal|under\s*age|minor|underage|teen(ager)?|child|high\s*school)\b/i,
+    /\b(incest|step-?(mom|dad|sister|brother|family))\b/i,
+    /\b(non[-\s]?consensual|non[-\s]?consent|no\s*consent|without\s*consent|rape|coercion)\b/i,
+    /\b(bestiality|zoophilia|necrophilia)\b/i,
+    /\b(blood\s*play|knife\s*play|scat|feces|fecal|vomit|urine\s*play|pee\s*play)\b/i,
+    /\b(kike|fag|retard|chink|spic|nigger|tranny)\b/i
   ];
+  const violatesHardRules = t => hardRules.some(rx=>rx.test(t));
 
-  function violatesHardRules(text){
-    return hardRules.some(rx => rx.test(text));
-  }
-
-  /* ------------------ chat log helpers ------------------ */
+  /* ------------- log helpers ------------- */
   function row(html, who='bot'){
-    const r = document.createElement('div');
-    r.className = `row ${who}`;
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    b.innerHTML = html;
-    r.appendChild(b);
-    logEl.appendChild(r);
-    logEl.scrollTop = logEl.scrollHeight;
+    const r=document.createElement('div'); r.className=`row ${who}`;
+    const b=document.createElement('div'); b.className='bubble'; b.innerHTML=html;
+    r.appendChild(b); logEl.appendChild(r); logEl.scrollTop=logEl.scrollHeight;
   }
-  function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const esc = s=> s.replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  /* ------------------ greetings ------------------ */
+  /* ------------- greetings ------------- */
   const greets = {
-    alexander: [
-      "<span class='botname'>Alexander Jackson:</span> Lights low or city view while we talk?",
-      "<span class='botname'>Alexander Jackson:</span> I noticed you. More than once."
-    ],
-    dylan: [
-      "<span class='botname'>Dylan Vale:</span> Hands flat on the counter, pretty thing.",
-      "<span class='botname'>Dylan Vale:</span> Calm tune-up or teasing tune-up?"
-    ],
-    jesse: [
-      "<span class='botname'>Jesse Granger:</span> Straight talk—what’d the day do to you?",
-      "<span class='botname'>Jesse Granger:</span> Saddle up or slow dance first?"
-    ],
-    grayson: [
-      "<span class='botname'>Grayson Kincaid:</span> Pick: gentle questions or firm direction?",
-      "<span class='botname'>Grayson Kincaid:</span> Library hush, wicked ideas."
-    ],
-    silas: [
-      "<span class='botname'>Silas Lennox:</span> Bring me a word that feels like velvet.",
-      "<span class='botname'>Silas Lennox:</span> Verse or confession first?"
-    ],
-    blade: [
-      "<span class='botname'>Blade Kincaid:</span> You’re here. I keep you safe—and a little breathless.",
-      "<span class='botname'>Blade Kincaid:</span> Footsteps behind you… I keep pace."
-    ]
+    alexander:["<span class='botname'>Alexander Jackson:</span> Lights low or city view while we talk?"],
+    dylan:["<span class='botname'>Dylan Vale:</span> Hands flat on the counter, pretty thing."],
+    jesse:["<span class='botname'>Jesse Granger:</span> Straight talk—what’d the day do to you?"],
+    grayson:["<span class='botname'>Grayson Kincaid:</span> Pick: gentle questions or firm direction?"],
+    silas:["<span class='botname'>Silas Lennox:</span> Bring me a word that feels like velvet."],
+    blade:["<span class='botname'>Blade Kincaid:</span> You’re here. I keep you safe—and a little breathless."]
   };
-  (greets[man]||greets.blade).forEach((g,i) => { if(i<1) row(g,'bot'); }); // one line to start
+  (greets[man]||greets.blade).forEach((g,i)=>{ if(i<1) row(g,'bot'); });
 
-  /* ------------------ backend bridge ------------------ */
-  const history = []; // simple text history; your backend can ignore if it already keeps context.
-
+  /* ------------- backend bridge ------------- */
+  const history=[];
   async function askBackend(userText){
-    // If your brain.js exposes a send function, use it.
-    if (window.BB_BRAIN && typeof window.BB_BRAIN.send === 'function'){
-      const r = await window.BB_BRAIN.send({ man, text:userText, history });
-      return (r && r.reply) ? r.reply : String(r||'');
+    if (window.BB_BRAIN && typeof window.BB_BRAIN.send==='function'){
+      const r = await window.BB_BRAIN.send({man, text:userText, history});
+      return (r&&r.reply)? r.reply : String(r||'');
     }
-    // Fallback to a generic /api/chat
     try{
-      const res = await fetch('/api/chat', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ man, text:userText, history })
-      });
+      const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({man,text:userText,history})});
       const j = await res.json();
       return j.reply || j.choices?.[0]?.message?.content || '…';
-    }catch(_e){
-      return "I’m here—just a brief hiccup. Say one more thing so I can catch the thread.";
-    }
+    }catch{ return "I’m here—just a brief hiccup. Say one more thing so I can catch the thread."; }
   }
 
-  /* ------------------ send flow ------------------ */
-  async function send(){
-    const text = inputEl.value.trim();
-    if(!text || showBlockedIfNeeded()) return;
+  /* ------------- send flow ------------- */
+  function checkBlockedFirst(){ return showBlockedIfNeeded(); }
 
-    // Hard-rule check
+  async function send(){
+    const text=inputEl.value.trim(); if(!text || checkBlockedFirst()) return;
+
     if (violatesHardRules(text)){
-      const w = getWarns()+1; setWarns(w);
-      warnCountEl.textContent = w;
+      setWarns(man, getWarns(man)+1);
       showModal();
-      if (w>=3){ showBlockedIfNeeded(); }
-      return; // do not send to model
+      if (getWarns(man)>=3){ showBlockedIfNeeded(); }
+      return;
     }
 
-    // show me
-    row(esc(text), 'you');
-    inputEl.value = '';
-    history.push({role:'user', content:text});
-
-    // ask backend
-    sendBtn.disabled = true;
-    const reply = await askBackend(text);
-    sendBtn.disabled = false;
-
-    // show bot
-    const name = names[man] || '—';
-    row(`<span class='botname'>${esc(name)}:</span> ` + esc(reply), 'bot');
-    history.push({role:'assistant', content:reply});
+    row(esc(text),'you'); inputEl.value=''; history.push({role:'user',content:text});
+    sendBtn.disabled=true; const reply=await askBackend(text); sendBtn.disabled=false;
+    const name=names[man]||'—';
+    row(`<span class='botname'>${esc(name)}:</span> `+esc(reply),'bot');
+    history.push({role:'assistant',content:reply});
   }
 
   sendBtn.addEventListener('click', send);
-  inputEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
-  });
+  inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
 
+  // finally, if we were blocked *before* loading, show it now
+  showBlockedIfNeeded();
 })();
 </script>
 </body>

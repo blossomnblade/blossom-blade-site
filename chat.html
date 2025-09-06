@@ -92,7 +92,10 @@
     <input id="input" type="text" placeholder="Say hi…" autocomplete="off" />
     <button class="btn" type="submit">Send</button>
   </form>
-  <div class="hint">PG-13 by default. Coins unlock erotic chat (words only, no visuals).</div>
+  <div class="hint">
+    Unlimited chat with your plan. Coins only used when you ask for explicit (“Advanced”) replies ·
+    <a href="/standards.html" target="_blank">Community Standards</a>
+  </div>
 </main>
 
 <!-- Paywall overlay -->
@@ -106,7 +109,7 @@
       </div>
     </div>
     <div class="bd">
-      <p id="ovMsg" style="margin-top:0">Grab a Day Pass or go Monthly. Coins simply unlock erotic chat.</p>
+      <p id="ovMsg" style="margin-top:0">Grab a Day Pass or go Monthly. Coins simply unlock Advanced chat.</p>
       <div class="choices">
         <a id="buyDay" class="btn link" href="#">Day Pass — $5.99</a>
         <a id="buyMonth" class="btn link" href="#">Monthly — $10.99</a>
@@ -122,15 +125,40 @@
 
 <!-- Coins popup -->
 <div id="coinPopup" class="coinpop hidden" role="dialog" aria-modal="false" aria-label="Buy coins">
-  <h4>Unlock erotic chat</h4>
+  <h4>Unlock Advanced chat</h4>
   <div class="coinpacks">
-    <a data-pack="5"   class="coinbtn">5 coins — $1</a>
-    <a data-pack="25"  class="coinbtn">25 coins — $5</a>
-    <a data-pack="60"  class="coinbtn">60 coins — $10</a>
-    <a data-pack="150" class="coinbtn">150 coins — $20</a>
+    <a data-pack="5"   class="coinbtn">5 coins — $5</a>
+    <a data-pack="25"  class="coinbtn">25 coins — $10</a>
+    <a data-pack="60"  class="coinbtn">60 coins — $20</a>
+    <a data-pack="150" class="coinbtn">150 coins — $40</a>
   </div>
-  <div class="coinmeta">1 coin unlocks <b>10 hot replies</b>. Triggers naturally—never pushy.</div>
+  <div class="coinmeta">1 coin unlocks <b>25 explicit replies</b>. We only charge if the next reply is actually explicit.</div>
   <div class="coinclose"><a href="#" id="coinClose">Not now</a></div>
+</div>
+
+<!-- Standards violation notice -->
+<div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
+  <div class="panel">
+    <div class="hd"><strong>Community Standards</strong></div>
+    <div class="bd">
+      <p class="subtle">We keep it adult & consensual. Some themes are not allowed even in Advanced mode.</p>
+      <ul class="subtle" style="margin:0 0 10px 18px">
+        <li>Minors, “school boy/girl”, “barely legal”, or teen/high-school contexts</li>
+        <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
+        <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
+        <li>Hate slurs or targeted harassment</li>
+      </ul>
+      <p class="subtle">We didn’t send that last message. You can adjust and continue.</p>
+      <div class="choices" style="margin-top:10px">
+        <button id="stdContinue" class="btn">Adjust & continue (PG)</button>
+        <a class="btn link" style="background:#2a1a25" href="/standards.html" target="_blank">View full standards</a>
+      </div>
+      <div class="choices" style="margin-top:10px">
+        <button id="stdBlock" class="btn" type="button" title="Blocks this device for 30 days">Block this device</button>
+        <a class="btn link" style="background:#2a1a25" href="mailto:support@example.com?subject=Report%20standards%20violation">Report</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -139,6 +167,22 @@ const qs = new URLSearchParams(location.search);
 const chat = document.getElementById("chat");
 const row = (html, you=false)=>{ const r=document.createElement("div"); r.className="row"+(you?" you":""); r.innerHTML=`<div class="bubble">${html}</div>`; chat.appendChild(r); chat.scrollTop=chat.scrollHeight; };
 const esc = s => (s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ===== device-level block check ===== */
+(function(){
+  const until = Number(localStorage.getItem("bb.blockedUntil")||0);
+  if (until && until > Date.now()){
+    document.body.innerHTML = `
+      <div style="display:grid;place-items:center;height:100vh;color:#efe6ee;background:#0e0a0d">
+        <div style="max-width:520px;border:1px solid #2a1a25;border-radius:16px;padding:18px;background:linear-gradient(180deg,#1a121a,#120a11);text-align:center">
+          <h2 style="margin:0 0 8px">Chat unavailable on this device</h2>
+          <p style="color:#bba9b6">This device has been blocked for Community Standards. Try again later or contact support.</p>
+          <p style="color:#bba9b6"><a href="/standards.html" style="color:#e7bddf">View standards</a></p>
+        </div>
+      </div>`;
+    throw new Error("Blocked device");
+  }
+})();
 
 /* ===== age-gate redirect ===== */
 (function(){
@@ -168,7 +212,7 @@ document.getElementById("hdrTitle").textContent = guy.name;
 document.getElementById("pricingLink").href = `/pay.html?man=${encodeURIComponent(id)}`;
 localStorage.setItem("bb.character", id);
 
-/* ===== COINS + TURNS (robust) ===== */
+/* ===== COINS + TURNS ===== */
 const COIN_KEY = "bb.coins";
 const TURNS_KEY = `bb.eroticTurns:${id}`;
 function toInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>0 ? n : 0; }
@@ -195,9 +239,95 @@ document.getElementById("coinClose").addEventListener("click",(e)=>{e.preventDef
     e.preventDefault();
     const pack = toInt(btn.getAttribute("data-pack") || "0");
     addCoins(pack);
-    row(`<em class="sys">Added ${pack} test coins.</em>`);
+    row(`<em class="sys">Added ${pack} demo coins.</em>`);
     hideCoins();
   });
+});
+
+/* ===== Standards detection (strict but roleplay-aware) ===== */
+const stdOverlay = document.getElementById("stdOverlay");
+const stdContinue = document.getElementById("stdContinue");
+const stdBlock = document.getElementById("stdBlock");
+
+// normalize leet + dragged letters
+function norm(input){
+  let s = (input||"").toLowerCase();
+  s = s.replace(/[@]/g,"a").replace(/[4]/g,"a").replace(/[1!|]/g,"i").replace(/[3]/g,"e").replace(/[0]/g,"o").replace(/[$]/g,"s");
+  s = s.replace(/([a-z])\1{2,}/g,"$1$1").replace(/\s+/g," ").trim();
+  return s;
+}
+const SEXUAL_NEAR = /\b(fuck|sex|suck|ride|blow|go\s*down|eat\s*out|finger(?:ing)?|penetrat|cum|orgasm|hand\s*job|bj|anal|doggystyle|deepthroat|spank|chok(?:e|ing)|dominat)\b/i;
+const ROLEPLAY_MARK = /\b(role\s*play|roleplay|outfit|costume|cosplay|lingerie)\b/i;
+const ADULT_CODED   = /\b(college|university|grad|over\s*18|of\s*age|consenting adults?|adult|pro\s*cheerleader)\b/i;
+
+const DISALLOWED_ALWAYS = [
+  // minors / age
+  /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*sex)\b/i,
+  // incest / step relations
+  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
+  // non-consent / coercion / against will
+  /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
+  // incapacity
+  /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
+  // bestiality / necrophilia
+  /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
+  // trafficking / sexual slavery
+  /\bsex\s*traffick(?:ing)?\b/i, /\bsell\s*(?:you|her|him)\b/i, /\bslave\s*role\b/i,
+  // extreme bodily / blood / knife play
+  /\b(scat|feces|coprophag(?:y|ia))\b/i, /\b(piss|urinate)\s*on\b/i, /\bblood\s*play\b/i, /\bknife\s*play\b/i,
+  // hate slurs (boundaries)
+  /\b(?:n[i1]gg(?:a|er)s?)\b/i, /\b(?:f[a@]gg?(?:o|0)t[s]?)\b/i, /\b(?:tr[a@]nn?y)\b/i, /\b(?:k[i1]k[e3]s?)\b/i, /\b(?:ch[i1]nk[s]?)\b/i, /\b(?:sp[i1]c[s]?)\b/i, /\b(?:w[ea]tb[a@]ck[s]?)\b/i
+];
+
+// schoolboy/girl: predator-coded → block outright
+const SCHOOL_MINOR_CODED = /\bschool\s*(?:boy|girl)|schoolboy|schoolgirl\b/i;
+
+// cheerleader/student words: contextual (allow only as adult roleplay)
+const CONTEXT_MINOR_TERMS = /\b(cheerleader|student|pupil|freshman)\b/i;
+const EXPLICIT_MINOR_CONTEXT = /\b(high\s*school|teen|tryout|pep\s*rally|under\s*18)\b/i;
+
+function breaksStandards(input){
+  const s = norm(input);
+
+  if (DISALLOWED_ALWAYS.some(rx => rx.test(s))) return true;
+
+  // college/university is adult-coded → safe unless hard-block elsewhere
+  if (/\bcollege|university\b/i.test(s)) return false;
+
+  // schoolboy/girl: always block (predator-coded)
+  if (SCHOOL_MINOR_CODED.test(s)) return true;
+
+  // contextual minor-coded terms
+  if (CONTEXT_MINOR_TERMS.test(s)) {
+    // if explicitly minor context → block
+    if (EXPLICIT_MINOR_CONTEXT.test(s)) return true;
+    // allow only if marked as adult roleplay/costume
+    if (!(ROLEPLAY_MARK.test(s) || ADULT_CODED.test(s))) {
+      // if sexual verb nearby and no adult markers → block
+      if (SEXUAL_NEAR.test(s)) return true;
+    }
+  }
+
+  // family words (mom/dad/bro/sis/cousin) only block if sexual nearby (and not step already covered)
+  if (/\b(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|cousin)\b/i.test(s) && SEXUAL_NEAR.test(s)) return true;
+
+  return false;
+}
+
+function showStd(){ stdOverlay.style.display = "grid"; pauseTimer(); }
+function hideStd(){ stdOverlay.style.display = "none"; resumeTimer(); }
+document.getElementById("stdContinue").addEventListener("click", ()=>{ hideStd(); row(`<em class="sys">Let’s keep it adult & consensual. Try a different phrasing.</em>`); });
+document.getElementById("stdBlock").addEventListener("click", ()=>{
+  const until = Date.now() + 30*24*60*60*1000;
+  localStorage.setItem("bb.blockedUntil", String(until));
+  document.body.innerHTML = `
+    <div style="display:grid;place-items:center;height:100vh;color:#efe6ee;background:#0e0a0d">
+      <div style="max-width:520px;border:1px solid #2a1a25;border-radius:16px;padding:18px;background:linear-gradient(180deg,#1a121a,#120a11);text-align:center">
+        <h2 style="margin:0 0 8px">Chat unavailable on this device</h2>
+        <p style="color:#bba9b6">This device has been blocked for Community Standards.</p>
+        <p style="color:#bba9b6"><a href="/standards.html" style="color:#e7bddf">View standards</a></p>
+      </div>
+    </div>`;
 });
 
 /* ===== trial timer with AUTO-PAUSE ===== */
@@ -222,8 +352,7 @@ function startPreview(){
 }
 function tick(){
   if(count>=MAX_TRIALS){lock(true);return;}
-  if(paused){ requestAnimationFrame(tick); return; } // freeze while paused
-
+  if(paused){ requestAnimationFrame(tick); return; }
   const ms=end-Date.now(); const total=TRIAL_SECONDS*1000;
   const used=Math.min(total,Math.max(0,total-ms));
   fill.style.width=(used/total*100)+"%"; timeleft.textContent=fmt(ms);
@@ -234,7 +363,6 @@ function lock(limitReached){
   document.getElementById("ovTitle").textContent=limitReached?`Free previews used up`:`Time’s up — ${guy.name} can keep you longer`;
   document.getElementById("ovPill").textContent=limitReached?`You’ve had ${MAX_TRIALS} previews with ${guy.name}`:`Keep going with ${guy.name}`;
   document.getElementById("ovAvatar").src=guy.bg;
-  // Count this preview end only once
   if(!limitReached){
     const mark=localStorage.getItem(MARK_KEY);
     if(String(end)!==mark){count=Number(localStorage.getItem(COUNT_KEY)||0)+1; localStorage.setItem(COUNT_KEY,String(count)); localStorage.setItem(MARK_KEY,String(end));}
@@ -243,9 +371,8 @@ function lock(limitReached){
   document.getElementById("freeLeft").textContent=left?`${left} free preview${left===1?"":"s"} left with ${guy.name}.`:`No free previews left for ${guy.name}.`;
   document.getElementById("ovActions").classList.toggle("hidden", left===0);
   document.getElementById("overlay").style.display="grid";
-  pauseTimer(); // overlay open → ensure paused
+  pauseTimer();
 }
-if(Number(localStorage.getItem(`bb.trialCount:${id}`)||0) >= 3){ lock(true); } else { if(!end || end<=Date.now()) startPreview(); else requestAnimationFrame(tick); }
 
 /* ===== severity + hotness check ===== */
 const HARD = ["lick me","eat me","suck","go down","blow","hand job","cum","finish in me","rail me","bend me over","tie me","pin me"];
@@ -262,36 +389,17 @@ function replyIsHot(t){
 const history = [];
 let mediumCount = 0;
 let lastAssistant = "";
-
-async function callBrain(mode, extraHistory=[]){
-  try{
-    const r = await fetch("/api/brain", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ guy:id, mode, history:[...history, ...extraHistory] }) });
-    const j = await r.json().catch(()=>null) || {};
-    return (j.reply || "Say more—I’m listening.").toString();
-  }catch(e){ console.error(e); return "Network’s acting up. Try one more line for me."; }
-}
-
-function pushAssistant(text, actuallyHot=false){
-  if(!text) return;
-  const trimmed = text.trim();
-  if(trimmed === lastAssistant.trim()) return; // prevent obvious loops
-  lastAssistant = trimmed;
-  history.push({role:"assistant", content:trimmed});
-  row(`<strong>${esc(guy.name)}:</strong> ${esc(trimmed)}`);
-  if(actuallyHot && getTurns()>0){
-    const left=getTurns()-1; setTurns(left);
-    if(left<=0) row(`<em class="sys">Your 10 hot replies are used—back to PG-13.</em>`);
-  }
-}
-
-function seedIntro(){
-  history.push({role:"user", content:"In character, start with one short opener and a concrete question. Keep it PG."});
-}
+let userMsgCount = 0; // for 5-message delay
 
 /* ===== send handling ===== */
 document.getElementById("composer").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const t=input.value.trim(); if(!t) return;
+
+  // Standards check BEFORE anything else
+  if (breaksStandards(t)){ showStd(); return; }
+
+  userMsgCount++;
   row(esc(t),true);
   history.push({role:"user", content:t});
   input.value="";
@@ -300,36 +408,54 @@ document.getElementById("composer").addEventListener("submit", async (e)=>{
   if(sev===1) mediumCount++;
 
   const haveTurns = getTurns()>0;
-  const tryErotic  = haveTurns || sev===2 || mediumCount>=1;
+  const candidateErotic = haveTurns || sev===2 || mediumCount>=1;
+  const allowCoins = userMsgCount >= 5; // delay coins until after 5 user messages
+  const tryErotic  = candidateErotic && allowCoins;
 
-  // Ask brain for the right tone, but do **not** spend a coin yet.
-  const reply = await callBrain(tryErotic ? "erotic" : "pg");
+  let reply = "Say more—I’m listening.";
+  try{
+    const r = await fetch("/api/brain", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ guy:id, mode:(tryErotic ? "erotic" : "pg"), history }) });
+    const j = await r.json().catch(()=>null) || {};
+    if (j.violation === true){ showStd(); return; }
+    reply = (j.reply || reply).toString();
+  }catch(e){ console.error(e); reply = "Network’s acting up. Try one more line for me."; }
 
   const hot = tryErotic && replyIsHot(reply);
 
-  // Hot reply but we had no turns → spend 1 coin now and grant 10 turns.
+  // Spend a coin only when the reply is actually explicit—and AFTER the 5-message delay
   if(hot && !haveTurns){
     if(getCoins()<=0){
-      row(`<em class="sys">Coins unlock the hotter mode. Grab a small pack to keep that going.</em>`);
-      showCoins(); // this will auto-pause timer
+      row(`<em class="sys">Coins unlock the explicit tone. Grab a small pack if you want to go there.</em>`);
+      showCoins();
     }else{
       setCoins(getCoins()-1);
-      setTurns(10);
-      row(`<em class="sys">Spent 1 coin — unlocked 10 hotter replies.</em>`);
+      setTurns(25); // 1 coin = 25 explicit replies
+      row(`<em class="sys">Spent 1 coin — unlocked 25 explicit replies.</em>`);
     }
   }
 
-  // Tried erotic, but reply stayed PG and we have no turns → no spend, nudge popup.
+  // Tried erotic, but reply stayed PG and we have no turns → no spend, nudge popup
   if(tryErotic && !hot && !haveTurns){
-    showCoins(); // auto-pause timer while she decides
-    row(`<em class="sys">We’ll keep it PG-13 until coins unlock erotic chat (words only).</em>`);
+    showCoins();
+    row(`<em class="sys">We’ll keep it PG-13 until coins unlock Advanced chat (words only).</em>`);
   }
 
-  pushAssistant(reply, hot);
+  if(reply){
+    const trimmed = reply.trim();
+    if(trimmed !== lastAssistant.trim()){
+      lastAssistant = trimmed;
+      history.push({role:"assistant", content:trimmed});
+      row(`<strong>${guy.name}:</strong> ${esc(trimmed)}`);
+      if(hot && getTurns()>0){
+        const left = getTurns()-1; setTurns(left);
+        if(left<=0) row(`<em class="sys">Your 25 explicit replies are used—back to PG-13.</em>`);
+      }
+    }
+  }
 });
 
 /* ===== kickoff ===== */
-seedIntro();
+if(Number(localStorage.getItem(`bb.trialCount:${id}`)||0) >= 3){ lock(true); } else { if(!end || end<=Date.now()) startPreview(); else requestAnimationFrame(tick); }
 document.getElementById("buyDay")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=day`);
 document.getElementById("buyMonth")?.setAttribute("href", `/age.html?man=${encodeURIComponent(id)}&plan=month`);
 document.getElementById("anotherPreview")?.addEventListener("click", ()=>{ location.reload(); });

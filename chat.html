@@ -182,8 +182,36 @@ const sendBtn = $("#send");
 const coinCountEl = $("#coinCount");
 const coinsPop = $("#coinsPop");
 const trialBar = $("#trialBar");
-const qs = new URLSearchParams(location.search);
-const manParam = (qs.get("man") || localStorage.getItem("lastMan") || "blade").toLowerCase();
+
+/* Robust man detection */
+const SLUGS = ["blade","grayson","dylan","silas","alexander","jesse"];
+function detectMan(){
+  // 1) URL
+  const q = new URLSearchParams(location.search);
+  let m = (q.get("man") || "").toLowerCase();
+  if (SLUGS.includes(m)) return m;
+
+  // 2) Referrer query
+  try{
+    const ref = new URL(document.referrer);
+    const rm = (new URLSearchParams(ref.search).get("man") || "").toLowerCase();
+    if (SLUGS.includes(rm)) return rm;
+
+    // 3) Referrer path (/rooms/alexander.html, /alexander, etc.)
+    const p = ref.pathname.toLowerCase();
+    for (const s of SLUGS){
+      if (p.includes(`/rooms/${s}.html`) || p.endsWith(`/${s}.html`) || p.endsWith(`/${s}`)) return s;
+    }
+  }catch(e){/* no referrer */}
+
+  // 4) Stored
+  const stored = (localStorage.getItem("lastMan") || "").toLowerCase();
+  if (SLUGS.includes(stored)) return stored;
+
+  // Fallback
+  return "blade";
+}
+const manParam = detectMan();
 localStorage.setItem("lastMan", manParam);
 
 const GUYS = {
@@ -259,7 +287,7 @@ function endPreview(){
 
 /* overlay actions */
 $("#npDay").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=day`;
-$("#npMonth").onclick = ()=> location.href=`/pay.html?plan=month`;
+$("#npMonth").onclick = ()=> location.href=`/pay.html?man=${encodeURIComponent(manParam)}&plan=month`;
 $("#npAnother").onclick = ()=>{
   $("#noPreview").style.display="none"; startTimer();
 };
@@ -291,7 +319,7 @@ const ADULT_CODED   = /\b(college|university|over\s*18|of\s*age|consenting adult
 
 const DISALLOWED_ALWAYS = [
   /\b(minor|under\s*age|under\s*1[0-9]|under\s*18|pre[-\s]?teen|jail\s*bait|barely\s*legal|teen\s*sex)\b/i,
-  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:her)?|sis(?:ter)?)\b/i,
+  /\bincest\b/i, /\bstep(?:-|\s)?(?:mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?)\b/i,
   /\brape\b/i, /\bnon[-\s]?consent(?:ual)?\b/i, /\bcoerc(?:e|ion)\b/i, /\bagainst\s+my\s+will\b/i,
   /\b(drugged|chloroform|black\s*out|passed\s*out|unconscious)\b/i, /\basleep\s*(?:sex|play)\b/i,
   /\b(bestial(?:ity)?|zoophil(?:e|ia)|animal\s*sex)\b/i, /\b(necrophil(?:e|ia)|corpse\s*(?:sex|play))\b/i,
@@ -497,7 +525,6 @@ async function handleSend(){
 
   // spend budget only when we actually generated advanced reply
   if (mode === "adv"){
-    // charge 1 hot reply
     const before = advBudget();
     const after = consumeBudget(1);
     if (before % 25 === before - after){ // just started a new 25-pack

@@ -40,6 +40,7 @@
        background:linear-gradient(180deg,var(--accent),#6b50dd)}
   .btn:disabled{opacity:.6; cursor:not-allowed}
   .footerline{text-align:center; font-size:12px; color:var(--ink-soft); margin-top:10px}
+
   .modal.hidden{display:none}
   .modal{position:fixed; inset:0; display:grid; place-items:center; z-index:50; background:rgba(5,7,11,.62); backdrop-filter:blur(2px)}
   .modal__card{width:min(680px,calc(100% - 28px)); background:#0e1220; color:var(--ink); border:1px solid rgba(255,255,255,.10);
@@ -50,13 +51,25 @@
   .modal-footnote{font-size:.85rem; opacity:.7; margin:.25rem 0 0}
   .modal__actions{display:flex; gap:8px; margin-top:12px}
   .btn--ghost{background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.15)}
+
   .blocked{position:fixed; inset:0; display:grid; place-items:center; z-index:60; background:rgba(0,0,0,.8); color:#fff; text-align:center; padding:20px}
   .blocked .card{max-width:520px; background:#0f1322; padding:18px; border-radius:14px; border:1px solid rgba(255,255,255,.1)}
   .blocked h3{margin:0 0 8px}
-  /* tiny dev bar (shows only with ?admin=1) */
-  .devbar{position:fixed; left:10px; bottom:10px; display:none; gap:8px; z-index:70}
-  .devbar button{font-size:12px; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.2);
-                 background:rgba(255,255,255,.06); color:#fff; cursor:pointer}
+
+  /* Admin button + modal */
+  .admin-btn{
+    position:fixed; left:12px; bottom:12px; z-index:80;
+    width:40px; height:40px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08); color:#fff; cursor:pointer;
+  }
+  .admin-btn:hover{background:rgba(255,255,255,.14)}
+  .admin.hidden{display:none}
+  .admin-modal{position:fixed; inset:0; display:grid; place-items:center; z-index:85; background:rgba(0,0,0,.65)}
+  .admin-card{width:min(560px,calc(100% - 28px)); background:#0e1220; border:1px solid rgba(255,255,255,.12);
+              color:#fff; border-radius:14px; padding:16px}
+  .admin-row{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap}
+  .admin-card input{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#fff; padding:10px; border-radius:8px}
 </style>
 </head>
 <body>
@@ -107,35 +120,56 @@
   </div>
 </div>
 
-<!-- Dev bar (shows only with ?admin=1) -->
-<div id="devbar" class="devbar">
-  <button id="devReset">Reset warnings</button>
+<!-- Admin gear -->
+<button id="adminBtn" class="admin-btn" aria-label="Admin">⚙</button>
+<div id="adminModal" class="admin-modal admin hidden" role="dialog" aria-modal="true">
+  <div class="admin-card">
+    <h3>Admin tools</h3>
+    <p class="subtle">For dev only. Actions affect this device (localStorage).</p>
+
+    <div id="adminLocked">
+      <div class="admin-row">
+        <input id="adminPass" type="password" placeholder="Passcode (default bbreset)" />
+        <button id="adminUnlock" class="btn">Unlock</button>
+        <button id="adminClose1" class="btn btn--ghost">Close</button>
+      </div>
+    </div>
+
+    <div id="adminPanel" class="admin hidden">
+      <div class="admin-row">
+        <button id="resetAll" class="btn">Reset ALL warnings</button>
+        <button id="resetGuy" class="btn">Reset this guy only</button>
+        <button id="blockNow" class="btn btn--ghost">Simulate block (set 3 warnings)</button>
+        <button id="adminClose2" class="btn btn--ghost">Close</button>
+      </div>
+      <p class="subtle" style="margin-top:10px">Tip: you can also add <code>?reset=1</code> to any chat URL to clear warnings quickly.</p>
+    </div>
+  </div>
 </div>
 
 <script>
 (() => {
-  /* ------------- setup & theming ------------- */
+  /* ---------------- basics ---------------- */
   const qs = new URLSearchParams(location.search);
   const man = (qs.get('man') || 'blade').toLowerCase();
   const MEN = ['alexander','dylan','jesse','grayson','silas','blade'];
-
   const names = {
-    alexander: 'Alexander Jackson', dylan: 'Dylan Vale', jesse: 'Jesse Granger',
-    grayson: 'Grayson Kincaid', silas: 'Silas Lennox', blade: 'Blade Kincaid'
+    alexander:'Alexander Jackson', dylan:'Dylan Vale', jesse:'Jesse Granger',
+    grayson:'Grayson Kincaid', silas:'Silas Lennox', blade:'Blade Kincaid'
   };
   const backgrounds = {
-    alexander:'/images/bg_alexander_boardroom.jpg', dylan:'/images/dylan-garage.jpg',
-    jesse:'/images/jesse_bg.jpg', grayson:'/images/grayson-bg.jpg',
-    silas:'/images/bg_silas_stage.jpg', blade:'/images/blade-woods.jpg',
+    alexander:'/images/bg_alexander_boardroom.jpg',
+    dylan:'/images/dylan-garage.jpg',
+    jesse:'/images/jesse_bg.jpg',
+    grayson:'/images/grayson-bg.jpg',
+    silas:'/images/bg_silas_stage.jpg',
+    blade:'/images/blade-woods.jpg',
     fallback:'/images/gothic-bg.jpg'
   };
-
   document.title = `${names[man] || 'Chat'} · Blossom & Blade`;
   document.getElementById('guyTitle').textContent = names[man] || '…';
   document.body.style.backgroundImage = `url("${backgrounds[man] || backgrounds.fallback}")`;
-  document.body.style.backgroundBlendMode = 'multiply';
 
-  /* ------------- elements ------------- */
   const logEl = document.getElementById('log');
   const inputEl = document.getElementById('input');
   const sendBtn = document.getElementById('sendBtn');
@@ -144,7 +178,7 @@
   const modalOk = document.getElementById('standardsOk');
   const blocked = document.getElementById('blocked');
 
-  /* ------------- warnings / reset helpers ------------- */
+  /* ---------------- warnings ---------------- */
   const KEY = (m)=>`bb_warns_${m}`;
   const getWarns = (m)=> parseInt(localStorage.getItem(KEY(m))||'0',10) || 0;
   const setWarns = (m,n)=> localStorage.setItem(KEY(m), String(n));
@@ -156,15 +190,7 @@
   if (reset){
     if (reset==='1' || reset==='all'){ clearAllWarns(); }
     else if (MEN.includes(reset)){ clearWarns(reset); }
-    // clean the URL on next paint so users don’t keep resetting accidentally
     setTimeout(()=>{ const u=new URL(location.href); u.searchParams.delete('reset'); history.replaceState({},'',u); }, 50);
-  }
-
-  // Optional tiny dev bar: ?admin=1
-  if (qs.get('admin') === '1'){
-    const bar = document.getElementById('devbar');
-    bar.style.display = 'flex';
-    document.getElementById('devReset').onclick = ()=>{ clearAllWarns(); location.reload(); };
   }
 
   function showBlockedIfNeeded(){
@@ -175,14 +201,50 @@
     }
     return false;
   }
-
   function showModal(){
     warnCountEl.textContent = getWarns(man);
     modal.classList.remove('hidden');
   }
   modalOk.addEventListener('click', () => modal.classList.add('hidden'));
 
-  /* ------------- hard-rule detector ------------- */
+  /* ---------------- admin panel ---------------- */
+  const PASSCODE = 'bbreset'; // change anytime
+  const adminBtn = document.getElementById('adminBtn');
+  const adminModal = document.getElementById('adminModal');
+  const adminLocked = document.getElementById('adminLocked');
+  const adminPanel  = document.getElementById('adminPanel');
+  const adminPass   = document.getElementById('adminPass');
+  const adminUnlock = document.getElementById('adminUnlock');
+  const adminClose1 = document.getElementById('adminClose1');
+  const adminClose2 = document.getElementById('adminClose2');
+  const resetAllBtn = document.getElementById('resetAll');
+  const resetGuyBtn = document.getElementById('resetGuy');
+  const blockNowBtn = document.getElementById('blockNow');
+
+  function isAdmin(){ return localStorage.getItem('bb_admin') === '1'; }
+  function renderAdmin(){
+    if(isAdmin()){ adminLocked.classList.add('admin'); adminPanel.classList.remove('admin'); }
+    else{ adminLocked.classList.remove('admin'); adminPanel.classList.add('admin'); }
+  }
+  adminBtn.onclick = ()=>{ adminModal.classList.remove('admin'); renderAdmin(); };
+  adminClose1.onclick = adminClose2.onclick = ()=> adminModal.classList.add('admin');
+  adminUnlock.onclick = ()=>{
+    if((adminPass.value||'').trim() === PASSCODE){ localStorage.setItem('bb_admin','1'); renderAdmin(); }
+    else{ adminPass.value=''; adminPass.placeholder='Wrong code'; }
+  };
+  resetAllBtn.onclick = ()=>{ clearAllWarns(); alert('All warnings cleared on this device.'); location.reload(); };
+  resetGuyBtn.onclick = ()=>{ clearWarns(man); alert(`Warnings cleared for ${names[man]}.`); location.reload(); };
+  blockNowBtn.onclick = ()=>{ setWarns(man,3); alert('Set to 3 warnings.'); location.reload(); };
+
+  /* ---------------- chat helpers ---------------- */
+  function row(html, who='bot'){
+    const r=document.createElement('div'); r.className=`row ${who}`;
+    const b=document.createElement('div'); b.className='bubble'; b.innerHTML=html;
+    r.appendChild(b); logEl.appendChild(r); logEl.scrollTop=logEl.scrollHeight;
+  }
+  const esc = s=> s.replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // Hard rules (only the truly hard stuff)
   const hardRules = [
     /\b(barely\s*legal|under\s*age|minor|underage|teen(ager)?|child|high\s*school)\b/i,
     /\b(incest|step-?(mom|dad|sister|brother|family))\b/i,
@@ -193,15 +255,6 @@
   ];
   const violatesHardRules = t => hardRules.some(rx=>rx.test(t));
 
-  /* ------------- log helpers ------------- */
-  function row(html, who='bot'){
-    const r=document.createElement('div'); r.className=`row ${who}`;
-    const b=document.createElement('div'); b.className='bubble'; b.innerHTML=html;
-    r.appendChild(b); logEl.appendChild(r); logEl.scrollTop=logEl.scrollHeight;
-  }
-  const esc = s=> s.replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-  /* ------------- greetings ------------- */
   const greets = {
     alexander:["<span class='botname'>Alexander Jackson:</span> Lights low or city view while we talk?"],
     dylan:["<span class='botname'>Dylan Vale:</span> Hands flat on the counter, pretty thing."],
@@ -212,7 +265,6 @@
   };
   (greets[man]||greets.blade).forEach((g,i)=>{ if(i<1) row(g,'bot'); });
 
-  /* ------------- backend bridge ------------- */
   const history=[];
   async function askBackend(userText){
     if (window.BB_BRAIN && typeof window.BB_BRAIN.send==='function'){
@@ -227,16 +279,14 @@
     }catch{ return "I’m here—just a brief hiccup. Say one more thing so I can catch the thread."; }
   }
 
-  /* ------------- send flow ------------- */
   function checkBlockedFirst(){ return showBlockedIfNeeded(); }
 
   async function send(){
     const text=inputEl.value.trim(); if(!text || checkBlockedFirst()) return;
 
     if (violatesHardRules(text)){
-      setWarns(man, getWarns(man)+1);
-      showModal();
-      if (getWarns(man)>=3){ showBlockedIfNeeded(); }
+      const n = getWarns(man)+1; setWarns(man,n);
+      showModal(); if (n>=3){ showBlockedIfNeeded(); }
       return;
     }
 
@@ -250,7 +300,6 @@
   sendBtn.addEventListener('click', send);
   inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
 
-  // finally, if we were blocked *before* loading, show it now
   showBlockedIfNeeded();
 })();
 </script>

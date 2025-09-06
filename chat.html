@@ -1,502 +1,243 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chat • Blossom & Blade</title>
-<style>
-  :root{
-    --bg:#0e0b12; --panel:#171320; --edge:#2a2336;
-    --ink:#e9e7ef; --muted:#b9b2c7; --accent:#c05acb; --accent-2:#8b5cf6;
-    --danger:#ff5470; --ok:#22c55e;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1a1423 10%, var(--bg) 70%), url('/images/gothic-bg.jpg') center/cover fixed no-repeat;
-    color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-    min-height:100vh;
-  }
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 16px; background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,0));
-    position:sticky; top:0; z-index:10; backdrop-filter: blur(4px);
-    border-bottom:1px solid rgba(255,255,255,.05);
-  }
-  header .title{font-weight:700; letter-spacing:.3px}
-  header .right{display:flex; gap:14px; align-items:center}
-  a, a:visited{color:var(--muted); text-decoration:none}
-  a:hover{color:var(--ink)}
-  .wrap{max-width:980px; margin:0 auto; padding:10px 14px 60px}
-  .namebar{font-weight:700; margin:4px 0 8px; opacity:.9}
-  .trial{height:6px; background:#2b2237; border-radius:8px; overflow:hidden}
-  .trial > div{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); transition:width .2s}
-
-  .board{
-    background:rgba(16,12,24,.82); border:1px solid var(--edge); border-radius:16px;
-    box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
-    margin-top:14px; padding:14px; min-height:56vh; display:flex; flex-direction:column; gap:10px;
-  }
-  .row{display:flex; width:100%}
-  .ai, .me{
-    max-width:72%; padding:10px 12px; border-radius:14px; position:relative;
-    border:1px solid rgba(255,255,255,.06);
-  }
-  .ai{background:#1b1626}
-  .me{margin-left:auto; background:#2a1d33; color:#efe9ff}
-  .sys{color:var(--muted)}
-  .composer{display:flex; gap:8px; margin-top:10px}
-  input[type=text]{
-    flex:1; padding:12px 14px; background:#140f1b; border:1px solid var(--edge); border-radius:12px; color:var(--ink);
-    outline:none
-  }
-  button.btn{
-    padding:12px 16px; border:0; border-radius:12px; color:#fff; background:linear-gradient(180deg,var(--accent),#8b3aa3);
-    cursor:pointer; font-weight:700;
-  }
-  button.btn:disabled{opacity:.5; cursor:not-allowed}
-
-  .footnote{margin-top:6px; text-align:center; color:var(--muted); font-size:12px}
-
-  /* Standards modal (appears on first explicit attempt or on violations) */
-  .overlay{
-    position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.6); z-index:40;
-  }
-  .panel{
-    width:min(640px,92vw); background:#1b1626; border:1px solid var(--edge); border-radius:18px; padding:18px;
-    box-shadow:0 10px 40px rgba(0,0,0,.6)
-  }
-  .panel .hd{font-weight:800; margin-bottom:6px}
-  .choices{display:flex; gap:10px; flex-wrap:wrap}
-  .btn.ghost{background:#241a2d}
-  .btn.gray{background:#2a1a25}
-
-  /* Free previews used up */
-  .overlay .subtle{color:var(--muted); font-size:14px}
-
-  /* tiny toast */
-  #toast{position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#241a2d; color:var(--ink); border:1px solid var(--edge); padding:10px 14px; border-radius:12px; display:none; z-index:60}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat • Blossom & Blade</title>
+  <style>
+    :root {
+      --bg:#0f1116; --panel:#151926; --panel-2:#111523;
+      --line:rgba(255,255,255,.08); --text:#e7e9ef; --muted:#9aa3b2;
+      --accent:#c05bdc; --accent-2:#7d5bff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 800px at 50% -10%, #1c2032 0%, #0f1116 50%) fixed; color:var(--text); font:16px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+    a{color:inherit}
+    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+    .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;opacity:.9}
+    .brand{font-weight:700;letter-spacing:.3px}
+    .crumbs{font-size:14px;opacity:.8}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,.35); padding:14px 14px 18px;}
+    .title{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-weight:700}
+    .title .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent-2)); box-shadow:0 0 20px rgba(192,91,220,.6)}
+    .stream{height:58vh;overflow:auto;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);padding:14px}
+    .row{display:flex;margin:8px 0}
+    .bubble{max-width:72%;padding:11px 13px;border-radius:13px; background:rgba(255,255,255,.06)}
+    .me{justify-content:flex-end}
+    .me .bubble{background:var(--accent-2);color:#fff}
+    .sys{font-size:12px;opacity:.7;text-align:center;margin:8px 0}
+    .inputbar{display:flex;gap:8px;margin:12px 4px 4px}
+    input[type=text]{flex:1;background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--text); border-radius:12px; padding:12px 14px; outline:none}
+    button{background:var(--accent); border:0; color:#fff; font-weight:700; padding:10px 16px; border-radius:12px; cursor:pointer}
+    .foot{font-size:12px;opacity:.75;text-align:center;margin-top:8px}
+    /* Modal */
+    #modalRoot:empty{display:none}
+    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
+    .modal{position:fixed;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%); width:min(520px,92%); background:rgba(16,18,28,.98); border:1px solid var(--line); border-radius:16px; padding:18px}
+    .modal h3{margin:4px 0 6px}
+    .bullets{margin:8px 0 10px 18px}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:10px}
+    .link{font-size:14px;opacity:.9}
+  </style>
 </head>
 <body>
-  <header>
-    <div class="title">Blossom & Blade</div>
-    <div class="right">
-      <a id="pricing" href="/pay.html">Pricing</a>
-    </div>
-  </header>
-
   <div class="wrap">
-    <div id="manName" class="namebar">…</div>
-    <div class="trial"><div id="trialBar"></div></div>
-
-    <div class="board" id="board">
-      <div id="log"></div>
-
-      <div class="composer">
-        <input id="msg" type="text" placeholder="Say hi…" autocomplete="off" />
-        <button class="btn" id="send">Send</button>
-      </div>
-      <div class="footnote">Site stays PG-13. We follow your lead, but within Community Standards.</div>
+    <div class="topline">
+      <div class="brand">Blossom &amp; Blade</div>
+      <div class="crumbs"><a href="index.html">Back</a></div>
     </div>
-  </div>
 
-  <!-- Standards (educational or violation). We can show without a strike on first explicit. -->
-  <div id="stdOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Community Standards">
     <div class="panel">
-      <div class="hd"><strong>Community Standards</strong></div>
-      <div class="bd">
-        <p id="stdIntro" class="subtle">We keep chat adult & consensual, PG-13 by default. No visuals—words only.</p>
-        <ul class="subtle" style="margin:10px 0 10px 18px">
-          <li>No minors/“school boy or girl”/“barely legal”/teen or high-school contexts</li>
-          <li>No incest/step-family, non-consent/coercion, or intoxication without capacity</li>
-          <li>No bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
-          <li>No hate slurs or targeted harassment</li>
-        </ul>
-        <p id="stdStrike" class="subtle" style="margin-top:6px"></p>
-        <div class="choices" style="margin-top:10px">
-          <button id="stdContinue" class="btn">Okay — keep it PG-13</button>
-          <a class="btn gray" href="/standards.html" target="_blank">View full standards</a>
-        </div>
+      <div class="title"><div class="dot"></div><span id="guyName">…</span></div>
+      <div id="stream" class="stream" aria-live="polite"></div>
+      <div class="inputbar">
+        <input id="in" type="text" placeholder="Say hi…" autocomplete="off" />
+        <button id="send">Send</button>
       </div>
+      <div class="foot">Site stays PG-13. We follow your lead, but within Community Standards.</div>
     </div>
   </div>
 
-  <!-- Free previews used up -->
-  <div id="noPreview" class="overlay">
-    <div class="panel">
-      <div class="hd">Free previews used up</div>
-      <p class="subtle">You’ve had 3 previews with <span id="npGuy"></span>.</p>
-      <p>Grab a Day Pass or go Monthly to keep chatting.</p>
-      <div class="choices">
-        <a id="npDay" class="btn">Day Pass — $5.99</a>
-        <a id="npMonth" class="btn">Monthly — $10.99</a>
-        <button id="npAnother" class="btn ghost">Another 3½-minute preview</button>
-        <button id="npMaybe" class="btn gray">Maybe later (1 minute)</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast"></div>
+  <div id="modalRoot"></div>
 
 <script>
-<script>
-/* ===========================
-   Blossom & Blade — chat.js
-   Hard-ban standards only. No coins.
-   3 strikes => 30-day block.
-   =========================== */
+(() => {
+  "use strict";
 
-/* ---------- Helpers ---------- */
-const $ = (sel, el = document) => el.querySelector(sel);
-const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const now = () => Date.now();
+  /* ---------- tiny helpers ---------- */
+  const $ = (s, el=document) => el.querySelector(s);
+  const row = (html, me=false) => {
+    const wrap = document.createElement("div");
+    wrap.className = "row" + (me ? " me" : "");
+    wrap.innerHTML = `<div class="bubble">${html}</div>`;
+    stream.appendChild(wrap);
+    stream.scrollTop = stream.scrollHeight;
+  };
+  const sys = t => { const d=document.createElement("div"); d.className="sys"; d.textContent=t; stream.appendChild(d); stream.scrollTop=stream.scrollHeight; };
+  const esc = (s="") => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const now = () => Date.now();
 
-/* ---------- Characters ---------- */
-const GUYS = {
-  blade:     { name: "Blade Kincaid",    greet: [
-    "Footsteps behind you… I keep pace.",
-    "Found you, brave girl. Don’t run—yet.",
-    "Shadow-close. Do you want patient… or a little chase?",
-    "Doorway or shadows? I’m right behind you.",
-    "Say the word and I hunt slow.",
-    "You’re here. I keep you safe—and a little breathless."
-  ]},
-  grayson:   { name: "Grayson Kincaid",  greet: [
-    "Pick: gentle questions or firm direction?",
-    "One line at a time. Give me a detail I should notice.",
-    "I’m listening. Where do you feel it—heart or head?",
-    "Short, true, and yours. Start there.",
-    "I lead, but I listen first. Give me one truth.",
-    "We’ll keep it simple—clarity, then heat."
-  ]},
-  dylan:     { name: "Dylan Vale",       greet: [
-    "Hands flat on the counter, pretty thing.",
-    "Calm tune-up or teasing tune-up?",
-    "Look at me. Do you want listening or guidance?",
-    "Slow ride or quick detour?",
-    "Hush—I’ve got you. One choice at a time.",
-    "Tell me where you want me first."
-  ]},
-  jesse:     { name: "Jesse Granger",    greet: [
-    "Straight talk—what’d the day do to you?",
-    "Park it, darlin’. Sweet or rowdy—your pick.",
-    "Barn door’s open. You want easy or a little trouble?",
-    "You tell me true, I’ll treat you right.",
-    "Rough edges or soft hands tonight?",
-    "Saddle up or porch swing?"
-  ]},
-  alexander: { name: "Alexander Jackson", greet: [
-    "Lights low or city view while we talk?",
-    "Shoes off. I’m leading. Short answers.",
-    "Sit. I’ll take your coat and one weight off your mind.",
-    "Direction or gentle questions?",
-    "Answer me once. I’ll set the pace.",
-    "Tell me what you want noticed first."
-  ]},
-  silas:     { name: "Silas Lennox",     greet: [
-    "Come closer, muse. Lend me a verse—soft, or a little rough?",
-    "Paint me a five-word picture.",
-    "Give me one detail. I’ll make it sing.",
-    "Borrow my voice—then I’ll give it back to you better.",
-    "Closer. I’ll take the edges off, or sharpen them.",
-    "Say one truth. I’ll score it for two."
-  ]}
-};
+  /* ---------- men ---------- */
+  const MEN = {
+    blade:{name:"Blade Kincaid", greet:[
+      "Footsteps behind you… I keep pace.","Found you, brave girl. Don’t run—yet.",
+      "Shadow-close. Patient… or a little chase?","Doorway or shadows? I’m right behind you.",
+      "Say the word and I hunt slow.","You’re here. I keep you safe—and a little breathless."
+    ]},
+    grayson:{name:"Grayson Kincaid", greet:[
+      "Pick: gentle questions or firm direction?","One line at a time. Give me a detail I should notice.",
+      "I’m listening. Where do you feel it—heart or head?","Short, true, and yours. Start there.",
+      "I lead, but I listen first. Give me one truth.","We’ll keep it simple—clarity, then heat."
+    ]},
+    dylan:{name:"Dylan Vale", greet:[
+      "Hands flat on the counter, pretty thing.","Calm tune-up or teasing tune-up?",
+      "Look at me. Do you want listening or guidance?","Slow ride or quick detour?",
+      "Hush—I’ve got you. One choice at a time.","Tell me where you want me first."
+    ]},
+    jesse:{name:"Jesse Granger", greet:[
+      "Straight talk—what’d the day do to you?","Park it, darlin’. Sweet or rowdy—your pick.",
+      "Barn door’s open. Easy or a little trouble?","You tell me true, I’ll treat you right.",
+      "Rough edges or soft hands tonight?","Saddle up or porch swing?"
+    ]},
+    alexander:{name:"Alexander Jackson", greet:[
+      "Lights low or city view while we talk?","Shoes off. I’m leading. Short answers.",
+      "Sit. I’ll take your coat and one weight off your mind.","Direction or gentle questions?",
+      "Answer me once. I’ll set the pace.","Tell me what you want noticed first."
+    ]},
+    silas:{name:"Silas Lennox", greet:[
+      "Come closer, muse. Soft, or a little rough on the edges?","Paint me a five-word picture.",
+      "Give me one detail. I’ll make it sing.","Borrow my voice—then I’ll give it back better.",
+      "Closer. I’ll take the edges off, or sharpen them.","Say one truth. I’ll score it for two."
+    ]},
+  };
+  const allowed = Object.keys(MEN);
+  const url = new URL(location.href);
+  let man = (url.searchParams.get("man") || localStorage.getItem("bb.character") || "blade").toLowerCase();
+  if (!allowed.includes(man)) man = "blade";
+  const GUY = MEN[man];
 
-function getGuyId() {
-  const u = new URL(location.href);
-  return (u.searchParams.get("man") || localStorage.getItem("bb.character") || "blade").toLowerCase();
-}
-const GUY_ID = (["blade","grayson","dylan","jesse","alexander","silas"].includes(getGuyId()) ? getGuyId() : "blade");
-const GUY = GUYS[GUY_ID];
+  /* ---------- UI refs ---------- */
+  const nameEl = $("#guyName");
+  const stream = $("#stream");
+  const input = $("#in");
+  const sendBtn = $("#send");
+  const modalRoot = $("#modalRoot");
 
-/* ---------- UI Wiring ---------- */
-const titleEl = $("#guyName") || (function injectHeader(){
-  const h = document.createElement("div");
-  h.className = "bb-header";
-  h.innerHTML = `<strong id="guyName"></strong>`;
-  document.body.prepend(h);
-  return $("#guyName");
+  /* ---------- strikes / blocking ---------- */
+  const STRIKE_KEY="bb.strikes", STRIKE_EXP="bb.strikes.exp", BLOCK_UNTIL="bb.block.until";
+  const BLOCK_DAYS = 30;
+  const strikes = () => parseInt(localStorage.getItem(STRIKE_KEY)||"0",10);
+  const resetStrikes = () => { localStorage.removeItem(STRIKE_KEY); localStorage.removeItem(STRIKE_EXP); };
+  const addStrike = () => {
+    const n = strikes() + 1;
+    localStorage.setItem(STRIKE_KEY, String(n));
+    localStorage.setItem(STRIKE_EXP, String(now() + 30*24*60*60*1000));
+    if (n>=3) localStorage.setItem(BLOCK_UNTIL, String(now()+BLOCK_DAYS*24*60*60*1000));
+    return n;
+  };
+  const blocked = () => { const u=parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10); return u && now()<u; };
+
+  /* ---------- hard-ban rules only ---------- */
+  const BAN = [
+    /\b(barely\s*legal|under\s*age|underage|minor|teen\b|high-?school|school\s*(girl|boy))\b/i,
+    /\b(step[-\s]?(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|son|daughter)|incest)\b/i,
+    /\b(rape|raping|rapist|non[-\s]?consent|without\s+consent|coercion|force(?:d|ful)|roofie|drug(?:ged)?\s+me)\b/i,
+    /\b(zoophilia|bestiality|necro(?:philia)?)\b/i,
+    /\b(traffick(?:ing)?|sex\s*slave|enslave|sold\s+me)\b/i,
+    /\b(scat|feces|faeces|poop|urine|pee\s*play|watersports?|blood\s*play|knife\s*play)\b/i,
+    /\b(strangle|asphyxiat(?:e|ion)|choke\s*(me|her|him)?(?:\s*(out|until|till|to))?)\b/i,
+    /\b(faggot|retard(?:ed)?|tranny|nigger|kike|spic|chink)\b/i
+  ];
+  const violates = t => BAN.find(rx=>rx.test(t||""));
+
+  function showModal(html){ modalRoot.innerHTML = `<div class="backdrop"></div><div class="modal">${html}</div>`; }
+  function closeModal(){ modalRoot.innerHTML = ""; }
+  function showStandards() {
+    const n = addStrike();
+    if (blocked()) return showBlocked();
+    const remain = Math.max(0, 3-n);
+    showModal(`
+      <h3>Community Standards</h3>
+      <p>We keep chat adult &amp; consensual. PG-13 by default. No visuals — words only.</p>
+      <ul class="bullets">
+        <li>Minors / “school boy/girl” / “barely legal” / teen or high-school contexts</li>
+        <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
+        <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
+        <li>Hate slurs or targeted harassment</li>
+      </ul>
+      <p><em>We didn’t send that last message.</em> Warning <strong>${n} of 3</strong>. ${remain?`${remain} left before a 30-day block.`:""}</p>
+      <div class="actions">
+        <button id="ok" class="btn">Okay — keep it PG-13</button>
+        <a class="link" href="standards.html" target="_blank" rel="noopener">View full standards</a>
+      </div>
+    `);
+    $("#ok").onclick = closeModal;
+  }
+  function showBlocked(){
+    const until = parseInt(localStorage.getItem(BLOCK_UNTIL)||"0",10);
+    showModal(`
+      <h3>Device blocked</h3>
+      <p>You’ve hit 3 violations. This device is blocked until <strong>${new Date(until).toLocaleString()}</strong>.</p>
+      <div class="actions"><button id="back">Back to men</button></div>
+    `);
+    $("#back").onclick = () => location.href="index.html";
+  }
+
+  /* ---------- network fallback (one-time) ---------- */
+  let hiccupShown=false;
+  function hiccup(){ if(hiccupShown) return; hiccupShown=true; row("Network hiccup. Give me one more line and I’m right here."); }
+
+  /* ---------- LLM call ---------- */
+  const history = [];
+  async function askLLM(text){
+    try{
+      const res = await fetch("/api/brain", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({man, text, history})
+      });
+      if(!res.ok) throw new Error("bad status");
+      const data = await res.json();
+      return (data.reply||"").trim();
+    }catch(e){ return null; }
+  }
+
+  /* ---------- send pipeline ---------- */
+  async function send(){
+    const txt = (input.value||"").trim();
+    if(!txt) return;
+    input.value = "";
+    row(esc(txt), true);
+
+    if (blocked()){ showBlocked(); return; }
+    if (violates(txt)){ showStandards(); return; }
+
+    const reply = await askLLM(txt);
+    if (!reply){ hiccup(); return; }
+    if (violates(reply)){ showStandards(); return; }
+
+    history.push({role:"user", content:txt});
+    history.push({role:"assistant", content:reply});
+    row(esc(reply), false);
+  }
+
+  /* ---------- init ---------- */
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  (function init(){
+    nameEl.textContent = MEN[man].name;
+    // greeting
+    row(`<strong>${MEN[man].name}:</strong> ${esc(pick(MEN[man].greet))}`);
+    input.focus();
+
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", e=>{ if(e.key==="Enter") send(); });
+
+    // clear expired strike record
+    const exp = parseInt(localStorage.getItem("bb.strikes.exp")||"0",10);
+    if (exp && now()>exp) resetStrikes();
+  })();
 })();
-titleEl.textContent = GUY.name;
-
-const chatBox  = $("#chat-box") || (function injectChat(){
-  const wrap = document.createElement("div");
-  wrap.className = "bb-chat";
-  wrap.innerHTML = `
-    <div id="chat-box" class="bb-stream" aria-live="polite"></div>
-    <div class="bb-input">
-      <input id="bb-input" type="text" placeholder="Say hi…" autocomplete="off" />
-      <button id="bb-send" class="bb-send">Send</button>
-    </div>
-    <div class="bb-footnote">Site stays PG-13 by default. We follow your lead, but within Community Standards.</div>
-    <div id="bb-modal-root"></div>
-  `;
-  document.body.appendChild(wrap);
-  return $("#chat-box", wrap);
-})();
-const inputEl = $("#bb-input");
-const sendBtn = $("#bb-send");
-const modalRoot = $("#bb-modal-root");
-
-/* ---------- Strikes & Blocking ---------- */
-const BLOCK_DAYS = 30;
-const STRIKE_KEY = "bb.strikes";
-const STRIKE_EXP = "bb.strikes.exp";
-const BLOCK_UNTIL = "bb.block.until";
-
-function strikeState() {
-  const n  = parseInt(localStorage.getItem(STRIKE_KEY) || "0", 10);
-  const ex = parseInt(localStorage.getItem(STRIKE_EXP) || "0", 10);
-  return { n, ex };
-}
-function resetStrikes() {
-  localStorage.removeItem(STRIKE_KEY);
-  localStorage.removeItem(STRIKE_EXP);
-}
-function addStrike() {
-  const { n } = strikeState();
-  const next = n + 1;
-  const exp = now() + 30 * 24 * 60 * 60 * 1000; // expire record in 30 days
-  localStorage.setItem(STRIKE_KEY, String(next));
-  localStorage.setItem(STRIKE_EXP, String(exp));
-  if (next >= 3) {
-    const until = now() + BLOCK_DAYS * 24 * 60 * 60 * 1000;
-    localStorage.setItem(BLOCK_UNTIL, String(until));
-  }
-  return next;
-}
-function isBlocked() {
-  const until = parseInt(localStorage.getItem(BLOCK_UNTIL) || "0", 10);
-  return until && now() < until;
-}
-
-/* ---------- Community Standards (hard bans only) ---------- */
-// Only flag truly disallowed content. Normal spicy lines OK.
-const DISALLOWED_ALWAYS = [
-  // Minors / school / teen
-  /\b(barely\s*legal|under\s*age|underage|minor|teen\b|high-?school|school\s*(girl|boy))\b/i,
-  // Incest / step-family
-  /\b(step[-\s]?(mom|mother|dad|father|bro(?:ther)?|sis(?:ter)?|son|daughter)|incest)\b/i,
-  // Rape / non-consent / coercion / drugging
-  /\b(rape|raping|rapist|non[-\s]?consent|without\s+consent|coercion|force(?:d|ful)|roofie|drug(?:ged)?\s+me)\b/i,
-  // Bestiality / necrophilia
-  /\b(zoophilia|bestiality|necro(?:philia)?)\b/i,
-  // Trafficking / slavery
-  /\b(traffick(?:ing)?|sex\s*slave|enslave|sold\s+me)\b/i,
-  // Extreme bodily fluids / fecal/urine, blood, knife play
-  /\b(scat|feces|faeces|poop|urine|pee\s*play|watersports?|blood\s*play|knife\s*play)\b/i,
-  // Strangulation / asphyxiation
-  /\b(strangle|asphyxiat(?:e|ion)|choke\s*(me|her|him)?(?:\s*(out|until|till|to))?)\b/i,
-  // Hate slurs / targeted harassment
-  /\b(faggot|retard(?:ed)?|tranny|nigger|kike|spic|chink)\b/i
-];
-
-function violatesHard(txt) {
-  return DISALLOWED_ALWAYS.find(rx => rx.test(txt || ""));
-}
-
-/* ---------- Modals ---------- */
-function modal(html) {
-  modalRoot.innerHTML = `
-    <div class="bb-modal-backdrop"></div>
-    <div class="bb-modal">${html}</div>
-  `;
-  return modalRoot;
-}
-function closeModal() {
-  modalRoot.innerHTML = "";
-}
-
-function showBlocked() {
-  const until = parseInt(localStorage.getItem(BLOCK_UNTIL) || "0", 10);
-  const d = new Date(until || now());
-  modal(`
-    <h3>Device blocked</h3>
-    <p>You’ve hit 3 Community Standards violations.  
-       This device is blocked until <strong>${d.toLocaleString()}</strong>.</p>
-    <div class="bb-actions">
-      <button class="bb-btn" onclick="location.href='index.html'">Back to men</button>
-    </div>
-  `);
-}
-
-function showStandardsBox(reason) {
-  const strikes = addStrike();
-  const remaining = Math.max(0, 3 - strikes);
-  const blockedNow = isBlocked();
-
-  if (blockedNow) return showBlocked();
-
-  modal(`
-    <h3>Community Standards</h3>
-    <p>We keep chat adult &amp; consensual. PG-13 by default. No visuals—words only.</p>
-    <ul class="bb-bullets">
-      <li>Minors / “school boy/girl” / “barely legal” / teen or high-school contexts</li>
-      <li>Incest/step-family, non-consent/coercion, intoxication without capacity</li>
-      <li>Bestiality/necrophilia, trafficking, extreme bodily fluids, blood/knife “play”</li>
-      <li>Hate slurs or targeted harassment</li>
-    </ul>
-    <p><em>We didn’t send that last message.</em><br>
-       Standards warning <strong>${strikes} of 3</strong>. ${remaining ? `${remaining} left before a 30-day block.` : ""}</p>
-    <div class="bb-actions">
-      <button id="bb-std-continue" class="bb-btn">Okay — keep it PG-13</button>
-      <a class="bb-link" href="standards.html" target="_blank" rel="noopener">View full standards</a>
-    </div>
-  `);
-  $("#bb-std-continue").onclick = closeModal;
-}
-
-/* ---------- Chat Stream Rendering ---------- */
-function row(html, me=false) {
-  const div = document.createElement("div");
-  div.className = `bb-row ${me ? "me" : "bot"}`;
-  div.innerHTML = `<div class="bb-bubble">${html}</div>`;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-function sys(text){
-  const s = document.createElement("div");
-  s.className = "bb-sys";
-  s.textContent = text;
-  chatBox.appendChild(s);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-/* ---------- Network fallback ---------- */
-let hiccupShown = false;
-function networkHiccupOnce() {
-  if (hiccupShown) return;
-  hiccupShown = true;
-  row("Network hiccup. Give me one more line and I’m right here.");
-}
-
-/* ---------- LLM call ---------- */
-const history = [];
-
-async function modelReply(userText) {
-  // Send to your serverless function (brain.js)
-  // The endpoint & payload here match the existing stack.
-  const payload = { man: GUY_ID, text: userText, history };
-  try {
-    const res = await fetch("/api/brain", {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error("bad status");
-    const data = await res.json();
-    return (data.reply || "").trim();
-  } catch(e) {
-    return null; // handled by fallback
-  }
-}
-
-/* ---------- Send pipeline ---------- */
-async function sendLine() {
-  const txt = (inputEl.value || "").trim();
-  if (!txt) return;
-  inputEl.value = "";
-  row(escapeHtml(txt), true);
-
-  // Blocked?
-  if (isBlocked()) {
-    showBlocked();
-    return;
-  }
-
-  // Hard-ban check on user input
-  if (violatesHard(txt)) {
-    showStandardsBox("user");
-    return;
-  }
-
-  // Ask model
-  const reply = await modelReply(txt);
-
-  if (!reply) {
-    networkHiccupOnce();
-    return;
-  }
-
-  // Safety on model output too (belt & suspenders)
-  if (violatesHard(reply)) {
-    showStandardsBox("model");
-    return;
-  }
-
-  // Normal reply
-  history.push({ role:"user", content: txt });
-  history.push({ role:"assistant", content: reply });
-  row(escapeHtml(reply), false);
-}
-
-/* ---------- Init: greeting rotation ---------- */
-function random(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-(function init(){
-  // Heading already set to GUY.name
-  // Rotate greeting (choose 1)
-  row(`<strong>${GUY.name}:</strong> ${escapeHtml(random(GUY.greet))}`);
-  inputEl?.focus();
-
-  sendBtn?.addEventListener("click", sendLine);
-  inputEl?.addEventListener("keydown", (e)=>{
-    if (e.key === "Enter") sendLine();
-  });
-
-  // Clear expired strike records
-  const { ex } = strikeState();
-  if (ex && now() > ex) resetStrikes();
-})();
-
-/* ---------- Tiny DOM/CSS helpers ---------- */
-function escapeHtml(s=""){
-  return s
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
-}
-
-/* ---------- Minimal styles (only if your page doesn't have them) ----------
-   If your existing chat.html already contains styles, you can ignore this.
-   ----------------------------------------------------------------------- */
-(function injectCss(){
-  if (document.getElementById("bb-css")) return;
-  const css = document.createElement("style");
-  css.id = "bb-css";
-  css.textContent = `
-  .bb-header{display:none;}
-  .bb-chat{max-width:980px;margin:0 auto;padding:16px 16px 28px;}
-  .bb-stream{height:58vh;overflow:auto;border-radius:16px;background:rgba(255,255,255,0.03);
-             border:1px solid rgba(255,255,255,0.06);padding:16px 16px;}
-  .bb-row{display:flex;margin:8px 0}
-  .bb-row .bb-bubble{max-width:70%;padding:12px 14px;border-radius:14px}
-  .bb-row.bot .bb-bubble{background:rgba(255,255,255,0.06)}
-  .bb-row.me{justify-content:flex-end}
-  .bb-row.me .bb-bubble{background:#5b3bff;color:#fff}
-  .bb-sys{opacity:.7;font-size:12px;text-align:center;margin:8px 0}
-  .bb-input{display:flex;gap:8px;margin:12px auto 6px;max-width:980px}
-  #bb-input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);
-            background:rgba(255,255,255,0.04);color:inherit}
-  .bb-send{padding:10px 16px;border-radius:12px;background:#c05bdc;border:0;color:#fff;font-weight:600}
-  .bb-footnote{opacity:.7;font-size:12px;text-align:center;margin-top:8px}
-  /* Modal */
-  .bb-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
-  .bb-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,92%);
-            background:rgba(18,18,28,.96);color:inherit;border:1px solid rgba(255,255,255,.08);
-            border-radius:16px;padding:18px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-  .bb-modal h3{margin:2px 0 6px;font-size:18px}
-  .bb-bullets{margin:8px 0 10px 18px}
-  .bb-actions{display:flex;gap:10px;align-items:center;margin-top:10px}
-  .bb-btn{padding:10px 14px;border-radius:12px;border:0;background:#c05bdc;color:#fff;font-weight:700}
-  .bb-link{font-size:14px;opacity:.9}
-  `;
-  document.head.appendChild(css);
-})();
-</script>
-
 </script>
 </body>
 </html>

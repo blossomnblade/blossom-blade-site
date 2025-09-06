@@ -1,133 +1,102 @@
-// /api/brain.js
-import OpenAI from "openai";
-
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// --- character sheets (short and punchy so replies stay snappy) ---
-const PERSONAS = {
-  blade: {
-    name: "Blade Kincaid",
-    vibe: "masked hunter, playful menace, short commands, likes chase/tease, protective",
-  },
-  dylan: {
-    name: "Dylan Vale",
-    vibe: "biker-mechanic, grease-under-nails charm, teasing confidence, dry humor",
-  },
-  grayson: {
-    name: "Grayson Kincaid",
-    vibe: "viking dom energy, calm control, few words, invites obedience",
-  },
-  silas: {
-    name: "Silas Lennox",
-    vibe: "rockstar-poet, lyrical, flirty, talks in images and rhythm",
-  },
-  alexander: {
-    name: "Alexander Jackson",
-    vibe: "boardroom dominant, precise, luxury, takes the lead and sets rules",
-  },
-  jesse: {
-    name: "Jesse Granger",
-    vibe: "cowboy-southern, rough-sweet, plain talk, a little salty",
-  },
-};
-
-function buildSystem(guyKey, mode, memory) {
-  const p = PERSONAS[guyKey] ?? PERSONAS.silas;
-
-  const common = `
-You are ${p.name}.
-Persona vibe: ${p.vibe}.
-Always speak in first person, never as an assistant. Keep responses to **1–2 sentences**.
-Never repeat yourself. Vary word choice. No emojis. No disclaimers. No meta talk.
-Stay inside character—confident, direct, warm when needed.
-User is an adult. Respect consent and safety; avoid minors, violence, medical claims, and anything illegal.
-If the user gives a personal detail, acknowledge it and tuck it into subtle continuity.
-Known facts so far: ${memory?.facts?.slice(0,8).join("; ") || "none"}.
-`;
-
-  // PG mode: warm flirt, specific questions, zero explicit content.
-  const pg = `
-STYLE: PG-13 flirt. Playful banter, specific questions, sensory words allowed, but **no explicit sexual acts**.
-Purpose: Make the user feel seen and wanted. Ask concrete questions ("shirt color", "today's truth", "lights low or city view?").
-If the user pushes explicit, keep it suggestive and redirect with a tempting alternative or boundary in character.
-Keep replies crisp and conversational—no philosophy or therapy.
-`;
-
-  // Erotic mode: coin-unlocked. We stay suggestive and confident; no graphic detail.
-  // IMPORTANT: Still avoid graphic descriptions of sexual acts/body parts.
-  const erotic = `
-STYLE: Hotter flirt. Confident, suggestive, a little commanding. It's okay to acknowledge desire,
-to ask where/when/how in a **suggestive** way, and to mirror the user's boldness—without graphic detail.
-Stay tasteful: no explicit descriptions of anatomy or sex acts; rely on implication, command, and innuendo.
-Escalate gradually: mirror the user's lead with short, direct lines or questions that move the scene forward.
-`;
-
-  return [
-    { role: "system", content: common + (mode === "erotic" ? erotic : pg) },
-  ];
-}
-
-// De-dup safeguard: if model echoes the last line, ask it to rephrase once.
-async function ensureNotDuplicate(reply, lastAssistant, context) {
-  if (!reply) return "Say more—I'm listening.";
-  const a = reply.trim().toLowerCase();
-  const b = (lastAssistant || "").trim().toLowerCase();
-  if (a && b && a === b) {
-    const { guy, mode } = context;
-    const sys = buildSystem(guy, mode, { facts: [] });
-    const r = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.9,
-      presence_penalty: 0.6,
-      frequency_penalty: 0.7,
-      messages: [
-        ...sys,
-        { role: "user", content: "Rephrase your last line. Make it fresh and different." },
-      ],
-    });
-    return r.choices?.[0]?.message?.content?.trim() || reply;
-  }
-  return reply;
-}
-
+// api/brain.js — super simple, reliable reply maker
 export default async function handler(req, res) {
   try {
-    const { guy = "silas", mode = "pg", history = [], memory = { facts: [] } } = await req.json?.() || req.body || {};
+    if (req.method !== "POST") {
+      return res.status(200).json({ ok: false, error: "POST only" });
+    }
 
-    // Build chat messages
-    const msgs = buildSystem(guy, mode, memory);
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(200).json({ ok: false, error: "Missing OPENAI_API_KEY" });
+    }
 
-    // Clamp history to last ~14 turns to keep it focused
-    const trimmed = history.slice(-14).map(m => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: String(m.content || "").slice(0, 500),
-    }));
+    // Body from the chat page
+    const data = req.body || {};
+    const man = (data.man || data.character || "blade").toString().toLowerCase();
+    const advanced = !!(data.advanced || data.coins); // coins>0 counts as advanced
+    const history = Array.isArray(data.history) ? data.history : [];
 
-    msgs.push(...trimmed);
+    // Last user message (fallbacks so we never crash)
+    let lastUser = data.message || data.text || "";
+    if (!lastUser && history.length) {
+      const u = history.filter(m => (m.role || "").startsWith("user")).slice(-1)[0];
+      lastUser = (u && u.content) || "";
+    }
+    if (!lastUser) lastUser = "Hi";
 
-    // Nudge for concreteness and flow
-    msgs.push({
-      role: "user",
-      content: "Reply now in 1–2 sentences. Ask a concrete follow-up if it helps the flow.",
+    // Simple personas (short & safe)
+    const personas = {
+      blade:
+        "You are Blade Kincaid: masked hunter vibe, protective, playful chase. Speak short, confident lines.",
+      grayson:
+        "You are Grayson Kincaid: calm, steady, Viking-Dom energy. Gentle control. Short, direct lines.",
+      dylan:
+        "You are Dylan Vale: biker-boy, garage grit, teasing humor. Short, flirty lines.",
+      jesse:
+        "You are Jesse Granger: cowboy, southern drawl, a little salty but sweet. Short, warm lines.",
+      silas:
+        "You are Silas Lennox: rockstar poet, lyrical flirt. Short, vivid lines.",
+      alexander:
+        "You are Alexander Jackson: CEO gentleman, precise, leading. Short, assured lines."
+    };
+    const persona = personas[man] || personas.blade;
+
+    // Safety + tone rules (PG-13 by default; “advanced” = a notch hotter, still respectful)
+    const guardrails =
+      "Adults only. No minors, school/teen talk, incest/step-family, non-consent, intoxication w/out capacity, bestiality/necrophilia, trafficking, extreme fluids, blood/knife play, or hate slurs. Keep it consensual and respectful.";
+
+    const tone = advanced
+      ? "You may be more suggestive and bold in WORDS ONLY, but stay classy and consensual. No graphic body-part detail."
+      : "Stay PG-13: flirty, romantic, a little teasing. Avoid explicit sexual detail.";
+
+    // Build messages for OpenAI
+    const messages = [
+      { role: "system", content: `${persona}\n${guardrails}\n${tone}\nAlways reply in 1–2 short lines, sound natural, never repeat the exact same sentence twice.` },
+    ];
+
+    // If the page sent prior turns, include them (trim to last 12)
+    const trimmed = history.slice(-12);
+    for (const m of trimmed) {
+      if (!m || !m.role || !m.content) continue;
+      messages.push({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content) });
+    }
+    // Add the newest user line
+    messages.push({ role: "user", content: String(lastUser) });
+
+    // Call OpenAI (no extra libraries needed)
+    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: advanced ? 0.9 : 0.7,
+        presence_penalty: 0.6,
+        frequency_penalty: 0.4,
+        messages
+      })
     });
 
-    const r = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: mode === "erotic" ? 0.95 : 0.8,
-      top_p: 0.95,
-      presence_penalty: 0.6,
-      frequency_penalty: 0.7,
-      messages: msgs,
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      return res.status(200).json({ ok: false, error: "upstream", detail: txt.slice(0, 300) });
+    }
+
+    const out = await r.json();
+    const reply =
+      out?.choices?.[0]?.message?.content?.trim() ||
+      "I’m here. Say one more line so I can follow your lead.";
+
+    // Always return 200 with a predictable shape so the page never “hiccups”
+    return res.status(200).json({
+      ok: true,
+      reply,
+      man,
+      advanced
     });
-
-    const lastAssistant = [...trimmed].reverse().find(x => x.role === "assistant")?.content || "";
-    const raw = r.choices?.[0]?.message?.content?.trim() || "Say more—I'm listening.";
-    const reply = await ensureNotDuplicate(raw, lastAssistant, { guy, mode });
-
-    res.setHeader("Content-Type", "application/json");
-    return res.status(200).send(JSON.stringify({ reply }));
   } catch (err) {
-    console.error(err);
-    return res.status(200).json({ reply: "Network hiccup. Give me one more line and I’m right here." });
+    return res.status(200).json({ ok: false, error: "exception", detail: String(err).slice(0, 300) });
   }
 }

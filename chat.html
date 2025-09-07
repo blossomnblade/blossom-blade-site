@@ -90,75 +90,90 @@
 
 <!-- persona brain -->
 <!-- (keep this tag just above closing body so it loads after the DOM) -->
+<!-- bg + route -->
 <script>
-  // --- helpers for chat.html ---
   const qs = k => new URLSearchParams(location.search).get(k);
-  const man = (qs('man')||'alexander').toLowerCase();
+  const man = (qs('man') || 'alexander').toLowerCase();
 
-  // background per room (kept simple; adjust to your actual file names)
-  const roomBg = {
+  // room backgrounds (update paths if your file names differ)
+  const ROOM_BG = {
     alexander: '/images/bg_alexander_boardroom.jpg',
-    jesse: '/images/jesse_bg.jpg',
-    silas: '/images/grayson-bg.jpg',       // guitar neck image
-    grayson: '/images/bg_silas_stage.jpg', // red room image you uploaded
-    blade: '/images/blade-woods.jpg',
-    dylan: '/images/dylan-garage.jpg'
+    dylan:     '/images/dylan-garage.jpg',
+    jesse:     '/images/jesse_bg.jpg',
+    grayson:   '/images/grayson-bg.jpg',
+    silas:     '/images/bg_silas_stage.jpg',
+    blade:     '/images/blade-woods.jpg'
   };
-  if (roomBg[man]) {
-    document.body.style.backgroundImage = `url('${roomBg[man]}')`;
+
+  if (ROOM_BG[man]) {
+    document.body.style.backgroundImage = `url("${ROOM_BG[man]}")`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
   }
-
-  // soft translucent chat surface already defined in CSS
-
 </script>
 
-<!-- drop-in brain -->
+<!-- brain (must load before UI wiring) -->
 <script src="/scripts/brain.js"></script>
 
+<!-- UI wiring: send button + Enter key + opener -->
 <script>
-  // wire UI
-  const log = document.getElementById('log');
-  const msg = document.getElementById('msg');
+  const log  = document.getElementById('log');
+  const msg  = document.getElementById('msg');
   const send = document.getElementById('send');
-  const titleEl = document.getElementById('title');
-  const whoEl = document.getElementById('who');
 
-  // title/nameplate
-  titleEl.textContent = "Blossom & Blade";
-  whoEl.textContent = BBBrain.titleFor(man);
+  // optional header labels—only set if elements exist
+  const titleEl = document.getElementById('title');
+  const whoEl   = document.getElementById('who');
+  if (titleEl) titleEl.textContent = 'Blossom & Blade';
+  if (whoEl && window.BBBrain && BBBrain.titleFor) whoEl.textContent = BBBrain.titleFor(man);
 
   function addBubble(text, me=false){
-    const div = document.createElement('div');
-    div.className = 'bubble' + (me ? ' me' : '');
-    div.textContent = text;
-    log.appendChild(div);
+    if (!log) return;
+    const b = document.createElement('div');
+    b.className = 'bubble' + (me ? ' me' : '');
+    b.textContent = text;
+    log.appendChild(b);
     log.scrollTop = log.scrollHeight;
   }
 
-  // starter line (rotating opener)
-  addBubble(`${BBBrain.titleFor(man)}: ${BBBrain.reply(man, "hello")}`);
-
   function handleSend(){
-    let t = (msg.value||"").trim();
+    if (!msg || !send) return;
+    const t = (msg.value || '').trim();
     if (!t) return;
     addBubble(t, true);
-    msg.value = ''; msg.focus();
+    msg.value = '';
+    msg.focus();
     send.disabled = true;
 
-    // generate reply locally (no network)
-    setTimeout(() => {
-      const reply = BBBrain.reply(man, t);
-      addBubble(`${BBBrain.titleFor(man)}: ${reply}`, false);
-      send.disabled = false;
-    }, 220); // tiny delay to feel natural
+    // tiny pause to feel conversational
+    setTimeout(()=>{
+      try {
+        const who = (window.BBBrain && BBBrain.titleFor) ? BBBrain.titleFor(man) : 'He';
+        const reply = (window.BBBrain && BBBrain.reply) ? BBBrain.reply(man, t) : "I'm here. Give me one detail.";
+        addBubble(`${who}: ${reply}`);
+      } finally {
+        send.disabled = false;
+      }
+    }, 220);
   }
 
-  send.addEventListener('click', handleSend);
-  msg.addEventListener('keydown', e=>{
-    if (e.key==='Enter' && !e.shiftKey){
+  // send button
+  if (send) send.addEventListener('click', handleSend);
+
+  // Enter to send (Shift+Enter = new line)
+  if (msg) msg.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' && !e.shiftKey){
       e.preventDefault();
       handleSend();
     }
+  });
+
+  // first line when chat opens (rotates inside brain)
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const who = (window.BBBrain && BBBrain.titleFor) ? BBBrain.titleFor(man) : 'He';
+    const opener = (window.BBBrain && BBBrain.reply) ? BBBrain.reply(man, 'hello') : "Hi.";
+    addBubble(`${who}: ${opener}`);
   });
 </script>
 </body>

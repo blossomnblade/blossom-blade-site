@@ -1,4 +1,3 @@
-<script>
 // Blossom & Blade — tiny persona brain (front-end only)
 
 /* --------------------- utilities --------------------- */
@@ -7,7 +6,6 @@ const MEM = JSON.parse(localStorage.getItem(storeKey) || '{}');
 const saveMem = () => localStorage.setItem(storeKey, JSON.stringify(MEM));
 const cap = s => s ? (s[0].toUpperCase() + s.slice(1)) : s;
 const pick = (arr, memPath) => {
-  // rotate choices so we don't repeat
   if (!arr || !arr.length) return '';
   const now = Date.now();
   let idx = 0;
@@ -20,8 +18,6 @@ const pick = (arr, memPath) => {
   return arr[idx];
 };
 
-// light intent tags
-const has = (t, ...words) => words.some(w => t.includes(w));
 const rx = {
   name: /(i['’]m|i am|my name is|call me)\s+([a-z0-9\- ]{2,30})/i,
   callName: /(call|say)\s+my\s+name/i,
@@ -32,15 +28,14 @@ const rx = {
   spicy: /(kiss|neck|touch|choke|strap|bend|take me|ride me|rail|lick|hands|mouth)/i
 };
 
-// small echo but styled per man
 const echoBack = (man, text) => {
   const voices = {
-    alexander: (t)=>`Clear. "${t}" noted—go on.`,
-    jesse:     (t)=>`Heard you, sugar. "${t}". Keep talking.`,
-    silas:     (t)=>`Mmm—"${t}" has a rhythm. Give me the next beat.`,
-    grayson:   (t)=>`"${t}." Good. Again—slowly.`,
-    blade:     (t)=>`"${t}"… stay close, little fox.`,
-    dylan:     (t)=>`"${t}"—nice spark. What’s next?`,
+    alexander: t=>`Clear. "${t}" noted—go on.`,
+    jesse:     t=>`Heard you, sugar. "${t}". Keep talking.`,
+    silas:     t=>`Mmm—"${t}" has a rhythm. Give me the next beat.`,
+    grayson:   t=>`"${t}." Good. Again—slowly.`,
+    blade:     t=>`"${t}"… stay close, little fox.`,
+    dylan:     t=>`"${t}"—nice spark. What’s next?`,
   };
   return (voices[man]||((t)=>t))(text);
 };
@@ -138,15 +133,10 @@ const CHARS = {
 function parseIntent(text){
   const t = text.trim();
   const low = t.toLowerCase();
-
-  // name capture
   let name = null;
   const m = low.match(rx.name);
-  if (m && m[2]) {
-    name = cap(m[2].replace(/[^a-z0-9\- ]/gi,'').trim());
-  }
-
-  const intent = {
+  if (m && m[2]) name = cap(m[2].replace(/[^a-z0-9\- ]/gi,'').trim());
+  return {
     greet: rx.greet.test(low),
     callName: rx.callName.test(low),
     compliment: rx.compliment.test(low),
@@ -155,43 +145,20 @@ function parseIntent(text){
     text: t,
     name
   };
-  return intent;
 }
 
 /* --------------------- reply engine --------------------- */
 function makeReply(man, intent){
   const cfg = CHARS[man] || CHARS.alexander;
-
-  // memory bucket per man
   MEM[man] = MEM[man] || {};
   const bm = MEM[man];
-
-  // set or recall her name
   if (intent.name) MEM.name = intent.name;
   const her = MEM.name || "you";
-
-  // assign a petname for this man once
-  if (!bm.pet) {
-    bm.pet = pick(cfg.nick, `${man}:nick`);
-    saveMem();
-  }
-
-  // shortcuts
+  if (!bm.pet) { bm.pet = pick(cfg.nick, `${man}:nick`); saveMem(); }
   const pet = bm.pet;
-  const sayName = () => (MEM.name ? `${MEM.name}.` : `Tell me your name and I’ll use it, ${pet}.`);
 
-  // greetings
-  if (intent.greet) {
-    const opener = pick(cfg.openers, `${man}:open`);
-    return opener;
-  }
-
-  // “call my name”
-  if (intent.callName) {
-    return MEM.name ? `Come here, ${MEM.name}.` : `Give me your name and I’ll say it like a promise.`;
-  }
-
-  // name provided
+  if (intent.greet) return pick(cfg.openers, `${man}:open`);
+  if (intent.callName) return MEM.name ? `Come here, ${MEM.name}.` : `Give me your name and I’ll say it like a promise.`;
   if (intent.name) {
     const a = {
       alexander: `Nice to meet you, ${MEM.name}. Stand tall for me.`,
@@ -204,7 +171,6 @@ function makeReply(man, intent){
     return a[man];
   }
 
-  // compliments
   if (intent.compliment) {
     const lines = {
       alexander: [
@@ -235,7 +201,6 @@ function makeReply(man, intent){
     return pick(lines, `${man}:compliment`);
   }
 
-  // settings & rooms
   if (intent.setting) {
     const map = {
       room: cfg.settings.room,
@@ -257,14 +222,12 @@ function makeReply(man, intent){
         return map[k];
       }
     }
-    // generic “your room”
     if (rx.askRoom.test(intent.text.toLowerCase()) && cfg.settings.room) {
       bm.lastSetting = 'room'; saveMem();
       return cfg.settings.room;
     }
   }
 
-  // spicy hints (keep PG-13 wording but responsive)
   if (intent.spicy) {
     const lines = {
       alexander: [
@@ -295,27 +258,17 @@ function makeReply(man, intent){
     return pick(lines, `${man}:spicy`);
   }
 
-  // default: echo with persona flavor and an acknowledgment to keep flow
   const ack = pick(cfg.acks, `${man}:ack`);
   return `${echoBack(man, intent.text)} ${ack}`;
 }
 
-/* --------------------- public API for chat.html --------------------- */
+/* --------------------- public API --------------------- */
 window.BBBrain = {
-  reply(man, userText) {
-    const intent = parseIntent(userText);
-    return makeReply(man, intent);
-  },
-  titleFor(man){
-    return (CHARS[man]?.title) || "Blossom & Blade";
-  },
+  reply(man, userText) { return makeReply(man, parseIntent(userText)); },
+  titleFor(man){ return (CHARS[man]?.title) || "Blossom & Blade"; },
   petFor(man){
     MEM[man] = MEM[man] || {};
-    if (!MEM[man].pet) {
-      MEM[man].pet = pick((CHARS[man]?.nick)||["love"], `${man}:nick`);
-      saveMem();
-    }
+    if (!MEM[man].pet) { MEM[man].pet = pick((CHARS[man]?.nick)||["love"], `${man}:nick`); saveMem(); }
     return MEM[man].pet;
   }
 };
-</script>

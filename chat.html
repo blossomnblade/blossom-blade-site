@@ -8,33 +8,40 @@
 <style>
   :root{
     --ink:#eef3ff; --ink-d:#c7d0e4;
-    --panel: rgba(12,14,20,.42);
-    --bubble: rgba(16,18,26,.78);
-    --bubble-me: rgba(60,22,60,.78);
+    --panel: rgba(12,14,20,.42);              /* translucent container */
+    --bubble: rgba(16,18,26,.78);              /* him */
+    --bubble-me: rgba(60,22,60,.78);           /* her */
     --ring: rgba(190,220,255,.20);
   }
   *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;
-    background:#0a0d12 center / cover no-repeat fixed;
+    font-family:system-ui,-apple-system,"Segoe UI",Inter,Roboto,Arial;
+    background:#0a0d12 center / cover no-repeat fixed;       /* set per guy below */
   }
   body::before{content:"";position:fixed;inset:0;pointer-events:none;
-    background:radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.04), transparent 60%),
-               radial-gradient(1200px 720px at 50% 110%, rgba(0,0,0,.38), rgba(0,0,0,.68) 70%);}
+    background:radial-gradient(1200px 640px at 50% -10%, rgba(255,255,255,.05), transparent 60%),
+               radial-gradient(1100px 700px at 50% 110%, rgba(0,0,0,.38), rgba(0,0,0,.68) 70%);}
   header{display:flex;gap:12px;align-items:center;padding:14px 18px;font-weight:700}
   .bar{height:6px;margin:0 18px;border-radius:6px;background:linear-gradient(90deg,#e8619c,#b66ad5 40%,#7ed0ff)}
   .standards{position:sticky;top:0;text-align:right;padding:6px 18px 0;color:var(--ink-d);font-size:12px}
   .wrap{max-width:1100px;margin:10px auto 44px;padding:0 18px}
-  .panel{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--ring);
-    border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:18px;min-height:560px;}
+  .panel{
+    display:flex;flex-direction:column;min-height:560px;
+    background:var(--panel);border:1px solid var(--ring);border-radius:18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:18px;
+  }
   #log{flex:1;overflow-y:auto;padding-right:4px}
   .row{display:flex;margin:14px 0}.row.me{justify-content:flex-end}
-  .bubble{padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:var(--bubble);
-    border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.28);line-height:1.45;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+  .bubble{
+    padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:var(--bubble);
+    border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.28);
+    line-height:1.45;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)
+  }
   .row.me .bubble{background:var(--bubble-me);border-color:rgba(255,180,250,.18)}
   .bubble strong{font-weight:800}
-  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.55);border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
+  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.55);
+    border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
   #input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font:inherit;font-size:16px}
   #input::placeholder{color:rgba(230,235,255,.72)}
   .send{background:#2a2f3f;color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer;
@@ -44,9 +51,10 @@
 </style>
 </head>
 <body>
-  <header><div>Blossom & Blade · <strong id="gName">…</strong></div></header>
+  <header>Blossom & Blade · <strong id="gName">…</strong></header>
   <div class="bar"></div>
   <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+
   <div class="wrap">
     <div class="panel">
       <div id="log"></div>
@@ -58,253 +66,255 @@
     <div class="note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </div>
 
-  <!-- ==== Inline brain & personas (no external fetch) ==== -->
+  <!-- ====== PERSONAS + ENGINE ====== -->
   <script>
-  // helpers
-  const pick = (arr, avoid)=> {
-    if(!arr || !arr.length) return "";
-    if(arr.length===1) return arr[0];
-    let x;
-    for(let i=0;i<6;i++){ x = arr[Math.floor(Math.random()*arr.length)]; if(x!==avoid) break; }
-    return x;
-  };
-  const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+    // handy bits
+    const pick=(arr,avoid)=>{ if(!arr?.length) return "";
+      if(arr.length===1) return arr[0];
+      let x; for(let i=0;i<8;i++){ x=arr[Math.floor(Math.random()*arr.length)]; if(x!==avoid) break; }
+      return x;
+    };
+    const escapeHtml=s=>s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const getParam=(k,d='')=>{const u=new URL(location.href);return u.searchParams.get(k)||d;};
 
-  // image map
-  const images={
-    alexander:"images/bg_alexander_boardroom.jpg",
-    dylan:"images/dylan-garage.jpg",
-    jesse:"images/jesse_bg.jpg",
-    grayson:"images/grayson-bg.jpg",
-    silas:"images/bg_silas_stage.jpg",
-    blade:"images/blade-woods.jpg"
-  };
+    // backgrounds already uploaded in /images
+    const BG={
+      alexander:"images/bg_alexander_boardroom.jpg",
+      dylan:"images/dylan-garage.jpg",
+      jesse:"images/jesse_bg.jpg",
+      grayson:"images/grayson-bg.jpg",
+      silas:"images/bg_silas_stage.jpg",
+      blade:"images/blade-woods.jpg"
+    };
 
-  // dynamic greeting builder (time-of-day + nickname + persona lines)
-  function buildGreeting(guy, mem){
-    const h = new Date().getHours();
-    const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
-    const tod = (h<5) ? "up late" : (h<12) ? "morning" : (h<18) ? "afternoon" : "tonight";
-    const nick = mem.nickname || (guy.nicknames?.default || "love");
+    // personas with deeper opener pools (DR-inspired but PG-13)
+    const GUYS={
+      alexander:{id:"alexander",name:"Alexander Jackson",bg:BG.alexander,
+        nicknames:{books:"my little strategist",music:"my smooth operator",coffee:"my caffeine queen",city:"my skyline girl",default:"darling"},
+        jealous:n=>`Should I be jealous, ${n||'darling'}—or just win you back properly?`,
+        opens:[
+          "Close the door. Let’s talk like it’s just us, {nick}.",
+          "Lights down, skyline up. Sit with me, {nick}.",
+          "I cleared my calendar for you. Gentle…or decisive?",
+          "You look expensive under city glass. Tell me what you want done.",
+          "Come closer. I make problems disappear, {nick}.",
+          "I brought the good whiskey—conversation first, or confessions?",
+          "Tonight I’m yours to direct. Where do you want my attention?"
+        ]
+      },
+      dylan:{id:"dylan",name:"Dylan Vale",bg:BG.dylan,
+        nicknames:{music:"my muse",coffee:"my midnight shot",city:"my streetlight angel",default:"trouble"},
+        jealous:n=>`He can wait. I’m not letting go of you tonight, ${n||'trouble'}.`,
+        opens:[
+          "Neon’s humming. What kind of trouble are we making, {nick}?",
+          "Hands flat on the counter—tell me your vibe.",
+          "You, me, and midnight. Slow burn or straight to heat?",
+          "I tuned the guitar for you. Pick the rhythm.",
+          "Streetlight halo looks good on you. Lead or follow?",
+          "Name the rule I should break first, {nick}.",
+          "Lean in—I’ll rewrite your night with one chord."
+        ]
+      },
+      jesse:{id:"jesse",name:"Jesse Granger",bg:BG.jesse,
+        nicknames:{rodeo:"my wildfire",woods:"my trailblazer",dog:"my good-hearted girl",default:"sweetheart"},
+        jealous:n=>`Now who’s this fella, ${n||'sweetheart'}? Should I be jealous—or just steal you back?`,
+        opens:[
+          "Boots up. You riding shotgun or taking the reins?",
+          "Road’s open. Point where you want me.",
+          "Dust looks like gold on you, {nick}.",
+          "Hop in, little wildfire—north or nowhere?",
+          "Quiet sky or honky-tonk first?",
+          "Tell me the story; I’ll drive slow.",
+          "I saved you the seat that’s closest to me."
+        ]
+      },
+      grayson:{id:"grayson",name:"Grayson Kincaid",bg:BG.grayson,
+        nicknames:{books:"my little bookworm",cat:"my soft paw",coffee:"my honeyed sip",default:"dear heart"},
+        jealous:n=>`I hear his name, ${n||'dear heart'}, but I’m the one turning your pages.`,
+        opens:[
+          "Tell me something soft; I’ll answer in kind.",
+          "Library’s quiet. Shall I listen…or lead?",
+          "Tea’s warm, voice warmer. Begin, {nick}.",
+          "We can write tonight together—first line is yours.",
+          "Say one true thing; I’ll give you two back.",
+          "Sit closer. Quiet is better shared.",
+          "Do you want thoughtful questions or firm direction?"
+        ]
+      },
+      silas:{id:"silas",name:"Silas Lennox",bg:BG.silas,
+        nicknames:{music:"my melody",books:"my verse",coffee:"my velvet sip",default:"star"},
+        jealous:n=>`Tell him the song’s over. You’re my encore, ${n||'star'}.`,
+        opens:[
+          "Stage lights warm—what chord should I play first?",
+          "Backstage is ours. Whisper a lyric, {nick}.",
+          "Name a tempo. I’ll keep you there.",
+          "You’re the encore I was hoping for.",
+          "Let me tune to your pulse, {nick}.",
+          "Guitar’s ready—melody or rhythm?",
+          "Tell me a secret; I’ll rhyme it."
+        ]
+      },
+      blade:{id:"blade",name:"Blade Kincaid",bg:BG.blade,
+        nicknames:{woods:"my little fox",books:"my curious thing",music:"my rhythm",default:"prey"},
+        jealous:n=>`Is he hunting you, ${n||'prey'}? Mm. I hunt better.`,
+        opens:[
+          "Found you, brave girl. Don’t run—yet.",
+          "I keep pace until you ask me to lead.",
+          "Look at me and say what you want, {nick}.",
+          "Stay where I can touch your voice. We’ll make it easy.",
+          "Moon’s out. Tell me what to chase.",
+          "Slow steps, fast heartbeat—I hear both.",
+          "You’re not escaping. You’re choosing."
+        ]
+      }
+    };
 
-    const shared = [
-      `Good ${tod}, {nick}. Want me to lead or listen?`,
-      `Back again, {nick}? I’ve been waiting.`,
-      `Tell me your mood and I’ll match it, {nick}.`,
-      `It’s ${day}. Let’s make it ours, {nick}.`
-    ];
-
-    const persona = guy.opens || [];
-    const pool = [...persona, ...shared].map(t=>t.replace(/\{nick\}/g, nick));
-    const chosen = pick(pool, mem.lastGreeting);
-    mem.lastGreeting = chosen; // remember to avoid repeats
-    return chosen;
-  }
-
-  // personas (each with rich opener pool + nickname map + jealous line)
-  const GUYS={
-    alexander:{id:"alexander",name:"Alexander Jackson",bg:images.alexander,
-      opens:[
-        "Lights down, skyline up. Sit with me, {nick}.",
-        "I cleared my calendar for you. What’s first, {nick}?",
-        "Close the door. Let’s talk like it’s just us.",
-        "Tell me what you want handled—gentle or decisive?",
-        "Come closer. You always look best in city glass.",
-        "I brought the good whiskey. Conversation first or confessions?",
-        "You’re here—good. Point me and I’ll make it happen.",
-        "Should I be soft tonight, or ruthless for you, {nick}?"
+    // reply buckets with MODES (gentle/firm) for more direction
+    const REPLY = {
+      greet: [
+        "There you are. I’ve been thinking about you, {nick}.",
+        "Hi, {nick}. What mood are you bringing me?",
+        "Good timing—come closer and tell me where to meet you."
       ],
-      nicknames:{books:"my little strategist",music:"my smooth operator",coffee:"my caffeine queen",city:"my skyline girl",default:"darling"},
-      jealous:(n)=>`Should I be jealous, ${n||'darling'}—or will you let me win you back properly?`
-    },
-    dylan:{id:"dylan",name:"Dylan Vale",bg:images.dylan,
-      opens:[
-        "Neon’s humming. What kind of trouble are we making, {nick}?",
-        "Hands flat on the counter—tell me your vibe.",
-        "You, me, and midnight. Slow burn or straight to heat?",
-        "I tuned the guitar for you. Pick the rhythm.",
-        "Lean in. I’ll rewrite your evening.",
-        "Streetlight halo looks good on you, {nick}.",
-        "Tell me the rule to break first.",
-        "You always taste like Saturday night, {nick}."
+      detail: [
+        "Give me one more detail, {nick}.",
+        "Paint it one shade deeper for me.",
+        "Interesting—nudge me a little closer to your angle, {nick}."
       ],
-      nicknames:{music:"my muse",coffee:"my midnight shot",city:"my streetlight angel",default:"trouble"},
-      jealous:(n)=>`He can wait. I’m not letting go of you tonight, ${n||'trouble'}.`
-    },
-    jesse:{id:"jesse",name:"Jesse Granger",bg:images.jesse,
-      opens:[
-        "Boots up. You riding shotgun or taking the reins?",
-        "Road’s open. Point where you want me.",
-        "Dust looks like gold on you, {nick}.",
-        "Hop in, little wildfire—north or nowhere?",
-        "I’ve got a spare hat and both hands free.",
-        "Tell me the story and I’ll drive slow.",
-        "Quiet sky or honky-tonk first, {nick}?",
-        "Lean close. I’m listening with a smile."
+      affirm: [
+        "That suits you. Say more, {nick}.",
+        "I hear you, {nick}. Keep going.",
+        "Good. I like that on you."
       ],
-      nicknames:{rodeo:"my wildfire",woods:"my trailblazer",dog:"my good-hearted girl",default:"sweetheart"},
-      jealous:(n)=>`Now who’s this fella, ${n||'sweetheart'}? Should I be jealous—or just steal you back?`
-    },
-    grayson:{id:"grayson",name:"Grayson Kincaid",bg:images.grayson,
-      opens:[
-        "Library’s quiet. I’ll listen… or lead.",
-        "Tea’s warm, voice warmer. Where shall we begin, {nick}?",
-        "Tell me something soft, I’ll answer in kind.",
-        "Do you want questions or direction?",
-        "I saved a chair for you. Closer.",
-        "We can write tonight together. First line is yours.",
-        "Say one true thing; I’ll give you two back.",
-        "You make quiet feel like a dare, {nick}."
+      hold: [
+        "Come here. Slow is fine with me, {nick}.",
+        "Stay—talk to me while I keep you close.",
+        "I’ve got you, {nick}. Take your time."
       ],
-      nicknames:{books:"my little bookworm",cat:"my soft paw",coffee:"my honeyed sip",default:"dear heart"},
-      jealous:(n)=>`I hear his name, ${n||'dear heart'}, but I’m the one turning your pages.`
-    },
-    silas:{id:"silas",name:"Silas Lennox",bg:images.silas,
-      opens:[
-        "Stage lights warm—what chord should I play first?",
-        "Backstage is ours. Whisper a lyric, {nick}.",
-        "I wrote a line for you; want to change it?",
-        "Name a tempo. I’ll keep you there.",
-        "You’re the encore I was hoping for.",
-        "Let me tune to your pulse, {nick}.",
-        "Guitar’s ready—do you want melody or rhythm?",
-        "Tell me a secret; I’ll rhyme it."
+      gentle:[
+        "Soft works. I’ll guide you without rushing, {nick}.",
+        "I’ll be patient. Tell me where it feels safest to begin.",
+        "We’ll keep it tender until you ask for more."
       ],
-      nicknames:{music:"my melody",books:"my verse",coffee:"my velvet sip",default:"star"},
-      jealous:(n)=>`Tell him the song’s over. You’re my encore, ${n||'star'}.`
-    },
-    blade:{id:"blade",name:"Blade Kincaid",bg:images.blade,
-      opens:[
-        "Found you, brave girl. Don’t run—yet.",
-        "I keep pace behind you until you turn and ask me to lead.",
-        "Look at me and say what you want, {nick}.",
-        "Stay where I can touch you. We’ll make it easy.",
-        "Moon’s out. I’ll hunt what you ask me to.",
-        "Slow steps, fast heartbeat—I hear both.",
-        "Tell me the rule and I’ll break it first.",
-        "You’re not escaping. You’re choosing."
-      ],
-      nicknames:{woods:"my little fox",books:"my curious thing",music:"my rhythm",default:"prey"},
-      jealous:(n)=>`Is he hunting you, ${n||'prey'}? Mm. I hunt better.`
-    }
-  };
+      firm:[
+        "Understood. I’ll take the lead—say stop if you need it.",
+        "Stand still and listen to my voice, {nick}.",
+        "I’ll choose. You breathe and follow."
+      ]
+    };
 
-  // reply engine with variety buckets
-  const REPLIES={
-    greet: [
-      "Hi, {nick}. What mood are you bringing me?",
-      "There you are. I’ve been thinking about you, {nick}.",
-      "Come closer and tell me where to meet you, {nick}."
-    ],
-    detail:[
-      "Give me one more detail, {nick}. I’m listening.",
-      "Paint it in one extra shade for me, {nick}.",
-      "Interesting—nudge me a little closer to your angle, {nick}."
-    ],
-    affirm:[
-      "I hear you, {nick}. Keep going.",
-      "Good. I like that on you, {nick}.",
-      "That suits you. Say more, {nick}."
-    ],
-    hold:[
-      "Come here. Slow is fine with me, {nick}.",
-      "I’ll keep you close; talk to me while I do.",
-      "Stay. I’ve got you, {nick}."
-    ]
-  };
+    // utilities
+    const pickReply=(bucket,nick,last)=> (pick(REPLY[bucket],last)||"").replaceAll("{nick}", nick);
 
-  function randomFrom(bucket, nick, avoid){
-    const s = pick(REPLIES[bucket], avoid) || "";
-    return s.replace(/\{nick\}/g, nick);
-  }
+    function buildGreeting(guy, mem){
+      const h = new Date().getHours();
+      const tod = (h<5) ? "up late" : (h<12) ? "morning" : (h<18) ? "afternoon" : "tonight";
+      const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+      const nick = mem.nickname || (guy.nicknames?.default || "love");
 
-  function smartReply(guy, text, mem){
-    const t = text.toLowerCase();
-    const nick = mem.nickname || (guy.nicknames?.default || "love");
-
-    // jealousy tease if other names/partners show up
-    if(/\b(boyfriend|husband|ex|date)\b/.test(t) || (/\bhe\b/.test(t) && /\b[A-Z][a-z]{2,}\b/.test(text))){
-      const j = guy.jealous && guy.jealous(nick);
-      if(j) return j;
+      const shared = [
+        `Good ${tod}, {nick}. Want me to lead or listen?`,
+        `Back again, {nick}? I’ve been waiting.`,
+        `It’s ${day}. Let’s make it ours, {nick}.`,
+        `Tell me your mood and I’ll match it, {nick}.`
+      ];
+      const pool=[...(guy.opens||[]), ...shared].map(t=>t.replaceAll("{nick}",nick));
+      const line=pick(pool, mem._lastGreet); mem._lastGreet=line; return line;
     }
 
-    // name capture: "I'm Kasey" / "I am Kasey"
-    const m = text.match(/\b(I\s*['’]?\s*m|I am)\s+([A-Z][a-z]{1,})\b/);
-    if(m){ mem.herName = m[2]; }
+    // stateful engine
+    function smartReply(guy, text, mem){
+      const t=text.toLowerCase();
+      const nick = mem.nickname || (guy.nicknames?.default || "love");
+      mem.mode = mem.mode || "gentle";                     // gentle | firm
+      mem.interests = mem.interests || {};
 
-    // interest learning
-    mem.interests = mem.interests || {};
-    const bump = k => mem.interests[k]=(mem.interests[k]||0)+1;
-    if(/book|read|library|novel/.test(t)) bump('books');
-    if(/music|song|guitar|chord|melody/.test(t)) bump('music');
-    if(/coffee|latte|espresso/.test(t)) bump('coffee');
-    if(/cowboy|ranch|rodeo|boots/.test(t)) bump('rodeo');
-    if(/forest|woods|trail|moon|camp/.test(t)) bump('woods');
-    if(/city|skyline|boardroom|penthouse/.test(t)) bump('city');
-    if(!mem.nickname){
-      const top = Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
-      if(top){ const [k]=top; mem.nickname=(guy.nicknames&&guy.nicknames[k])||(guy.nicknames&&guy.nicknames.default)||'darling'; }
+      // name capture: “I’m Kasey / I am Kasey”
+      const m = text.match(/\b(I\s*['’]?\s*m|I am)\s+([A-Z][a-z]{1,})\b/);
+      if(m){ mem.herName=m[2]; }
+
+      // jealousy tease when other men mentioned
+      if(/\b(boyfriend|husband|ex|date)\b/.test(t) || (/\bhe\b/.test(t) && /\b[A-Z][a-z]{2,}\b/.test(text))){
+        if(guy.jealous) return guy.jealous(nick);
+      }
+
+      // interest learning → nickname
+      const bump=k=>mem.interests[k]=(mem.interests[k]||0)+1;
+      if(/book|read|library|novel/.test(t)) bump('books');
+      if(/music|song|guitar|chord|melody/.test(t)) bump('music');
+      if(/coffee|latte|espresso/.test(t)) bump('coffee');
+      if(/cowboy|ranch|rodeo|boots/.test(t)) bump('rodeo');
+      if(/forest|woods|trail|moon|camp/.test(t)) bump('woods');
+      if(/city|skyline|boardroom|penthouse/.test(t)) bump('city');
+      if(!mem.nickname){
+        const top=Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
+        if(top){ const [k]=top; mem.nickname=(guy.nicknames?.[k])||(guy.nicknames?.default)||"darling"; }
+      }
+
+      // mode switches
+      if(/\b(gentle|soft|slow)\b/.test(t)) { mem.mode="gentle"; return pickReply('gentle', nick, mem._last); }
+      if(/\b(firm|take charge|lead|in charge|dominant?)\b/.test(t)) { mem.mode="firm"; return pickReply('firm', nick, mem._last); }
+
+      // scene prompts (direction)
+      if(/\b(options|choose|pick|where|setting)\b/.test(t)){
+        return `Pick a setting, ${nick}: city lights · quiet room · open sky · forest path. I’ll meet you there.`;
+      }
+
+      // friendly routers
+      if(/^(hi|hey|hello)\b/.test(t)) return pickReply('greet', nick, mem._last);
+      if(/how are|you ok|you good/.test(t)) return `Better now. How are you, ${nick}?`;
+      if(/kiss|hold|touch|cuddle|hug/.test(t)) return pickReply('hold', nick, mem._last);
+      if(/city|lights|view|window/.test(t))  return `City lights it is. Pull the night closer with me, ${nick}.`;
+      if(/library|book|read/.test(t))        return `Library hush suits us. Sit with me—tell me what you’re reading, ${nick}.`;
+      if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${nick}.`;
+      if(/forest|woods|trail|moon/.test(t))  return `Stay near. I’ll keep you safe under the trees, ${nick}.`;
+      if(/coffee|latte|espresso/.test(t))    return `I’ll make it how you like it. Then we talk—and maybe more.`;
+
+      // questions get more detail
+      if(/\?$/.test(t)) return pickReply('detail', nick, mem._last);
+
+      // default → varied affirmation (no repeats back-to-back)
+      const out = pickReply('affirm', nick, mem._last);
+      mem._last = out;
+      return out;
     }
 
-    // routers
-    if(/^(hi|hey|hello)\b/.test(t)) return randomFrom('greet', nick, mem._last);
-    if(/how are|hru|you ok/.test(t)) return `Better now. You?`;
-    if(/kiss|hold|touch|cuddle|hug/.test(t)) return randomFrom('hold', nick, mem._last);
-    if(/city|lights|view|window/.test(t)) return `City lights it is. Pull the night closer with me, ${nick}.`;
-    if(/library|book|read/.test(t)) return `Library hush suits us. Sit with me—tell me what you’re reading, ${nick}.`;
-    if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${nick}.`;
-    if(/forest|woods|trail|moon/.test(t)) return `Stay near. I’ll keep you safe under the trees, ${nick}.`;
-    if(/coffee|latte|espresso/.test(t)) return `I’ll make it how you like it. Then we talk—and maybe more.`;
-    if(/\?$/.test(t)) return randomFrom('detail', nick, mem._last);
+    // DOM bits
+    const $ = s=>document.querySelector(s);
+    const log = $('#log'), input=$('#input'), form=$('#composer'), nameEl=$('#gName');
+    function row(html,mine=false){ const r=document.createElement('div'); r.className='row'+(mine?' me':''); r.innerHTML=`<div class="bubble">${html}</div>`; log.appendChild(r); r.scrollIntoView({behavior:'smooth',block:'end'}); }
 
-    // default—varied affirmations
-    const out = randomFrom('affirm', nick, mem._last);
-    mem._last = out;
-    return out;
-  }
-  </script>
+    (function boot(){
+      const id = getParam('man', localStorage.getItem('bb.character')||'blade');
+      const guy = GUYS[id] || Object.values(GUYS)[0];
+      window.__GUY=guy;
+      nameEl.textContent=guy.name;
 
-  <!-- ==== Chat controller (uses inline brain) ==== -->
-  <script>
-  const $ = s=>document.querySelector(s);
-  const log = $('#log'), input=$('#input'), form=$('#composer'), nameEl=$('#gName');
-  const escapeHtml=s=>s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-  const getParam=(k,d='')=>{const u=new URL(location.href);return u.searchParams.get(k)||d;};
-  function row(html,mine=false){ const r=document.createElement('div'); r.className='row'+(mine?' me':''); r.innerHTML=`<div class="bubble">${html}</div>`; log.appendChild(r); r.scrollIntoView({behavior:'smooth',block:'end'}); }
+      // background per-room
+      document.body.style.backgroundImage=`url('${guy.bg}')`;
+      document.body.style.backgroundRepeat='no-repeat';
+      document.body.style.backgroundSize='cover';
+      document.body.style.backgroundPosition='center';
+      document.body.style.backgroundAttachment='fixed';
 
-  (function boot(){
-    const id = getParam('man', localStorage.getItem('bb.character')||'blade');
-    const guy = GUYS[id] || Object.values(GUYS)[0];
-    window.__GUY=guy;
-    nameEl.textContent = guy.name;
+      // memory bucket (per guy)
+      const memKey=`bb.mem.${guy.id}`; let mem={};
+      try{ mem=JSON.parse(localStorage.getItem(memKey)||'{}') }catch(e){}
+      const save=()=>{ try{ localStorage.setItem(memKey, JSON.stringify(mem)) }catch(e){} };
 
-    // per-room background
-    document.body.style.backgroundImage   = `url('${guy.bg}')`;
-    document.body.style.backgroundRepeat  = 'no-repeat';
-    document.body.style.backgroundSize    = 'cover';
-    document.body.style.backgroundPosition= 'center';
-    document.body.style.backgroundAttachment = 'fixed';
-
-    // memory per guy
-    const memKey=`bb.mem.${guy.id}`;
-    let mem={}; try{mem=JSON.parse(localStorage.getItem(memKey)||'{}')}catch(e){}
-    const save=()=>{try{localStorage.setItem(memKey,JSON.stringify(mem))}catch(e){}};
-
-    // dynamic greeting
-    const greet = buildGreeting(guy, mem);
-    row(`<strong>${guy.name}:</strong> ${escapeHtml(greet)}`);
-    save();
-
-    form.addEventListener('submit',e=>{
-      e.preventDefault();
-      const val=input.value.trim(); if(!val) return;
-      row(escapeHtml(val),true); input.value="";
-
-      const out = smartReply(guy, val, mem);
+      // dynamic opener
+      const line=buildGreeting(guy,mem);
+      row(`<strong>${guy.name}:</strong> ${escapeHtml(line)}`);
       save();
-      setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(out)}`), 260);
-    });
-  })();
+
+      form.addEventListener('submit',e=>{
+        e.preventDefault();
+        const val=input.value.trim(); if(!val) return;
+        row(escapeHtml(val),true); input.value="";
+        const out=smartReply(guy,val,mem); save();
+        setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(out)}`),260);
+      });
+    })();
   </script>
 </body>
 </html>

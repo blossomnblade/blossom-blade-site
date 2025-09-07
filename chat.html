@@ -7,75 +7,73 @@
 <link rel="preload" as="script" href="api/brain.js">
 <style>
   :root{
-    --ink:#e8eefc; --ink-d:#c6d0e6;
-    --brand:#B66AD5;
-    --panel: rgba(12,14,20,.58);      /* chat window glass – slightly see-through */
-    --bubble: rgba(18,20,28,.52);     /* bot bubbles */
-    --bubble-me: rgba(50,16,50,.55);  /* user bubbles */
-    --ring: rgba(190,220,255,.2);
+    --room: none;                     /* set by JS per guy */
+    --ink:#eef3ff; --ink-d:#c6d0e6;
+    --panel: rgba(10,12,18,.42);      /* chat window glass (more translucent) */
+    --bubble: rgba(16,18,26,.68);     /* bot bubble */
+    --bubble-me: rgba(60,20,60,.62);  /* user bubble */
+    --ring: rgba(190,220,255,.22);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0; color:var(--ink);
     font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
-    background:#0a0d12 fixed no-repeat center/cover;
+    /* per-room background via CSS var so it never “disappears” */
+    background: #0a0d12 var(--room) center / cover no-repeat fixed;
   }
-  /* room background (set inline by script) + a gentle top vignette */
+  /* soft vignette so bg is visible but readable */
   body::before{
     content:""; position:fixed; inset:0;
     background:
-      radial-gradient(1200px 600px at 50% 0%, rgba(255,255,255,.06), transparent 55%),
-      radial-gradient(1200px 700px at 50% 100%, rgba(0,0,0,.55), rgba(0,0,0,.85) 70%);
+      radial-gradient(1200px 600px at 50% 0%, rgba(255,255,255,.05), transparent 60%),
+      radial-gradient(1200px 720px at 50% 100%, rgba(0,0,0,.45), rgba(0,0,0,.75) 70%);
     pointer-events:none;
   }
 
-  header{
-    display:flex; align-items:center; gap:12px;
-    padding:14px 18px; font-weight:700
-  }
-  .crumb{opacity:.8; font-weight:600}
+  header{ display:flex; align-items:center; gap:12px; padding:14px 18px; font-weight:700 }
+  .crumb{opacity:.85}
   .name{font-weight:800}
-  .bar{
-    height:6px; margin: 0 18px; border-radius:6px;
-    background: linear-gradient(90deg, #e8619c 0%, #b66ad5 40%, #7ed0ff 100%);
-    opacity:.85;
-  }
-  .standards{
-    position:sticky; top:0; text-align:right; padding:6px 18px 0;
-    color:var(--ink-d); font-size:12px;
-  }
+  .bar{ height:6px; margin:0 18px; border-radius:6px;
+        background: linear-gradient(90deg,#e8619c, #b66ad5 40%, #7ed0ff) }
 
-  .wrap{
-    max-width:1100px; margin:10px auto 40px; padding: 0 18px;
-  }
+  .standards{ position:sticky; top:0; text-align:right; padding:6px 18px 0;
+              color:var(--ink-d); font-size:12px }
+
+  .wrap{ max-width:1100px; margin:10px auto 44px; padding:0 18px }
   .panel{
     background: var(--panel);
     border:1px solid var(--ring);
     border-radius:18px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    box-shadow: 0 24px 60px rgba(0,0,0,.45);
     backdrop-filter: blur(4px);
     padding:18px 18px 12px;
+    /* keep the big window size like before */
+    min-height: 560px;
   }
+  #log{ min-height: 380px }          /* ensures messages don’t “eat” composer */
+
   .row{ display:flex; margin:14px 0 }
   .row.me{ justify-content:flex-end }
   .bubble{
     padding:12px 14px; max-width:min(720px, 90%);
     border-radius:16px;
     background: var(--bubble);
-    border:1px solid rgba(255,255,255,.06);
-    box-shadow: 0 5px 18px rgba(0,0,0,.25);
-    line-height:1.4;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow: 0 6px 18px rgba(0,0,0,.28);
+    line-height:1.45;
+    color:#fff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.45);   /* keeps text crisp on busy bgs */
   }
   .row.me .bubble{
     background: var(--bubble-me);
-    border-color: rgba(255,180,250,.15);
+    border-color: rgba(255,180,250,.18);
   }
   .bubble strong{ font-weight:800 }
 
   .composer{
     display:flex; gap:10px; margin:16px 4px 8px;
-    background: rgba(8,10,14,.55);
+    background: rgba(8,10,14,.50);
     border:1px solid var(--ring); border-radius:14px;
     padding:10px 10px 10px 14px; backdrop-filter: blur(3px);
   }
@@ -83,6 +81,7 @@
     flex:1; background:transparent; border:0; outline:0;
     color:var(--ink); font:inherit; font-size:16px;
   }
+  #input::placeholder{ color:rgba(230,235,255,.7) }
   .send{
     background:#2a2f3f; color:#fff; border:0; border-radius:12px; padding:10px 16px;
     font-weight:800; cursor:pointer;
@@ -95,8 +94,7 @@
 </head>
 <body>
   <header>
-    <div class="crumb">Blossom & Blade</div>
-    <div>·</div>
+    <div class="crumb">Blossom & Blade</div><div>·</div>
     <div class="name" id="gName">…</div>
   </header>
   <div class="bar"></div>
@@ -115,8 +113,7 @@
 
 <script src="api/brain.js"></script>
 <script>
-  /* --- utilities --- */
-  const $ = sel => document.querySelector(sel);
+  const $ = s => document.querySelector(s);
   const log = $('#log'), input = $('#input'), form = $('#composer'), nameEl = $('#gName');
 
   function row(html, mine=false){
@@ -126,37 +123,31 @@
     log.appendChild(r);
     r.scrollIntoView({behavior:'smooth', block:'end'});
   }
-
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
   function getParam(k, d=''){ const u=new URL(location.href); return u.searchParams.get(k)||d; }
 
-  /* --- pick guy & set room background --- */
   const id = getParam('man', localStorage.getItem('bb.character')||'blade');
   const guy = BnB.guys[id] || BnB.guys.blade;
   nameEl.textContent = guy.name;
 
-  // set per-room bg (landing bg is NOT layered here)
-  document.body.style.backgroundImage = `url('${guy.bg}')`;
+  /* set room background via CSS var so it always sticks */
+  document.body.style.setProperty('--room', `url('${guy.bg}')`);
 
-  /* --- memory by device & guy --- */
+  /* simple per-guy memory */
   const memKey = `bb.mem.${id}`;
-  let mem = {};
-  try{ mem = JSON.parse(localStorage.getItem(memKey)||'{}'); }catch(e){}
-  function save(){ try{ localStorage.setItem(memKey, JSON.stringify(mem)); }catch(e){} }
+  let mem = {}; try{ mem = JSON.parse(localStorage.getItem(memKey)||'{}'); }catch(e){}
+  const save = () => { try{ localStorage.setItem(memKey, JSON.stringify(mem)); }catch(e){} };
 
-  /* on first load: greet (rotates) */
   (function init(){
     const idx = (mem.greetIndex || 0) % guy.greetings.length;
-    const greet = guy.greetings[idx];
+    row(`<strong>${guy.name}:</strong> ${guy.greetings[idx]}`);
     mem.greetIndex = idx + 1; save();
-    row(`<strong>${guy.name}:</strong> ${greet}`);
   })();
 
-  /* extract light interests & give her a nickname */
   function learn(text){
     const t = text.toLowerCase();
     mem.interests = mem.interests || {};
-    const add = k => { mem.interests[k]=(mem.interests[k]||0)+1; };
-
+    const add = k => mem.interests[k]=(mem.interests[k]||0)+1;
     if(/book|read|library|novel/.test(t)) add('books');
     if(/music|song|guitar|band|concert/.test(t)) add('music');
     if(/coffee|latte|espresso|caffeine/.test(t)) add('coffee');
@@ -166,21 +157,15 @@
     if(/cat|kitten/.test(t)) add('cat');
     if(/dog|puppy/.test(t)) add('dog');
 
-    // assign nickname once we know her best interest for THIS guy
     if(!mem.nickname){
       const top = Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
-      if(top){
-        const [key] = top;
-        const n = (guy.nicknames[key] || guy.nicknames.default || 'darling');
-        mem.nickname = n;
-      }
+      if(top){ const [k]=top; mem.nickname = (guy.nicknames[k]||guy.nicknames.default||'darling'); }
     }
     save();
   }
 
   function jealousProbe(text){
-    // if she mentions another man, tease lightly
-    if(/\b(boyfriend|husband|ex|date)\b/i.test(text) || /\b[A-Z][a-z]{2,}\b/.test(text) && / he\b/i.test(text)){
+    if(/\b(boyfriend|husband|ex|date)\b/i.test(text) || (/\b[A-Z][a-z]{2,}\b/.test(text) && /\bhe\b/i.test(text))){
       return guy.jealous(mem.nickname);
     }
     return '';
@@ -199,13 +184,8 @@
     if(!val) return;
     row(escapeHtml(val), true);
     input.value="";
-    const bot = replyTo(val);
-    setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(bot)}`), 360);
+    setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(replyTo(val))}`), 360);
   });
-
-  function escapeHtml(s){
-    return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-  }
 </script>
 </body>
 </html>

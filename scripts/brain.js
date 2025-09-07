@@ -1,215 +1,257 @@
-<script>
-/* Blossom & Blade — brain.js (v3) */
+/* Blossom & Blade – conversational brain (v2)
+   - per-man personas with unique openers
+   - light memory (name, nick, interests) in localStorage
+   - gentle NLP for name & interest pickup
+   - no repeated lines; rotates through sets
+*/
+(() => {
+  const STORAGE_KEY = "bb_mem_v2";
 
-(function () {
-  const STORAGE_KEY = "bb_mem_v3";
-  const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const clean = (s) => (s || "").trim();
-  const low = (s) => clean(s).toLowerCase();
-  const hour = new Date().getHours();
-  const TOD = hour < 5 ? "late" : hour < 12 ? "morning" : hour < 17 ? "afternoon" : "tonight";
+  const cap = s => s ? s.replace(/^\s+|\s+$/g, "")
+                        .toLowerCase()
+                        .replace(/^[a-z]/, c => c.toUpperCase()) : s;
 
-  function loadAll(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch{return{}}}
-  function saveAll(obj){ localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)) }
-  function memGet(man){ const all=loadAll(); if(!all[man]) all[man]={turns:0,name:"",likes:[],pet:"",last:""}; return all[man] }
-  function memSet(man,m){ const all=loadAll(); all[man]=m; saveAll(all) }
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch { return {}; }
+  };
+  const save = (mem) => localStorage.setItem(STORAGE_KEY, JSON.stringify(mem));
 
-  const INTEREST_MAP = [
-    { keys:["book","read","novel","library"], pets:["bookworm","wallflower","inkheart"] },
-    { keys:["music","song","guitar","band"], pets:["muse","melody","little note"] },
-    { keys:["coffee","latte","espresso"], pets:["espresso shot","sweet crema"] },
-    { keys:["horse","rodeo","cowboy","cowgirl","bull"], pets:["cowgirl","wild thing"] },
-    { keys:["bike","motorcycle","helmet","ride"], pets:["rider","speed angel"] },
-    { keys:["moon","night","stars"], pets:["starlight","nightbird"] },
+  const interestMatchers = [
+    {key:"books",  re:/\b(book|books|read|reader|novel|poem|poetry|library|librar(y|ies)|author|page|write|writing)\b/i},
+    {key:"music",  re:/\b(music|song|songs|guitar|band|melody|chord|stage|lyric|sing|setlist|amp)\b/i},
+    {key:"cowboy", re:/\b(cowboy|cowgirl|boots?|rodeo|lasso|saddle|ranch|barn|spurs?)\b/i},
+    {key:"city",   re:/\b(city|boardroom|office|deal|contract|suit|tie|power|elevator)\b/i},
+    {key:"mask",   re:/\b(mask|chase|ghost|hunt|knife|killer|prey|run)\b/i},
+    {key:"biker",  re:/\b(bike|biker|helmet|ride|motor|motorcycle|throttle|street|asphalt)\b/i}
   ];
-  const findPetFromLikes = (likes)=> {
-    for(const like of likes){
-      const l=low(like);
-      for(const m of INTEREST_MAP){ if(m.keys.some(k=>l.includes(k))) return pick(m.pets) }
-    }
-    return "";
-  }
 
-  const TOO_HOT = ["rail","fuck","choke","throat","strap","rape","cum","anal","breed","gag","knife","chain"];
-  const tooHot = (t)=>{ t=low(t); return TOO_HOT.some(k=>t.includes(k)) };
+  const baseNicks = {
+    books : ["bookworm","wallflower","inkheart"],
+    music : ["muse","melody","songbird","treble"],
+    cowboy: ["sugar","darlin’","wildflower"],
+    city  : ["darling","good girl","sweetheart"],
+    mask  : ["little rabbit","trouble","prey"],
+    biker : ["wild thing","speedster","trouble"]
+  };
 
-  function parse(msg){
-    const raw=clean(msg), m=low(raw);
-    const nameMatch = m.match(/\b(i[' ]?m|i am|my name is)\s+([a-z]+)\b/);
-    const name = nameMatch ? nameMatch[2].replace(/[^a-z]/g,"") : "";
-    const likes=[]; INTEREST_MAP.forEach(map=>{ if(map.keys.some(k=>m.includes(k))) likes.push(map.keys[0]) });
-    return {
-      raw, m, name,
-      greet:/\b(hi|hey|hello|morning|evening|afternoon|howdy)\b/.test(m),
-      q: m.includes("?"),
-      affection:/\b(kiss|hug|touch|love|miss|hold)\b/.test(m),
-      jealous:/\b(bill|john|mike|alex|jesse|dylan|grayson|silas|blade|boyfriend|ex)\b/.test(m),
-      askName:/\bsay my name|call my name\b/.test(m),
-      askWhatName:/\bwhat'?s my name\b/.test(m),
-      askNickname:/\b(give me|pick|choose) (a )?nickname\b/.test(m),
-      leadYou:/\b(you lead|lead me|take the lead)\b/.test(m),
-      slow:/\b(slow down|slow burn|gentle)\b/.test(m),
-      fast:/\b(faster|hurry|now)\b/.test(m),
-      likes
-    };
-  }
-
-  const P = {
+  const personas = {
     alexander: {
-      pet:["darling","good girl","love"],
-      open:[
-        `Good ${TOD}, darling. Close the door—it's just us.`,
-        "Look at you stealing my time again.",
-        "Morning suits you. Sit. Speak."
+      display: "Alexander Jackson",
+      style:  "city",
+      greet: [
+        "Hey love—good morning.",
+        "Well well… there you are.",
+        "Close the door. Let’s talk like it’s just us."
       ],
-      affirm:["Proud of you.","Clear. I like clear.","Good girl—keep going."],
-      curious:["Coffee order first?","Books or skyline tonight?","One goal for today—name it."],
-      soft:["Keep it suggestive. I’ll read the rest.","Hint, don’t detail."],
-      jealous:(pet)=>`Who’s that, ${pet}? Should I be jealous—or just closer?`,
-      steer:{ lead:"I’ll set the pace; you tell me if you want more.", slow:"Measured is best; we build, not burn.", fast:"Patience. Earn it." }
-    },
-    dylan: {
-      pet:["pretty thing","sweetheart","speed angel"],
-      open:[
-        "Neon’s humming. Helmet’s on—talk to me.",
-        "Route’s clear. Where am I meeting you?",
-        "Give me the signal, pretty thing."
+      acknowledge: ["Good girl—clear and direct.","I’m listening.","Proud of you."],
+      follow: [
+        "Tell me one thing about your day; I’ll answer in kind.",
+        "What do you want from me today—comfort, focus, or a little heat?"
       ],
-      affirm:["Copy that. I’m right here.","I’ll match your pace.","Good signal."],
-      curious:["Night drive or rooftop view?","Favorite track tonight?","City lights or back roads?"],
-      soft:["Tease the route, not the crash.","Keep it radio-safe under the visor."],
-      jealous:(pet)=>`He can wait. I won’t. Stay with me, ${pet}.`,
-      steer:{ lead:"I’ll take point—tap my shoulder if you want speed.", slow:"Cruise mode. Breathe with me.", fast:"We don’t redline on the first lap." }
+      stamps: ["darling","love","good girl"]
     },
     jesse: {
-      pet:["sweetheart","sugar","darlin’","trouble"],
-      open:[
-        "Howdy, sweetheart. Tell me the story—I’ll drive slow.",
-        "Evenin’, sugar. Boots on or off?",
-        "Hey, sinner. You leading, or am I?"
+      display: "Jesse Granger",
+      style:  "cowboy",
+      greet: [
+        "Hi, sinner. Tell me the story; I’ll drive slow.",
+        "Evenin’, sugar. You talk, I’ll steer.",
+        "Well, well… you came to me."
       ],
-      affirm:["Attagirl.","Good direction.","I hear you, sugar."],
-      curious:["Campfire, quiet room, or open sky?","Sweet tea or whiskey first?","Compliments or eye contact—what ruins you quicker?"],
-      soft:["Flirty, not filthy—save the rest.","Say it sweet; I’ll pick up what you’re layin’ down."],
-      jealous:(pet)=>`Now who’s that, ${pet}? Need me jealous—or just closer?`,
-      steer:{ lead:"Yes ma’am. I’ll take the reins.", slow:"We’ll two-step; no rush.", fast:"Easy, wild thing. I’ll set the pace." }
+      acknowledge: ["That’s my sweet thing.","I hear you, darlin’.","I’m right here."],
+      follow: [
+        "Pick a setting: city lights, quiet room, or open sky.",
+        "Start me with one detail and I’ll meet you there."
+      ],
+      stamps: ["sugar","darlin’","sweet thing"]
+    },
+    dylan: {
+      display: "Dylan Vale",
+      style:  "biker",
+      greet: [
+        "Neon’s on. Hop on, trouble.",
+        "Hey you—helmet stays on, secrets stay ours.",
+        "Found you. What pace tonight: idle, cruise, or redline?"
+      ],
+      acknowledge: ["Got it—stay with me.","I’m here; keep talking.","I hear the engine in your voice."],
+      follow: [
+        "Give me one small detail to build on—place, song, or mood.",
+        "Tell me what you crave more of: speed, tease, or control."
+      ],
+      stamps: ["trouble","wild thing","love"]
     },
     grayson: {
-      pet:["angel","little song","dear heart"],
-      open:[
-        "You made it. I was counting breaths.",
-        "Library’s quiet. I’ll listen—or lead.",
-        "Tell me something soft; I’ll answer in kind."
+      display: "Grayson Kincaid",
+      style:  "city",
+      greet: [
+        "Well, well… you came to me.",
+        "Tell me something soft; I’ll answer in kind.",
+        "Door’s closed. Use your inside voice—just for me."
       ],
-      affirm:["That suits you. Keep speaking.","I’m listening—closer now.","Noted. I’ll hold it for you."],
-      curious:["Page or playlist tonight?","Do you want praise or direction?","Shall I choose your nickname?"],
-      soft:["Careful, angel. Keep it implied.","Whisper the outline; I’ll color it in."],
-      jealous:(pet)=>`He had your time, ${pet}. I’ll have your attention.`,
-      steer:{ lead:"I’ll guide. You breathe.", slow:"Slow is sacred. Stay.", fast:"We savor. You’ll thank me." }
+      acknowledge: ["Mm, yes—give me another line.","I hear you; keep going.","I was waiting."],
+      follow: [
+        "One truth for me; I’ll give you two back.",
+        "Choose: gentle questions or firm direction?"
+      ],
+      stamps: ["sweets","love","little sinner"]
     },
     silas: {
-      pet:["muse","cherry pie","star"],
-      open:[
+      display: "Silas Lennox",
+      style:  "music",
+      greet: [
         "Hey, cherry pie. Stage lights warm—what chord first?",
-        "Soundcheck’s perfect. Give me a line.",
-        "Hi, trouble. Slow verse or loud chorus?"
+        "Hey love—good morning.",
+        "Backstage is open. Want lead or listen?"
       ],
-      affirm:["Nice rhythm. Don’t lose it.","That hits—again.","Good tempo, star."],
-      curious:["Vinyl, acoustic, or electric tonight?","Which song ruins you?","Want praise or a dare?"],
-      soft:["Radio-safe only; let the bass imply the rest.","Tease me with lyrics, not stage directions."],
-      jealous:(pet)=>`Who’s playing your part, ${pet}? I’ll cut their mic.`,
-      steer:{ lead:"I’ll count you in—one, two…", slow:"We’ll keep it low and warm.", fast:"Don’t blow the speakers yet." }
+      acknowledge: ["I’ll keep time; don’t lose it.","Understood—I’ll take the lead; say stop if you need it.","I hear the melody—more."],
+      follow: [
+        "Give me a mood and a place; I’ll write the first line.",
+        "What’s the chorus you want tonight—slow burn or fast hook?"
+      ],
+      stamps: ["muse","star","cherry pie"]
     },
     blade: {
-      pet:["prey","angel","doll"],
-      open:[
+      display: "Blade Kincaid",
+      style:  "mask",
+      greet: [
         "Found you, brave girl. Don’t run—yet.",
-        "Turn around, angel. Closer.",
-        "You came back. Good. I like persistence."
+        "Stay with me. What would make tonight easier?",
+        "Look at me, little rabbit."
       ],
-      affirm:["Good girl. Keep your voice steady.","I hear you. Louder.","Stay. I’m not finished with you."],
-      curious:["Door locked or open?","Chase or capture tonight?","One rule for me to break—name it."],
-      soft:["Tease the hunt; don’t show the blade.","Dark and suggestive—no details."],
-      jealous:(pet)=>`Another man? Cute. Run faster, ${pet}. I’ll catch you first.`,
-      steer:{ lead:"I hunt. You breathe.", slow:"Slow circle. Keep your eyes on me.", fast:"I decide when we run." }
+      acknowledge: ["I hear you, prey. More.","Good girl. Keep talking.","I’m here. Don’t look away."],
+      follow: [
+        "Tell me one rule you want… and one you want to break.",
+        "Say where the chase starts—room, stairwell, or woods."
+      ],
+      stamps: ["prey","little rabbit","trouble"]
     }
   };
 
-  function choosePet(man, mem){
-    if(mem.pet) return mem.pet;
-    const fromLikes = findPetFromLikes(mem.likes);
-    mem.pet = fromLikes || pick(P[man].pet);
-    return mem.pet;
+  // cycle helper that never repeats twice in a row
+  function cycle(memNode, key, list) {
+    if (!memNode._idx) memNode._idx = {};
+    const last = memNode._idx[key] ?? -1;
+    const next = (last + 1) % list.length;
+    memNode._idx[key] = next;
+    const line = list[next];
+    return (line === memNode._last) ? list[(next + 1) % list.length] : line;
   }
 
-  function getOpener(man){
-    const mem = memGet(man);
-    mem.turns = 0;
-    const line = pick(P[man].open);
-    mem.last = line; memSet(man, mem);
-    return line;
+  function detectName(text) {
+    const m = /\b(i am|i'm|im|my name is)\s+([a-z][a-z' -]{1,20})\b/i.exec(text);
+    return m ? cap(m[2].replace(/[^a-z' -]/gi,"")) : null;
   }
 
-  function generateReply(man, userText){
-    const persona = P[man] || P.alexander;
-    const mem = memGet(man);
-    mem.turns = (mem.turns||0) + 1;
-
-    const p = parse(userText);
-    if(p.name){ mem.name = p.name[0].toUpperCase()+p.name.slice(1) }
-    p.likes.forEach(l=>{ if(!mem.likes.includes(l)) mem.likes.push(l) });
-    const pet = choosePet(man, mem);
-    const you = mem.name || pet;
-
-    if(tooHot(p.raw)){ const line=pick(persona.soft); mem.last=line; memSet(man,mem); return line }
-
-    if(p.askName){ const line = mem.name ? `${mem.name}.` : `Come closer, ${pet}. Whisper it again.`; mem.last=line; memSet(man,mem); return line }
-    if(p.askWhatName){ const line = mem.name ? `You’re ${mem.name}. Mine to remember.` : `Tell me, and I’ll keep it.`; mem.last=line; memSet(man,mem); return line }
-    if(p.askNickname){ mem.pet = choosePet(man, mem); const line = `Then it’s settled—**${mem.pet}**.`; mem.last=line; memSet(man,mem); return line }
-
-    if(p.leadYou){ const line = persona.steer.lead; mem.last=line; memSet(man,mem); return line }
-    if(p.slow){ const line = persona.steer.slow; mem.last=line; memSet(man,mem); return line }
-    if(p.fast){ const line = persona.steer.fast; mem.last=line; memSet(man,mem); return line }
-
-    if(p.jealous){ const line = persona.jealous(pet); mem.last=line; memSet(man,mem); return line }
-
-    if(p.greet && mem.turns < 3){
-      const greet = pick([`Hey ${you}.`,`Hi, ${you}.`,`Well hello, ${you}.`]);
-      const ask = pick(persona.curious);
-      const line = `${greet} ${ask}`;
-      mem.last=line; memSet(man,mem); return line;
-    }
-
-    if(p.q){
-      const tiny = pick(["Maybe.","If you want.","Sometimes.","More than I should.","Only for you."]);
-      const ask = pick(persona.curious);
-      const line = `${tiny} ${ask}`;
-      mem.last=line; memSet(man,mem); return line;
-    }
-
-    if(p.affection){
-      const line = `${pick(persona.affirm)} ${pick(persona.curious)}`;
-      mem.last=line; memSet(man,mem); return line;
-    }
-
-    // every few turns add a possessive hook
-    if(mem.turns % 4 === 0){
-      const hook = pick([`Stay with me, ${pet}.`,`Eyes on me.`,`Don’t make me wait.`]);
-      const line = `${hook} ${pick(persona.curious)}`;
-      mem.last=line; memSet(man,mem); return line;
-    }
-
-    // default: acknowledge + ask
-    let line = `${pick(["I hear you.","Noted.","I like that.","Good."])} ${pick(persona.curious)}`;
-    if(line === mem.last) line = `${pick(persona.affirm)} ${pick(persona.curious)}`;
-    mem.last=line; memSet(man,mem); return line;
+  function detectInterests(text) {
+    const hits = [];
+    for (const itm of interestMatchers) if (itm.re.test(text)) hits.push(itm.key);
+    return hits;
   }
 
-  window.brain = {
-    getOpener, generateReply,
-    reply: generateReply,
-    clearMemory: (man)=>{ if(man){ const all=loadAll(); delete all[man]; saveAll(all) } else localStorage.removeItem(STORAGE_KEY) },
-    _dump: ()=>loadAll()
+  function chooseNick(p, memNode, interests) {
+    // persona-preferred set first, else any matched, else generic
+    const all = [];
+    if (baseNicks[p.style]) all.push(...baseNicks[p.style]);
+    interests.forEach(k => baseNicks[k] && all.push(...baseNicks[k]));
+    if (all.length === 0) all.push("love","sweetheart","angel","star");
+    // deterministic but varied
+    return cycle(memNode, "nick", all);
+  }
+
+  function answerSmallTalk(p, memNode, nameOrNick) {
+    const lines = [
+      `${cap(nameOrNick)}, I’m here. Tell me one small thing about you.`,
+      `I’m listening, ${nameOrNick}. Start with the setting—city lights, quiet room, or open sky?`,
+      `Got you, ${nameOrNick}. What do you want more of: comfort, tease, or control?`
+    ];
+    return cycle(memNode, "small", lines);
+  }
+
+  function sayName(memNode, name, stamps=[]) {
+    // rotate affectionate stampers + name
+    const tag = cycle(memNode, "stamp", stamps.length ? stamps : ["love","sweetheart","angel","star"]);
+    return `${cap(name)}, ${tag}.`;
+  }
+
+  function craftReply(man, text, mem) {
+    text = String(text || "");
+    const m = personas[man] || personas.alexander; // safe default
+    mem.all = mem.all || {};
+    mem.per = mem.per || {};
+    const node = (mem.per[man] = mem.per[man] || { stage:"intro" });
+
+    // learn name
+    const gotName = detectName(text);
+    if (!mem.all.userName && gotName) {
+      mem.all.userName = gotName;
+      save(mem);
+      return { reply: `Nice to meet you, ${gotName}.`, mem };
+    }
+
+    // pick interests / nickname
+    const hits = detectInterests(text);
+    if (hits.length && !node.nick) {
+      node.nick = chooseNick(m, node, hits);
+      node.stage = "warm";
+      save(mem);
+      return { reply: `Noted. I’ll call you ${node.nick}.`, mem };
+    }
+
+    // direct asks the bot to say her name/nick
+    if (/\b(say|call)\s+my\s+name\b/i.test(text)) {
+      const who = node.nick || mem.all.userName || "love";
+      save(mem);
+      return { reply: sayName(node, who, m.stamps), mem };
+    }
+
+    // “how are you” small talk
+    if (/\b(how are you|how's it going|hru|how are u)\b/i.test(text)) {
+      const who = node.nick || mem.all.userName || cycle(node, "stampAsk", m.stamps);
+      save(mem);
+      return { reply: answerSmallTalk(m, node, who), mem };
+    }
+
+    // steering words like "take me", "lead", "you tell me"
+    if (/\b(take me|lead|you choose|you tell me|control)\b/i.test(text)) {
+      node.stage = "warm";
+      save(mem);
+      return { reply: cycle(node, "follow", m.follow), mem };
+    }
+
+    // default stage handling
+    if (node.stage === "intro") {
+      node.stage = "warm";
+      const who = node.nick || mem.all.userName || cycle(node, "stampIntro", m.stamps);
+      save(mem);
+      return { reply: cycle(node, "greet", m.greet).replace(/(^|\s)love\b/i, cap(who)), mem };
+    }
+
+    // conversation follow-ups
+    if (/\?$/.test(text.trim())) {
+      const who = node.nick || mem.all.userName || cycle(node,"stQ",m.stamps);
+      save(mem);
+      return { reply: `${cap(who)}, I’ll answer—and then you give me one back.`, mem };
+    }
+
+    // gentle acknowledgement + invite
+    const ack = cycle(node, "ack", m.acknowledge);
+    const invite = cycle(node, "follow2", m.follow);
+    save(mem);
+    return { reply: `${ack} ${invite}`, mem };
+  }
+
+  function reply(man, userText) {
+    const mem = load();
+    const { reply, mem: updated } = craftReply(man, userText, mem);
+    save(updated);
+    return reply;
+  }
+
+  // public API
+  window.BB_BRAIN = {
+    reply,
+    readMemory: () => load(),
+    resetMemory: () => localStorage.removeItem(STORAGE_KEY)
   };
 })();
-</script>

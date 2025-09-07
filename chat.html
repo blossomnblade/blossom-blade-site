@@ -4,91 +4,50 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Chat · Blossom & Blade</title>
-<link rel="preload" as="script" href="api/brain.js">
+<meta http-equiv="Cache-Control" content="no-store"/>
 <style>
   :root{
     --ink:#eef3ff; --ink-d:#c7d0e4;
-    --panel: rgba(12,14,20,.42);      /* glass panel (more translucent) */
-    --bubble: rgba(16,18,26,.70);     /* bot bubble */
-    --bubble-me: rgba(60,22,60,.68);  /* user bubble */
+    --panel: rgba(12,14,20,.42);
+    --bubble: rgba(16,18,26,.70);
+    --bubble-me: rgba(60,22,60,.68);
     --ring: rgba(190,220,255,.20);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0; color:var(--ink);
     font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;
-    background:#0a0d12 center / cover no-repeat fixed;   /* image set by JS below */
+    background:#0a0d12 center / cover no-repeat fixed;
   }
-  /* very soft vignette so rooms are visible but readable */
-  body::before{
-    content:""; position:fixed; inset:0; pointer-events:none;
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;
     background:
       radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.04), transparent 60%),
-      radial-gradient(1200px 720px at 50% 110%, rgba(0,0,0,.38), rgba(0,0,0,.68) 70%);
-  }
-
-  header{display:flex;align-items:center;gap:12px;padding:14px 18px;font-weight:700}
-  .crumb{opacity:.85}
-  .name{font-weight:800}
-  .bar{height:6px;margin:0 18px;border-radius:6px;
-       background:linear-gradient(90deg,#e8619c,#b66ad5 40%,#7ed0ff)}
-
-  .standards{position:sticky;top:0;text-align:right;padding:6px 18px 0;
-             color:var(--ink-d);font-size:12px}
-
+      radial-gradient(1200px 720px at 50% 110%, rgba(0,0,0,.38), rgba(0,0,0,.68) 70%);}
+  header{display:flex;gap:12px;align-items:center;padding:14px 18px;font-weight:700}
+  .bar{height:6px;margin:0 18px;border-radius:6px;background:linear-gradient(90deg,#e8619c,#b66ad5 40%,#7ed0ff)}
+  .standards{position:sticky;top:0;text-align:right;padding:6px 18px 0;color:var(--ink-d);font-size:12px}
   .wrap{max-width:1100px;margin:10px auto 44px;padding:0 18px}
-  /* panel is a column so composer never overlaps/eats the log */
-  .panel{
-    display:flex;flex-direction:column;
-    background:var(--panel);
-    border:1px solid var(--ring);
-    border-radius:18px;
-    box-shadow:0 24px 60px rgba(0,0,0,.45);
-    backdrop-filter:blur(4px);
-    padding:18px;
-    min-height:560px;   /* keep big size */
-  }
-  #log{flex:1; overflow-y:auto; padding-right:4px}  /* sturdy scroll area */
-
-  .row{display:flex;margin:14px 0}
-  .row.me{justify-content:flex-end}
-  .bubble{
-    padding:12px 14px; max-width:min(720px,90%);
-    border-radius:16px;background:var(--bubble);
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:0 6px 18px rgba(0,0,0,.28);
-    line-height:1.45;color:#fff;
-    text-shadow:0 1px 0 rgba(0,0,0,.45); /* crisp text on busy bg */
-  }
+  .panel{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--ring);
+    border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:18px;min-height:560px;}
+  #log{flex:1;overflow-y:auto;padding-right:4px}
+  .row{display:flex;margin:14px 0}.row.me{justify-content:flex-end}
+  .bubble{padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:rgba(16,18,26,.70);
+    border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.28);line-height:1.45;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
   .row.me .bubble{background:var(--bubble-me);border-color:rgba(255,180,250,.18)}
   .bubble strong{font-weight:800}
-
-  .composer{
-    display:flex;gap:10px;margin-top:12px;
-    background:rgba(8,10,14,.50);
-    border:1px solid var(--ring);border-radius:14px;
-    padding:10px 10px 10px 14px; backdrop-filter:blur(3px);
-  }
+  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.50);border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
   #input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font:inherit;font-size:16px}
   #input::placeholder{color:rgba(230,235,255,.72)}
-  .send{
-    background:#2a2f3f;color:#fff;border:0;border-radius:12px;padding:10px 16px;
-    font-weight:800;cursor:pointer;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.35)
-  }
+  .send{background:#2a2f3f;color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.35)}
   .send:hover{filter:brightness(1.08)}
   .note{color:var(--ink-d);font-size:12px;text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
-  <header>
-    <div class="crumb">Blossom & Blade</div><div>·</div>
-    <div class="name" id="gName">…</div>
-  </header>
+  <header><div>Blossom & Blade · <strong id="gName">…</strong></div></header>
   <div class="bar"></div>
   <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
-
   <div class="wrap">
     <div class="panel">
       <div id="log"></div>
@@ -100,48 +59,38 @@
     <div class="note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </div>
 
-<script src="api/brain.js"></script>
-<script>
-  /* ----- helpers ----- */
+  <!-- real brain (static), cache-busted -->
+  <script defer src="scripts/brain.js?v=2"></script>
+
+  <script>
+  /* minimal fallback only if brain.js fails entirely */
+  if(!window.BnB){ window.BnB = { guys: { blade: {id:'blade',name:'Blade Kincaid',bg:'images/blade-woods.jpg',greetings:['Found you, brave girl. Don’t run—yet.'], nicknames:{default:'love'}} },
+                                  reply:()=>`Tell me more, love.` }; }
+
   const $ = s=>document.querySelector(s);
   const log = $('#log'), input=$('#input'), form=$('#composer'), nameEl=$('#gName');
-  function row(html,mine=false){
-    const r=document.createElement('div'); r.className='row'+(mine?' me':'');
-    r.innerHTML=`<div class="bubble">${html}</div>`; log.appendChild(r);
-    r.scrollIntoView({behavior:'smooth',block:'end'});
-  }
   const escapeHtml=s=>s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const getParam=(k,d='')=>{const u=new URL(location.href);return u.searchParams.get(k)||d;};
+  function row(html,mine=false){ const r=document.createElement('div'); r.className='row'+(mine?' me':''); r.innerHTML=`<div class="bubble">${html}</div>`; log.appendChild(r); r.scrollIntoView({behavior:'smooth',block:'end'}); }
 
-  /* ----- load guy + ensure room background shows even if CSS vars fail ----- */
   (function boot(){
-    // fallback mini-brain if api/brain.js didn’t load for any reason
-    if(!window.BnB){
-      window.BnB = {
-        guys:{
-          blade:{id:'blade',name:'Blade Kincaid',bg:'images/blade-woods.jpg',greetings:['Found you, brave girl. Don’t run—yet.'],
-                 nicknames:{default:'prey'},jealous:(n)=>`Is he hunting you, ${n||'prey'}? I hunt better.`}
-        },
-        reply:(g,t,n)=>`Mm. I hear you, ${n||'love'}. Tell me more.`
-      };
-    }
     const id = getParam('man', localStorage.getItem('bb.character')||'blade');
-    const guy = (BnB.guys&&BnB.guys[id]) || BnB.guys.blade;
-    window.__GUY = guy;           // expose for any debugging
+    const guy = (BnB.guys && BnB.guys[id]) || Object.values(BnB.guys)[0];
+    window.__GUY=guy;
     nameEl.textContent = guy.name;
-    // set both the full background property and image (so it shows on all browsers)
+
+    // make sure room background shows
     document.body.style.backgroundImage   = `url('${guy.bg}')`;
     document.body.style.backgroundRepeat  = 'no-repeat';
     document.body.style.backgroundSize    = 'cover';
     document.body.style.backgroundPosition= 'center';
     document.body.style.backgroundAttachment = 'fixed';
 
-    // simple per-guy memory
-    const memKey=`bb.mem.${id}`;
+    // simple per-guy memory for greeting rotation + nickname
+    const memKey=`bb.mem.${guy.id}`;
     let mem={}; try{mem=JSON.parse(localStorage.getItem(memKey)||'{}')}catch(e){}
     const save=()=>{try{localStorage.setItem(memKey,JSON.stringify(mem))}catch(e){}};
 
-    // rotate greetings
     const gi=(mem.greetIndex||0)% (guy.greetings?.length||1);
     row(`<strong>${guy.name}:</strong> ${escapeHtml((guy.greetings||['Hi.'])[gi])}`);
     mem.greetIndex=gi+1; save();
@@ -155,7 +104,6 @@
       if(/cowboy|ranch|rodeo|boots/.test(t)) add('rodeo');
       if(/forest|woods|hike|camp/.test(t)) add('woods');
       if(/city|skyline|boardroom|penthouse/.test(t)) add('city');
-      if(/cat|kitten/.test(t)) add('cat'); if(/dog|puppy/.test(t)) add('dog');
       if(!mem.nickname){
         const top=Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
         if(top){ const [k]=top; mem.nickname=(guy.nicknames&&guy.nicknames[k])||(guy.nicknames&&guy.nicknames.default)||'darling'; }
@@ -177,9 +125,9 @@
       const spice=jealousProbe(val);
       const out=(BnB.reply?BnB.reply(guy,val,mem.nickname):(`Tell me more, ${(mem.nickname||'love')}.`));
       const msg=spice?`${out} ${spice}`:out;
-      setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(msg)}`), 320);
+      setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(msg)}`), 300);
     });
   })();
-</script>
+  </script>
 </body>
 </html>

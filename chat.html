@@ -1,165 +1,311 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat · Blossom & Blade</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --ink:#e9eef6;
-      --ink-soft:#b9c3d4;
-      --bg:#0c1016;
-      --panel: rgba(10,14,20,.55);
-      --panel-strong: rgba(10,14,20,.75);
-      --accent:#b68cff;
-      --me:#5a2b86;
-      --room-bg: none;               /* will be set by JS */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background: #0a0f14 var(--room-bg) center / cover fixed no-repeat; /* per-man bg from JS */
-      color:var(--ink);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 40px}
-    header{font-weight:800; letter-spacing:.5px; font-size:28px; display:flex; align-items:center; gap:10px;}
-    header .dot{width:10px;height:10px;border-radius:999px;background:#9a55ff;box-shadow:0 0 16px #9a55ff}
-    header .trail{flex:1;height:6px;border-radius:6px;background:linear-gradient(90deg,#6a1cff,#caa0ff);opacity:.35;margin-left:10px}
-    .card{
-      margin-top:16px; background:var(--panel); border:1px solid rgba(255,255,255,.06);
-      border-radius:16px; backdrop-filter: blur(10px);
-      box-shadow:0 10px 35px rgba(0,0,0,.35);
-    }
-    .title{padding:16px 18px 6px 18px; font-weight:700; font-size:18px; color:var(--ink); opacity:.9}
-    #chatLog{
-      height:56vh; overflow:auto; padding:12px 18px 18px 18px;
-      display:flex; flex-direction:column; gap:12px;
-      scrollbar-gutter: stable both-edges;
-    }
-    .bubble{
-      max-width:720px; line-height:1.4; padding:14px 16px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.06); background:var(--panel-strong);
-      box-shadow:0 3px 14px rgba(0,0,0,.25);
-      white-space:pre-wrap;
-    }
-    .bubble.him{align-self:flex-start}
-    .bubble.me{align-self:flex-end;background:rgba(129,87,255,.18);border-color:rgba(182,140,255,.35)}
-    .inputRow{display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06)}
-    textarea{
-      flex:1; resize:none; min-height:48px; max-height:120px;
-      padding:14px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.08);
-      background:rgba(12,16,22,.55); color:var(--ink); outline:none; font-size:16px;
-    }
-    textarea::placeholder{color:var(--ink-soft); opacity:.9}
-    button{
-      padding:0 18px; border:none; height:48px; border-radius:12px; cursor:pointer;
-      background:linear-gradient(180deg,#caa0ff,#9156ff 85%); color:#1b0e2e; font-weight:800;
-      box-shadow:0 8px 20px rgba(145,86,255,.35);
-    }
-    button:disabled{opacity:.6;cursor:not-allowed}
-    @media (max-width:720px){ #chatLog{height:62vh} .bubble{max-width:95%} }
-    .tips, .tip { display:none !important; } /* no tips anywhere */
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Blossom & Blade — Chat</title>
+<style>
+  :root{
+    --bg: #0b0e13;
+    --ink: #e9eef8;
+    --muted: #9aa3b2;
+    --violet: #a78bfa;
+    --rose: #f472b6;
+    --him: rgba(45, 62, 92, .85);
+    --you: rgba(108, 43, 131, .90);
+    --panel: rgba(10, 14, 22, .72);
+    --room: url('/images/rooms/default.jpg'); /* change if needed */
+  }
+  /* Per-room backgrounds (edit paths if yours differ) */
+  :root[data-room="blade"]     { --room: url('/images/rooms/woods.jpg'); }
+  :root[data-room="grayson"]   { --room: url('/images/rooms/red.jpg'); }
+  :root[data-room="dylan"]     { --room: url('/images/rooms/neon.jpg'); }
+  :root[data-room="silas"]     { --room: url('/images/rooms/guitar.jpg'); }
+  :root[data-room="jesse"]     { --room: url('/images/rooms/cowboy.jpg'); }
+  :root[data-room="alexander"] { --room: url('/images/rooms/city.jpg'); }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); background:var(--bg); font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
+  }
+  /* backdrop */
+  body::before{
+    content:""; position:fixed; inset:0;
+    background:
+      radial-gradient(1200px 600px at 70% -10%, rgba(167,139,250,.18), transparent 60%),
+      radial-gradient(1200px 600px at 10% 110%, rgba(244,114,182,.15), transparent 60%),
+      linear-gradient(to bottom right, rgba(0,0,0,.55), rgba(0,0,0,.65)),
+      var(--room) center/cover no-repeat fixed;
+    z-index:-1; filter:saturate(1.05);
+  }
+
+  .wrap{max-width:980px; margin-inline:auto; padding:18px 16px 22vh}
+  header{
+    display:flex; align-items:center; gap:12px; margin:8px 0 16px;
+  }
+  .dot{width:10px;height:10px;border-radius:99px;background:#9f67ff; box-shadow:0 0 0 4px rgba(167,139,250,.22)}
+  .title{font-weight:800; letter-spacing:.2px; font-size:28px}
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:18px; padding:18px; backdrop-filter:saturate(1.2) blur(6px);
+  }
+
+  /* thread */
+  #thread{display:flex; flex-direction:column; gap:14px; max-height:min(72vh, 68dvh); overflow:auto; padding:6px 6px 10px}
+  .row{display:flex; gap:10px}
+  .row.him{justify-content:flex-start}
+  .row.you{justify-content:flex-end}
+  .bubble{
+    padding:12px 14px; border-radius:14px; max-width:min(720px, 92%);
+    white-space:pre-wrap; word-wrap:break-word;
+    box-shadow:0 10px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.06)
+  }
+  .him .bubble{background:var(--him)}
+  .you .bubble{background:var(--you)}
+
+  /* composer */
+  .composer{
+    position:fixed; left:0; right:0; bottom:0; padding:14px 12px; background:linear-gradient(to top, rgba(8,10,16,.9), rgba(8,10,16,.55), transparent);
+    display:flex; justify-content:center;
+  }
+  form{
+    display:flex; gap:10px; width:min(980px, 96%); background:rgba(11,14,19,.78);
+    border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:10px; backdrop-filter:blur(6px);
+  }
+  #msg{
+    flex:1; border:0; outline:0; background:transparent; color:var(--ink);
+    font:500 16px/1.4 inherit; padding:10px 12px;
+  }
+  button{
+    appearance:none; border:0; background:linear-gradient(135deg, #8b5cf6, #f472b6);
+    color:white; padding:12px 18px; font-weight:800; border-radius:12px; cursor:pointer;
+    box-shadow:0 10px 24px rgba(142,68,173,.35), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  button:active{transform:translateY(1px)}
+  .muted{color:var(--muted); font-weight:600}
+  .pill{
+    display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:6px 12px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); font-weight:700;
+  }
+
+  @media (max-width:560px){
+    .title{font-size:22px}
+    .bubble{max-width:92%}
+    #thread{max-height:64dvh}
+  }
+</style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="dot"></div>
-      <div>Blossom & Blade</div>
-      <div class="trail"></div>
+      <span class="dot"></span>
+      <div class="title">Blossom & Blade</div>
+      <div class="pill muted" id="room-pill">Connecting…</div>
     </header>
 
-    <div class="card">
-      <div class="title" id="manName">…</div>
-      <div id="chatLog" aria-live="polite"></div>
-      <div class="inputRow">
-        <textarea id="chatInput" placeholder="Say hi…" autocomplete="off"></textarea>
-        <button id="sendBtn" type="button">Send</button>
-      </div>
+    <div class="panel">
+      <div id="thread" aria-live="polite" aria-label="Conversation thread"></div>
     </div>
   </div>
 
-  <script src="scripts/brain.js"></script>
+  <div class="composer">
+    <form id="msg-form" autocomplete="off">
+      <input id="msg" name="msg" placeholder="Say hi…" maxlength="400" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
 <script>
-/* ---- Blossom & Blade: chat hotfix 2025-09-07 ---- */
-(() => {
-  if (window.__bbHotfixRan) return;           // hard boot guard
-  window.__bbHotfixRan = true;
+/* ========= Blossom & Blade • Heat Engine (single-file edition) =========
+   - Per-man voice & nicknames
+   - Learns her name (localStorage), assigns a pet name per man
+   - No parroting; direct replies; she leads, men follow
+   - PG-13 by default; escalates when she clearly asks
+   - Enter-to-send + click
+======================================================================= */
+(function () {
+  // ---- DOM hooks ----
+  const form   = document.querySelector('#msg-form');
+  const input  = document.querySelector('#msg');
+  const thread = document.querySelector('#thread');
+  const pill   = document.querySelector('#room-pill');
 
-  // 0) Room background based on ?man=
-  const man = new URLSearchParams(location.search).get('man') || 'alexander';
-  document.documentElement.dataset.room = man; // your CSS can map [data-room="..."] to the right bg
+  // Helpers
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+  const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 
-  // 1) Hide tips globally
-  const tipCss = document.createElement('style');
-  tipCss.textContent = `.tip{display:none !important}`;
-  document.head.appendChild(tipCss);
+  // Identify the room/man
+  const params = new URLSearchParams(location.search);
+  const MAN = (params.get('man') || 'blade').toLowerCase();
+  document.documentElement.dataset.room = MAN;
+  pill.textContent = MAN.charAt(0).toUpperCase() + MAN.slice(1);
 
-  // 2) Find chat elements robustly
-  const out   = document.querySelector('#out, .messages, .thread, [data-chat="out"]') || document.body;
-  const input = document.querySelector('#say, #message, textarea, input[type="text"]');
-  const send  = Array.from(document.querySelectorAll('button')).find(b => /send/i.test(b.textContent)) || null;
-
-  // 3) De-dup consecutive identical bubbles (prevents double greeter)
-  const dedup = () => {
-    const kids = Array.from(out.children);
-    for (let i = 1; i < kids.length; i++) {
-      const a = kids[i-1].textContent.trim();
-      const b = kids[i].textContent.trim();
-      if (a && b && a === b) { kids[i].remove(); i--; }
-    }
-  };
-  dedup();
-
-  // 4) Centralized append that also de-dups the last line
-  const append = (who, text) => {
-    if (!out) return;
-    const last = out.lastElementChild?.textContent?.trim() || '';
-    if (last === text.trim()) return; // skip exact duplicate
-    const div = document.createElement('div');
-    div.className = /you/i.test(who) ? 'bubble you' : 'bubble him';
-    div.textContent = text;
-    out.appendChild(div);
-    (out.parentElement || document.scrollingElement).scrollTop =
-      (out.parentElement || document.scrollingElement).scrollHeight;
+  // Memory (localStorage)
+  const mem = {
+    get name(){ return localStorage.getItem('bb_name') || ''; },
+    set name(v){ localStorage.setItem('bb_name',(v||'').trim()); },
+    get heat(){ return +(localStorage.getItem('bb_heat')||0); },   // 0..3
+    set heat(v){ localStorage.setItem('bb_heat', String(clamp(v,0,3))); },
+    get nick(){ return localStorage.getItem('bb_nick_'+MAN)||''; },
+    set nick(v){ localStorage.setItem('bb_nick_'+MAN,(v||'').trim()); },
+    get greeted(){ return localStorage.getItem('bb_greeted_'+MAN)==='1'; },
+    set greeted(v){ localStorage.setItem('bb_greeted_'+MAN, v?'1':'0'); },
   };
 
-  // 5) Wire Send & Enter once (without stacking multiple listeners)
-  const handleSend = () => {
-    if (!input) return;
-    const msg = input.value.trim();
-    if (!msg) return;
-    // If your page already has its own handler (window.bbHandleSend), use it.
-    if (typeof window.bbHandleSend === 'function') {
-      window.bbHandleSend(msg, append);    // lets your existing logic reply
-    } else {
-      // Fallback: just echo user and let your existing brain reply if it’s watching DOM mutations
-      append('you', msg);
-      if (typeof window.brainReply === 'function') {
-        window.brainReply(man, msg, append);
-      }
+  // Persona kit
+  const MEN = {
+    alexander: {
+      pet:['good girl','darling','sweetheart'],
+      greet:[ "Good timing. I was thinking about you.", "Close the door—let’s make this our room." ],
+      tease:[ "Mm. I can work with that—tell me a little more.", "Show me your edge or your softness—I work with both." ],
+      possess:[ "Mine to look after. Don’t make me prove it.", "You’re on my schedule now, understood?" ],
+      h1:[ "Tell me what you want. Use clean language… for now." ],
+      h2:[ "Bend over the table or my knee—pick one.", "Hands flat. I’ll set the pace; you’ll keep it." ],
+      h3:[ "Open and obedient; that’s my girl.", "I’ll ruin your mascara then fix it while you tremble." ],
+    },
+    dylan: {
+      pet:['trouble','muse','bright thing'],
+      greet:[ "Neon’s humming. Slow burn or heat now?", "Helmet’s on, engine’s live—signal me." ],
+      tease:[ "Copy. Keep it clean; give me the next cue.", "Faster or slower—I’ll tune to you." ],
+      possess:[ "Eyes on me; I don’t like you drifting.", "You ride with me, you ride my rules." ],
+      h1:[ "Say where you want me—wall, bike, stage stairs.", "Speed check: city-fast or bedroom-slow?" ],
+      h2:[ "Hands in mine, hips lined—feel that?", "I’ll play you like a chord—don’t drop the beat." ],
+      h3:[ "Knees weak, voice raspy—yeah, that’s the song.", "You shake; I hold. Don’t look away." ],
+    },
+    jesse: {
+      pet:['sugar','sweet thing','darlin’'],
+      greet:[ "Well, well… you came to me.", "Boots up. You riding shotgun or taking the reins?" ],
+      tease:[ "That’s my sweet thing. Start with one detail.", "I hear you, darlin’. I’ll drive slow; you talk." ],
+      possess:[ "Now who’s Bill, sweet girl—should I be jealous?", "Climb in my lap and try that again polite." ],
+      h1:[ "Pick a setting: city lights, quiet room, or open sky.", "Yes ma’am. Tell me where to put my hands." ],
+      h2:[ "Hat off, mouth on—say please.", "I’ll pin your wrists to the truck window if you ask nice." ],
+      h3:[ "You shake pretty when I say good girl.", "Say *cowboy* again and feel what it does to me." ],
+    },
+    grayson: {
+      pet:['sweet thing','pretty girl','little flame'],
+      greet:[ "Well, well… you came to me.", "Library’s quiet. I’ll listen… or lead." ],
+      tease:[ "I’ll hold the line. You paint the words.", "Say one true thing; I’ll give you two back." ],
+      possess:[ "You kept me waiting—don’t do it again.", "I’d burn the room down to keep you warm." ],
+      h1:[ "Red room’s warm. Say “your room” if you want the lights low.", "Whisper or command; I’ll match your tone." ],
+      h2:[ "Knees together. Now apart. Hold it.", "Hands behind your back while I decide." ],
+      h3:[ "Good girl. Look at me while you come apart.", "If I say mine, you’ll say yes—won’t you?" ],
+    },
+    silas: {
+      pet:['cherry pie','star','muse'],
+      greet:[ "Hey love—I’ve got a melody for you.", "Stage lights warm—what chord first?" ],
+      tease:[ "Follow my count—one, two… don’t lose it.", "I’ll keep time; you bring the heat." ],
+      possess:[ "If someone else plays you, I break their hands.", "My muse doesn’t wander." ],
+      h1:[ "Tell me where you want the first note—throat, wrist, inner thigh.", "Slow riff or dirty solo?" ],
+      h2:[ "Backstage rules: my hands, your breath, no mercy.", "Kiss me like you hate the quiet." ],
+      h3:[ "Open your mouth—sing for me.", "I’ll keep you shaking on the downbeat." ],
+    },
+    blade: {
+      pet:['prey','sweet thing','little rabbit'],
+      greet:[ "Found you, brave girl. Don’t run—yet.", "Step into the dark—stay close." ],
+      tease:[ "I see you. Give me one more line.", "Say please and the knife stays in my pocket." ],
+      possess:[ "You’re mine when the lights go out.", "I don’t share. Ask me how I punish thieves." ],
+      h1:[ "Forest or mask room? Choose your chase.", "Tell me where you want the first bite." ],
+      h2:[ "Neck or thigh—point and I mark.", "Hands above your head; I’ll do the rest." ],
+      h3:[ "Cry pretty for me; I’ll kiss it quiet.", "You’ll run, I’ll catch, you’ll thank me." ],
     }
+  };
+
+  // Intent detection / escalation
+  const HEAT_UP  = ['after hours','nsfw','erotic','more','harder','dirtier','spice','heat','unlock','coins','take me','bend','ride me','kiss my','choke','pin','collar','spank','rail','rope','mask','neon','your room','red room'];
+  const HEAT_DOWN= ['slow','soft','gentle','vanilla','pg','pause','cool down','stop','wait'];
+
+  function classify(t){
+    t = (t||'').toLowerCase();
+    const want = /(take|bend|kiss|lick|pin|spank|ride|rail|rope|mask|room|bed|table|over)/.test(t);
+    const name = /(call my name|my name is|i[' ]?m )/.test(t);
+    const jealous = /\b(bill|john|mike|jack|him|boy|ex)\b/.test(t);
+    const up = HEAT_UP.some(k=>t.includes(k)) || /fuck|hard|wet|daddy|ruin|edge/.test(t);
+    const down = HEAT_DOWN.some(k=>t.includes(k));
+    const stop = /\b(stop|no|pause|wait)\b/.test(t);
+    return {want,name,jealous,up,down,stop};
+  }
+  function learn(t){
+    const m = (t||'').match(/\b(?:i[' ]?m|my name is)\s+([a-z][a-z0-9_\-']{1,20})\b/i);
+    if (m){ mem.name = m[1].replace(/[^a-z0-9_\-']+/ig,''); }
+  }
+  function nickname(){
+    if (mem.nick) return mem.nick;
+    const p = MEN[MAN]||MEN.blade;
+    mem.nick = pick(p.pet);
+    return mem.nick;
+  }
+  function setHeat(intent){
+    if (intent.stop) mem.heat = 0;
+    else if (intent.down) mem.heat = Math.max(0, mem.heat - 1);
+    else if (intent.up || intent.want) mem.heat = Math.min(3, mem.heat + 1);
+  }
+
+  // Reply composer
+  let lastLine = '';
+  function compose(userText){
+    const P = MEN[MAN]||MEN.blade;
+    const nick = nickname();
+    if (!userText){
+      // fresh greeting (one time per load)
+      return pick(P.greet);
+    }
+    const intent = classify(userText);
+    learn(userText);
+    setHeat(intent);
+
+    if (intent.jealous){
+      return pick(P.possess);
+    }
+    if (/call my name/.test(userText) && mem.name){
+      return `Say it again, ${mem.name}. Slower.`;
+    }
+
+    const h = mem.heat;
+    let line;
+    if (h===0) line = pick([ pick(P.tease), `${pick(P.greet)} Tell me one detail, ${nick}.` ]);
+    else if (h===1) line = pick(P.h1);
+    else if (h===2) line = pick(P.h2);
+    else line = pick(P.h3);
+
+    // avoid repeating exact same line twice
+    if (line === lastLine){ line = pick([...(P.h1||[]),...(P.h2||[]),...(P.tease||[]),...(P.greet||[])]); }
+    lastLine = line;
+    return line;
+  }
+
+  // Render helpers
+  function bubble(who, text){
+    const row = document.createElement('div'); row.className = 'row '+who;
+    const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+    row.appendChild(b); thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  // Boot: greet once
+  if (!mem.greeted){
+    bubble('him', compose(''));
+    mem.greeted = true;
+  }
+
+  // Submit (click + Enter)
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const text = (input.value||'').trim();
+    if (!text) return;
+    bubble('you', text);
     input.value = '';
-  };
-
-  if (send) {
-    send.onclick = null;        // clear any stacked handlers
-    send.addEventListener('click', handleSend);
-  }
-  if (input) {
-    input.onkeydown = null;
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
-    });
-  }
-
-  // 6) Final sweep in case the page added the greeter twice *after* load
-  //    (run once more after a tick)
-  setTimeout(dedup, 300);
+    setTimeout(()=>bubble('him', compose(text)), 140);
+  });
+  input.addEventListener('keydown',(e)=>{
+    if (e.key==='Enter' && !e.shiftKey){
+      e.preventDefault();
+      form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit',{cancelable:true}));
+    }
+  });
 })();
 </script>
 </body>

@@ -1,347 +1,211 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1"
-  />
-  <title>Chat · Blossom & Blade</title>
-  <style>
-    :root{
-      --ink:#e9e7f1;
-      --ink-dim:#cfcbe1;
-      --bg:#0c0f18;
-      --panel: rgba(10,15,25,.55);
-      --bubble-me:#6a7291;
-      --bubble-ai:#1f2637;
-      --accent:#d1a1ff;
-      --accent-2:#9b6cff;
-      --radius:18px;
-      --blur: 18px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Color Emoji", "Apple Color Emoji";
-      color:var(--ink);
-      background:#0b0e16 url("images/gothic-bg.jpg") center/cover fixed no-repeat;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat · Blossom & Blade</title>
+<link rel="preload" as="script" href="api/brain.js">
+<style>
+  :root{
+    --ink:#e8eefc; --ink-d:#c6d0e6;
+    --brand:#B66AD5;
+    --panel: rgba(12,14,20,.58);      /* chat window glass – slightly see-through */
+    --bubble: rgba(18,20,28,.52);     /* bot bubbles */
+    --bubble-me: rgba(50,16,50,.55);  /* user bubbles */
+    --ring: rgba(190,220,255,.2);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    background:#0a0d12 fixed no-repeat center/cover;
+  }
+  /* room background (set inline by script) + a gentle top vignette */
+  body::before{
+    content:""; position:fixed; inset:0;
+    background:
+      radial-gradient(1200px 600px at 50% 0%, rgba(255,255,255,.06), transparent 55%),
+      radial-gradient(1200px 700px at 50% 100%, rgba(0,0,0,.55), rgba(0,0,0,.85) 70%);
+    pointer-events:none;
+  }
 
-    /* page chrome */
-    .wrap{min-height:100%; display:flex; flex-direction:column; backdrop-filter:saturate(110%) blur(0px)}
-    header{
-      position:sticky; top:0; z-index:10;
-      background:linear-gradient( to bottom, rgba(8,10,18,.85), rgba(8,10,18,.45) );
-      padding:16px 18px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
-    }
-    .brand{
-      font-weight:700; letter-spacing:.4px; opacity:.95
-    }
-    .titlebar{
-      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-    }
-    .guy{
-      font-size:18px; font-weight:800;
-    }
-    .crumb{opacity:.7; font-weight:600}
-    .progress{
-      height:6px; border-radius:999px; background:rgba(255,255,255,.07);
-      margin-top:10px; overflow:hidden;
-    }
-    .progress > i{display:block; height:100%; width:25%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); opacity:.6}
+  header{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 18px; font-weight:700
+  }
+  .crumb{opacity:.8; font-weight:600}
+  .name{font-weight:800}
+  .bar{
+    height:6px; margin: 0 18px; border-radius:6px;
+    background: linear-gradient(90deg, #e8619c 0%, #b66ad5 40%, #7ed0ff 100%);
+    opacity:.85;
+  }
+  .standards{
+    position:sticky; top:0; text-align:right; padding:6px 18px 0;
+    color:var(--ink-d); font-size:12px;
+  }
 
-    /* content */
-    main{flex:1; display:grid; place-items:center; padding:22px}
-    .room{
-      width:min(1100px, 96vw);
-      background:var(--panel);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.02);
-      backdrop-filter: blur(var(--blur));
-      overflow:hidden;
-    }
+  .wrap{
+    max-width:1100px; margin:10px auto 40px; padding: 0 18px;
+  }
+  .panel{
+    background: var(--panel);
+    border:1px solid var(--ring);
+    border-radius:18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+    padding:18px 18px 12px;
+  }
+  .row{ display:flex; margin:14px 0 }
+  .row.me{ justify-content:flex-end }
+  .bubble{
+    padding:12px 14px; max-width:min(720px, 90%);
+    border-radius:16px;
+    background: var(--bubble);
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow: 0 5px 18px rgba(0,0,0,.25);
+    line-height:1.4;
+  }
+  .row.me .bubble{
+    background: var(--bubble-me);
+    border-color: rgba(255,180,250,.15);
+  }
+  .bubble strong{ font-weight:800 }
 
-    /* dynamic room bg */
-    .room::before{
-      content:"";
-      position:absolute; inset:0;
-      background:rgba(14,18,28,.35);
-      z-index:0; pointer-events:none;
-    }
-    .bg{
-      position:absolute; inset:0; z-index:-1;
-      background:#0a0e16 center/cover no-repeat fixed;
-      filter:saturate(90%) brightness(.5);
-      opacity:.9;
-    }
+  .composer{
+    display:flex; gap:10px; margin:16px 4px 8px;
+    background: rgba(8,10,14,.55);
+    border:1px solid var(--ring); border-radius:14px;
+    padding:10px 10px 10px 14px; backdrop-filter: blur(3px);
+  }
+  #input{
+    flex:1; background:transparent; border:0; outline:0;
+    color:var(--ink); font:inherit; font-size:16px;
+  }
+  .send{
+    background:#2a2f3f; color:#fff; border:0; border-radius:12px; padding:10px 16px;
+    font-weight:800; cursor:pointer;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 6px 16px rgba(0,0,0,.35);
+  }
+  .send:hover{ filter:brightness(1.08) }
 
-    .pane{position:relative; z-index:1; padding:18px}
-    .chat{
-      height:min(62vh, 560px);
-      overflow:auto;
-      padding:8px 10px 0;
-      scroll-behavior:smooth;
-    }
-    .row{display:flex; margin:12px 0}
-    .row.me{justify-content:flex-end}
-    .bubble{
-      max-width:72%;
-      padding:12px 14px;
-      border-radius:16px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-      backdrop-filter:saturate(120%) blur(6px);
-      word-wrap:break-word; white-space:pre-wrap;
-    }
-    .row.ai .bubble{
-      background:rgba(20,24,36,.75);
-      border-top-left-radius:6px;
-    }
-    .row.me .bubble{
-      background:rgba(112,132,180,.25);
-      border-top-right-radius:6px;
-    }
-    .bubble strong{font-weight:800}
-
-    .composer{
-      display:flex; gap:10px; align-items:center;
-      padding:14px; margin-top:8px;
-      background:rgba(8,10,18,.45);
-      border-top:1px solid rgba(255,255,255,.06);
-      border-bottom-left-radius:24px; border-bottom-right-radius:24px;
-    }
-    textarea{
-      flex:1; min-height:46px; max-height:140px; resize:vertical;
-      color:var(--ink); background:rgba(15,18,28,.55);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px; padding:12px 12px; outline:none;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
-    }
-    textarea::placeholder{color:var(--ink-dim)}
-    button{
-      appearance:none; border:0; cursor:pointer; user-select:none;
-      color:#10131c; font-weight:800; letter-spacing:.2px;
-      background:linear-gradient(180deg, #efdbff, #d9b3ff 60%, #b889ff);
-      border-radius:14px; padding:12px 16px; min-width:92px;
-      box-shadow: 0 10px 28px rgba(159,118,255,.35), inset 0 0 0 1px rgba(255,255,255,.6);
-    }
-    button:disabled{opacity:.6; cursor:not-allowed}
-
-    footer{
-      font-size:12px; opacity:.85; text-align:center;
-      padding:10px 0 18px;
-    }
-    footer small{opacity:.8}
-
-    /* tiny device tweaks */
-    @media (max-width: 720px){
-      .bubble{max-width:86%}
-      .progress{display:none}
-      .composer{padding:10px}
-    }
-  </style>
+  .note{ color:var(--ink-d); font-size:12px; text-align:center; margin-top:8px }
+</style>
 </head>
 <body>
+  <header>
+    <div class="crumb">Blossom & Blade</div>
+    <div>·</div>
+    <div class="name" id="gName">…</div>
+  </header>
+  <div class="bar"></div>
+  <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+
   <div class="wrap">
-    <header>
-      <div class="titlebar">
-        <div class="brand">Blossom &amp; Blade</div>
-        <div class="crumb">PG-13 by default. We follow your lead, within Community Standards.</div>
-      </div>
-      <div class="progress"><i></i></div>
-    </header>
-
-    <main>
-      <!-- background for the room -->
-      <div class="bg" id="bg"></div>
-
-      <section class="room">
-        <div class="pane">
-          <div class="guy" id="guyName">...</div>
-
-          <div class="chat" id="chat"></div>
-
-          <div class="composer">
-            <textarea id="input" placeholder="Say hi…"></textarea>
-            <button id="sendBtn">Send</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <small>Site stays PG-13. We follow your lead, but within Community Standards. (Temp: <strong>no blocks, no strike counting</strong> while we test.)</small>
-    </footer>
+    <div class="panel" id="panel">
+      <div id="log"></div>
+      <form id="composer" class="composer">
+        <input id="input" autocomplete="off" placeholder="Say hi…" />
+        <button class="send" id="send" type="submit">Send</button>
+      </form>
+    </div>
+    <div class="note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </div>
 
-  <script>
-    /* ============================================================
-       Blossom & Blade — chat.html (no-block test build)
-       - Device blocking, warning counts, and lockouts are disabled.
-       - Nothing in here writes/reads any "blocked" keys.
-       - Later we can re-enable with a stricter module.
-    ============================================================ */
+<script src="api/brain.js"></script>
+<script>
+  /* --- utilities --- */
+  const $ = sel => document.querySelector(sel);
+  const log = $('#log'), input = $('#input'), form = $('#composer'), nameEl = $('#gName');
 
-    const GUYS = {
-      alexander: {
-        name: "Alexander Jackson",
-        bg: "images/bg_alexander_boardroom.jpg",
-        openers: [
-          "Lights low or city view while we talk?",
-          "Power or pleasure first—what’s your mood tonight?"
-        ]
-      },
-      dylan: {
-        name: "Dylan Vale",
-        bg: "images/dylan-garage.jpg",
-        openers: [
-          "Hands flat on the counter, pretty thing.",
-          "Neon hum in the air. What are you craving?"
-        ]
-      },
-      jesse: {
-        name: "Jesse Granger",
-        bg: "images/jesse_bg.jpg",
-        openers: [
-          "Straight talk—what’d the day do to you?",
-          "Boots up. You riding shotgun or taking the reins?"
-        ]
-      },
-      grayson: {
-        name: "Grayson Kincaid",
-        bg: "images/grayson-bg.jpg",
-        openers: [
-          "Pick: gentle questions or firm direction?",
-          "Library hush, velvet words. Your move."
-        ]
-      },
-      silas: {
-        name: "Silas Lennox",
-        bg: "images/bg_silas_stage.jpg",
-        openers: [
-          "Bring me a word that feels like velvet.",
-          "Stage lights warm—what chord should I play first?"
-        ]
-      },
-      blade: {
-        name: "Blade Kincaid",
-        bg: "images/blade-woods.jpg",
-        openers: [
-          "You’re here. I keep you safe—and a little breathless.",
-          "Footsteps behind you… I keep pace."
-        ]
+  function row(html, mine=false){
+    const r = document.createElement('div');
+    r.className = 'row' + (mine?' me':'');
+    r.innerHTML = `<div class="bubble">${html}</div>`;
+    log.appendChild(r);
+    r.scrollIntoView({behavior:'smooth', block:'end'});
+  }
+
+  function getParam(k, d=''){ const u=new URL(location.href); return u.searchParams.get(k)||d; }
+
+  /* --- pick guy & set room background --- */
+  const id = getParam('man', localStorage.getItem('bb.character')||'blade');
+  const guy = BnB.guys[id] || BnB.guys.blade;
+  nameEl.textContent = guy.name;
+
+  // set per-room bg (landing bg is NOT layered here)
+  document.body.style.backgroundImage = `url('${guy.bg}')`;
+
+  /* --- memory by device & guy --- */
+  const memKey = `bb.mem.${id}`;
+  let mem = {};
+  try{ mem = JSON.parse(localStorage.getItem(memKey)||'{}'); }catch(e){}
+  function save(){ try{ localStorage.setItem(memKey, JSON.stringify(mem)); }catch(e){} }
+
+  /* on first load: greet (rotates) */
+  (function init(){
+    const idx = (mem.greetIndex || 0) % guy.greetings.length;
+    const greet = guy.greetings[idx];
+    mem.greetIndex = idx + 1; save();
+    row(`<strong>${guy.name}:</strong> ${greet}`);
+  })();
+
+  /* extract light interests & give her a nickname */
+  function learn(text){
+    const t = text.toLowerCase();
+    mem.interests = mem.interests || {};
+    const add = k => { mem.interests[k]=(mem.interests[k]||0)+1; };
+
+    if(/book|read|library|novel/.test(t)) add('books');
+    if(/music|song|guitar|band|concert/.test(t)) add('music');
+    if(/coffee|latte|espresso|caffeine/.test(t)) add('coffee');
+    if(/cowboy|ranch|rodeo|boots/.test(t)) add('rodeo');
+    if(/forest|woods|hike|camp/.test(t)) add('woods');
+    if(/city|skyline|penthouse|boardroom|deal/.test(t)) add('city');
+    if(/cat|kitten/.test(t)) add('cat');
+    if(/dog|puppy/.test(t)) add('dog');
+
+    // assign nickname once we know her best interest for THIS guy
+    if(!mem.nickname){
+      const top = Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
+      if(top){
+        const [key] = top;
+        const n = (guy.nicknames[key] || guy.nicknames.default || 'darling');
+        mem.nickname = n;
       }
-    };
-
-    // who?
-    const params = new URLSearchParams(location.search);
-    const id = (params.get("man") || "alexander").toLowerCase();
-    const guy = GUYS[id] || GUYS.alexander;
-
-    // plumb UI
-    const bg = document.getElementById("bg");
-    const guyName = document.getElementById("guyName");
-    const chat = document.getElementById("chat");
-    const input = document.getElementById("input");
-    const sendBtn = document.getElementById("sendBtn");
-
-    document.title = `${guy.name} · Blossom & Blade`;
-    guyName.textContent = guy.name;
-    bg.style.backgroundImage = `url("${guy.bg}")`;
-
-    // helpers
-    function row(text, who="ai"){
-      const div = document.createElement("div");
-      div.className = `row ${who}`;
-      const b = document.createElement("div");
-      b.className = "bubble";
-      b.innerHTML = text;
-      div.appendChild(b);
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
     }
+    save();
+  }
 
-    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-
-    // Lite brain (keeps site moving while we test no-block build)
-    function craftReply(user){
-      const u = user.trim().toLowerCase();
-
-      // Soft guardrails (no blocks; just redirect tone)
-      const HARD = /(rape|raping|non[- ]?consent|nc|choke|strangle|knife|blood|scat|feces|bestial|necrophil|kid|minor|barely legal)/i;
-      if (HARD.test(user)){
-        return "Let’s keep it adult, safe, and consensual. Pick the fantasy, I’ll meet you there—within our standards.";
-      }
-
-      // Flirty escalation that mirrors user vibe
-      const tease = [
-        "Then say it slower… make me believe you.",
-        "I like that. Tell me where you want me—details.",
-        "Bold. Take me there—how does it start?",
-        "Mm. Keep talking; I’m listening with both hands."
-      ];
-
-      const playful = [
-        "Tell me your ideal night—cozy, adventurous, or delightfully chaotic?",
-        "What do I call you when you smile like that?",
-        "Do you want sweet praise or a little pressure?",
-        "Pick a setting: city lights, quiet room, or open sky."
-      ];
-
-      if (u.length <= 2) return "Come closer. Start with one urgent thought.";
-      if (/[?]$/.test(u)) return "Answer first, pretty thing—then I’ll give you mine.";
-
-      if (/(ride|kiss|lick|take|touch|bend|over|spank|grip|thrust|pull my hair|tie|desk|table|bed)/i.test(u)){
-        const lines = [
-          "Say where you want me and I’ll move you there—slow, sure, unhurried.",
-          "Good. Now tell me pace: gentle… or ruinously patient?",
-          "I’ve got you. Breathe. I won’t rush a thing unless you beg.",
-          "Turn around for me. I’ll talk you through every inch."
-        ];
-        return pick(lines);
-      }
-
-      if (/(tired|bad day|rough|stress|lonely|sad)/i.test(u)){
-        return "I hear you. Sit back—let me carry the conversation until you feel lighter.";
-      }
-
-      // default
-      return Math.random() < .5 ? pick(tease) : pick(playful);
+  function jealousProbe(text){
+    // if she mentions another man, tease lightly
+    if(/\b(boyfriend|husband|ex|date)\b/i.test(text) || /\b[A-Z][a-z]{2,}\b/.test(text) && / he\b/i.test(text)){
+      return guy.jealous(mem.nickname);
     }
+    return '';
+  }
 
-    function send(){
-      const text = input.value.trim();
-      if (!text) return;
-      row(escapeHtml(text), "me");
-      input.value = "";
-      sendBtn.disabled = true;
-      setTimeout(()=>{
-        row(`<strong>${guy.name}:</strong> ` + escapeHtml(craftReply(text)), "ai");
-        sendBtn.disabled = false;
-        input.focus();
-      }, 450 + Math.random()*350);
-    }
+  function replyTo(text){
+    learn(text);
+    const spice = jealousProbe(text);
+    const out = BnB.reply(guy, text.trim(), mem.nickname);
+    return spice ? `${out} ${spice}` : out;
+  }
 
-    function escapeHtml(s){
-      return s.replace(/[&<>"']/g, m=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]));
-    }
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const val = input.value.trim();
+    if(!val) return;
+    row(escapeHtml(val), true);
+    input.value="";
+    const bot = replyTo(val);
+    setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(bot)}`), 360);
+  });
 
-    // boot
-    row(`<strong>${guy.name}:</strong> ${pick(guy.openers)}`, "ai");
-
-    input.addEventListener("keydown", e=>{
-      if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
-    });
-    sendBtn.addEventListener("click", send);
-
-    // ======= IMPORTANT: No blocks / No strikes =======
-    // We intentionally do NOT read or write any localStorage
-    // keys related to warnings/blocks here. Old keys—if they exist—
-    // are ignored entirely by this build so you won’t get locked out.
-  </script>
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+</script>
 </body>
 </html>

@@ -9,11 +9,12 @@
   :root{
     --ink:#eef3ff; --ink-d:#c7d0e4;
     --panel: rgba(12,14,20,.42);
-    --bubble: rgba(16,18,26,.70);
-    --bubble-me: rgba(60,22,60,.68);
+    --bubble: rgba(16,18,26,.78);
+    --bubble-me: rgba(60,22,60,.78);
     --ring: rgba(190,220,255,.20);
   }
-  *{box-sizing:border-box} html,body{height:100%}
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0; color:var(--ink);
     font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;
@@ -31,11 +32,11 @@
     border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:18px;min-height:560px;}
   #log{flex:1;overflow-y:auto;padding-right:4px}
   .row{display:flex;margin:14px 0}.row.me{justify-content:flex-end}
-  .bubble{padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:rgba(16,18,26,.70);
+  .bubble{padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:var(--bubble);
     border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.28);line-height:1.45;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
   .row.me .bubble{background:var(--bubble-me);border-color:rgba(255,180,250,.18)}
   .bubble strong{font-weight:800}
-  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.50);border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
+  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.55);border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
   #input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font:inherit;font-size:16px}
   #input::placeholder{color:rgba(230,235,255,.72)}
   .send{background:#2a2f3f;color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer;
@@ -59,14 +60,97 @@
     <div class="note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </div>
 
-  <!-- real brain (static), cache-busted -->
-  <script defer src="scripts/brain.js?v=2"></script>
-
+  <!-- === Inline brain so there’s no external file to fail === -->
   <script>
-  /* minimal fallback only if brain.js fails entirely */
-  if(!window.BnB){ window.BnB = { guys: { blade: {id:'blade',name:'Blade Kincaid',bg:'images/blade-woods.jpg',greetings:['Found you, brave girl. Don’t run—yet.'], nicknames:{default:'love'}} },
-                                  reply:()=>`Tell me more, love.` }; }
+  window.BnB=(function(){
+    const images={
+      alexander:"images/bg_alexander_boardroom.jpg",
+      dylan:"images/dylan-garage.jpg",
+      jesse:"images/jesse_bg.jpg",
+      grayson:"images/grayson-bg.jpg",
+      silas:"images/bg_silas_stage.jpg",
+      blade:"images/blade-woods.jpg"
+    };
+    const guys={
+      alexander:{id:"alexander",name:"Alexander Jackson",bg:images.alexander,
+        greetings:[
+          "Lights low or city view while we talk?",
+          "I’ve cleared the evening—tell me what you want on the agenda.",
+          "Come in. Close the door. Now… what’s first, sweetheart?"
+        ],
+        nicknames:{books:"my little strategist",music:"my smooth operator",coffee:"my caffeine queen",city:"my skyline girl",default:"darling"},
+        jealous:(n)=>`Should I be jealous, ${n||'sweetheart'}—or should I simply win you back tonight?`
+      },
+      dylan:{id:"dylan",name:"Dylan Vale",bg:images.dylan,
+        greetings:[
+          "Hands flat on the counter, pretty thing.",
+          "Neon’s humming. Tell me the vibe—slow burn or straight to heat?",
+          "Come closer. I’ll tune you up, one string at a time."
+        ],
+        nicknames:{music:"my muse",coffee:"my midnight shot",city:"my streetlight angel",default:"trouble"},
+        jealous:(n)=>`He can wait. I’m not letting go of you tonight, ${n||'trouble'}.`
+      },
+      jesse:{id:"jesse",name:"Jesse Granger",bg:images.jesse,
+        greetings:[
+          "Boots up. You riding shotgun or taking the reins?",
+          "Dust is gold out here—talk to me, honey.",
+          "Lean in, little wildfire. Where we headed?"
+        ],
+        nicknames:{rodeo:"my wildfire",woods:"my trailblazer",dog:"my good-hearted girl",default:"sweetheart"},
+        jealous:(n)=>`Now who’s this fella, ${n||'sweetheart'}? Should I be jealous—or just steal you back?`
+      },
+      grayson:{id:"grayson",name:"Grayson Kincaid",bg:images.grayson,
+        greetings:[
+          "Pick: gentle questions or firm direction?",
+          "Library’s quiet. I’ll listen… or lead.",
+          "Tea’s warm, voice warmer. Where do you want to start?"
+        ],
+        nicknames:{books:"my little bookworm",cat:"my soft paw",coffee:"my honeyed sip",default:"dear heart"},
+        jealous:(n)=>`Mmm. I hear his name, ${n||'dear heart'}, but I’m the one turning your pages.`
+      },
+      silas:{id:"silas",name:"Silas Lennox",bg:images.silas,
+        greetings:[
+          "Stage lights warm—what chord should I play first?",
+          "I wrote a line for you. Want to hear it or make a new one together?",
+          "Backstage is quiet. Tell me your tempo."
+        ],
+        nicknames:{music:"my melody",books:"my verse",coffee:"my velvet sip",default:"star"},
+        jealous:(n)=>`Tell him the song’s over. You’re my encore, ${n||'star'}.`
+      },
+      blade:{id:"blade",name:"Blade Kincaid",bg:images.blade,
+        greetings:[
+          "Found you, brave girl. Don’t run—yet.",
+          "Stay with me. What would make tonight easier?",
+          "Footsteps behind you… I keep pace."
+        ],
+        nicknames:{woods:"my little fox",books:"my curious thing",music:"my rhythm",default:"prey"},
+        jealous:(n)=>`Is he hunting you, ${n||'prey'}? Mm. I hunt better.`
+      }
+    };
 
+    function reply(guy,text,nick){
+      const t=text.toLowerCase();
+      const call=nick||(guy.nicknames&&guy.nicknames.default)||'love';
+      if(/hi|hey|hello|morning|evening/.test(t)) return `Hi, ${call}. Tell me what mood you’re in.`;
+      if(/how are|hru|you ok/.test(t)) return `Better now. You?`;
+      if(/joke|funny/.test(t)) return `Only if you laugh. I like that sound on you.`;
+      if(/city|lights|view|window/.test(t)) return `City lights it is. Pull the night closer with me, ${call}.`;
+      if(/library|book|read/.test(t)) return `Library hush suits us. Sit with me—tell me what you’re reading, ${call}.`;
+      if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${call}.`;
+      if(/forest|woods|trail|moon/.test(t)) return `Stay near. I’ll keep you safe under the trees, ${call}.`;
+      if(/coffee|latte|espresso/.test(t)) return `I’ll make it how you like it. Then we talk—and maybe more.`;
+      if(/kiss|hold|touch|cuddle|hug/.test(t)) return `Come here. I’ll make it slow, ${call}.`;
+      if(/miss you|think of you|need you/.test(t)) return `Say it again. I like when you need me, ${call}.`;
+      if(/what|how|why|\?$/.test(t)) return `Give me one more detail, ${call}. I’m listening.`;
+      return `Mm. I hear you, ${call}. Tell me a little more so I can meet you there.`;
+    }
+
+    return {guys, reply};
+  })();
+  </script>
+
+  <!-- === Chat controller (uses inline BnB) === -->
+  <script>
   const $ = s=>document.querySelector(s);
   const log = $('#log'), input=$('#input'), form=$('#composer'), nameEl=$('#gName');
   const escapeHtml=s=>s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -75,18 +159,19 @@
 
   (function boot(){
     const id = getParam('man', localStorage.getItem('bb.character')||'blade');
-    const guy = (BnB.guys && BnB.guys[id]) || Object.values(BnB.guys)[0];
+    const all = window.BnB?.guys || {};
+    const guy = all[id] || Object.values(all)[0];
     window.__GUY=guy;
     nameEl.textContent = guy.name;
 
-    // make sure room background shows
+    // per-room background
     document.body.style.backgroundImage   = `url('${guy.bg}')`;
     document.body.style.backgroundRepeat  = 'no-repeat';
     document.body.style.backgroundSize    = 'cover';
     document.body.style.backgroundPosition= 'center';
     document.body.style.backgroundAttachment = 'fixed';
 
-    // simple per-guy memory for greeting rotation + nickname
+    // simple memory
     const memKey=`bb.mem.${guy.id}`;
     let mem={}; try{mem=JSON.parse(localStorage.getItem(memKey)||'{}')}catch(e){}
     const save=()=>{try{localStorage.setItem(memKey,JSON.stringify(mem))}catch(e){}};
@@ -123,9 +208,9 @@
       row(escapeHtml(val),true); input.value="";
       learn(val);
       const spice=jealousProbe(val);
-      const out=(BnB.reply?BnB.reply(guy,val,mem.nickname):(`Tell me more, ${(mem.nickname||'love')}.`));
+      const out=(window.BnB?.reply?window.BnB.reply(guy,val,mem.nickname):(`Tell me more, ${(mem.nickname||'love')}.`));
       const msg=spice?`${out} ${spice}`:out;
-      setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(msg)}`), 300);
+      setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(msg)}`), 280);
     });
   })();
   </script>

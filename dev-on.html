@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Dev ON · Blossom & Blade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{display:grid;place-items:center;min-height:100vh;background:#0b141c;color:#e8f2fb;font:16px system-ui}a,button{background:#173447;color:#cfe9ff;padding:12px 16px;border-radius:12px;text-decoration:none;border:1px solid #2c4f65}a:hover,button:hover{background:#21465f}}</style>
+<div>
+  <h1>Dev mode: ON</h1>
+  <p>Device blocks & warnings are disabled on this device.</p>
+  <button onclick="localStorage.setItem('bb.dev','1');alert('Dev mode enabled.');">Enable</button>
+  <p style="margin-top:14px"><a href="index.html">Back to landing</a> · <a href="chat.html?dev=1">Open a chat</a></p>
+</div>
+<script>localStorage.setItem('bb.dev','1');</script>
+</html>

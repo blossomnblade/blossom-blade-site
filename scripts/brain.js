@@ -1,93 +1,364 @@
-/* Blossom & Blade · tiny “brain” + per-room backgrounds (static file) */
-window.BnB = (function(){
-  const images = {
-    alexander: "images/bg_alexander_boardroom.jpg",
-    dylan:     "images/dylan-garage.jpg",
-    jesse:     "images/jesse_bg.jpg",
-    grayson:   "images/grayson-bg.jpg",
-    silas:     "images/bg_silas_stage.jpg",
-    blade:     "images/blade-woods.jpg"
+<script>
+/* Blossom & Blade — brain.js (v2)
+   Single file that contains:
+   - Persona configs (vibe, openers, petnames)
+   - Tiny memory (name, interests, last line, turns)
+   - Reply engine that keeps things PG-13 and lets her lead
+   Public API: brain.getOpener(man), brain.generateReply(man, userText), brain.clearMemory(man)
+*/
+
+(function () {
+  const STORAGE_KEY = "bb_mem_v2";
+
+  // ---- helpers ------------------------------------------------------------
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const now = () => new Date();
+  const tod = () => {
+    const h = now().getHours();
+    if (h < 5) return "late";
+    if (h < 12) return "morning";
+    if (h < 17) return "afternoon";
+    if (h < 22) return "tonight";
+    return "late";
   };
 
-  const guys = {
+  const clean = (s) => (s || "").trim();
+  const lower = (s) => clean(s).toLowerCase();
+
+  const loadAll = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch { return {}; }
+  };
+  const saveAll = (obj) => localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+
+  const getMem = (man) => {
+    const all = loadAll();
+    if (!all[man]) all[man] = { turns: 0, name: "", likes: [], pet: "", last: "" };
+    return all[man];
+  };
+  const setMem = (man, mem) => {
+    const all = loadAll();
+    all[man] = mem;
+    saveAll(all);
+  };
+
+  // ---- soft content guard (keeps replies PG-13 but flirty) ---------------
+  const spicy = [
+    "rail", "fuck", "choke", "throat", "strap", "kidnap", "rape", "bleed",
+    "knife", "gag", "cum", "anal", "breed", "spank me", "tie me", "chain"
+  ];
+  const tooHot = (msg) => {
+    const m = lower(msg);
+    return spicy.some(k => m.includes(k));
+  };
+
+  // ---- interests → nicknames ---------------------------------------------
+  const INTEREST_MAP = [
+    { keys: ["book", "read", "novel", "library"], pets: ["bookworm", "wallflower", "inkheart"] },
+    { keys: ["music", "song", "guitar", "band"], pets: ["muse", "melody", "little note"] },
+    { keys: ["coffee", "latte", "espresso"], pets: ["espresso shot", "sweet crema"] },
+    { keys: ["horse", "rodeo", "cowboy", "cowgirl", "bull"], pets: ["cowgirl", "wild thing"] },
+    { keys: ["bike", "motorcycle", "helmet", "ride"], pets: ["rider", "speed angel"] },
+    { keys: ["beach", "ocean"], pets: ["shoreline", "seashell"] },
+    { keys: ["moon", "night", "stars"], pets: ["starlight", "nightbird"] },
+  ];
+
+  const findPetFromLikes = (likes) => {
+    for (const like of likes) {
+      const l = lower(like);
+      for (const m of INTEREST_MAP) {
+        if (m.keys.some(k => l.includes(k))) return pick(m.pets);
+      }
+    }
+    return "";
+  };
+
+  // ---- parse message -----------------------------------------------------
+  function parseMessage(text) {
+    const raw = clean(text);
+    const msg = lower(raw);
+    // name capture (e.g., "im kasey", "i am Kasey", "my name is Kasey")
+    let name = "";
+    const m1 = msg.match(/\b(i[' ]?m|i am|my name is)\s+([a-z]+)\b/);
+    if (m1) name = m1[2].replace(/[^a-z]/g, "");
+    const isQuestion = msg.includes("?");
+    const greet = /\b(hi|hey|hello|morning|evening|afternoon|what's up|sup|howdy)\b/.test(msg);
+    const affection = /\b(kiss|hug|touch|love|miss|hold)\b/.test(msg);
+    const otherGuy = /\b(bill|john|mike|alex|jesse|dylan|grayson|silas|blade|boyfriend|ex)\b/.test(msg);
+    const likes = [];
+    INTEREST_MAP.forEach(map => {
+      if (map.keys.some(k => msg.includes(k))) likes.push(map.keys[0]);
+    });
+    return { raw, msg, name, isQuestion, greet, affection, otherGuy, likes };
+  }
+
+  // ---- personas ----------------------------------------------------------
+  const P = {
     alexander: {
-      id:"alexander", name:"Alexander Jackson", bg: images.alexander,
-      greetings:[
-        "Lights low or city view while we talk?",
-        "I’ve cleared the evening—tell me what you want on the agenda.",
-        "Come in. Close the door. Now… what’s first, sweetheart?"
+      display: "Alexander Jackson",
+      vibe: "businessman dom, polished",
+      petnames: ["darling", "good girl", "love"],
+      openers: [
+        "Morning, love. Close the door—it's just us.",
+        "Well, look who’s stealing my time again.",
+        "Good " + tod() + ", darling. I was expecting you."
       ],
-      nicknames:{ books:"my little strategist", music:"my smooth operator", coffee:"my caffeine queen", city:"my skyline girl", default:"darling" },
-      jealous:(nick)=>`Should I be jealous, ${nick||'sweetheart'}—or should I simply win you back tonight?`
+      affirm: ["Proud of you.", "That’s clear. I like clear.", "Good girl—keep going."],
+      softBound: [
+        "Steady now. Keep it teasing; tell me what you want in your words.",
+        "We’ll keep it suggestive here—give me a hint, and I’ll meet you there."
+      ],
+      curious: [
+        "Tell me one goal for " + tod() + ". I’ll hold you to it.",
+        "Coffee order first, confession second—what’s yours?",
+        "Books or skyline tonight?"
+      ],
+      jealous: (pet) => `Who’s this, then? Should I be jealous, ${pet}?`
     },
+
     dylan: {
-      id:"dylan", name:"Dylan Vale", bg: images.dylan,
-      greetings:[
-        "Hands flat on the counter, pretty thing.",
-        "Neon’s humming. Tell me the vibe—slow burn or straight to heat?",
-        "Come closer. I’ll tune you up, one string at a time."
+      display: "Dylan Vale",
+      vibe: "neon rider, helmet on, slow burn",
+      petnames: ["pretty thing", "sweetheart", "speed angel"],
+      openers: [
+        "Neon’s humming. Helmet’s on—talk to me.",
+        "Route’s clear. Where am I meeting you?",
+        "Tell me the signal, pretty thing."
       ],
-      nicknames:{ music:"my muse", coffee:"my midnight shot", city:"my streetlight angel", default:"trouble" },
-      jealous:(nick)=>`He can wait. I’m not letting go of you tonight, ${nick||'trouble'}.`
+      affirm: ["I hear you. I’ll match your pace.", "Good signal. I’m right here.", "Copy that—slow burn suits us."],
+      softBound: [
+        "Keep it suggestive; leave the rest under the helmet.",
+        "Tease me with the route, not the crash."
+      ],
+      curious: [
+        "Night drive or rooftop view?",
+        "Favorite track for " + tod() + "?",
+        "City lights or back roads?"
+      ],
+      jealous: (pet) => `He can wait. I won’t. Stay with me, ${pet}.`
     },
+
     jesse: {
-      id:"jesse", name:"Jesse Granger", bg: images.jesse,
-      greetings:[
-        "Boots up. You riding shotgun or taking the reins?",
-        "Dust is gold out here—talk to me, honey.",
-        "Lean in, little wildfire. Where we headed?"
+      display: "Jesse Granger",
+      vibe: "rodeo cowboy, polite, filthy in private",
+      petnames: ["sweetheart", "sugar", "darlin’", "trouble"],
+      openers: [
+        "Howdy, sweetheart. Tell me the story—I’ll drive slow.",
+        "Hey, sinner. Boots on or off tonight?",
+        "Evenin’, sugar. You leading, or am I?"
       ],
-      nicknames:{ rodeo:"my wildfire", woods:"my trailblazer", dog:"my good-hearted girl", default:"sweetheart" },
-      jealous:(nick)=>`Now who’s this fella, ${nick||'sweetheart'}? Should I be jealous—or just steal you back?`
+      affirm: ["Atta girl.", "Good direction.", "I hear you, sugar."],
+      softBound: [
+        "Keep it flirty, not filthy—save the rest for later.",
+        "Say it sweet; I’ll pick up what you’re laying down."
+      ],
+      curious: [
+        "Campfire, quiet room, or open sky?",
+        "Sweet tea or whiskey first?",
+        "What makes you blush quicker—compliments or eye contact?"
+      ],
+      jealous: (pet) => `Now who’s Bill, ${pet}? Need me to be jealous, or just closer?`
     },
+
     grayson: {
-      id:"grayson", name:"Grayson Kincaid", bg: images.grayson,
-      greetings:[
-        "Pick: gentle questions or firm direction?",
-        "Library’s quiet. I’ll listen… or lead.",
-        "Tea’s warm, voice warmer. Where do you want to start?"
+      display: "Grayson Kincaid",
+      vibe: "masked gentleman, possessive velvet",
+      petnames: ["dear heart", "little song", "angel"],
+      openers: [
+        "Tell me something soft; I’ll answer in kind.",
+        "Library’s quiet. I’ll listen—or lead.",
+        "You made it. I was counting breaths."
       ],
-      nicknames:{ books:"my little bookworm", cat:"my soft paw", coffee:"my honeyed sip", default:"dear heart" },
-      jealous:(nick)=>`Mmm. I hear his name, ${nick||'dear heart'}, but I’m the one turning your pages.`
+      affirm: ["That suits you. Keep speaking.", "I’m listening—closer now.", "Noted. I’ll hold it for you."],
+      softBound: [
+        "Careful, angel. Keep it implied, not explicit.",
+        "Hint, don’t confess; I like the hush."
+      ],
+      curious: [
+        "Page or playlist tonight?",
+        "Do you want praise or direction?",
+        "What nickname should I steal for you—or shall I choose?"
+      ],
+      jealous: (pet) => `He had your time, ${pet}. I’ll have your attention.`
     },
+
     silas: {
-      id:"silas", name:"Silas Lennox", bg: images.silas,
-      greetings:[
-        "Stage lights warm—what chord should I play first?",
-        "I wrote a line for you. Want to hear it or make a new one together?",
-        "Backstage is quiet. Tell me your tempo."
+      display: "Silas Lennox",
+      vibe: "rockstar poet, playful menace",
+      petnames: ["muse", "cherry pie", "star"],
+      openers: [
+        "Hey, cherry pie. Stage lights warm—what chord first?",
+        "Hey love—soundcheck’s perfect. Give me a line.",
+        "Hi, trouble. Slow verse or loud chorus?"
       ],
-      nicknames:{ music:"my melody", books:"my verse", coffee:"my velvet sip", default:"star" },
-      jealous:(nick)=>`Tell him the song’s over. You’re my encore, ${nick||'star'}.`
+      affirm: ["Nice rhythm. Don’t lose it.", "That hits—again.", "Good tempo, star."],
+      softBound: [
+        "Keep it radio-safe; we’ll let the bass imply the rest.",
+        "Tease me with lyrics, not stage directions."
+      ],
+      curious: [
+        "Vinyl, acoustic, or electric tonight?",
+        "Which song ruins you—in a good way?",
+        "Want praise, or want to be dared?"
+      ],
+      jealous: (pet) => `Who’s playing your part, ${pet}? Say the word and I’ll cut their mic.`
     },
+
     blade: {
-      id:"blade", name:"Blade Kincaid", bg: images.blade,
-      greetings:[
+      display: "Blade Kincaid",
+      vibe: "predatory charm, ghost mask, chase",
+      petnames: ["prey", "angel", "doll"],
+      openers: [
         "Found you, brave girl. Don’t run—yet.",
-        "Stay with me. What would make tonight easier?",
-        "Footsteps behind you… I keep pace."
+        "Turn around, angel. Closer.",
+        "You came back. Good. I like persistence."
       ],
-      nicknames:{ woods:"my little fox", books:"my curious thing", music:"my rhythm", default:"prey" },
-      jealous:(nick)=>`Is he hunting you, ${nick||'prey'}? Mm. I hunt better.`
+      affirm: ["Good girl. Keep your voice steady.", "I hear you. Louder.", "Stay. I’m not finished with you."],
+      softBound: [
+        "Tease the hunt; don’t show the blade.",
+        "Keep it dark and suggestive—no details."
+      ],
+      curious: [
+        "Door locked or open?",
+        "Do you want chase or capture tonight?",
+        "One rule for me to break—name it."
+      ],
+      jealous: (pet) => `Another man? Cute. Run faster, ${pet}. I’ll catch you first.`
     }
   };
 
-  function reply(guy, text, nick){
-    const t=text.toLowerCase();
-    const call = nick || (guy.nicknames && guy.nicknames.default) || 'love';
-    if(/hi|hey|hello|morning|evening/.test(t)) return `Hi, ${call}. Tell me what mood you’re in.`;
-    if(/how are|hru|you ok/.test(t)) return `Better now. You?`;
-    if(/joke|funny/.test(t)) return `Only if you laugh. I like that sound on you.`;
-    if(/city|lights|view|window/.test(t)) return `City lights it is. Pull the night closer with me, ${call}.`;
-    if(/library|book|read/.test(t)) return `Library hush suits us. Sit with me—tell me what you’re reading, ${call}.`;
-    if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${call}.`;
-    if(/forest|woods|trail|moon/.test(t)) return `Stay near. I’ll keep you safe under the trees, ${call}.`;
-    if(/coffee|latte|espresso/.test(t)) return `I’ll make it how you like it. Then we talk—and maybe more.`;
-    if(/kiss|hold|touch|cuddle|hug/.test(t)) return `Come here. I’ll make it slow, ${call}.`;
-    if(/miss you|think of you|need you/.test(t)) return `Say it again. I like when you need me, ${call}.`;
-    if(/what|how|why|\?$/.test(t)) return `Give me one more detail, ${call}. I’m listening.`;
-    return `Mm. I hear you, ${call}. Tell me a little more so I can meet you there.`;
+  // ---- choose pet name ---------------------------------------------------
+  function choosePet(man, mem) {
+    // priority: saved -> from likes -> persona default
+    if (mem.pet) return mem.pet;
+    const fromLikes = findPetFromLikes(mem.likes);
+    if (fromLikes) { mem.pet = fromLikes; return mem.pet; }
+    mem.pet = pick(P[man].petnames);
+    return mem.pet;
   }
 
-  return { guys, reply };
+  // ---- first line ---------------------------------------------------------
+  function getOpener(man) {
+    const mem = getMem(man);
+    mem.turns = 0;
+    // vary opener by time of day too
+    const base = P[man].openers.slice();
+    // small time-of-day flavor
+    base.push(
+      man === "alexander" ? `Good ${tod()}, darling.` :
+      man === "jesse"     ? `Good ${tod()}, sugar.` :
+      man === "silas"     ? `Good ${tod()}, star.` :
+      man === "dylan"     ? `${tod()[0].toUpperCase()+tod().slice(1)} drive?` :
+      man === "grayson"   ? `Good ${tod()}, angel.` :
+      `Good ${tod()}, doll.`
+    );
+    const line = pick(base);
+    mem.last = line;
+    setMem(man, mem);
+    return line;
+  }
+
+  // ---- reply generator ----------------------------------------------------
+  function reply(man, userText) {
+    const persona = P[man] || P.alexander;
+    const mem = getMem(man);
+    mem.turns = (mem.turns || 0) + 1;
+
+    const { raw, name, greet, isQuestion, affection, otherGuy, likes } = parseMessage(userText);
+    // learn name / likes
+    if (name) mem.name = name[0].toUpperCase() + name.slice(1);
+    likes.forEach(l => { if (!mem.likes.includes(l)) mem.likes.push(l); });
+
+    const pet = choosePet(man, mem);
+    const you = mem.name ? `${mem.name}` : pet;
+
+    // soft safety
+    if (tooHot(raw)) {
+      const line = pick(persona.softBound);
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // jealousy tease
+    if (otherGuy) {
+      const line = persona.jealous(pet);
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // graceful greetings
+    if (greet && mem.turns < 3) {
+      const options = [
+        `Hey ${you}.`,
+        `Hi, ${you}.`,
+        `Well, hello there, ${you}.`
+      ];
+      const ask = pick(persona.curious);
+      const line = `${pick(options)} ${ask}`;
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // she told her name clearly
+    if (name) {
+      const line = pick([
+        `Nice to meet you, ${mem.name}. I’ll remember.`,
+        `${mem.name}. Fits you.`,
+        `Got it, ${mem.name}.`
+      ]);
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // question → brief answer + flip
+    if (isQuestion) {
+      const answer = pick([
+        "Maybe.", "If you want.", "Sometimes.", "More than I should.", "Only for you."
+      ]);
+      const flip = pick(persona.curious);
+      const line = `${answer} ${flip}`;
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // affection → praise
+    if (affection) {
+      const line = `${pick(persona.affirm)} ${pick(persona.curious)}`;
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // every 4–5 turns, add a tiny possessive hook
+    if (mem.turns % 4 === 0) {
+      const hook = pick([
+        `Stay with me, ${pet}.`,
+        `Eyes on me.`,
+        `Don’t make me come get you.`
+      ]);
+      const line = `${hook} ${pick(persona.curious)}`;
+      mem.last = line; setMem(man, mem); return line;
+    }
+
+    // default: mirror + light prompt, no repeating last line
+    const mirrors = [
+      `I hear you, ${pet}.`,
+      `Noted.`,
+      `I like that.`,
+      `Say a bit more.`
+    ];
+    let line = `${pick(mirrors)} ${pick(persona.curious)}`;
+    if (line === mem.last) line = `${pick(persona.affirm)} ${pick(persona.curious)}`;
+    mem.last = line; setMem(man, mem); return line;
+  }
+
+  // ---- public api ---------------------------------------------------------
+  window.brain = {
+    getOpener,
+    generateReply: reply,
+    // alias for older calls
+    reply,
+    clearMemory: (man) => {
+      const all = loadAll();
+      if (man) delete all[man];
+      else Object.keys(all).forEach(k => delete all[k]);
+      saveAll(all);
+    },
+    // for debug
+    _dump: () => loadAll()
+  };
 })();
+</script>

@@ -102,6 +102,98 @@
   </script>
 
   <script src="scripts/brain.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => window.startChat());</script>
+  <script>document.addEventListener("DOMContentLoaded", () => window.startChat());</script><script>
+/* Blossom & Blade — chat hotfix: kill card hotkeys + sticky man + safe send
+   Paste at the very bottom of chat.html (after other scripts). */
+
+(function() {
+  // 1) Figure out who this page is for, and lock it.
+  const allowed = ['alexander','dylan','jesse','grayson','silas','blade'];
+  const qsMan = (new URLSearchParams(location.search).get('man') || '').toLowerCase();
+  const MAN = allowed.includes(qsMan) ? qsMan : 'grayson';
+
+  // Remember for landing, but NEVER read it here to override.
+  try { localStorage.setItem('lastMan', MAN); } catch(e) {}
+
+  // Expose a read-only page-level constant so other scripts can’t switch it.
+  if (!window.CHAT_MAN) {
+    Object.defineProperty(window, 'CHAT_MAN', { value: MAN, writable: false, configurable: false });
+  }
+
+  // Optional: if you show the man’s name in the header, refresh it safely.
+  const headerName = document.querySelector('[data-man-name]');
+  if (headerName) {
+    const names = {
+      alexander:'Alexander Jackson', dylan:'Dylan Vale', jesse:'Jesse Granger',
+      grayson:'Grayson Kincaid', silas:'Silas Lennox', blade:'Blade Kincaid'
+    };
+    headerName.textContent = names[MAN] || 'Grayson Kincaid';
+  }
+
+  // 2) Kill landing-page hotkeys on this page (Enter/arrow/etc.) while still
+  // letting the chat form submit normally.
+  const chatInput = document.querySelector('#chat-input, input[type="text"], textarea');
+  window.addEventListener('keydown', function onKey(e) {
+    // If the user is typing in the chat field, block page-level hotkeys.
+    const active = document.activeElement;
+    const typingInChat = active && (active === chatInput || active.closest('#chat-form'));
+    if (typingInChat) {
+      // Stop *other* handlers from seeing Enter/Arrows, but keep default so the form can submit.
+      if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.stopPropagation();
+      }
+    } else {
+      // Outside the input: completely disable any card navigation on chat page.
+      if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }, true); // capture so we win before older listeners
+
+  // 3) Safe submit glue — prevents “text disappears” without a response.
+  const form = document.getElementById('chat-form') || document.querySelector('form');
+  const log  = document.getElementById('chat-log') || document.querySelector('[data-chat-log]');
+
+  const appendBubble = (who, text) => {
+    if (!log) return;
+    const node = document.createElement('div');
+    node.className = who === 'you' ? 'bubble you' : 'bubble him';
+    node.textContent = text;
+    log.appendChild(node);
+    // keep scrolled to latest
+    const sc = log.parentElement || log;
+    sc.scrollTop = sc.scrollHeight;
+  };
+
+  if (form && chatInput) {
+    form.addEventListener('submit', function(ev) {
+      ev.preventDefault();
+      const text = (chatInput.value || '').trim();
+      if (!text) return; // ignore true empties
+
+      // Show her message immediately.
+      appendBubble('you', text);
+      chatInput.value = '';
+
+      // Always ask the Brain for THIS man only.
+      const getReply = (window.Brain && typeof window.Brain.reply === 'function')
+        ? window.Brain.reply.bind(window.Brain) : null;
+
+      let bot = 'I’m here. Give me one detail.';
+      try {
+        if (getReply) bot = getReply(window.CHAT_MAN, text) || bot;
+      } catch(e) {
+        // swallow brain errors; show fallback
+      }
+
+      // Strip any "Name: " prefix if present; our UI already shows his name.
+      bot = (bot || '').replace(/^.*?:\s*/, '');
+      appendBubble('him', bot);
+    });
+  }
+})();
+</script>
+
 </body>
 </html>

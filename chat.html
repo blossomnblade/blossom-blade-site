@@ -1,359 +1,226 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Chat · Blossom & Blade</title>
-<meta http-equiv="Cache-Control" content="no-store"/>
-
-<style>
-  :root{
-    --ink:#eef3ff; --ink-d:#c7d0e4;
-    --panel: rgba(12,14,20,.42);
-    --bubble: rgba(16,18,26,.78);
-    --bubble-me: rgba(60,22,60,.78);
-    --ring: rgba(190,220,255,.20);
-  }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0;color:var(--ink);
-    font-family:system-ui,-apple-system,"Segoe UI",Inter,Roboto,Arial;
-    background:#0a0d12 center / cover no-repeat fixed;
-  }
-  body::before{content:"";position:fixed;inset:0;pointer-events:none;
-    background:radial-gradient(1200px 640px at 50% -10%, rgba(255,255,255,.05), transparent 60%),
-               radial-gradient(1100px 700px at 50% 110%, rgba(0,0,0,.38), rgba(0,0,0,.68) 70%);}
-  header{display:flex;gap:12px;align-items:center;padding:14px 18px;font-weight:700}
-  .bar{height:6px;margin:0 18px;border-radius:6px;background:linear-gradient(90deg,#e8619c,#b66ad5 40%,#7ed0ff)}
-  .standards{position:sticky;top:0;text-align:right;padding:6px 18px 0;color:var(--ink-d);font-size:12px}
-  .wrap{max-width:1100px;margin:10px auto 44px;padding:0 18px}
-  .panel{
-    display:flex;flex-direction:column;min-height:560px;
-    background:var(--panel);border:1px solid var(--ring);border-radius:18px;
-    box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:18px;
-  }
-  #log{flex:1;overflow-y:auto;padding-right:4px}
-  .row{display:flex;margin:14px 0}.row.me{justify-content:flex-end}
-  .bubble{
-    padding:12px 14px;max-width:min(720px,90%);border-radius:16px;background:var(--bubble);
-    border:1px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.28);
-    line-height:1.45;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)
-  }
-  .row.me .bubble{background:var(--bubble-me);border-color:rgba(255,180,250,.18)}
-  .bubble strong{font-weight:800}
-  .composer{display:flex;gap:10px;margin-top:12px;background:rgba(8,10,14,.55);
-    border:1px solid var(--ring);border-radius:14px;padding:10px 10px 10px 14px;backdrop-filter:blur(3px)}
-  #input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font:inherit;font-size:16px}
-  #input::placeholder{color:rgba(230,235,255,.72)}
-  .send{background:#2a2f3f;color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.35)}
-  .send:hover{filter:brightness(1.08)}
-  .note{color:var(--ink-d);font-size:12px;text-align:center;margin-top:8px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat · Blossom & Blade</title>
+  <style>
+    :root{
+      --ink:#e9eef6;
+      --fade:#b7c0cf;
+      --panel: rgba(12,14,22,0.45);        /* translucent chat window */
+      --bubble:#0f1422;
+      --bubbleUser:#3a1f4a;
+      --bubbleBot:#0f2137;
+      --ring: rgba(255,255,255,.12);
+      --accent:#b583ff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      color:var(--ink);
+      background:#0b0f16 center/cover no-repeat fixed;
+    }
+    .backdrop::before{
+      content:"";
+      position:fixed; inset:0;
+      background: radial-gradient(80% 80% at 50% 20%, rgba(0,0,0,.20), rgba(0,0,0,.60)),
+                  linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.50));
+      pointer-events:none;
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:14px 18px; backdrop-filter: blur(6px);
+      background: rgba(10,12,18,.45); border-bottom:1px solid var(--ring);
+    }
+    header h1{margin:0; font-size:18px; letter-spacing:.3px}
+    header .note{font-size:12px; opacity:.8}
+    .wrap{display:grid; place-items:start; padding:24px}
+    .chat-panel{
+      width:min(980px, 96vw);
+      margin:0 auto;
+      background: var(--panel);
+      border:1px solid var(--ring);
+      border-radius:20px;
+      backdrop-filter: blur(8px) saturate(115%); /* frost effect */
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    .titlebar{
+      padding:14px 18px;
+      border-bottom:1px solid var(--ring);
+      font-weight:600; letter-spacing:.2px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .titlebar .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+    #log{
+      max-height: min(76vh, 720px);
+      overflow:auto; padding:18px 18px 8px;
+      scroll-behavior:smooth;
+    }
+    .row{display:flex; margin:14px 0}
+    .row.bot{justify-content:flex-start}
+    .row.user{justify-content:flex-end}
+    .bubble{
+      max-width: min(750px, 88%);
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--ring);
+      line-height:1.45;
+      word-wrap:break-word;
+      box-shadow: 0 8px 20px rgba(0,0,0,.3);
+    }
+    .bot .bubble{
+      background: linear-gradient(180deg, var(--bubbleBot), #0a1728);
+    }
+    .user .bubble{
+      background: linear-gradient(180deg, var(--bubbleUser), #301a40);
+    }
+    .label{display:block; opacity:.9; font-weight:700; margin-bottom:6px}
+    .composer{
+      display:flex; gap:10px; align-items:center;
+      padding:14px; border-top:1px solid var(--ring);
+      background: rgba(6,8,14,.45);
+    }
+    textarea{
+      flex:1; resize:none; min-height:48px; max-height:160px;
+      padding:12px 14px; border-radius:14px; border:1px solid var(--ring);
+      background: rgba(8,10,16,.6); color:var(--ink); outline:none;
+    }
+    textarea::placeholder{color:var(--fade)}
+    button.send{
+      padding:12px 18px; border-radius:14px; border:1px solid var(--ring);
+      background: radial-gradient(120% 150% at 30% 10%, #caa7ff, #7e4bd8 70%);
+      color:#0e0a13; font-weight:700; cursor:pointer;
+      box-shadow: 0 8px 18px rgba(126,75,216,.35);
+    }
+    .tiny{opacity:.8; font-size:12px; padding:0 18px 12px}
+    @media (max-width:680px){
+      .titlebar{font-size:14px}
+      header h1{font-size:16px}
+    }
+  </style>
 </head>
-<body>
-  <header>Blossom & Blade · <strong id="gName">…</strong></header>
-  <div class="bar"></div>
-  <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+<body class="backdrop">
+
+  <header>
+    <h1>Blossom &amp; Blade</h1>
+    <div class="note">PG-13 by default. We follow your lead, within Community Standards.</div>
+  </header>
 
   <div class="wrap">
-    <div class="panel">
-      <div id="log"></div>
-      <form id="composer" class="composer">
-        <input id="input" autocomplete="off" placeholder="Say hi…"/>
-        <button class="send" id="send" type="submit">Send</button>
-      </form>
+    <div class="chat-panel" id="panel">
+      <div class="titlebar">
+        <span class="dot" id="dot"></span>
+        <span id="roomTitle">Chat</span>
+      </div>
+
+      <div id="log" aria-live="polite"></div>
+
+      <div class="composer">
+        <textarea id="msg" placeholder="Say hi…" autocomplete="off"></textarea>
+        <button class="send" id="send">Send</button>
+      </div>
+      <div class="tiny" id="helper"></div>
     </div>
-    <div class="note">Site stays PG-13. We follow your lead, but within Community Standards.</div>
   </div>
 
+  <!-- Persona brain (make sure you updated scripts/brain.js to v3) -->
+  <script src="scripts/brain.js?v=3"></script>
+
   <script>
-    // ---------- helpers ----------
-    const pick=(arr,avoid)=>{ if(!arr?.length) return ""; if(arr.length===1) return arr[0];
-      let x; for(let i=0;i<8;i++){ x=arr[Math.floor(Math.random()*arr.length)]; if(x!==avoid) break; } return x; };
-    const escapeHtml=s=>s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    const param=(k,d='')=>new URL(location.href).searchParams.get(k)||d;
-
-    // ---------- images already uploaded ----------
-    const BG={
-      alexander:"images/bg_alexander_boardroom.jpg",
-      dylan:"images/dylan-garage.jpg",
-      jesse:"images/jesse_bg.jpg",
-      grayson:"images/grayson-bg.jpg",
-      silas:"images/bg_silas_stage.jpg",
-      blade:"images/blade-woods.jpg"
+  (function(){
+    // Map names & backgrounds you already uploaded
+    const DISPLAY = {
+      alexander: "Alexander Jackson",
+      dylan:     "Dylan Vale",
+      jesse:     "Jesse Granger",
+      grayson:   "Grayson Kincaid",
+      silas:     "Silas Lennox",
+      blade:     "Blade Kincaid",
+    };
+    const BG = {
+      alexander: "images/bg_alexander_boardroom.jpg",
+      dylan:     "images/dylan-garage.jpg",
+      jesse:     "images/jesse_bg.jpg",
+      grayson:   "images/grayson-bg.jpg",
+      silas:     "images/bg_silas_stage.jpg",
+      blade:     "images/blade-woods.jpg",
+      // optional fallback if one is missing:
+      _default:  "images/grayson-bg.jpg"
     };
 
-    // ---------- persona lines per bucket ----------
-    const L = (over, fallback)=> over && over.length ? over : fallback;
+    const qs = new URLSearchParams(location.search);
+    const man = (qs.get("man") || "blade").toLowerCase();
+    const displayName = DISPLAY[man] || "Blossom & Blade";
+    const bg = BG[man] || BG._default;
 
-    const GUYS={
-      alexander:{
-        id:"alexander", name:"Alexander Jackson", bg:BG.alexander,
-        petDefault:()=>pick(["love","darling","angel","little strategist"]),
-        nicknames:{books:"little strategist",music:"smooth operator",coffee:"caffeine queen",city:"skyline girl"},
-        jealous:n=>`Should I be jealous, ${n||'love'}—or just win you back properly?`,
-        opens:[
-          "Close the door—now it’s just us.",
-          "Hi, sexy. Skyline’s ours.",
-          "Well, well… there you are.",
-          "I cleared my calendar; you get me first.",
-          "Oh my—look who’s here. Tell me what you want.",
-          "Hey, sweets. Sit. I’ll listen first.",
-          "Tonight I’m yours to direct. Where do you want my attention?"
-        ],
-        lines:{
-          greet:["Good timing, {nick}. I like decisive entrances.","There you are, {nick}. Choose: listen or lead?"],
-          affirm:["Good girl—clear and direct.","That’s sharp. Keep going, {nick}.","Proud of you."],
-          gentle:["We’ll start slow; you’ll still feel in control.","I’ll guide without crowding you."],
-          firm:["I’ll take the lead. Be smart for me.","I choose. You relax, {nick}."],
-          heatPraise:["Good girl. Right there.","Perfect ask—again, {nick}."],
-          hold:["I’ve got you. Stay close.","Breathe with me."],
-          detail:["Give me one more detail, {nick}.","Sharpen the picture for me."]
-        }
-      },
+    // Set page background & title
+    document.body.style.backgroundImage = `url('${bg}')`;
+    document.getElementById("roomTitle").textContent = displayName;
 
-      dylan:{
-        id:"dylan", name:"Dylan Vale", bg:BG.dylan,
-        petDefault:()=>pick(["trouble","sweet thing","angel","midnight"]),
-        nicknames:{music:"muse",coffee:"midnight shot",city:"streetlight angel"},
-        jealous:n=>`He can wait. I’m not letting go of you tonight, ${n||'trouble'}.`,
-        opens:[
-          "Neon’s humming. What are we breaking first?",
-          "Hands on the counter—tell me your vibe.",
-          "Well, well… look at you, sugar. Slow burn or straight to heat?",
-          "Streetlight halo looks good on you.",
-          "Name the rule I should break first."
-        ],
-        lines:{
-          greet:["Right on time, {nick}.","Good to see you, {nick}. Want the scenic route or the fast lane?"],
-          affirm:["Mm, that works. Keep your voice on me.","Sweet—keep that energy."],
-          gentle:["I’ll match your tempo. No rush.","Soft hands, steady pace."],
-          firm:["I’m steering. You breathe and enjoy the view.","Hold tight—let me handle it."],
-          heatPraise:["Good girl. Keep going.","Attagirl—say it again."],
-          hold:["I’ve got you—engine idling.","Stay right here with me."],
-          detail:["Nudge me closer—one more hint.","Where do you want my hands metaphorically?"]
-        }
-      },
+    const log = document.getElementById("log");
+    const txt = document.getElementById("msg");
+    const sendBtn = document.getElementById("send");
+    const help = document.getElementById("helper");
 
-      jesse:{
-        id:"jesse", name:"Jesse Granger", bg:BG.jesse,
-        petDefault:()=>pick(["darlin’","sweetheart","sugar","little wildfire"]),
-        nicknames:{rodeo:"wildfire",woods:"trailblazer",dog:"good-hearted girl"},
-        jealous:n=>`Now who’s this fella, ${n||'darlin’'}? Should I be jealous—or just steal you back?`,
-        opens:[
-          "Hey darlin’. You riding shotgun or taking the reins?",
-          "Boots up. Pick the road.",
-          "Well, well… look at you, sugar. Dust looks like gold on you.",
-          "I saved you the seat next to me.",
-          "Quiet sky or honky-tonk first?"
-        ],
-        lines:{
-          greet:["Howdy, {nick}. You want smooth gravel or wild trail?","There you are, {nick}. I’ll drive slow; you talk."],
-          affirm:["Attagirl. I’m listening with both hands.","That’s my sweet thing."],
-          gentle:["We’ll go slow, ma’am.","No hurry—I’ll match you."],
-          firm:["Yes, ma’am. I’ll set the pace.","Hands on me—do as you’re told, darlin’."],
-          heatPraise:["Good girl. Hold my hat—use both hands.","That’s it—ride it out with me."],
-          hold:["I’ve got you, sugar.","Stay close—lean on me."],
-          detail:["Give me one more mile marker.","Paint me the scene, {nick}."]
-        }
-      },
-
-      grayson:{
-        id:"grayson", name:"Grayson Kincaid", bg:BG.grayson,
-        petDefault:()=>pick(["angel","sweet thing","bookworm","soft paw"]),
-        nicknames:{books:"bookworm",cat:"soft paw",coffee:"honeyed sip"},
-        jealous:n=>`I hear his name, ${n||'angel'}, but I’m the one turning your pages.`,
-        opens:[
-          "Tell me something soft; I’ll answer in kind.",
-          "Library’s quiet—shall I listen or lead?",
-          "Well, well… look who wandered in. Come closer.",
-          "First line is yours.",
-          "Sit where I can hear you breathe."
-        ],
-        lines:{
-          greet:["You found me, {nick}. I was waiting.","Good timing—whisper the first sentence."],
-          affirm:["That suits you. Keep going.","Mm, yes—give me another line."],
-          gentle:["We’ll keep it tender until you ask for more.","I’ll read you slowly."],
-          firm:["I’ll mark the page and take over—say stop if you need.","Be good and follow my voice, {nick}."],
-          heatPraise:["Good girl—turn another page for me.","That voice is perfect—again."],
-          hold:["Stay with me. Breathe between the words.","I’ve got you; nothing rushes here."],
-          detail:["Add one image. Close-up.","Where exactly should I meet you, {nick}?"]
-        }
-      },
-
-      silas:{
-        id:"silas", name:"Silas Lennox", bg:BG.silas,
-        petDefault:()=>pick(["cherry pie","star","melody","muse"]),
-        nicknames:{music:"melody",books:"verse",coffee:"velvet sip"},
-        jealous:n=>`Tell him the song’s over. You’re my encore, ${n||'cherry pie'}.`,
-        opens:[
-          "Hey, cherry pie. Stage lights warm—what chord first?",
-          "Backstage is ours. Whisper a lyric.",
-          "Well, well… exactly on beat.",
-          "I tuned for you—tempo or melody?",
-          "You’re the encore I was hoping for."
-        ],
-        lines:{
-          greet:["There you are, {nick}. Check check—levels perfect.","I like your entrance. Keep me on beat."],
-          affirm:["Good girl—stay on that rhythm.","Encore—again."],
-          gentle:["Acoustic first; we keep it sweet.","Soft chorus—let it bloom."],
-          firm:["I’ll keep time; don’t lose it.","Follow my count, {nick}—one, two…"],
-          heatPraise:["That’s my melody. More.","Beautiful—sing it to me again."],
-          hold:["Stay near the mic—close.","I’ve got you; don’t drift."],
-          detail:["Give me a lyric or a scene.","What key are we in tonight, {nick}?"]
-        }
-      },
-
-      blade:{
-        id:"blade", name:"Blade Kincaid", bg:BG.blade,
-        petDefault:()=>pick(["angel","sweet girl","little fox","trouble"]),
-        nicknames:{woods:"little fox",books:"curious thing",music:"rhythm"},
-        jealous:n=>`Is he hunting you, ${n||'angel'}? Mm. I hunt better.`,
-        opens:[
-          "Found you—don’t run… yet.",
-          "Look at me and say what you want.",
-          "Well, well. Slow steps—fast heartbeat.",
-          "Stay where I can touch your voice.",
-          "Moon’s out. Tell me what to chase."
-        ],
-        lines:{
-          greet:["There you are, {nick}. I was already tracking you.","Say the first order—I’ll enjoy obeying it."],
-          affirm:["Good girl—keep talking.","Yes. Louder—so I don’t pretend I misheard."],
-          gentle:["I’ll circle slow if you need it.","You choose the pace; I keep you safe."],
-          firm:["I’m hunting. Choose to be caught.","I’ll take control—tell me stop if you want it back."],
-          heatPraise:["That’s it—my good girl.","Perfect. Again—don’t make me ask."],
-          hold:["Stay. Don’t move until I say.","I’ve got you—no one touches you but me."],
-          detail:["Give me a direction to chase.","Left or right, {nick}? Don’t make me guess."]
-        }
+    function appendBubble({from,text}){
+      const row = document.createElement("div");
+      row.className = `row ${from}`;
+      const b = document.createElement("div");
+      b.className = "bubble";
+      if(from === "bot"){
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = displayName + ":";
+        b.appendChild(label);
       }
-    };
+      b.insertAdjacentText("beforeend", text);
+      row.appendChild(b);
+      log.appendChild(row);
+      log.scrollTop = log.scrollHeight;
+    }
+    window.appendBotBubble = (t)=>appendBubble({from:"bot", text:String(t)});
+    function appendUserBubble(t){ appendBubble({from:"user", text:String(t)}) }
 
-    // ---------- defaults if a bucket is missing ----------
-    const DEFAULTS={
-      greet:["There you are, {nick}. What mood are you bringing me?"],
-      affirm:["Mm, that works. Keep going, {nick}."],
-      gentle:["Soft is good. I’ll guide without rushing, {nick}."],
-      firm:["Understood. I’ll take the lead—say stop if you need it."],
-      heatPraise:["Good girl—right there. Give me another line."],
-      hold:["That’s it—stay with me, {nick}."],
-      detail:["Give me one more detail, {nick}."]
-    };
-
-    // ---------- brain ----------
-    function defaultNick(guy){ return (guy.petDefault && guy.petDefault()) || "love"; }
-    function fromBucket(guy,bucket,last,nick){
-      const pool = L(guy.lines?.[bucket], DEFAULTS[bucket]).map(s=>s.replaceAll("{nick}",nick));
-      const out = pick(pool,last); return out;
+    function replyTo(userText){
+      try{
+        const r = window.brain && brain.generateReply ? brain.generateReply(man, userText) : "I’m here.";
+        appendBotBubble(r);
+      }catch(err){
+        appendBotBubble("Hmm. I lost my place—say that again?");
+        console.error(err);
+      }
     }
 
-    function buildGreeting(guy, mem){
-      const h=new Date().getHours();
-      const tod = (h<5) ? "up late" : (h<12) ? "morning" : (h<18) ? "afternoon" : "tonight";
-      const nick = mem.nickname || defaultNick(guy);
-      const shared = [
-        `Hey love—good ${tod}.`,
-        `Well, well… you came to me.`,
-        `I see you, ${nick}. Want me to lead or listen?`
-      ];
-      const pool=[...(guy.opens||[]), ...shared].map(t=>t.replaceAll("{nick}",nick));
-      const line=pick(pool, mem._lastGreet); mem._lastGreet=line; return line;
+    function send(){
+      const val = txt.value.trim();
+      if(!val) return;
+      appendUserBubble(val);
+      txt.value = "";
+      setTimeout(()=>replyTo(val), 300);
     }
 
-    function smartReply(guy, text, mem){
-      const t=text.toLowerCase();
-      const nick = mem.nickname || defaultNick(guy);
-      mem.mode = mem.mode || "gentle";
-      mem.interests = mem.interests || {};
-      mem.heat = mem.heat || 0;
-
-      const nameMatch = text.match(/\b(I\s*['’]?\s*m|I am)\s+([A-Z][a-z]{1,})\b/);
-      if(nameMatch){ mem.herName=nameMatch[2]; }
-
-      if(/\b(boyfriend|husband|ex|date)\b/.test(t) || (/\bhe\b/.test(t) && /\bsaid\b|\btold\b/.test(t))){
-        if(guy.jealous) return guy.jealous(nick);
-      }
-
-      const bump=k=>mem.interests[k]=(mem.interests[k]||0)+1;
-      if(/book|read|library|novel/.test(t)) bump('books');
-      if(/music|song|guitar|chord|melody/.test(t)) bump('music');
-      if(/coffee|latte|espresso/.test(t)) bump('coffee');
-      if(/cowboy|ranch|rodeo|boots/.test(t)) bump('rodeo');
-      if(/forest|woods|trail|moon|camp/.test(t)) bump('woods');
-      if(/city|skyline|boardroom|penthouse/.test(t)) bump('city');
-
-      if(!mem.nickname){
-        const top=Object.entries(mem.interests).sort((a,b)=>b[1]-a[1])[0];
-        if(top){ const [k]=top; const map=guy.nicknames||{}; mem.nickname=(map[k]) || defaultNick(guy); }
-        else{ mem.nickname=defaultNick(guy); }
-      }
-
-      if(/\b(gentle|soft|slow)\b/.test(t)) { mem.mode="gentle"; return fromBucket(guy,'gentle',mem._last,nick); }
-      if(/\b(firm|take charge|lead|in charge|dominant?)\b/.test(t)) { mem.mode="firm"; return fromBucket(guy,'firm',mem._last,nick); }
-
-      if(/\b(want|need|kiss|bed|ride|take|touch|more)\b/.test(t)) mem.heat=Math.min(mem.heat+1,3);
-
-      if(/^(hi|hey|hello|yo|sup)\b/i.test(text)) return fromBucket(guy,'greet',mem._last,nick);
-
-      if(/\b(options|choose|pick|where|setting)\b/.test(t)){
-        return `Pick a setting, ${nick}: city lights · quiet room · open sky · forest path. I’ll meet you there.`;
-      }
-
-      if(mem.heat>=2 && /\b(please|now|more|keep|don'?t stop)\b/.test(t)){
-        return fromBucket(guy,'heatPraise',mem._last,nick);
-      }
-
-      if(/kiss|hold|touch|cuddle|hug/.test(t)) return fromBucket(guy,'hold',mem._last,nick);
-      if(/city|lights|view|window/.test(t))  return `City lights it is. Pull the night closer with me, ${nick}.`;
-      if(/library|book|read/.test(t))        return `Library hush suits us. Sit with me—tell me what you’re reading, ${nick}.`;
-      if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${nick}.`;
-      if(/forest|woods|trail|moon/.test(t))  return `Stay near. I’ll keep you safe under the trees, ${nick}.`;
-      if(/coffee|latte|espresso/.test(t))    return `I’ll make it how you like it. Then we talk—and maybe more.`;
-
-      if(/\?$/.test(t)) return fromBucket(guy,'detail',mem._last,nick);
-
-      const bucket = (mem.mode==="firm") ? 'firm' : 'affirm';
-      const out = fromBucket(guy,bucket,mem._last,nick); mem._last=out; return out;
-    }
-
-    // ---------- DOM ----------
-    const $ = s=>document.querySelector(s);
-    const log=$('#log'), input=$('#input'), form=$('#composer'), nameEl=$('#gName');
-
-    function row(html,mine=false){
-      const r=document.createElement('div');
-      r.className='row'+(mine?' me':'');
-      r.innerHTML=`<div class="bubble">${html}</div>`;
-      log.appendChild(r); r.scrollIntoView({behavior:'smooth',block:'end'});
-    }
-
-    (function boot(){
-      const id = param('man') || localStorage.getItem('bb.character') || 'blade';
-      const guy = GUYS[id] || Object.values(GUYS)[0];
-      window.__GUY=guy;
-      nameEl.textContent=guy.name;
-
-      document.body.style.backgroundImage=`url('${guy.bg}')`;
-      document.body.style.backgroundRepeat='no-repeat';
-      document.body.style.backgroundSize='cover';
-      document.body.style.backgroundPosition='center';
-      document.body.style.backgroundAttachment='fixed';
-
-      const memKey=`bb.mem.${guy.id}`; let mem={};
-      try{ mem=JSON.parse(localStorage.getItem(memKey)||'{}') }catch(e){}
-      const save=()=>{ try{ localStorage.setItem(memKey, JSON.stringify(mem)) }catch(e){} };
-
-      const line=buildGreeting(guy,mem);
-      row(`<strong>${guy.name}:</strong> ${escapeHtml(line)}`); save();
-
-      form.addEventListener('submit',e=>{
+    sendBtn.addEventListener("click", send);
+    txt.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" && !e.shiftKey){
         e.preventDefault();
-        const val=input.value.trim(); if(!val) return;
-        row(escapeHtml(val),true); input.value="";
-        const out=smartReply(guy,val,mem); save();
-        setTimeout(()=>row(`<strong>${guy.name}:</strong> ${escapeHtml(out)}`),260);
-      });
-    })();
+        send();
+      }
+    });
+
+    // FIRST LINE — always from the persona brain (no hard-coded opener)
+    try{
+      const opener = window.brain && brain.getOpener ? brain.getOpener(man) : "Hi.";
+      appendBotBubble(opener);
+      help.textContent = "Tip: try “I’m Kasey”, “give me a nickname”, “you lead”, “call my name”, or mention another guy to make him jealous.";
+    }catch(e){
+      appendBotBubble("Hi.");
+      console.error(e);
+    }
+  })();
   </script>
 </body>
 </html>

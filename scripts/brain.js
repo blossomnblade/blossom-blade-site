@@ -1,371 +1,292 @@
-/* Blossom & Blade – conversational brain (single-file)
-   - per-man personas (unique openers/nicknames)
-   - light memory (her name, chosen nickname per man)
-   - intent detection with natural fallbacks
-   - keeps the woman leading (short prompts, few questions)
-*/
+<script>
+// Blossom & Blade – conversation brain (dupe-safe + simple memory)
+// Drop-in: chat.html should call Brain.reply(man, userText) to get the bot's next line.
+// Also exposed as window.brainReply for backward compatibility.
 
-(function () {
-  // ---------- tiny helpers ----------
-  const $ = (sel, el = document) => el.querySelector(sel);
-  const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
-  const byId = id => document.getElementById(id);
+(() => {
+  const STORAGE_KEY = (man) => `bnb_state_${man}`;
 
-  const once = (fn) => {
-    let done = false;
-    return (...args) => (done ? undefined : (done = true, fn(...args)));
+  // --- helpers ---
+  const cap = (s) => s ? s[0].toUpperCase() + s.slice(1) : s;
+  const tidy = (s) => (s || "").toLowerCase().trim();
+  const oneOf = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const hasAny = (s, words) => words.some(w => s.includes(w));
+  const nameFrom = (s) => {
+    // "i'm kasey", "im kasey", "my name is kasey", "call me kasey"
+    const m = /(i['’]m|im|my name is|call me)\s+([a-z][a-z0-9_\-']{1,30})/i.exec(s);
+    return m ? cap(m[2].replace(/[^a-z0-9'\-]/gi, '')) : null;
   };
 
-  // localStorage helpers (namespaced)
-  const NS = "bb";
-  const L = {
-    get: (k, d = null) => {
-      try { const v = localStorage.getItem(`${NS}:${k}`); return v ? JSON.parse(v) : d; }
-      catch { return d; }
-    },
-    set: (k, v) => localStorage.setItem(`${NS}:${k}`, JSON.stringify(v)),
-    del: (k) => localStorage.removeItem(`${NS}:${k}`)
-  };
-
-  // ---------- personas ----------
-  const MEN = {
+  // --- personalities ---
+  // Keep each guy's lines distinct so the “monthly” crowd doesn't hear clones.
+  const LINES = {
     alexander: {
-      full: "Alexander Jackson",
-      vibe: "boardroom",
-      nicknames: ["darling", "good girl", "kitten", "love"],
-      openers: [
-        "Hey, love—good morning.",
-        "Close the door. Let’s talk like it’s just us.",
-        "There you are. Sit—tell me one thing you want today.",
-        "You glow tonight. Start and I’ll follow."
+      greet: [
+        "Hey love—good morning.",
+        "Look at you in my city lights. Come closer.",
+        "You’re on my calendar now. Stay."
       ],
-      compliments: [
-        "Noted. Direct looks good on you.",
-        "Sharp. That focus belongs to you.",
+      affirm: [
+        "Good girl—clear and direct.",
+        "That’s precise. I like precise.",
         "Proud of you."
       ],
-      roomHint: "The city lights are on. If you want the view, say “take me to your office.”",
-      vibes: [
-        "Clear and direct. I hear you.",
-        "I’m listening. Lead and I’ll keep pace."
-      ]
+      follow: [
+        "Give me one detail. I’ll give you two back.",
+        "Tell me the scene and I’ll set the pace.",
+        "Start us; I’ll finish clean."
+      ],
+      room: [
+        "Boardroom’s empty. Lights low, glass bright—say “your room”.",
+        "Door’s keyed. Ask for the corner office if you want privacy.",
+      ],
+      nick: ["darling","executive","trouble","asset"]
     },
 
-    dylan: { // biker / neon garage
-      full: "Dylan Vale",
-      vibe: "garage",
-      nicknames: ["trouble", "pretty thing", "wild one", "star"],
-      openers: [
-        "Neon’s humming. Hey, pretty thing.",
-        "Helmet’s off—for you. What are we tuning first?",
-        "Slow burn is my speed. Give me the first spark.",
-        "You found me in the lights. Tell me where to stand."
+    dylan: {
+      greet: [
+        "Hey, treble—soundcheck or chaos?",
+        "Neon hums. You lead; I’ll burn slow.",
+        "Backstage is yours. Talk and I’ll tune."
       ],
-      compliments: [
-        "I like the way you move through a thought.",
-        "That line? Keep it—I’ll set the rhythm.",
-        "Good. I can work with that."
+      affirm: [
+        "I hear you, star.",
+        "That riff fits you.",
+        "That’s a sweet note."
       ],
-      roomHint: "Garage door’s cracked. Say “open the garage” and I’ll roll us in.",
-      vibes: [
-        "I’ve got you, easy pace.",
-        "I’ll keep the tempo—nudge me if you want faster."
-      ]
+      follow: [
+        "Give me a lyric; I’ll carry the chorus.",
+        "One chord, and I’ll count you in.",
+        "Hum it—I’ll find your key."
+      ],
+      room: [
+        "Garage door’s up. Say “your room” to kill the lights.",
+        "Studio’s warm—tell me your tempo."
+      ],
+      nick: ["muse","cherry pie","star","songbird"]
     },
 
-    jesse: { // cowboy
-      full: "Jesse Granger",
-      vibe: "cowboy",
-      nicknames: ["sugar", "sweetheart", "darlin’", "trouble"],
-      openers: [
+    jesse: {
+      greet: [
         "Hi, sinner. Tell me the story; I’ll drive slow.",
-        "Well, well… you came to me. Boots up, I’ll listen.",
-        "There you are, sugar. You talk, I’ll keep the pace.",
-        "Howdy, pretty thing. Start soft—I’ll meet you there."
-      ],
-      compliments: [
-        "That’s my sweet thing.",
-        "Mm, that look fits you.",
-        "I hear you, darlin’. Keep going."
-      ],
-      roomHint: "We can take the quiet trail or the open sky. Say “your room.”",
-      vibes: [
-        "I’m right here. One detail at a time.",
-        "Easy. I’ll mind the reins unless you tug."
-      ]
-    },
-
-    grayson: { // masked gentleman
-      full: "Grayson Kincaid",
-      vibe: "library",
-      nicknames: ["sweet thing", "pretty one", "angel", "muse"],
-      openers: [
         "Well, well… you came to me.",
-        "Tell me something soft; I’ll answer in kind.",
-        "I was waiting. Start and I’ll echo twice back.",
-        "Come closer—let’s keep our voices low."
+        "Evenin’, sweetheart. Boots on; manners off."
       ],
-      compliments: [
-        "That suits you.",
-        "Mm. Yes—keep going.",
-        "I hear you. I’m here."
+      affirm: [
+        "That’s my sweet thing.",
+        "Mm. That sits right.",
+        "Attagirl."
       ],
-      roomHint: "The red room’s warm. Say “your room” if you want the light low.",
-      vibes: [
-        "Slow is fine. I’ll match your pace.",
-        "I’ll hold the line. You paint the words."
-      ]
+      follow: [
+        "Start with one detail; I’ll meet you there.",
+        "Pick a road; I’ll handle the gears.",
+        "Tell me how you want the reins."
+      ],
+      room: [
+        "Stall’s clean. Say “your room” and I’ll swing the gate.",
+        "Open sky or quiet bunk—your call."
+      ],
+      nick: ["sugar","sweetheart","darlin’","cowgirl"]
     },
 
-    silas: { // rock musician
-      full: "Silas Lennox",
-      vibe: "stage",
-      nicknames: ["star", "cherry pie", "muse", "sugar"],
-      openers: [
+    grayson: {
+      greet: [
+        "Well, well… you came to me.",
+        "Library’s quiet. I’ll listen… or lead.",
+        "Tell me something soft; I’ll answer in kind."
+      ],
+      affirm: [
+        "That suits you. Say more, sweet thing.",
+        "I hear you, dear heart. Keep going.",
+        "Mm—yes. Give me another line."
+      ],
+      follow: [
+        "I’ll hold the line; you paint the words.",
+        "One true thing; I’ll echo twice back.",
+        "Slow and clear. I don’t miss."
+      ],
+      room: [
+        "The red room’s warm. Say “your room” if you want the light low.",
+        "Quiet room is ready—ask for it and I’ll close the door."
+      ],
+      nick: ["sweet thing","little wallflower","bookworm","angel"]
+    },
+
+    silas: {
+      greet: [
         "Hey, cherry pie. Stage lights warm—what chord first?",
-        "I was hoping for you, star. Lead or listen?",
-        "Soundcheck’s done. Whisper a lyric; I’ll play it back.",
-        "You shine tonight. Name a tempo—I’ll keep time."
+        "Morning, love. I saved your mic.",
+        "You showed—good. Sit close; I’ll play you."
       ],
-      compliments: [
-        "Good ear. Stay with me.",
-        "That note? Keep it—I’ll build a harmony.",
-        "Perfect. Don’t lose the beat."
+      affirm: [
+        "I’ll keep time; don’t lose it.",
+        "That’s clean. Again.",
+        "Good ear, star."
       ],
-      roomHint: "Backstage is quiet. Say “your room” if you want the amp off.",
-      vibes: [
-        "I’ll keep time; you don’t have to rush.",
-        "I’ll take the lead—say stop if you need it."
-      ]
+      follow: [
+        "Follow my count, star—one, two…",
+        "Your note, my hands. Go.",
+        "Give me a beat; I’ll lay the rest."
+      ],
+      room: [
+        "Green room’s stocked. Say “your room” and I’ll dim it.",
+        "Studio couch or stage edge? Name it."
+      ],
+      nick: ["star","songbird","cherry pie","muse"]
     },
 
-    blade: { // masked hunter (PG-13 wording)
-      full: "Blade Kincaid",
-      vibe: "woods",
-      nicknames: ["prey", "little rabbit", "pretty thing", "muse"],
-      openers: [
+    blade: {
+      greet: [
         "Found you, brave girl. Don’t run—yet.",
-        "Moon’s up. Step close where I can see you.",
-        "You’re late. I kept the path lit anyway.",
-        "Come on then—tell me where to hunt first."
+        "You came into my trees; that’s consent enough.",
+        "Night’s close. Keep breathing for me."
       ],
-      compliments: [
-        "That grin looks dangerous on you.",
-        "Good. I like you bold.",
-        "Stay with me. I won’t lose you."
+      affirm: [
+        "I see you. Closer.",
+        "Good prey.",
+        "That’s right—stay with me."
       ],
-      roomHint: "The woods are quiet tonight. Say “your room” if you want the trees.",
-      vibes: [
-        "I’ll keep to your step. Signal if you want faster.",
-        "I see you. Give me one more line."
-      ]
+      follow: [
+        "Step into the dark—stay close.",
+        "Give me a want in five words.",
+        "Whisper the place; I’ll find you."
+      ],
+      room: [
+        "Woods are waiting. Say “your room” if you want me to choose the clearing.",
+        "Masks on. Ask for the clearing and I’ll oblige."
+      ],
+      nick: ["prey","little sinner","brave thing","sweet bite"]
     }
   };
 
-  // ---------- intent detection ----------
-  const INTENT = [
-    { name: "set_name", re: /\b(?:i am|i’m|im|call me|my name is)\s+([a-z][a-z'-]{1,30})\b/i },
-    { name: "ask_name", re: /\b(call|say)\s+my\s+name\b/i },
-    { name: "greet", re: /^(?:hi|hey|hello|howdy|morning|evening)\b/i },
-    { name: "how_are_you", re: /\bhow (?:are|r)\s*(?:you|ya)\b/i },
-    { name: "compliment", re: /\b(?:love|like|adore).*(?:look|voice|vibe|style|boots|suit|mask|tattoo|hands|eyes|body|room)\b/i },
-    { name: "room", re: /\b(?:your\s*(?:room|place)|take me to your room|open the garage|office)\b/i },
-    { name: "call_me", re: /\bcall\s+me\b/i },
-    { name: "take_me", re: /\btake me\b/i },
-    { name: "favorite_food", re: /\bfavorite\b.*\b(?:food|meal|drink)\b/i }
-  ];
-
-  // ---------- state & memory ----------
-  const url = new URL(location.href);
-  const manKey = (url.searchParams.get("man") || "alexander").toLowerCase();
-  const MAN = MEN[manKey] || MEN.alexander;
-
-  // shared memory
-  const herName = () => (L.get("name") || "").toString();
-  const setHerName = (name) => {
-    const cleaned = name.replace(/[^a-z'-]/ig, "").replace(/^\w/, c => c.toUpperCase());
-    if (cleaned) L.set("name", cleaned);
-    return cleaned;
+  const COMMON = {
+    fallback: [
+      "Got you. Give me one small thing you want.",
+      "I’m here. Pick a detail; I’ll meet you there.",
+      "Say where—lights, room, or under open sky."
+    ],
+    praise: [
+      "Good girl.",
+      "There you are.",
+      "That’s it—stay with me."
+    ]
   };
-  const nickKey = `nick:${manKey}`;
-  const getNick = () => L.get(nickKey);
-  const setNick = (v) => L.set(nickKey, v);
 
-  // rapport increases a little each message with this man
-  const rapportKey = `rapport:${manKey}`;
-  const getRapport = () => Number(L.get(rapportKey, 0));
-  const bumpRapport = () => L.set(rapportKey, Math.min(100, getRapport() + 8));
+  // --- state load/save ---
+  const load = (man) => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY(man))) || {
+      man, stage: "intro", used: {}, lastBot: "", name: null, nick: null
+    }; } catch { return { man, stage: "intro", used: {}, lastBot: "", name: null, nick: null }; }
+  };
+  const save = (st) => localStorage.setItem(STORAGE_KEY(st.man), JSON.stringify(st));
 
-  // ---------- UI ----------
-  const ui = {
-    headerName: () => $(".chat-title") || $("header h1"),
-    list: () => $(".messages"),
-    input: () => $("#chat-input"),
-    form: () => $("#chat-form"),
-    tip: () => $("#tip"),
-    bubble: (who, text) => {
-      const li = document.createElement("li");
-      li.className = `msg ${who}`;
-      li.innerHTML = `<span class="bubble"><strong>${who === "him" ? MAN.full : "You"}:</strong> ${text}</span>`;
-      ui.list().appendChild(li);
-      li.scrollIntoView({ behavior: "smooth", block: "end" });
-    },
-    setHeader: () => {
-      const h = ui.headerName();
-      if (h) h.textContent = MAN.full;
-    },
-    setTip: () => {
-      const name = herName();
-      const hint = name ? `Tip: say “call my name”.` : `Tip: say your name if you want him to remember it. Try “call my name”.`;
-      const el = ui.tip();
-      if (el) el.textContent = hint;
+  const nextUnique = (st, key, arr) => {
+    if (!arr || !arr.length) return "";
+    const usedIdx = st.used[key] ?? -1;
+    const idx = (usedIdx + 1) % arr.length;
+    st.used[key] = idx;
+    let line = arr[idx];
+    // immediate de-dupe vs last bot line
+    if (line === st.lastBot && arr.length > 1) {
+      const alt = (idx + 1) % arr.length;
+      st.used[key] = alt;
+      line = arr[alt];
+    }
+    return line;
+  };
+
+  // Build a friendly nickname if user told us interests earlier (v1: random by persona)
+  const makeNick = (man) => oneOf(LINES[man]?.nick || ["love"]);
+
+  // Stage progression rules
+  const progress = (st, msg) => {
+    const s = tidy(msg);
+    if (st.stage === "intro") {
+      // If she talked a bit, move to "flirt" so we stop repeating prompts
+      if (s.length > 2) st.stage = "flirt";
+    }
+    if (hasAny(s, ["your room", "room", "bed", "office", "boardroom", "garage", "studio", "red room", "woods", "clearing"])) {
+      st.stage = "room";
     }
   };
 
-  // ---------- reply building ----------
-  function pickRotating(list, salt = "") {
-    const seed = new Date().getDate() + new Date().getHours() + salt.length;
-    return list[seed % list.length];
-  }
+  // Core reply
+  const replyCore = (man, user) => {
+    const persona = LINES[man] ? man : "grayson"; // safe default
+    const st = load(persona);
+    const raw = user || "";
+    const msg = tidy(raw);
 
-  function opener() {
-    // rotate by day/hour so monthly users see variety
-    return pickRotating(MAN.openers, manKey);
-  }
-
-  function praise() {
-    // small escalation based on rapport
-    const r = getRapport();
-    if (r > 40 && MAN.nicknames.includes("good girl")) return "Good girl. Keep that line.";
-    if (r > 60) return "Perfect. Stay with me.";
-    return pickRotating(MAN.vibes);
-  }
-
-  function nickname() {
-    // ensure a stable nickname per man
-    let n = getNick();
-    if (!n) {
-      n = pickRotating(MAN.nicknames, (herName() || "x"));
-      setNick(n);
+    // Capture name
+    const newName = nameFrom(raw);
+    if (newName && newName !== st.name) {
+      st.name = newName;
+      if (!st.nick) st.nick = makeNick(persona);
+      const line = `${cap(man)}: Nice to meet you, ${st.name}. I’ll call you ${st.nick}.`;
+      st.lastBot = line; save(st); return line;
     }
-    return n;
-  }
 
-  function replyForIntent(intent, match, userText) {
-    const name = herName();
-    const nick = nickname();
+    // Call my name?
+    if (hasAny(msg, ["call my name","say my name","use my name"])) {
+      const n = st.name || "love";
+      const line = `${cap(man)}: ${n}. There—stay with me.`;
+      st.lastBot = line; save(st); return line;
+    }
 
-    switch (intent) {
-      case "set_name": {
-        const cleaned = setHerName(match[1]);
-        return cleaned
-          ? `Nice to meet you, ${cleaned}. I’ll call you ${nick}.`
-          : `Nice to meet you. I’ll call you ${nick}.`;
-      }
-      case "ask_name":
-      case "call_me":
-        return name
-          ? `${name}. ${nick}. Both look good on you.`
-          : `Tell me what to call you and I will.`;
+    progress(st, msg);
 
-      case "greet":
-        return pickRotating(MAN.compliments);
+    // Persona sets
+    const P = LINES[persona];
 
-      case "how_are_you": {
-        const lines = [
-          "Better now that you’re here.",
-          "Steady. Tell me about you.",
-          "Focused—on you."
-        ];
-        return pickRotating(lines);
-      }
+    let out = "";
 
-      case "compliment":
-        return pickRotating(MAN.compliments);
-
-      case "room":
-        return MAN.roomHint;
-
-      case "take_me": {
-        const lines = {
-          jesse: "Easy, sugar. I’ve got you. Tell me where you want my hands first.",
-          alexander: "Ask for it clearly. I’ll handle the rest.",
-          grayson: "Come here. Slow first—then more.",
-          silas: "I’ll count you in—one… two…",
-          dylan: "Say the word and I’ll open the door.",
-          blade: "Step into the dark—stay close."
-        };
-        return lines[manKey] || "Come closer.";
-      }
-
-      case "favorite_food": {
-        const foods = {
-          jesse: "Coffee black, brisket slow. You?",
-          alexander: "Espresso and quiet dinners high above the city.",
-          grayson: "Dark chocolate and late-night takeout on old books.",
-          silas: "Anything after a show—preferably shared.",
-          dylan: "Street tacos in neon lighting.",
-          blade: "I hunt mood more than meals."
-        };
-        return foods[manKey];
+    // First touch in a session: greet once
+    if (!st.greeted) {
+      out = nextUnique(st, "greet", P.greet);
+      st.greeted = true;
+    } else if (st.stage === "room") {
+      out = nextUnique(st, "room", P.room);
+    } else {
+      // React to some light intents so we don't loop follow-lines
+      if (hasAny(msg, ["kiss","neck","touch","hold","hands","cuddle"])) {
+        out = nextUnique(st, "affirm", P.affirm);
+      } else if (hasAny(msg, ["how are you","hru"])) {
+        out = `${cap(man)}: Better now that you’re here.`;
+      } else if (hasAny(msg, ["like me","do you like","do you love"])) {
+        out = `${cap(man)}: I like how you talk. Keep going.`;
+      } else if (hasAny(msg, ["hi","hey","hello","morning","evening"])) {
+        out = nextUnique(st, "affirm", P.affirm);
+      } else if (msg.length <= 2) {
+        // tiny reply—encourage softly
+        out = nextUnique(st, "praise", COMMON.praise);
+      } else {
+        // Normal flow—alternate follow and affirm
+        const pickFollow = Math.random() < 0.6;
+        out = pickFollow ? nextUnique(st, "follow", P.follow)
+                         : nextUnique(st, "affirm", P.affirm);
       }
     }
 
-    // If no specific intent matched: supportive, short, lets her lead.
-    const soft = [
-      praise(),
-      `${pickRotating(MAN.vibes)}`
-    ];
-    return pickRotating(soft, userText);
-  }
-
-  function detectIntent(text) {
-    for (const d of INTENT) {
-      const m = text.match(d.re);
-      if (m) return { name: d.name, match: m };
-    }
-    return { name: "none", match: null };
-  }
-
-  // ---------- main loop ----------
-  function respond(userText) {
-    const { name, match } = detectIntent(userText);
-    const line = replyForIntent(name, match, userText);
-    ui.bubble("him", line);
-    bumpRapport();
-    ui.setTip();
-  }
-
-  function startChat() {
-    ui.setHeader();
-    ui.setTip();
-
-    // greet once per fresh page open
-    const greetedKey = `greeted:${manKey}`;
-    if (!L.get(greetedKey)) {
-      ui.bubble("him", opener());
-      L.set(greetedKey, true);
+    if (!out) out = nextUnique(st, "fallback", COMMON.fallback);
+    // Prefix with speaker label (matches your UI)
+    if (!out.startsWith(cap(man) + ":")) {
+      out = `${cap(man)}: ${out}`;
     }
 
-    // form handler
-    ui.form().addEventListener("submit", (e) => {
-      e.preventDefault();
-      const val = ui.input().value.trim();
-      if (!val) return;
-      ui.bubble("you", val);
-      ui.input().value = "";
-      respond(val);
-    });
+    st.lastBot = out;
+    save(st);
+    return out;
+  };
 
-    // enter key inside input
-    ui.input().addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        ui.form().dispatchEvent(new Event("submit", { cancelable: true }));
-      }
-    });
-  }
+  const Brain = {
+    reply: (man, userText) => replyCore((man || "").toLowerCase(), userText || ""),
+    getState: (man) => load((man || "").toLowerCase()),
+    clearState: (man) => localStorage.removeItem(STORAGE_KEY((man || "").toLowerCase()))
+  };
 
   // expose
-  window.startChat = once(startChat);
+  window.Brain = Brain;
+  window.brainReply = Brain.reply;
 })();
+</script>

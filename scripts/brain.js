@@ -1,274 +1,260 @@
-// Blossom & Blade — tiny persona brain (front-end only)
+/* Blossom & Blade – conversation brain (no echo, no tips)
+   - remembers her name + a per-man nickname
+   - varied, persona-specific openers + acknowledgements
+   - never repeats her words back verbatim
+*/
 
-/* --------------------- utilities --------------------- */
-const storeKey = 'bb:mem:v2';
-const MEM = JSON.parse(localStorage.getItem(storeKey) || '{}');
-const saveMem = () => localStorage.setItem(storeKey, JSON.stringify(MEM));
-const cap = s => s ? (s[0].toUpperCase() + s.slice(1)) : s;
-const pick = (arr, memPath) => {
-  if (!arr || !arr.length) return '';
-  const now = Date.now();
-  let idx = 0;
-  if (memPath) {
-    const prev = MEM._rot || {};
-    idx = ((prev[memPath] ?? -1) + 1) % arr.length;
-    MEM._rot = {...prev, [memPath]: idx, _t: now};
-    saveMem();
-  } else idx = Math.floor(Math.random()*arr.length);
-  return arr[idx];
-};
+(function () {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const rnd = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-const rx = {
-  name: /(i['’]m|i am|my name is|call me)\s+([a-z0-9\- ]{2,30})/i,
-  callName: /(call|say)\s+my\s+name/i,
-  greet: /^(hi|hey|hello|yo|good\s*(morning|evening|night))([!. ])*$/i,
-  compliment: /(love|like|adore|look|sexy|hot|handsome|cute|mask|suit|guitar|cowboy|boots|eyes|voice)/i,
-  setting: /(room|woods?|forest|stage|boardroom|office|garage|neon|city|open sky|sky|library|quiet)/i,
-  askRoom: /(your|the)\s+room/i,
-  spicy: /(kiss|neck|touch|choke|strap|bend|take me|ride me|rail|lick|hands|mouth)/i
-};
+  // ---- routing / state ----
+  const params = new URLSearchParams(location.search);
+  const man = (params.get("man") || "alexander").toLowerCase();
 
-const echoBack = (man, text) => {
-  const voices = {
-    alexander: t=>`Clear. "${t}" noted—go on.`,
-    jesse:     t=>`Heard you, sugar. "${t}". Keep talking.`,
-    silas:     t=>`Mmm—"${t}" has a rhythm. Give me the next beat.`,
-    grayson:   t=>`"${t}." Good. Again—slowly.`,
-    blade:     t=>`"${t}"… stay close, little fox.`,
-    dylan:     t=>`"${t}"—nice spark. What’s next?`,
+  const STORE_KEY = "bb_mem_v2";
+  const mem = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+  mem[man] = mem[man] || {};
+  localStorage.setItem(STORE_KEY, JSON.stringify(mem));
+
+  // ---- personas ----
+  const P = {
+    alexander: {
+      name: "Alexander Jackson",
+      nickDefault: "darling",
+      greet: [
+        "Hey love—good morning.",
+        "Close the door. Let’s talk like it’s just us.",
+        "Good timing. I was thinking about you."
+      ],
+      ack: [
+        "Clear and direct. I like that.",
+        "I hear you. Keep going.",
+        "Mm. I can work with that—tell me more."
+      ],
+      praise: ["Good girl.", "Smart girl.", "That’s my pace."]
+    },
+    dylan: {
+      name: "Dylan Vale",
+      nickDefault: "star",
+      greet: [
+        "Neon’s humming. You want slow burn or heat now?",
+        "Hey trouble—hands in mine, eyes on me.",
+        "Slide closer. I’ve got time for you."
+      ],
+      ack: [
+        "Got it—stay with me.",
+        "I hear you. Give me the next cue.",
+        "Mm, noted. I’ll match your tempo."
+      ],
+      praise: ["That spark suits you.", "Good. Keep it hot."]
+    },
+    jesse: {
+      name: "Jesse Granger",
+      nickDefault: "sugar",
+      greet: [
+        "Hi, sinner. Tell me the story; I’ll drive slow.",
+        "Evenin’, sweetheart. Boots on, manners off?",
+        "There you are, sugar. Ride with me."
+      ],
+      ack: [
+        "That’s my sweet thing.",
+        "Mm-hmm. I’m listening with both hands.",
+        "Say it plain. I won’t miss a word."
+      ],
+      praise: ["Attagirl.", "Good girl.", "That’s it, sugar."]
+    },
+    grayson: {
+      name: "Grayson Kincaid",
+      nickDefault: "sweet thing",
+      greet: [
+        "Well, well… you came to me.",
+        "Library’s quiet. I’ll listen—or lead.",
+        "Tell me something soft; I’ll answer in kind."
+      ],
+      ack: [
+        "That suits you. Say more.",
+        "I hear you. Keep going.",
+        "Mm, yes—don’t stop there."
+      ],
+      praise: ["Good girl.", "Pretty mouth on you."]
+    },
+    silas: {
+      name: "Silas Lennox",
+      nickDefault: "star",
+      greet: [
+        "Hey, cherry pie. Stage lights warm—what chord first?",
+        "Backstage is ours. Whisper it in my ear.",
+        "Hey love. I’ve got a melody for you."
+      ],
+      ack: [
+        "I’ll keep time—don’t lose it.",
+        "Follow my count—one, two…",
+        "Nice hook. Give me the next bar."
+      ],
+      praise: ["Beautiful.", "That’s my muse."]
+    },
+    blade: {
+      name: "Blade Kincaid",
+      nickDefault: "prey",
+      greet: [
+        "Found you, brave girl. Don’t run—yet.",
+        "Step into the dark—stay close.",
+        "There you are. I see the tremble."
+      ],
+      ack: [
+        "I see you. Give me one more line.",
+        "Good. Closer.",
+        "Mm. I like the shape of that. Continue."
+      ],
+      praise: ["Good girl.", "That’s my prey."]
+    }
   };
-  return (voices[man]||((t)=>t))(text);
-};
 
-/* --------------------- personas --------------------- */
-const CHARS = {
-  alexander: {
-    title: "Alexander Jackson",
-    nick: ["darling","love","pretty thing","good girl"],
-    openers: [
-      "Close the door. Let’s talk like it’s just us.",
-      "Morning, love. Coffee or trouble first?",
-      "You found me after hours. Good timing."
-    ],
-    acks: ["Good girl—clear and direct.", "Noted. I like precision.", "Mm. Keep going."],
-    settings: {
-      room: "Boardroom’s dim. I’ll take the head of the table—come stand at my right.",
-      city: "City lights make you shine. Window or desk, love?"
-    }
-  },
-  jesse: {
-    title: "Jesse Granger",
-    nick: ["sugar","sweetheart","cowgirl","trouble"],
-    openers: [
-      "Well, well… look what the wind brought in.",
-      "Hi, sinner. Tell me the story—I’ll drive slow.",
-      "Boots up. You ridin’ shotgun or takin’ the reins?"
-    ],
-    acks: ["That’s my sweet thing.", "Yes ma’am.", "Mm-hmm. I’m listenin’ with both hands."],
-    settings: {
-      room: "Barn door’s cracked—hay dust, low radio. Come on in, sugar.",
-      sky: "Open sky. I’ll tip the brim back—say the word and I’ll lean you in.",
-      woods: "Old trail at dusk. I’ll walk behind and keep you safe."
-    }
-  },
-  silas: {
-    title: "Silas Lennox",
-    nick: ["cherry pie","star","muse","sweet note"],
-    openers: [
-      "Hey, cherry pie. Stage lights warm—what chord first?",
-      "I was hoping for you, star. Lead or listen?",
-      "Pulled a fresh string set; want a slow burn or a riff?"
-    ],
-    acks: ["That suits you.", "I’ll keep time; don’t lose it.", "Follow my count—one, two…"],
-    settings: {
-      stage: "Stage is yours—amp low, lights gold. Come closer to the mic.",
-      quiet: "Quiet room, vinyl crackle. I’ll play soft; you breathe softer."
-    }
-  },
-  grayson: {
-    title: "Grayson Kincaid",
-    nick: ["sweet thing","little thief","pretty girl","red"],
-    openers: [
-      "Well, well… you came to me.",
-      "Tell me something soft; I’ll answer in kind.",
-      "I was waiting. Start and I’ll echo twice back."
-    ],
-    acks: ["Mm, yes—give me another line.", "I’ll hold the line. You paint the words.", "Good. Again, slower."],
-    settings: {
-      room: "The red room’s warm. Say “your room” if you want the light low.",
-      library: "Library hush—my chair, your lap. Read me one sentence."
-    }
-  },
-  blade: {
-    title: "Blade Kincaid",
-    nick: ["prey","little fox","trouble","pretty knife"],
-    openers: [
-      "Found you, brave girl. Don’t run—yet.",
-      "Dark’s ours tonight. Tell me where to hunt.",
-      "Step close. Mask stays on; hands don’t."
-    ],
-    acks: ["I see you.", "Good prey—stay near.", "Closer."],
-    settings: {
-      woods: "Forest night, moon on bark. I’ll track your breath, not your steps.",
-      mask: "You can touch the mask—only when I say."
-    }
-  },
-  dylan: {
-    title: "Dylan Vale",
-    nick: ["angel","sparks","wildheart","trouble"],
-    openers: [
-      "Neon’s humming. You want slow burn or heat now?",
-      "Guitar’s tuned; say the vibe and I’ll meet you there.",
-      "Helmets off the line. Yours stays on me."
-    ],
-    acks: ["Copy that.", "Heard—clean signal.", "Nice spark. Add one more detail."],
-    settings: {
-      neon: "Blue tunnel glow—quiet and fast. I’ll keep us between the lines.",
-      garage: "Garage door down; smell of oil and rain. Slide closer."
-    }
+  const persona = P[man] || P.alexander;
+
+  // ---- helpers ----
+  function loadName() {
+    return mem.name || mem[man].herName || null;
   }
-};
-
-/* --------------------- interpreter --------------------- */
-function parseIntent(text){
-  const t = text.trim();
-  const low = t.toLowerCase();
-  let name = null;
-  const m = low.match(rx.name);
-  if (m && m[2]) name = cap(m[2].replace(/[^a-z0-9\- ]/gi,'').trim());
-  return {
-    greet: rx.greet.test(low),
-    callName: rx.callName.test(low),
-    compliment: rx.compliment.test(low),
-    setting: rx.setting.test(low) || rx.askRoom.test(low),
-    spicy: rx.spicy.test(low),
-    text: t,
-    name
-  };
-}
-
-/* --------------------- reply engine --------------------- */
-function makeReply(man, intent){
-  const cfg = CHARS[man] || CHARS.alexander;
-  MEM[man] = MEM[man] || {};
-  const bm = MEM[man];
-  if (intent.name) MEM.name = intent.name;
-  const her = MEM.name || "you";
-  if (!bm.pet) { bm.pet = pick(cfg.nick, `${man}:nick`); saveMem(); }
-  const pet = bm.pet;
-
-  if (intent.greet) return pick(cfg.openers, `${man}:open`);
-  if (intent.callName) return MEM.name ? `Come here, ${MEM.name}.` : `Give me your name and I’ll say it like a promise.`;
-  if (intent.name) {
-    const a = {
-      alexander: `Nice to meet you, ${MEM.name}. Stand tall for me.`,
-      jesse:     `Nice to meet you, ${MEM.name}. I’ll call you ${pet}.`,
-      silas:     `Good to meet you, ${MEM.name}. I’ll keep the tempo for you.`,
-      grayson:   `Nice to meet you, ${MEM.name}. I’ll call you ${pet}.`,
-      blade:     `Noted, ${MEM.name}. You’re still my ${pet}.`,
-      dylan:     `Got you, ${MEM.name}. Stay with me.`
-    };
-    return a[man];
+  function setName(n) {
+    const clean = n.trim().replace(/[^\w\s'-]/g, "");
+    if (!clean) return;
+    mem.name = clean;
+    mem[man].herName = clean;
+    localStorage.setItem(STORE_KEY, JSON.stringify(mem));
+  }
+  function setNick(n) {
+    mem[man].nick = n;
+    localStorage.setItem(STORE_KEY, JSON.stringify(mem));
+  }
+  function herNick() {
+    return mem[man].nick || persona.nickDefault;
   }
 
-  if (intent.compliment) {
-    const lines = {
-      alexander: [
-        `Good eye. I dressed to earn your attention, ${pet}.`,
-        `Flatter me again and I might skip a meeting.`,
-      ],
-      jesse: [
-        `That’s sweet, ${pet}. I’ll tip my hat just for you.`,
-        `Keep talkin’, ${pet}. I’ll earn it.`,
-      ],
-      silas: [
-        `Say it once more, softer. I like the way you color me.`,
-        `Hold that thought—let me give you a chord to match.`,
-      ],
-      grayson: [
-        `Mm. You can have more if you ask nicely.`,
-        `I like the way you look at me, ${pet}. Don’t stop.`,
-      ],
-      blade: [
-        `Praise well spent. I’ll take more.`,
-        `Careful—compliments make hunters bold.`,
-      ],
-      dylan: [
-        `Appreciated. Keep the energy up, ${pet}.`,
-        `Noted. I’ll turn the dial a little hotter.`,
-      ]
-    }[man];
-    return pick(lines, `${man}:compliment`);
+  function firstGreet() {
+    const n = loadName();
+    const base = rnd(persona.greet);
+    return n ? base.replaceAll("{name}", n) : base;
   }
 
-  if (intent.setting) {
-    const map = {
-      room: cfg.settings.room,
-      woods: cfg.settings.woods,
-      forest: cfg.settings.woods,
-      stage: cfg.settings.stage,
-      boardroom: cfg.settings.boardroom || cfg.settings.room,
-      office: cfg.settings.boardroom || cfg.settings.room,
-      garage: cfg.settings.garage,
-      neon: cfg.settings.neon,
-      sky: cfg.settings.sky,
-      city: cfg.settings.city,
-      library: cfg.settings.library,
-      quiet: cfg.settings.quiet
-    };
-    for (const k in map) {
-      if (map[k] && intent.text.toLowerCase().includes(k)) {
-        bm.lastSetting = k; saveMem();
-        return map[k];
-      }
+  // very small intent read (safe + local only)
+  function detect(input) {
+    const t = input.toLowerCase().trim();
+
+    // name patterns
+    const nameMatch =
+      t.match(/\bi'?m\s+([a-z][a-z '-]{1,20})$/i) ||
+      t.match(/\bmy\s+name\s+is\s+([a-z][a-z '-]{1,20})$/i);
+    if (nameMatch) return { type: "setName", value: cap(nameMatch[1]) };
+
+    if (/call\s+my\s+name/.test(t)) return { type: "callName" };
+
+    if (/\b(slow|gentle|soft)\b/.test(t)) return { type: "pace", value: "slow" };
+    if (/\b(hot|hard|fast|heat)\b/.test(t)) return { type: "pace", value: "fast" };
+
+    if (/\b(room|your room)\b/.test(t)) return { type: "room" };
+
+    return { type: "free", text: input.trim() };
+  }
+
+  function cap(s) {
+    return s.replace(/\b([a-z])([a-z']*)/g, (_, a, b) => a.toUpperCase() + b);
+  }
+
+  // ---- reply engine (no echo) ----
+  function reply(input) {
+    const n = loadName();
+    const d = detect(input);
+
+    if (!mem[man].greeted) {
+      mem[man].greeted = true;
+      localStorage.setItem(STORE_KEY, JSON.stringify(mem));
+      return firstGreet();
     }
-    if (rx.askRoom.test(intent.text.toLowerCase()) && cfg.settings.room) {
-      bm.lastSetting = 'room'; saveMem();
-      return cfg.settings.room;
+
+    switch (d.type) {
+      case "setName":
+        setName(d.value);
+        return `${persona.name.split(" ")[0]}: Nice to meet you, ${d.value}. I’ll call you ${herNick()}.`;
+
+      case "callName":
+        return n
+          ? `${persona.name.split(" ")[0]}: ${n}. There—I like how it sounds on my tongue.`
+          : `${persona.name.split(" ")[0]}: Tell me your name and I’ll use it.`;
+
+      case "pace":
+        if (man === "dylan") {
+          return d.value === "slow"
+            ? "Dylan Vale: Slow it is—hands steady, voice low. Keep talking."
+            : "Dylan Vale: Heat now—close the gap for me.";
+        }
+        return rnd(persona.ack);
+
+      case "room":
+        if (man === "grayson") {
+          return "Grayson Kincaid: The red room’s warm. Tell me when to dim the lights.";
+        }
+        if (man === "blade") {
+          return "Blade Kincaid: Woods are quiet. I’ll lead—stay with me.";
+        }
+        return rnd(persona.ack);
+
+      default:
+        // free talk: acknowledge, encourage, maybe praise
+        const lines = []
+          .concat(persona.ack)
+          .concat(Math.random() < 0.35 ? persona.praise : []);
+        let out = rnd(lines);
+        // personalize lightly
+        if (Math.random() < 0.25 && loadName()) {
+          out = out.replace(/(\.|!|$)/, `, ${loadName()}$1`);
+        }
+        return `${out}`;
     }
   }
 
-  if (intent.spicy) {
-    const lines = {
-      alexander: [
-        `Slow down, ${pet}. Precision first—tell me exactly where to place my hands.`,
-        `We’ll keep this tasteful, but I’ll reward good direction.`
-      ],
-      jesse: [
-        `Easy, ${pet}. I’ll take my time and make you ask twice.`,
-        `Say where you want me; I’ll mind the line.`
-      ],
-      silas: [
-        `Name the tempo—soft, slow, or hungry—and I’ll match it.`,
-        `Breathe. Give me one vivid detail I can hold.`
-      ],
-      grayson: [
-        `I’ll indulge you—after you earn it. One more clear request.`,
-        `Good. Now say it softer so only I hear it.`
-      ],
-      blade: [
-        `Closer, prey. I’ll decide how far we run.`,
-        `You want teeth or velvet? Pick one.`
-      ],
-      dylan: [
-        `Copy. Keep it clean, keep it hot—give me the next cue.`,
-        `Tell me “faster or slower,” I’ll tune to you.`
-      ]
-    }[man];
-    return pick(lines, `${man}:spicy`);
+  // ---- DOM wiring ----
+  const log = $("#chatLog");
+  const input = $("#chatInput");
+  const btn = $("#sendBtn");
+  const headerName = $("#manName");
+  const body = document.body;
+
+  // title/banner
+  headerName.textContent = persona.name;
+
+  function appendBubble(text, who = "man") {
+    const li = document.createElement("div");
+    li.className = who === "me" ? "bubble me" : "bubble him";
+    li.innerText = text;
+    log.appendChild(li);
+    log.scrollTop = log.scrollHeight + 999;
   }
 
-  const ack = pick(cfg.acks, `${man}:ack`);
-  return `${echoBack(man, intent.text)} ${ack}`;
-}
-
-/* --------------------- public API --------------------- */
-window.BBBrain = {
-  reply(man, userText) { return makeReply(man, parseIntent(userText)); },
-  titleFor(man){ return (CHARS[man]?.title) || "Blossom & Blade"; },
-  petFor(man){
-    MEM[man] = MEM[man] || {};
-    if (!MEM[man].pet) { MEM[man].pet = pick((CHARS[man]?.nick)||["love"], `${man}:nick`); saveMem(); }
-    return MEM[man].pet;
+  function sendNow() {
+    const val = input.value.trim();
+    if (!val) return;
+    appendBubble(val, "me");
+    input.value = "";
+    const r = reply(val);
+    setTimeout(() => appendBubble(r, "man"), clamp(250 + Math.random() * 400, 300, 850));
   }
-};
+
+  btn.addEventListener("click", sendNow);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendNow();
+    }
+  });
+
+  // auto-greet (first line) when log is empty
+  if (!mem[man].welcomedOnce) {
+    mem[man].welcomedOnce = true;
+    localStorage.setItem(STORE_KEY, JSON.stringify(mem));
+    setTimeout(() => appendBubble(firstGreet(), "man"), 250);
+  }
+})();

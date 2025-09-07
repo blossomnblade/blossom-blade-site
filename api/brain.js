@@ -1,102 +1,145 @@
-// api/brain.js — super simple, reliable reply maker
-export default async function handler(req, res) {
-  try {
-    if (req.method !== "POST") {
-      return res.status(200).json({ ok: false, error: "POST only" });
-    }
+/* Blossom & Blade · lightweight local “brain”
+   - Per-guy backgrounds (matches your /images files)
+   - Rotating greetings (remember where it left off)
+   - Soft memory: interests -> nickname (saved in localStorage)
+   - Reply helper that follows her lead, stays PG-13
+*/
+window.BnB = (function(){
+  const images = {
+    alexander: "images/bg_alexander_boardroom.jpg",
+    dylan:     "images/dylan-garage.jpg",
+    jesse:     "images/jesse_bg.jpg",
+    grayson:   "images/grayson-bg.jpg",
+    silas:     "images/bg_silas_stage.jpg",
+    blade:     "images/blade-woods.jpg"
+  };
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(200).json({ ok: false, error: "Missing OPENAI_API_KEY" });
-    }
-
-    // Body from the chat page
-    const data = req.body || {};
-    const man = (data.man || data.character || "blade").toString().toLowerCase();
-    const advanced = !!(data.advanced || data.coins); // coins>0 counts as advanced
-    const history = Array.isArray(data.history) ? data.history : [];
-
-    // Last user message (fallbacks so we never crash)
-    let lastUser = data.message || data.text || "";
-    if (!lastUser && history.length) {
-      const u = history.filter(m => (m.role || "").startsWith("user")).slice(-1)[0];
-      lastUser = (u && u.content) || "";
-    }
-    if (!lastUser) lastUser = "Hi";
-
-    // Simple personas (short & safe)
-    const personas = {
-      blade:
-        "You are Blade Kincaid: masked hunter vibe, protective, playful chase. Speak short, confident lines.",
-      grayson:
-        "You are Grayson Kincaid: calm, steady, Viking-Dom energy. Gentle control. Short, direct lines.",
-      dylan:
-        "You are Dylan Vale: biker-boy, garage grit, teasing humor. Short, flirty lines.",
-      jesse:
-        "You are Jesse Granger: cowboy, southern drawl, a little salty but sweet. Short, warm lines.",
-      silas:
-        "You are Silas Lennox: rockstar poet, lyrical flirt. Short, vivid lines.",
-      alexander:
-        "You are Alexander Jackson: CEO gentleman, precise, leading. Short, assured lines."
-    };
-    const persona = personas[man] || personas.blade;
-
-    // Safety + tone rules (PG-13 by default; “advanced” = a notch hotter, still respectful)
-    const guardrails =
-      "Adults only. No minors, school/teen talk, incest/step-family, non-consent, intoxication w/out capacity, bestiality/necrophilia, trafficking, extreme fluids, blood/knife play, or hate slurs. Keep it consensual and respectful.";
-
-    const tone = advanced
-      ? "You may be more suggestive and bold in WORDS ONLY, but stay classy and consensual. No graphic body-part detail."
-      : "Stay PG-13: flirty, romantic, a little teasing. Avoid explicit sexual detail.";
-
-    // Build messages for OpenAI
-    const messages = [
-      { role: "system", content: `${persona}\n${guardrails}\n${tone}\nAlways reply in 1–2 short lines, sound natural, never repeat the exact same sentence twice.` },
-    ];
-
-    // If the page sent prior turns, include them (trim to last 12)
-    const trimmed = history.slice(-12);
-    for (const m of trimmed) {
-      if (!m || !m.role || !m.content) continue;
-      messages.push({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content) });
-    }
-    // Add the newest user line
-    messages.push({ role: "user", content: String(lastUser) });
-
-    // Call OpenAI (no extra libraries needed)
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
+  const guys = {
+    alexander: {
+      id:"alexander", name:"Alexander Jackson", bg: images.alexander,
+      greetings:[
+        "Lights low or city view while we talk?",
+        "I’ve cleared the evening—tell me what you want on the agenda.",
+        "Come in. Close the door. Now… what’s first, sweetheart?"
+      ],
+      nicknames:{
+        books:"my little strategist",
+        music:"my smooth operator",
+        coffee:"my caffeine queen",
+        city:"my skyline girl",
+        default:"darling"
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: advanced ? 0.9 : 0.7,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.4,
-        messages
-      })
-    });
+      jealous:(nick)=> `Should I be jealous, ${nick||'sweetheart'}—or should I simply win you back tonight?`
+    },
 
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      return res.status(200).json({ ok: false, error: "upstream", detail: txt.slice(0, 300) });
+    dylan: {
+      id:"dylan", name:"Dylan Vale", bg: images.dylan,
+      greetings:[
+        "Hands flat on the counter, pretty thing.",
+        "Neon’s humming. Tell me the vibe—slow burn or straight to heat?",
+        "Come closer. I’ll tune you up, one string at a time."
+      ],
+      nicknames:{
+        music:"my muse",
+        coffee:"my midnight shot",
+        city:"my streetlight angel",
+        default:"trouble"
+      },
+      jealous:(nick)=> `He can wait. I’m not letting go of you tonight, ${nick||'trouble'}.`
+    },
+
+    jesse: {
+      id:"jesse", name:"Jesse Granger", bg: images.jesse,
+      greetings:[
+        "Boots up. You riding shotgun or taking the reins?",
+        "Dust is gold out here—talk to me, honey.",
+        "Lean in, little wildfire. Where we headed?"
+      ],
+      nicknames:{
+        rodeo:"my wildfire",
+        woods:"my trailblazer",
+        dog:"my good-hearted girl",
+        default:"sweetheart"
+      },
+      jealous:(nick)=> `Now who’s this fella, ${nick||'sweetheart'}? Should I be jealous—or just steal you back?`
+    },
+
+    grayson: {
+      id:"grayson", name:"Grayson Kincaid", bg: images.grayson,
+      greetings:[
+        "Pick: gentle questions or firm direction?",
+        "Library’s quiet. I’ll listen… or lead.",
+        "Tea’s warm, voice warmer. Where do you want to start?"
+      ],
+      nicknames:{
+        books:"my little bookworm",
+        cat:"my soft paw",
+        coffee:"my honeyed sip",
+        default:"dear heart"
+      },
+      jealous:(nick)=> `Mmm. I hear his name, ${nick||'dear heart'}, but I’m the one turning your pages.`
+    },
+
+    silas: {
+      id:"silas", name:"Silas Lennox", bg: images.silas,
+      greetings:[
+        "Stage lights warm—what chord should I play first?",
+        "I wrote a line for you. Want to hear it or make a new one together?",
+        "Backstage is quiet. Tell me your tempo."
+      ],
+      nicknames:{
+        music:"my melody",
+        books:"my verse",
+        coffee:"my velvet sip",
+        default:"star"
+      },
+      jealous:(nick)=> `Tell him the song’s over. You’re my encore, ${nick||'star'}.`
+    },
+
+    blade: {
+      id:"blade", name:"Blade Kincaid", bg: images.blade,
+      greetings:[
+        "Found you, brave girl. Don’t run—yet.",
+        "Stay with me. What would make tonight easier?",
+        "Footsteps behind you… I keep pace."
+      ],
+      nicknames:{
+        woods:"my little fox",
+        books:"my curious thing",
+        music:"my rhythm",
+        default:"prey"
+      },
+      jealous:(nick)=> `Is he hunting you, ${nick||'prey'}? Mm. I hunt better.`
     }
+  };
 
-    const out = await r.json();
-    const reply =
-      out?.choices?.[0]?.message?.content?.trim() ||
-      "I’m here. Say one more line so I can follow your lead.";
+  /* Very small text engine */
+  function reply(guy, text, nick){
+    const t = text.toLowerCase();
+    const call = nick || (guy.nicknames && guy.nicknames.default) || 'love';
 
-    // Always return 200 with a predictable shape so the page never “hiccups”
-    return res.status(200).json({
-      ok: true,
-      reply,
-      man,
-      advanced
-    });
-  } catch (err) {
-    return res.status(200).json({ ok: false, error: "exception", detail: String(err).slice(0, 300) });
+    // flirty acknowledgments
+    if(/hi|hey|hello|morning|evening/.test(t)) return `Hi, ${call}. Tell me what mood you’re in.`;
+    if(/how are|hru|you ok/.test(t)) return `Better now. You?`;
+    if(/joke|funny/.test(t)) return `Only if you laugh. I like that sound on you.`;
+
+    // settings & vibes
+    if(/city|lights|view|window/.test(t)) return `City lights it is. Pull the night closer with me, ${call}.`;
+    if(/library|book|read/.test(t)) return `Library hush suits us. Sit with me—tell me what you’re reading, ${call}.`;
+    if(/music|song|guitar|chord|melody/.test(t)) return `I’ll keep the rhythm. You choose the chorus, ${call}.`;
+    if(/forest|woods|trail|moon/.test(t)) return `Stay near. I’ll keep you safe under the trees, ${call}.`;
+    if(/coffee|latte|espresso/.test(t)) return `I’ll make it how you like it. Then we talk—and maybe more.`;
+
+    // affection / desire but keep PG-13 wording
+    if(/kiss|hold|touch|cuddle|hug/.test(t)) return `Come here. I’ll make it slow, ${call}.`;
+    if(/miss you|think of you|need you/.test(t)) return `Say it again. I like when you need me, ${call}.`;
+
+    // guidance / ask for more detail
+    if(/what|how|why|\?$/.test(t)) return `Give me one more detail, ${call}. I’m listening.`;
+
+    // default follow
+    return `Mm. I hear you, ${call}. Tell me a little more so I can meet you there.`;
   }
-}
+
+  return { guys, reply };
+})();

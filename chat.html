@@ -84,5 +84,83 @@
   </div>
 
   <script src="scripts/brain.js"></script>
+<script>
+/* ---- Blossom & Blade: chat hotfix 2025-09-07 ---- */
+(() => {
+  if (window.__bbHotfixRan) return;           // hard boot guard
+  window.__bbHotfixRan = true;
+
+  // 0) Room background based on ?man=
+  const man = new URLSearchParams(location.search).get('man') || 'alexander';
+  document.documentElement.dataset.room = man; // your CSS can map [data-room="..."] to the right bg
+
+  // 1) Hide tips globally
+  const tipCss = document.createElement('style');
+  tipCss.textContent = `.tip{display:none !important}`;
+  document.head.appendChild(tipCss);
+
+  // 2) Find chat elements robustly
+  const out   = document.querySelector('#out, .messages, .thread, [data-chat="out"]') || document.body;
+  const input = document.querySelector('#say, #message, textarea, input[type="text"]');
+  const send  = Array.from(document.querySelectorAll('button')).find(b => /send/i.test(b.textContent)) || null;
+
+  // 3) De-dup consecutive identical bubbles (prevents double greeter)
+  const dedup = () => {
+    const kids = Array.from(out.children);
+    for (let i = 1; i < kids.length; i++) {
+      const a = kids[i-1].textContent.trim();
+      const b = kids[i].textContent.trim();
+      if (a && b && a === b) { kids[i].remove(); i--; }
+    }
+  };
+  dedup();
+
+  // 4) Centralized append that also de-dups the last line
+  const append = (who, text) => {
+    if (!out) return;
+    const last = out.lastElementChild?.textContent?.trim() || '';
+    if (last === text.trim()) return; // skip exact duplicate
+    const div = document.createElement('div');
+    div.className = /you/i.test(who) ? 'bubble you' : 'bubble him';
+    div.textContent = text;
+    out.appendChild(div);
+    (out.parentElement || document.scrollingElement).scrollTop =
+      (out.parentElement || document.scrollingElement).scrollHeight;
+  };
+
+  // 5) Wire Send & Enter once (without stacking multiple listeners)
+  const handleSend = () => {
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+    // If your page already has its own handler (window.bbHandleSend), use it.
+    if (typeof window.bbHandleSend === 'function') {
+      window.bbHandleSend(msg, append);    // lets your existing logic reply
+    } else {
+      // Fallback: just echo user and let your existing brain reply if it’s watching DOM mutations
+      append('you', msg);
+      if (typeof window.brainReply === 'function') {
+        window.brainReply(man, msg, append);
+      }
+    }
+    input.value = '';
+  };
+
+  if (send) {
+    send.onclick = null;        // clear any stacked handlers
+    send.addEventListener('click', handleSend);
+  }
+  if (input) {
+    input.onkeydown = null;
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
+    });
+  }
+
+  // 6) Final sweep in case the page added the greeter twice *after* load
+  //    (run once more after a tick)
+  setTimeout(dedup, 300);
+})();
+</script>
 </body>
 </html>

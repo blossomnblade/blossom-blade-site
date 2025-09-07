@@ -193,7 +193,187 @@
     });
   }
 })();
+</script><script>
+/* Blossom & Blade — Chat glue (universal hook + fallback Brain + room lock)
+   Paste at the BOTTOM of chat.html. Works even if your input/log/button
+   have different ids/classes.  */
+
+(function () {
+  // ---------- A) Lock to this character & kill landing hotkeys ----------
+  const allowed = ['alexander','dylan','jesse','grayson','silas','blade'];
+  const qs = new URLSearchParams(location.search);
+  const qsMan = (qs.get('man') || '').toLowerCase();
+  const MAN = allowed.includes(qsMan) ? qsMan : 'grayson';
+  try { localStorage.setItem('lastMan', MAN); } catch(e) {}
+  if (!window.CHAT_MAN) Object.defineProperty(window, 'CHAT_MAN', { value: MAN, writable: false });
+
+  window.addEventListener('keydown', function(e){
+    const active = document.activeElement;
+    const typing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+    if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (typing) e.stopPropagation(); else { e.preventDefault(); e.stopPropagation(); }
+    }
+  }, true);
+
+  // ---------- B) Find DOM pieces no matter what they’re called ----------
+  const find = {
+    input() {
+      return document.querySelector('#chat-input, [data-chat-input], textarea, input[type="text"]');
+    },
+    log() {
+      return document.querySelector('#chat-log, [data-chat-log], .chat-log, .messages, [role="log"]')
+          || createLog();
+    },
+    form() {
+      return document.querySelector('#chat-form, [data-chat-form], form');
+    },
+    sendBtn() {
+      // button next to input or any obvious "send"
+      const near = this.input() && this.input().closest('form, .input-row, .composer') || document;
+      return near.querySelector('#send-btn, [data-send], button[type="submit"], button.send, button');
+    }
+  };
+
+  function createLog(){
+    // If your page already has a pretty log, we never reach here.
+    const host = document.querySelector('[data-chat-box]') || document.body;
+    const log = document.createElement('div');
+    log.id = 'chat-log';
+    log.style.minHeight = '160px';
+    log.style.padding = '8px 12px';
+    host.insertBefore(log, host.firstChild);
+    return log;
+  }
+
+  // ---------- C) Minimal bubble helper (uses your styles if present) ----------
+  const log = find.log();
+  function bubble(who, text) {
+    const row = document.createElement('div');
+    row.className = who === 'you' ? 'bubble you' : 'bubble him';
+    // Fall back to some neutral styling if your CSS classes differ.
+    row.style.whiteSpace = 'pre-wrap';
+    row.style.margin = '8px 0';
+    if (!row.classList.contains('bubble')) {
+      row.style.maxWidth = '720px';
+      row.style.padding = '10px 14px';
+      row.style.borderRadius = '12px';
+      row.style.background = who === 'you' ? 'rgba(130,70,160,.25)' : 'rgba(30,40,60,.35)';
+      row.style.backdropFilter = 'blur(4px)';
+      row.style.color = '#e6e6f0';
+    }
+    // Strip leading "Name: " if the brain adds it.
+    text = (text || '').replace(/^[A-Z][a-z]+(?:\s[A-Z][a-z]+)?:\s*/, '');
+    row.textContent = text || '…';
+    log.appendChild(row);
+    (log.parentElement || log).scrollTop = (log.parentElement || log).scrollHeight;
+  }
+
+  // ---------- D) Load Brain if available; otherwise use a tiny fallback ----------
+  function ensureBrain(cb){
+    if (window.Brain && typeof window.Brain.reply === 'function') return cb();
+    // Try to load scripts/brain.js if it exists in your repo.
+    const s = document.createElement('script');
+    s.src = 'scripts/brain.js?v=' + Date.now();
+    s.onload = () => cb();
+    s.onerror = () => { window.Brain = { reply: localBrain }; cb(); };
+    document.head.appendChild(s);
+  }
+
+  // Persona-flavored micro brain (PG-13) used only if scripts/brain.js isn’t found.
+  function localBrain(man, text) {
+    text = (text || '').toLowerCase();
+    // name memory
+    const nameM = /\b(i[' ]?m|my name is|call me)\s+([a-z][a-z'-]{1,20})\b/i.exec(text);
+    if (nameM) { try { localStorage.setItem('bb:youName', nameM[2]); } catch(e){} }
+    const youName = (localStorage.getItem('bb:youName') || 'love');
+
+    const wantsRoom = /\b(room|your place|red room|bed|woods?|garage)\b/.test(text);
+    const greet = /\b(hi|hey|hello|morning|evening)\b/.test(text);
+    const askName = /\b(say|call).*\bname\b/.test(text);
+    const praise = /\b(love|like|hot|handsome|pretty|good)\b/.test(text);
+
+    const lines = {
+      jesse: {
+        greet: [`Hi, sinner.`, `Well hey there, darlin’.`, `Evenin’, ${youName}.`],
+        lead: [`Tell me the story—I’ll drive slow.`, `Pick a setting: city lights, quiet room, or open sky.`],
+        room: [`Saddle up, sugar. My room’s warm; boots by the door.`],
+        praise: [`That’s my sweet thing.`, `Attagirl.`],
+        steady: [`I’m right here.`]
+      },
+      alexander: {
+        greet: [`Hey love—good morning.`, `Well, look at you.`],
+        lead: [`Clear and direct. I listen fast.`, `Tell me one true thing; I’ll give you two back.`],
+        room: [`Boardroom’s unlocked. Say “your room” for low lights.`],
+        praise: [`Good girl.`, `Proud of you.`],
+        steady: [`I’m here.`]
+      },
+      dylan: {
+        greet: [`Hey, star.`, `Neon looks good on you.`],
+        lead: [`Lead or listen? I’ll match you.`, `Give me a chord—slow burn from there.`],
+        room: [`Studio’s dark. Say “your room” if you want the lights down.`],
+        praise: [`That suits you.`, `Nice line.`],
+        steady: [`I’m here, hands steady.`]
+      },
+      grayson: {
+        greet: [`Well, well… you came to me.`, `Hi, sinner.`],
+        lead: [`I’ll hold the line. You paint the words.`, `Start; I’ll echo twice back.`],
+        room: [`The red room’s warm. Say “your room” for the light low.`],
+        praise: [`Mm. That suits you, sweet thing.`, `I hear you, dear heart.`],
+        steady: [`Stay with me.`]
+      },
+      silas: {
+        greet: [`Hey, cherry pie.`, `Morning, muse.`],
+        lead: [`Follow my count, star—one, two…`, `I’ll keep time; don’t lose it.`],
+        room: [`Greenroom’s ready. Say “your room” if you want hush.`],
+        praise: [`Pretty note.`, `Good ear.`],
+        steady: [`Right here, sweetheart.`]
+      },
+      blade: {
+        greet: [`Found you. Don’t run—yet.`, `Step close, prey.`],
+        lead: [`Give me one more line.`, `Step into the dark—stay close.`],
+        room: [`Woods are waiting. Say “your room” to lock the door.`],
+        praise: [`Good girl.`, `I see you.`],
+        steady: [`Stay.`]
+      }
+    }[man] || lines.grayson;
+
+    if (askName) return `Say it slow, ${youName}.`;
+    if (wantsRoom) return lines.room[0];
+    if (greet) return lines.greet[Math.floor(Math.random()*lines.greet.length)];
+    if (praise) return lines.praise[Math.floor(Math.random()*lines.praise.length)];
+    return lines.lead[Math.floor(Math.random()*lines.lead.length)] || lines.steady[0];
+  }
+
+  // ---------- E) Wire up submit / Enter / Send click (robust) ----------
+  ensureBrain(() => {
+    const input = find.input();
+    const form  = find.form();
+    const btn   = find.sendBtn();
+
+    const send = () => {
+      if (!input) return;
+      const text = (input.value || '').trim();
+      if (!text) return;
+      bubble('you', text);
+      input.value = '';
+      let reply = 'I’m here. Give me one detail.';
+      try {
+        reply = (window.Brain && typeof window.Brain.reply === 'function')
+          ? (window.Brain.reply(window.CHAT_MAN, text) || reply)
+          : reply;
+      } catch(e){}
+      bubble('him', reply);
+    };
+
+    if (form) form.addEventListener('submit', (e) => { e.preventDefault(); send(); });
+    if (btn)  btn.addEventListener('click', (e) => { e.preventDefault(); send(); });
+    if (input) input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+  });
+})();
 </script>
+
 
 </body>
 </html>

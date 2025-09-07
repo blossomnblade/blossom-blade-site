@@ -1,180 +1,94 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Chat · Blossom & Blade</title>
-  <link rel="icon" href="/images/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --ink:#e7eaf5;
-      --ink-dim:#bfc7dd;
-      --bubble:#0e1320d9;     /* more see-through container */
-      --user:#4b1e63;         /* user bubble */
-      --ring:#a57cf3;
+      --ink:#e9eef6;
+      --ink-soft:#b9c3d4;
+      --bg:#0c1016;
+      --panel: rgba(10,14,20,.55);           /* translucent window */
+      --panel-strong: rgba(10,14,20,.75);    /* stronger for bubbles */
+      --accent:#b68cff;
+      --me:#5a2b86;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; color:var(--ink); font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:#0b0f17 url('/images/bg_silas_stage.jpg') center/cover fixed no-repeat;
+      margin:0; background:#0a0f14 url('images/blade-woods.jpg') center/cover fixed no-repeat;
+      color:var(--ink); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
     }
-    .wrap{min-height:100%; display:flex; flex-direction:column}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 40px}
     header{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 18px; backdrop-filter: blur(6px);
-      background:linear-gradient(180deg,#0b0f17f2 0%, #0b0f1700 100%);
-      border-bottom:1px solid #ffffff14;
+      font-weight:800; letter-spacing:.5px; font-size:28px; display:flex; align-items:center; gap:10px;
     }
-    header .ttl{font-weight:800; letter-spacing:.3px; font-size:28px}
-    header .note{font-size:12px; color:var(--ink-dim)}
-    .roombar{
-      height:4px; background:linear-gradient(90deg,#b84cff,#ff6297,#ffd36b);
-      border-radius:3px; margin:0 18px 6px;
-      opacity:.6;
+    header .dot{width:10px;height:10px;border-radius:999px;background:#9a55ff;box-shadow:0 0 16px #9a55ff}
+    header .trail{flex:1;height:6px;border-radius:6px;background:linear-gradient(90deg,#6a1cff,#caa0ff);opacity:.35;margin-left:10px}
+    .card{
+      margin-top:16px; background:var(--panel); border:1px solid rgba(255,255,255,.06);
+      border-radius:16px; backdrop-filter: blur(10px);
+      box-shadow:0 10px 35px rgba(0,0,0,.35);
     }
-    main{flex:1; display:flex; justify-content:center; padding:18px}
-    .chat{
-      width:min(980px, 96vw);
-      background:var(--bubble);
-      border:1px solid #ffffff1a; border-radius:18px;
-      box-shadow:0 10px 30px #00000066; padding:14px 14px 12px;
+    .title{
+      padding:16px 18px 6px 18px; font-weight:700; font-size:18px; color:var(--ink); opacity:.9
+    }
+    #chatLog{
+      height:56vh; overflow:auto; padding:12px 18px 18px 18px;
       display:flex; flex-direction:column; gap:12px;
     }
-    .nameplate{font-weight:700; opacity:.95; display:flex; align-items:center; gap:10px}
-    .dot{width:10px;height:10px;background:#b84cff;border-radius:50%;box-shadow:0 0 0 4px #b84cff22}
-    .scroll{overflow:auto; padding:10px 6px; display:flex; flex-direction:column; gap:10px; max-height:65vh}
     .bubble{
-      max-width:75%; padding:12px 14px; border-radius:14px;
-      background:#141a28; border:1px solid #ffffff14;
-      box-shadow:0 6px 16px #00000044; white-space:pre-wrap;
+      max-width:720px; line-height:1.4; padding:14px 16px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.06); background:var(--panel-strong);
+      box-shadow:0 3px 14px rgba(0,0,0,.25);
+      white-space:pre-wrap;
     }
-    .bubble.me{
-      align-self:flex-end; background:var(--user); border-color:#ffffff22;
-    }
-    .input{
-      display:flex; gap:10px; align-items:center; margin-top:6px
+    .bubble.him{align-self:flex-start}
+    .bubble.me{align-self:flex-end;background:rgba(129,87,255,.18);border-color:rgba(182,140,255,.35)}
+    .inputRow{
+      display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,.06)
     }
     textarea{
-      flex:1; resize:none; min-height:46px; max-height:120px; padding:12px 14px; border-radius:12px;
-      border:1px solid #ffffff22; background:#0e1320bf; color:var(--ink); outline:none;
+      flex:1; resize:none; min-height:48px; max-height:120px;
+      padding:14px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.08);
+      background:rgba(12,16,22,.55); color:var(--ink); outline:none;
     }
     button{
-      background:#6b2bd8; color:white; font-weight:700; border:0; padding:12px 18px; border-radius:12px;
-      box-shadow:0 6px 18px #6b2bd85a; cursor:pointer
+      padding:0 18px; border:none; height:48px; border-radius:12px; cursor:pointer;
+      background:linear-gradient(180deg,#caa0ff,#9156ff 85%); color:#1b0e2e; font-weight:800;
+      box-shadow:0 8px 20px rgba(145,86,255,.35);
     }
-    button:disabled{opacity:.6; cursor:not-allowed}
-    .tip{font-size:12px; color:var(--ink-dim); opacity:.9}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    @media (max-width:720px){
+      #chatLog{height:62vh}
+      .bubble{max-width:95%}
+    }
+    /* no tips */
+    .tips, .tip { display:none !important; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="ttl" id="title">Blossom & Blade</div>
-    <div class="note">PG-13 by default. We follow your lead, within Community Standards.</div>
-  </header>
-  <div class="roombar"></div>
+  <div class="wrap">
+    <header>
+      <div class="dot"></div>
+      <div>Blossom & Blade</div>
+      <div class="trail"></div>
+    </header>
 
-  <main>
-    <div class="chat">
-      <div class="nameplate"><span class="dot"></span> <span id="who"> … </span></div>
-      <div id="log" class="scroll"></div>
-      <div class="input">
-        <textarea id="msg" placeholder="Say hi…"></textarea>
-        <button id="send">Send</button>
+    <div class="card">
+      <div class="title" id="manName">…</div>
+      <div id="chatLog" aria-live="polite"></div>
+      <div class="inputRow">
+        <textarea id="chatInput" placeholder="Say hi…" autocomplete="off"></textarea>
+        <button id="sendBtn" type="button">Send</button>
       </div>
-      <div class="tip">Tip: say your name if you want him to remember it. Try “call my name”.</div>
     </div>
-  </main>
-</div>
+  </div>
 
-<!-- persona brain -->
-<!-- (keep this tag just above closing body so it loads after the DOM) -->
-<!-- bg + route -->
-<script>
-  const qs = k => new URLSearchParams(location.search).get(k);
-  const man = (qs('man') || 'alexander').toLowerCase();
-
-  // room backgrounds (update paths if your file names differ)
-  const ROOM_BG = {
-    alexander: '/images/bg_alexander_boardroom.jpg',
-    dylan:     '/images/dylan-garage.jpg',
-    jesse:     '/images/jesse_bg.jpg',
-    grayson:   '/images/grayson-bg.jpg',
-    silas:     '/images/bg_silas_stage.jpg',
-    blade:     '/images/blade-woods.jpg'
-  };
-
-  if (ROOM_BG[man]) {
-    document.body.style.backgroundImage = `url("${ROOM_BG[man]}")`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundAttachment = 'fixed';
-  }
-</script>
-
-<!-- brain (must load before UI wiring) -->
-<script src="/scripts/brain.js"></script>
-
-<!-- UI wiring: send button + Enter key + opener -->
-<script>
-  const log  = document.getElementById('log');
-  const msg  = document.getElementById('msg');
-  const send = document.getElementById('send');
-
-  // optional header labels—only set if elements exist
-  const titleEl = document.getElementById('title');
-  const whoEl   = document.getElementById('who');
-  if (titleEl) titleEl.textContent = 'Blossom & Blade';
-  if (whoEl && window.BBBrain && BBBrain.titleFor) whoEl.textContent = BBBrain.titleFor(man);
-
-  function addBubble(text, me=false){
-    if (!log) return;
-    const b = document.createElement('div');
-    b.className = 'bubble' + (me ? ' me' : '');
-    b.textContent = text;
-    log.appendChild(b);
-    log.scrollTop = log.scrollHeight;
-  }
-
-  function handleSend(){
-    if (!msg || !send) return;
-    const t = (msg.value || '').trim();
-    if (!t) return;
-    addBubble(t, true);
-    msg.value = '';
-    msg.focus();
-    send.disabled = true;
-
-    // tiny pause to feel conversational
-    setTimeout(()=>{
-      try {
-        const who = (window.BBBrain && BBBrain.titleFor) ? BBBrain.titleFor(man) : 'He';
-        const reply = (window.BBBrain && BBBrain.reply) ? BBBrain.reply(man, t) : "I'm here. Give me one detail.";
-        addBubble(`${who}: ${reply}`);
-      } finally {
-        send.disabled = false;
-      }
-    }, 220);
-  }
-
-  // send button
-  if (send) send.addEventListener('click', handleSend);
-
-  // Enter to send (Shift+Enter = new line)
-  if (msg) msg.addEventListener('keydown', (e)=>{
-    if (e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      handleSend();
-    }
-  });
-
-  // first line when chat opens (rotates inside brain)
-  window.addEventListener('DOMContentLoaded', ()=>{
-    const who = (window.BBBrain && BBBrain.titleFor) ? BBBrain.titleFor(man) : 'He';
-    const opener = (window.BBBrain && BBBrain.reply) ? BBBrain.reply(man, 'hello') : "Hi.";
-    addBubble(`${who}: ${opener}`);
-  });
-</script>
+  <!-- conversation brain -->
+  <script src="scripts/brain.js"></script>
 </body>
 </html>

@@ -1,142 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chat · Blossom & Blade</title>
-  <link rel="icon" href="images/logo.jpg" />
+
   <style>
     :root {
-      --ink:#e9e7f1;
-      --ink-dim:#cfd2dc;
-      --panel: rgba(12,16,24,0.65);
-      --bubble: rgba(18,24,34,0.75);
-      --bubble-user: rgba(83,49,108,0.85);
-      --accent:#b591ff;
-      --accent-soft:#6f3fb3;
+      --bg: #0b1116;
+      --panel: rgba(12, 16, 22, 0.55);
+      --bubble-him: rgba(22, 30, 40, 0.85);
+      --bubble-you: rgba(92, 40, 108, 0.90);
+      --accent: #d9b3ff;
+      --room-img: none; /* set below by script */
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:#0c1018;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-    .page{min-height:100%;display:flex;flex-direction:column;background:radial-gradient(80% 80% at 50% 0%,rgba(181,145,255,0.08),transparent 70%)}
-    .bar{height:8px;background:linear-gradient(90deg,#b591ff,#6f3fb3);box-shadow:0 0 20px #6f3fb3 inset,0 0 12px rgba(181,145,255,.6);opacity:.9}
-    header{padding:18px 20px 10px;font-weight:700;font-size:18px;letter-spacing:.2px;display:flex;gap:10px;align-items:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-    header small{margin-left:auto;opacity:.8;font-weight:500}
-    .wrap{position:relative;flex:1;display:flex;justify-content:center;padding:16px}
-    .bg::before{
-      content:"";position:absolute;inset:0;background:var(--bg-url) center/cover no-repeat fixed;opacity:.38;filter:saturate(.9) contrast(1.05) brightness(.9);
+    html, body {
+      height: 100%;
+      margin: 0;
+      color: #e8ecf1;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg) center/cover no-repeat fixed;
+      background-image: var(--room-img);
     }
-    .chat{
-      position:relative;width:min(1100px,96vw);margin:auto;background:var(--panel);border:1px solid rgba(255,255,255,.06);
-      border-radius:20px;backdrop-filter:blur(6px);box-shadow:0 10px 22px rgba(0,0,0,.45), inset 0 0 60px rgba(255,255,255,.03);
-      overflow:hidden;
+    header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.2) 60%, transparent);
+      position: sticky; top: 0; z-index: 2;
+      backdrop-filter: blur(2px);
     }
-    .head{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
-      font-weight:800;display:flex;align-items:center;gap:10px}
-    .badge{width:10px;height:10px;border-radius:50%;background:#b55fff;box-shadow:0 0 0 4px rgba(181,95,255,.18)}
-    .body{padding:18px;display:flex;flex-direction:column;gap:14px;max-height:min(74vh,980px);overflow:auto}
-    .bubble{max-width:75%;padding:14px 16px;border-radius:14px;line-height:1.35;background:var(--bubble);box-shadow:0 6px 16px rgba(0,0,0,.35)}
-    .bubble b{opacity:.95}
-    .user{align-self:flex-end;background:var(--bubble-user)}
-    .foot{display:flex;gap:10px;padding:14px;border-top:1px solid rgba(255,255,255,.06);background:linear-gradient(0deg,rgba(255,255,255,.02),transparent)}
-    .input{flex:1;background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;outline:none}
-    .btn{background:linear-gradient(180deg,#b591ff,#6f3fb3);color:#fff;border:none;border-radius:14px;padding:0 18px;font-weight:800;min-width:84px}
-    .tip{padding:8px 18px 16px;opacity:.8;font-size:12px}
-    .pg{position:fixed;top:10px;right:16px;font-size:12px;opacity:.85}
-    @media (max-width:720px){ .bubble{max-width:86%} .pg{display:none} }
-  </style>
+    .dot { width: 10px; height:10px; border-radius: 50%; background:#a24cff; box-shadow:0 0 12px #a24cff;}
+    .chat-title { font-weight: 700; letter-spacing:.2px; }
+    .standards { margin-left:auto; font-size: 12px; opacity:.8; }
 
-  <!-- load the real brain FIRST; if it fails we warn -->
-  <script defer src="/scripts/brain.js"></script>
+    main { display:flex; justify-content:center; }
+    .chat-window {
+      width: min(980px, 92vw);
+      margin: 18px auto;
+      padding: 18px 18px 8px;
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
+      backdrop-filter: blur(4px);
+    }
+    ul.messages { list-style: none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px; min-height: 55vh;}
+    .msg .bubble { display:inline-block; padding:14px 16px; border-radius:14px; line-height:1.35; }
+    .msg.him .bubble { background: var(--bubble-him); }
+    .msg.you { display:flex; justify-content:flex-end; }
+    .msg.you .bubble { background: var(--bubble-you); }
+    .msg strong { opacity:.9; }
+
+    form.chat-input {
+      display:flex; gap:10px; align-items:center; margin-top:12px; padding:12px; border-radius:14px;
+      background: rgba(255,255,255,.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    #chat-input {
+      flex:1; border:none; outline:none; background: transparent; color: #e9e9f0; font-size:16px;
+    }
+    button.send {
+      background:#a24cff; color:white; border:none; padding:10px 18px; border-radius:12px; font-weight:700;
+      box-shadow: 0 8px 22px rgba(162,76,255,.35);
+      cursor:pointer;
+    }
+    .tip { margin: 8px 2px 0; font-size: 12px; opacity:.75; }
+  </style>
 </head>
 <body>
-  <div class="page">
-    <div class="bar"></div>
-    <header>
-      <div>Blossom & Blade</div>
-      <small class="pg">PG-13 by default. We follow your lead, within Community Standards.</small>
-    </header>
+  <header>
+    <span class="dot"></span>
+    <h1 class="chat-title">Blossom &amp; Blade</h1>
+    <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+  </header>
 
-    <div class="wrap bg">
-      <div class="chat" id="chat">
-        <div class="head"><span class="badge"></span><span id="manTitle">Chat</span></div>
-        <div class="body" id="log"></div>
-        <div class="foot">
-          <input id="msg" class="input" placeholder="Say hi…" autocomplete="off" />
-          <button id="send" class="btn">Send</button>
-        </div>
-        <div class="tip" id="tip">Tip: say your name if you want him to remember it. Try “call my name”.</div>
-      </div>
-    </div>
-  </div>
+  <main>
+    <section class="chat-window">
+      <ul class="messages"></ul>
+
+      <form id="chat-form" class="chat-input" autocomplete="off">
+        <input id="chat-input" type="text" placeholder="Say hi…" />
+        <button class="send" type="submit">Send</button>
+      </form>
+      <div id="tip" class="tip"></div>
+    </section>
+  </main>
 
   <script>
-    // ---- page boot ----------------------------------------------------------
-    const qs = new URLSearchParams(location.search);
-    const man = (qs.get("man") || "alexander").toLowerCase();
-
-    const BG = {
-      alexander: "images/bg_alexander_boardroom.jpg",
-      jesse:     "images/jesse_bg.jpg",
-      dylan:     "images/dylan-garage.jpg",
-      grayson:   "images/grayson-bg.jpg",
-      silas:     "images/bg_silas_stage.jpg",
-      blade:     "images/blade-woods.jpg"
-    };
-    document.documentElement.style.setProperty("--bg-url", `url('${BG[man] || BG.alexander}')`);
-
-    const titleMap = {
-      alexander: "Alexander Jackson",
-      jesse: "Jesse Granger",
-      dylan: "Dylan Vale",
-      grayson: "Grayson Kincaid",
-      silas: "Silas Lennox",
-      blade: "Blade Kincaid"
-    };
-    document.getElementById("manTitle").textContent = titleMap[man] || "Chat";
-
-    const log = document.getElementById("log");
-    const input = document.getElementById("msg");
-    const sendBtn = document.getElementById("send");
-
-    function bubble(html, user=false){
-      const b = document.createElement("div");
-      b.className = "bubble" + (user ? " user" : "");
-      b.innerHTML = html;
-      log.appendChild(b);
-      log.scrollTo({top: log.scrollHeight, behavior:"smooth"});
-    }
-
-    // initial line (unique per man, rotated by brain)
-    function intro(){
-      // If brain loaded, let it craft the very first line via a blank ping
-      if (window.BB_BRAIN) {
-        const first = window.BB_BRAIN.reply(man, "");
-        bubble(`<b>${titleMap[man]}:</b> ${first}`);
-      } else {
-        bubble(`<b>${titleMap[man]}:</b> Hi.`);
-      }
-    }
-
-    function send(){
-      const txt = input.value.trim();
-      if (!txt) return;
-      bubble(txt, true);
-      input.value = "";
-
-      // guard: make sure brain is loaded; if not, warn instead of looping "I'm here."
-      if (!window.BB_BRAIN || typeof window.BB_BRAIN.reply !== "function"){
-        bubble(`<b>${titleMap[man]}:</b> (Dev) Brain failed to load. Hard refresh this page.`, false);
-        return;
-      }
-      const bot = window.BB_BRAIN.reply(man, txt);
-      bubble(`<b>${titleMap[man]}:</b> ${bot}`);
-    }
-
-    sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
-
-    // start
-    intro();
+    // pick the correct background for the man shown
+    (function () {
+      const man = (new URL(location.href)).searchParams.get("man") || "alexander";
+      const BG = {
+        alexander: "images/bg_alexander_boardroom.jpg",
+        dylan:     "images/dylan-garage.jpg",
+        jesse:     "images/jesse_bg.jpg",
+        grayson:   "images/grayson-bg.jpg",
+        silas:     "images/bg_silas_stage.jpg",
+        blade:     "images/blade-woods.jpg"
+      }[man] || "images/gothic-bg.jpg";
+      document.documentElement.style.setProperty("--room-img", `url('${BG}')`);
+    })();
   </script>
+
+  <script src="scripts/brain.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", () => window.startChat());</script>
 </body>
 </html>

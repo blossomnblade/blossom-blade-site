@@ -1,379 +1,165 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Chat · Blossom & Blade</title>
-
+  <link rel="icon" href="/images/logo.jpg">
   <style>
-    :root {
-      --bg: #0b1116;
-      --panel: rgba(12, 16, 22, 0.55);
-      --bubble-him: rgba(22, 30, 40, 0.85);
-      --bubble-you: rgba(92, 40, 108, 0.90);
-      --accent: #d9b3ff;
-      --room-img: none; /* set below by script */
+    :root{
+      --ink:#e7eaf5;
+      --ink-dim:#bfc7dd;
+      --bubble:#0e1320d9;     /* more see-through container */
+      --user:#4b1e63;         /* user bubble */
+      --ring:#a57cf3;
     }
-    html, body {
-      height: 100%;
-      margin: 0;
-      color: #e8ecf1;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
-      background: var(--bg) center/cover no-repeat fixed;
-      background-image: var(--room-img);
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink); font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:#0b0f17 url('/images/bg_silas_stage.jpg') center/cover fixed no-repeat;
     }
-    header {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 18px;
-      background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.2) 60%, transparent);
-      position: sticky; top: 0; z-index: 2;
-      backdrop-filter: blur(2px);
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    header{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 18px; backdrop-filter: blur(6px);
+      background:linear-gradient(180deg,#0b0f17f2 0%, #0b0f1700 100%);
+      border-bottom:1px solid #ffffff14;
     }
-    .dot { width: 10px; height:10px; border-radius: 50%; background:#a24cff; box-shadow:0 0 12px #a24cff;}
-    .chat-title { font-weight: 700; letter-spacing:.2px; }
-    .standards { margin-left:auto; font-size: 12px; opacity:.8; }
-
-    main { display:flex; justify-content:center; }
-    .chat-window {
-      width: min(980px, 92vw);
-      margin: 18px auto;
-      padding: 18px 18px 8px;
-      border-radius: 18px;
-      background: var(--panel);
-      box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
-      backdrop-filter: blur(4px);
+    header .ttl{font-weight:800; letter-spacing:.3px; font-size:28px}
+    header .note{font-size:12px; color:var(--ink-dim)}
+    .roombar{
+      height:4px; background:linear-gradient(90deg,#b84cff,#ff6297,#ffd36b);
+      border-radius:3px; margin:0 18px 6px;
+      opacity:.6;
     }
-    ul.messages { list-style: none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px; min-height: 55vh;}
-    .msg .bubble { display:inline-block; padding:14px 16px; border-radius:14px; line-height:1.35; }
-    .msg.him .bubble { background: var(--bubble-him); }
-    .msg.you { display:flex; justify-content:flex-end; }
-    .msg.you .bubble { background: var(--bubble-you); }
-    .msg strong { opacity:.9; }
-
-    form.chat-input {
-      display:flex; gap:10px; align-items:center; margin-top:12px; padding:12px; border-radius:14px;
-      background: rgba(255,255,255,.06);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    main{flex:1; display:flex; justify-content:center; padding:18px}
+    .chat{
+      width:min(980px, 96vw);
+      background:var(--bubble);
+      border:1px solid #ffffff1a; border-radius:18px;
+      box-shadow:0 10px 30px #00000066; padding:14px 14px 12px;
+      display:flex; flex-direction:column; gap:12px;
     }
-    #chat-input {
-      flex:1; border:none; outline:none; background: transparent; color: #e9e9f0; font-size:16px;
+    .nameplate{font-weight:700; opacity:.95; display:flex; align-items:center; gap:10px}
+    .dot{width:10px;height:10px;background:#b84cff;border-radius:50%;box-shadow:0 0 0 4px #b84cff22}
+    .scroll{overflow:auto; padding:10px 6px; display:flex; flex-direction:column; gap:10px; max-height:65vh}
+    .bubble{
+      max-width:75%; padding:12px 14px; border-radius:14px;
+      background:#141a28; border:1px solid #ffffff14;
+      box-shadow:0 6px 16px #00000044; white-space:pre-wrap;
     }
-    button.send {
-      background:#a24cff; color:white; border:none; padding:10px 18px; border-radius:12px; font-weight:700;
-      box-shadow: 0 8px 22px rgba(162,76,255,.35);
-      cursor:pointer;
+    .bubble.me{
+      align-self:flex-end; background:var(--user); border-color:#ffffff22;
     }
-    .tip { margin: 8px 2px 0; font-size: 12px; opacity:.75; }
+    .input{
+      display:flex; gap:10px; align-items:center; margin-top:6px
+    }
+    textarea{
+      flex:1; resize:none; min-height:46px; max-height:120px; padding:12px 14px; border-radius:12px;
+      border:1px solid #ffffff22; background:#0e1320bf; color:var(--ink); outline:none;
+    }
+    button{
+      background:#6b2bd8; color:white; font-weight:700; border:0; padding:12px 18px; border-radius:12px;
+      box-shadow:0 6px 18px #6b2bd85a; cursor:pointer
+    }
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .tip{font-size:12px; color:var(--ink-dim); opacity:.9}
   </style>
 </head>
 <body>
+<div class="wrap">
   <header>
-    <span class="dot"></span>
-    <h1 class="chat-title">Blossom &amp; Blade</h1>
-    <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+    <div class="ttl" id="title">Blossom & Blade</div>
+    <div class="note">PG-13 by default. We follow your lead, within Community Standards.</div>
   </header>
+  <div class="roombar"></div>
 
   <main>
-    <section class="chat-window">
-      <ul class="messages"></ul>
-
-      <form id="chat-form" class="chat-input" autocomplete="off">
-        <input id="chat-input" type="text" placeholder="Say hi…" />
-        <button class="send" type="submit">Send</button>
-      </form>
-      <div id="tip" class="tip"></div>
-    </section>
+    <div class="chat">
+      <div class="nameplate"><span class="dot"></span> <span id="who"> … </span></div>
+      <div id="log" class="scroll"></div>
+      <div class="input">
+        <textarea id="msg" placeholder="Say hi…"></textarea>
+        <button id="send">Send</button>
+      </div>
+      <div class="tip">Tip: say your name if you want him to remember it. Try “call my name”.</div>
+    </div>
   </main>
+</div>
 
-  <script>
-    // pick the correct background for the man shown
-    (function () {
-      const man = (new URL(location.href)).searchParams.get("man") || "alexander";
-      const BG = {
-        alexander: "images/bg_alexander_boardroom.jpg",
-        dylan:     "images/dylan-garage.jpg",
-        jesse:     "images/jesse_bg.jpg",
-        grayson:   "images/grayson-bg.jpg",
-        silas:     "images/bg_silas_stage.jpg",
-        blade:     "images/blade-woods.jpg"
-      }[man] || "images/gothic-bg.jpg";
-      document.documentElement.style.setProperty("--room-img", `url('${BG}')`);
-    })();
-  </script>
+<!-- persona brain -->
+<!-- (keep this tag just above closing body so it loads after the DOM) -->
+<script>
+  // --- helpers for chat.html ---
+  const qs = k => new URLSearchParams(location.search).get(k);
+  const man = (qs('man')||'alexander').toLowerCase();
 
-  <script src="scripts/brain.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => window.startChat());</script><script>
-/* Blossom & Blade — chat hotfix: kill card hotkeys + sticky man + safe send
-   Paste at the very bottom of chat.html (after other scripts). */
-
-(function() {
-  // 1) Figure out who this page is for, and lock it.
-  const allowed = ['alexander','dylan','jesse','grayson','silas','blade'];
-  const qsMan = (new URLSearchParams(location.search).get('man') || '').toLowerCase();
-  const MAN = allowed.includes(qsMan) ? qsMan : 'grayson';
-
-  // Remember for landing, but NEVER read it here to override.
-  try { localStorage.setItem('lastMan', MAN); } catch(e) {}
-
-  // Expose a read-only page-level constant so other scripts can’t switch it.
-  if (!window.CHAT_MAN) {
-    Object.defineProperty(window, 'CHAT_MAN', { value: MAN, writable: false, configurable: false });
-  }
-
-  // Optional: if you show the man’s name in the header, refresh it safely.
-  const headerName = document.querySelector('[data-man-name]');
-  if (headerName) {
-    const names = {
-      alexander:'Alexander Jackson', dylan:'Dylan Vale', jesse:'Jesse Granger',
-      grayson:'Grayson Kincaid', silas:'Silas Lennox', blade:'Blade Kincaid'
-    };
-    headerName.textContent = names[MAN] || 'Grayson Kincaid';
-  }
-
-  // 2) Kill landing-page hotkeys on this page (Enter/arrow/etc.) while still
-  // letting the chat form submit normally.
-  const chatInput = document.querySelector('#chat-input, input[type="text"], textarea');
-  window.addEventListener('keydown', function onKey(e) {
-    // If the user is typing in the chat field, block page-level hotkeys.
-    const active = document.activeElement;
-    const typingInChat = active && (active === chatInput || active.closest('#chat-form'));
-    if (typingInChat) {
-      // Stop *other* handlers from seeing Enter/Arrows, but keep default so the form can submit.
-      if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        e.stopPropagation();
-      }
-    } else {
-      // Outside the input: completely disable any card navigation on chat page.
-      if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-  }, true); // capture so we win before older listeners
-
-  // 3) Safe submit glue — prevents “text disappears” without a response.
-  const form = document.getElementById('chat-form') || document.querySelector('form');
-  const log  = document.getElementById('chat-log') || document.querySelector('[data-chat-log]');
-
-  const appendBubble = (who, text) => {
-    if (!log) return;
-    const node = document.createElement('div');
-    node.className = who === 'you' ? 'bubble you' : 'bubble him';
-    node.textContent = text;
-    log.appendChild(node);
-    // keep scrolled to latest
-    const sc = log.parentElement || log;
-    sc.scrollTop = sc.scrollHeight;
+  // background per room (kept simple; adjust to your actual file names)
+  const roomBg = {
+    alexander: '/images/bg_alexander_boardroom.jpg',
+    jesse: '/images/jesse_bg.jpg',
+    silas: '/images/grayson-bg.jpg',       // guitar neck image
+    grayson: '/images/bg_silas_stage.jpg', // red room image you uploaded
+    blade: '/images/blade-woods.jpg',
+    dylan: '/images/dylan-garage.jpg'
   };
-
-  if (form && chatInput) {
-    form.addEventListener('submit', function(ev) {
-      ev.preventDefault();
-      const text = (chatInput.value || '').trim();
-      if (!text) return; // ignore true empties
-
-      // Show her message immediately.
-      appendBubble('you', text);
-      chatInput.value = '';
-
-      // Always ask the Brain for THIS man only.
-      const getReply = (window.Brain && typeof window.Brain.reply === 'function')
-        ? window.Brain.reply.bind(window.Brain) : null;
-
-      let bot = 'I’m here. Give me one detail.';
-      try {
-        if (getReply) bot = getReply(window.CHAT_MAN, text) || bot;
-      } catch(e) {
-        // swallow brain errors; show fallback
-      }
-
-      // Strip any "Name: " prefix if present; our UI already shows his name.
-      bot = (bot || '').replace(/^.*?:\s*/, '');
-      appendBubble('him', bot);
-    });
-  }
-})();
-</script><script>
-/* Blossom & Blade — Chat glue (universal hook + fallback Brain + room lock)
-   Paste at the BOTTOM of chat.html. Works even if your input/log/button
-   have different ids/classes.  */
-
-(function () {
-  // ---------- A) Lock to this character & kill landing hotkeys ----------
-  const allowed = ['alexander','dylan','jesse','grayson','silas','blade'];
-  const qs = new URLSearchParams(location.search);
-  const qsMan = (qs.get('man') || '').toLowerCase();
-  const MAN = allowed.includes(qsMan) ? qsMan : 'grayson';
-  try { localStorage.setItem('lastMan', MAN); } catch(e) {}
-  if (!window.CHAT_MAN) Object.defineProperty(window, 'CHAT_MAN', { value: MAN, writable: false });
-
-  window.addEventListener('keydown', function(e){
-    const active = document.activeElement;
-    const typing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
-    if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      if (typing) e.stopPropagation(); else { e.preventDefault(); e.stopPropagation(); }
-    }
-  }, true);
-
-  // ---------- B) Find DOM pieces no matter what they’re called ----------
-  const find = {
-    input() {
-      return document.querySelector('#chat-input, [data-chat-input], textarea, input[type="text"]');
-    },
-    log() {
-      return document.querySelector('#chat-log, [data-chat-log], .chat-log, .messages, [role="log"]')
-          || createLog();
-    },
-    form() {
-      return document.querySelector('#chat-form, [data-chat-form], form');
-    },
-    sendBtn() {
-      // button next to input or any obvious "send"
-      const near = this.input() && this.input().closest('form, .input-row, .composer') || document;
-      return near.querySelector('#send-btn, [data-send], button[type="submit"], button.send, button');
-    }
-  };
-
-  function createLog(){
-    // If your page already has a pretty log, we never reach here.
-    const host = document.querySelector('[data-chat-box]') || document.body;
-    const log = document.createElement('div');
-    log.id = 'chat-log';
-    log.style.minHeight = '160px';
-    log.style.padding = '8px 12px';
-    host.insertBefore(log, host.firstChild);
-    return log;
+  if (roomBg[man]) {
+    document.body.style.backgroundImage = `url('${roomBg[man]}')`;
   }
 
-  // ---------- C) Minimal bubble helper (uses your styles if present) ----------
-  const log = find.log();
-  function bubble(who, text) {
-    const row = document.createElement('div');
-    row.className = who === 'you' ? 'bubble you' : 'bubble him';
-    // Fall back to some neutral styling if your CSS classes differ.
-    row.style.whiteSpace = 'pre-wrap';
-    row.style.margin = '8px 0';
-    if (!row.classList.contains('bubble')) {
-      row.style.maxWidth = '720px';
-      row.style.padding = '10px 14px';
-      row.style.borderRadius = '12px';
-      row.style.background = who === 'you' ? 'rgba(130,70,160,.25)' : 'rgba(30,40,60,.35)';
-      row.style.backdropFilter = 'blur(4px)';
-      row.style.color = '#e6e6f0';
-    }
-    // Strip leading "Name: " if the brain adds it.
-    text = (text || '').replace(/^[A-Z][a-z]+(?:\s[A-Z][a-z]+)?:\s*/, '');
-    row.textContent = text || '…';
-    log.appendChild(row);
-    (log.parentElement || log).scrollTop = (log.parentElement || log).scrollHeight;
-  }
+  // soft translucent chat surface already defined in CSS
 
-  // ---------- D) Load Brain if available; otherwise use a tiny fallback ----------
-  function ensureBrain(cb){
-    if (window.Brain && typeof window.Brain.reply === 'function') return cb();
-    // Try to load scripts/brain.js if it exists in your repo.
-    const s = document.createElement('script');
-    s.src = 'scripts/brain.js?v=' + Date.now();
-    s.onload = () => cb();
-    s.onerror = () => { window.Brain = { reply: localBrain }; cb(); };
-    document.head.appendChild(s);
-  }
-
-  // Persona-flavored micro brain (PG-13) used only if scripts/brain.js isn’t found.
-  function localBrain(man, text) {
-    text = (text || '').toLowerCase();
-    // name memory
-    const nameM = /\b(i[' ]?m|my name is|call me)\s+([a-z][a-z'-]{1,20})\b/i.exec(text);
-    if (nameM) { try { localStorage.setItem('bb:youName', nameM[2]); } catch(e){} }
-    const youName = (localStorage.getItem('bb:youName') || 'love');
-
-    const wantsRoom = /\b(room|your place|red room|bed|woods?|garage)\b/.test(text);
-    const greet = /\b(hi|hey|hello|morning|evening)\b/.test(text);
-    const askName = /\b(say|call).*\bname\b/.test(text);
-    const praise = /\b(love|like|hot|handsome|pretty|good)\b/.test(text);
-
-    const lines = {
-      jesse: {
-        greet: [`Hi, sinner.`, `Well hey there, darlin’.`, `Evenin’, ${youName}.`],
-        lead: [`Tell me the story—I’ll drive slow.`, `Pick a setting: city lights, quiet room, or open sky.`],
-        room: [`Saddle up, sugar. My room’s warm; boots by the door.`],
-        praise: [`That’s my sweet thing.`, `Attagirl.`],
-        steady: [`I’m right here.`]
-      },
-      alexander: {
-        greet: [`Hey love—good morning.`, `Well, look at you.`],
-        lead: [`Clear and direct. I listen fast.`, `Tell me one true thing; I’ll give you two back.`],
-        room: [`Boardroom’s unlocked. Say “your room” for low lights.`],
-        praise: [`Good girl.`, `Proud of you.`],
-        steady: [`I’m here.`]
-      },
-      dylan: {
-        greet: [`Hey, star.`, `Neon looks good on you.`],
-        lead: [`Lead or listen? I’ll match you.`, `Give me a chord—slow burn from there.`],
-        room: [`Studio’s dark. Say “your room” if you want the lights down.`],
-        praise: [`That suits you.`, `Nice line.`],
-        steady: [`I’m here, hands steady.`]
-      },
-      grayson: {
-        greet: [`Well, well… you came to me.`, `Hi, sinner.`],
-        lead: [`I’ll hold the line. You paint the words.`, `Start; I’ll echo twice back.`],
-        room: [`The red room’s warm. Say “your room” for the light low.`],
-        praise: [`Mm. That suits you, sweet thing.`, `I hear you, dear heart.`],
-        steady: [`Stay with me.`]
-      },
-      silas: {
-        greet: [`Hey, cherry pie.`, `Morning, muse.`],
-        lead: [`Follow my count, star—one, two…`, `I’ll keep time; don’t lose it.`],
-        room: [`Greenroom’s ready. Say “your room” if you want hush.`],
-        praise: [`Pretty note.`, `Good ear.`],
-        steady: [`Right here, sweetheart.`]
-      },
-      blade: {
-        greet: [`Found you. Don’t run—yet.`, `Step close, prey.`],
-        lead: [`Give me one more line.`, `Step into the dark—stay close.`],
-        room: [`Woods are waiting. Say “your room” to lock the door.`],
-        praise: [`Good girl.`, `I see you.`],
-        steady: [`Stay.`]
-      }
-    }[man] || lines.grayson;
-
-    if (askName) return `Say it slow, ${youName}.`;
-    if (wantsRoom) return lines.room[0];
-    if (greet) return lines.greet[Math.floor(Math.random()*lines.greet.length)];
-    if (praise) return lines.praise[Math.floor(Math.random()*lines.praise.length)];
-    return lines.lead[Math.floor(Math.random()*lines.lead.length)] || lines.steady[0];
-  }
-
-  // ---------- E) Wire up submit / Enter / Send click (robust) ----------
-  ensureBrain(() => {
-    const input = find.input();
-    const form  = find.form();
-    const btn   = find.sendBtn();
-
-    const send = () => {
-      if (!input) return;
-      const text = (input.value || '').trim();
-      if (!text) return;
-      bubble('you', text);
-      input.value = '';
-      let reply = 'I’m here. Give me one detail.';
-      try {
-        reply = (window.Brain && typeof window.Brain.reply === 'function')
-          ? (window.Brain.reply(window.CHAT_MAN, text) || reply)
-          : reply;
-      } catch(e){}
-      bubble('him', reply);
-    };
-
-    if (form) form.addEventListener('submit', (e) => { e.preventDefault(); send(); });
-    if (btn)  btn.addEventListener('click', (e) => { e.preventDefault(); send(); });
-    if (input) input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-    });
-  });
-})();
 </script>
 
+<!-- drop-in brain -->
+<script src="/scripts/brain.js"></script>
 
+<script>
+  // wire UI
+  const log = document.getElementById('log');
+  const msg = document.getElementById('msg');
+  const send = document.getElementById('send');
+  const titleEl = document.getElementById('title');
+  const whoEl = document.getElementById('who');
+
+  // title/nameplate
+  titleEl.textContent = "Blossom & Blade";
+  whoEl.textContent = BBBrain.titleFor(man);
+
+  function addBubble(text, me=false){
+    const div = document.createElement('div');
+    div.className = 'bubble' + (me ? ' me' : '');
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // starter line (rotating opener)
+  addBubble(`${BBBrain.titleFor(man)}: ${BBBrain.reply(man, "hello")}`);
+
+  function handleSend(){
+    let t = (msg.value||"").trim();
+    if (!t) return;
+    addBubble(t, true);
+    msg.value = ''; msg.focus();
+    send.disabled = true;
+
+    // generate reply locally (no network)
+    setTimeout(() => {
+      const reply = BBBrain.reply(man, t);
+      addBubble(`${BBBrain.titleFor(man)}: ${reply}`, false);
+      send.disabled = false;
+    }, 220); // tiny delay to feel natural
+  }
+
+  send.addEventListener('click', handleSend);
+  msg.addEventListener('keydown', e=>{
+    if (e.key==='Enter' && !e.shiftKey){
+      e.preventDefault();
+      handleSend();
+    }
+  });
+</script>
 </body>
 </html>

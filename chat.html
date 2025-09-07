@@ -303,5 +303,53 @@
   showBlockedIfNeeded();
 })();
 </script>
+<!-- DEV: soft-only mode switch (disables device blocks & warning counters) -->
+<script>
+(function () {
+  // Dev mode activates if either:
+  // 1) URL has ?dev=1, or
+  // 2) localStorage flag bb.dev is "1"
+  const qs = new URLSearchParams(location.search);
+  const DEV_ACTIVE = qs.get('dev') === '1' || localStorage.getItem('bb.dev') === '1';
+
+  if (!DEV_ACTIVE) return;
+
+  console.log('[BB] Dev soft-only mode enabled: device blocks/warnings disabled');
+
+  // Clear any existing bb.* keys (local & session) so you start fresh
+  try {
+    [localStorage, sessionStorage].forEach(store => {
+      const keys = [];
+      for (let i = 0; i < store.length; i++) keys.push(store.key(i));
+      keys.forEach(k => { if (/^bb[._-]/i.test(k)) store.removeItem(k); });
+    });
+  } catch (e) {}
+
+  // Prevent future writes/removes of bb.* keys (so counters never persist)
+  (function () {
+    const ls = localStorage;
+    const origSet = ls.setItem.bind(ls);
+    const origRemove = ls.removeItem.bind(ls);
+    ls.setItem = function (k, v) {
+      if (/^bb[._-]/i.test(k)) { console.debug('[BB:DEV] swallow set', k); return; }
+      return origSet(k, v);
+    };
+    ls.removeItem = function (k) {
+      if (/^bb[._-]/i.test(k)) { console.debug('[BB:DEV] swallow remove', k); return; }
+      return origRemove(k);
+    };
+  })();
+
+  // Hide any “standards/blocked” modal if legacy code tries to show it
+  const style = document.createElement('style');
+  style.textContent = `
+    .bb-modal, .modal, [data-modal="standards"], [data-modal="blocked"],
+    .blocked-overlay, .standards-overlay { display:none !important; }
+  `;
+  document.head.appendChild(style);
+})();
+</script>
+</body>
+</html>
 </body>
 </html>

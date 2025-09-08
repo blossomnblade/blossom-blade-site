@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<title>Day Pass – Unlocked</title>
+<script src="scripts/access.js"></script>
+<script>
+  // Grant 1 day of access and send her where she came from (chat or landing)
+  BBAccess.grantDays(1);
+  const back = document.referrer || 'index.html';
+  location.replace(back.includes('success-day.html') ? 'index.html' : back);
+</script>
+<body style="background:#0b0b11;color:#fff;font-family:system-ui;padding:24px">
+  <h1>Day Pass Activated</h1>
+  <p>You can close this tab. Taking you back…</p>
+</body>
+</html>

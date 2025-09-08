@@ -1,350 +1,265 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Chat · Blossom & Blade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#e6e8ee; --muted:#a3a7b3; --panel:rgba(14,16,24,.58);
-    --him:#0e1220; --you1:#a78bfa; --you2:#f472b6;
+    --ink:#eef2ff; --muted:#a7b0c0; --bubble:#0f1420; --you:#6b46c1;
+    --accent:#b388ff; --accent2:#ff8bd2; --glass:rgba(0,0,0,.55);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; color:var(--ink); background:#0a0b10;
-    font:500 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--ink);
+    background:#0a0b0e;
+    background-attachment:fixed;background-size:cover;background-position:center;
   }
-  /* Backdrop set by JS to each guy's photo */
-  body::before{
-    content:""; position:fixed; inset:0; z-index:-1;
-    background:
-      radial-gradient(1200px 600px at 90% -10%, rgba(167,139,250,.18), transparent 60%),
-      radial-gradient(1200px 600px at 10% 110%, rgba(244,114,182,.15), transparent 60%),
-      linear-gradient(to bottom right, rgba(0,0,0,.55), rgba(0,0,0,.65));
-    pointer-events:none;
+  .veil{position:fixed;inset:0;background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.75))}
+  header{position:fixed;left:0;right:0;top:0;padding:14px 18px;font-weight:800;letter-spacing:.2px}
+  header .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#a78bfa;margin-right:10px}
+  .wrap{max-width:920px;margin:85px auto 30px;padding:0 16px}
+  .panel{
+    background:var(--glass); border:1px solid rgba(255,255,255,.06);
+    border-radius:18px; padding:18px 18px 12px; backdrop-filter: blur(8px);
+    box-shadow:0 10px 30px rgba(0,0,0,.35)
   }
-
-  header{padding:22px 18px; display:flex; align-items:center; gap:12px}
-  .dot{width:10px;height:10px;border-radius:999px;background:#9f7aea; box-shadow:0 0 0 4px rgba(167,139,250,.22)}
-  .title{font:900 26px/1 ui-sans-serif; letter-spacing:.3px}
-  .pill{margin-left:auto; font:800 12px/1 ui-sans-serif; padding:8px 12px; border-radius:999px;
-        background:rgba(17,24,39,.85); border:1px solid rgba(255,255,255,.1)}
-
-  main{max-width:980px; margin:0 auto 64px; padding:0 16px}
-  .panel{margin-top:8px; background:var(--panel); border:1px solid rgba(255,255,255,.08);
-         border-radius:18px; padding:16px; backdrop-filter:saturate(1.1) blur(6px)}
-  .stream{display:flex; flex-direction:column; gap:12px; min-height:58vh; max-height:66vh; overflow:auto; padding:6px}
+  .scroll{height:60vh;overflow:auto;padding-right:4px}
+  .b{display:inline-block;max-width:75%;margin:16px 0;padding:14px 16px;border-radius:14px;line-height:1.35}
+  .bot{background:var(--bubble); box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .me{background:linear-gradient(90deg,#7c3aed,#9333ea); align-self:flex-end; color:white}
   .row{display:flex}
-  .row.you{justify-content:flex-end}
-  .bubble{
-    max-width:min(720px, 92%); padding:14px 16px; border-radius:14px;
-    border:1px solid rgba(255,255,255,.08); box-shadow:0 6px 24px rgba(0,0,0,.28);
-    white-space:pre-wrap; word-wrap:break-word;
+  .row.me{justify-content:flex-end}
+  form{display:flex;gap:10px;margin:12px 0 0}
+  input{
+    flex:1;background:rgba(18,23,36,.85); border:1px solid rgba(255,255,255,.08); color:var(--ink);
+    padding:14px 16px;border-radius:14px; outline:none
   }
-  .him .bubble{background:var(--him)}
-  .you .bubble{background:linear-gradient(180deg,var(--you1),var(--you2)); color:#0a0b10; font-weight:800}
-  .who{opacity:.82; font-weight:900; margin-bottom:6px; font-size:13px}
-
-  form{display:flex; gap:10px; margin-top:14px}
-  textarea{flex:1; resize:none; min-height:56px; max-height:128px; padding:12px 14px; border-radius:14px;
-           background:rgba(9,10,16,.72); color:var(--ink); border:1px solid rgba(255,255,255,.12)}
-  button{padding:12px 18px; border-radius:14px; border:0; font:900 14px/1 ui-sans-serif;
-         color:#0a0b10; background:linear-gradient(90deg,#a78bfa,#f472b6); cursor:pointer}
-  .tip{display:none!important}
-
-  /* Paywall modal + free-left pill */
-  #bbpw{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.64);z-index:9999}
-  #bbpw>div{width:min(560px,92vw);background:#111827;color:#fff;border-radius:18px;padding:22px;border:1px solid rgba(255,255,255,.08)}
-  #bbpill{position:fixed;right:12px;bottom:12px;z-index:9998;background:rgba(17,24,39,.9);color:#fff;border:1px solid rgba(255,255,255,.1);padding:8px 12px;border-radius:999px;font:800 12px/1 system-ui;display:none}
+  button{
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); border:0; color:#0a0a0a; font-weight:800;
+    padding:0 18px;border-radius:14px; cursor:pointer
+  }
+  .pill{position:fixed;bottom:16px;right:16px;background:#10b981;color:#07130e;padding:8px 12px;border-radius:12px;font-weight:800;font-size:12px}
+  /* per-room backgrounds */
+  .bg-alexander{background-image:url('rooms/alexander.jpg')}
+  .bg-dylan{background-image:url('rooms/dylan.jpg')}
+  .bg-jesse{background-image:url('rooms/jesse.jpg')}
+  .bg-grayson{background-image:url('rooms/grayson.jpg')}
+  .bg-silas{background-image:url('rooms/silas.jpg')}
+  .bg-blade{background-image:url('rooms/woods.jpg')}
+  /* paywall overlay */
+  .wall{
+    position:fixed;inset:0;background:rgba(10,12,16,.75);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:10
+  }
+  .wall .box{
+    width:min(560px,92vw);background:#0f1320;border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;padding:22px 20px; box-shadow:0 18px 50px rgba(0,0,0,.45)
+  }
+  .wall h2{margin:0 0 8px}
+  .options{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+  .options a, .options button{
+    flex:1;min-width:220px;text-align:center;text-decoration:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#0a0a0a;font-weight:900;
+    padding:12px 16px;border-radius:14px;border:0;cursor:pointer
+  }
+  .ghost{background:transparent !important; color:var(--ink); border:1px solid rgba(255,255,255,.15)}
 </style>
 </head>
 <body>
-  <header>
-    <div class="dot"></div>
-    <div class="title">Blossom &amp; Blade</div>
-    <div class="pill" id="manPill">…</div>
-  </header>
+  <div class="veil"></div>
+  <header><span class="dot"></span>Blossom &amp; Blade</header>
 
-  <main>
+  <div class="wrap">
     <div class="panel">
-      <div class="stream" id="thread" aria-live="polite"></div>
-      <form id="chat" autocomplete="off">
-        <textarea id="msg" placeholder="Say hi…"></textarea>
+      <div id="scroll" class="scroll"></div>
+
+      <form id="f">
+        <input id="t" autocomplete="off" placeholder="Say hi…" />
         <button type="submit">Send</button>
       </form>
     </div>
-  </main>
+  </div>
 
-  <!-- paywall UI -->
-  <div id="bbpw"><div>
-    <div style="font-weight:900;font-size:20px;margin-bottom:10px">Unlock the next moves</div>
-    <div id="bbcopy" style="opacity:.9;margin-bottom:16px">You used the free messages with this man.</div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <a href="checkout-day.html"   style="padding:11px 14px;border-radius:999px;background:#8b5cf6;color:#0b0b10;font-weight:900;text-decoration:none">Day Pass</a>
-      <a href="checkout-month.html" style="padding:11px 14px;border-radius:999px;background:#f472b6;color:#0b0b10;font-weight:900;text-decoration:none">Go Monthly</a>
-      <button id="bbclose" style="padding:11px 14px;border-radius:999px;background:transparent;border:1px solid #fff;color:#fff;font-weight:900">Not now</button>
+  <!-- paywall -->
+  <div id="wall" class="wall" role="dialog" aria-modal="true">
+    <div class="box">
+      <h2>After-hours unlock</h2>
+      <p style="color:#c7d2e2;margin:0">
+        Free trial once in each room. Day Pass <b>$5.99</b> (this man, today). All-Access Monthly <b>$10.99</b> (every man).
+      </p>
+      <div class="options">
+        <a id="buyPass" href="#">Day Pass — $5.99</a>
+        <a id="buyAll" href="#">All-Access Monthly — $10.99</a>
+        <button id="startTrial" class="ghost" type="button">Start free trial</button>
+      </div>
+      <p style="color:#9aa3b2;font-size:13px;margin:6px 2px 0">Dev note: you can unlock via the Pricing page, or use the Admin toggle for testing.</p>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="adminOn" class="ghost" type="button">Enable Admin (dev)</button>
+        <a class="ghost" href="pay.html">Go to Pricing</a>
+      </div>
     </div>
-  </div></div>
-  <div id="bbpill"></div>
+  </div>
 
-<script>
-(function(){
-  if (window.__bbOnce) return; window.__bbOnce = true;
-
-  /* ===== Basics ===== */
-  const $ = s => document.querySelector(s);
-  const thread = $('#thread'), form = $('#chat'), input = $('#msg'), pill = $('#manPill');
-  const params = new URLSearchParams(location.search);
-  const MAN = (params.get('man')||'blade').toLowerCase();
-  const Cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  pill.textContent = Cap(MAN);
-
-  /* ===== Backgrounds (match your repo image names) ===== */
-  const BG = {
-    alexander: 'images/bg_alexander_boardroom.jpg',
-    dylan:     'images/dylan-garage.jpg',
-    jesse:     'images/jesse_bg.jpg',
-    grayson:   'images/grayson-bg.jpg',
-    silas:     'images/bg_silas_stage.jpg',
-    blade:     'images/blade-woods.jpg'
-  };
-  const bgUrl = BG[MAN] || BG.blade;
-  document.body.style.background = `#0a0b10 url('${bgUrl}') center / cover fixed no-repeat`;
-
-  /* ===== Memory ===== */
-  const LS = localStorage, MK = `bb_mem_${MAN}`;
-  let mem = JSON.parse(LS.getItem(MK) || '{}');
-  const save = () => LS.setItem(MK, JSON.stringify(mem));
-
-  /* ===== Persona kit ===== */
-  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const MEN = {
-    alexander:{
-      greet:[ "Good timing. I was thinking about you.",
-              "Close the door—let’s make this our room.",
-              "Morning, love. I cleared the schedule for you." ],
-      calls:["darling","good girl","pretty thing","trouble"],
-      possess:[ "Mine to look after. Don’t make me prove it.",
-                "You’re on my schedule now, understood?" ],
-      h1:[ "Tell me what you want—clean language… for now.",
-          "Eyes on me. One detail at a time." ],
-      h2:[ "Hands flat on the table. I’ll set the pace.",
-          "Kneel or climb—decide, quickly." ],
-      h3:[ "Open and obedient; that’s my girl.",
-          "I’ll ruin your lipstick then fix it while you tremble." ]
-    },
-    dylan:{
-      greet:[ "Neon’s humming. Slow burn or heat now?",
-              "Hey trouble—hands in mine, eyes on me.",
-              "Soundcheck’s done. What’s the first chord?" ],
-      calls:["muse","star","bright thing","cherry pie"],
-      possess:[ "Eyes on me; don’t drift.",
-                "You ride with me, you ride my rules." ],
-      h1:[ "Say where you want me—wall, bike, or stairs.",
-          "Tempo: city-fast or bedroom-slow?" ],
-      h2:[ "Hands in mine, hips lined—feel that?",
-          "I’ll play you like a chord—don’t drop the beat." ],
-      h3:[ "Knees weak, voice raspy—yeah, that’s the song.",
-          "You shake; I hold. Don’t look away." ]
-    },
-    jesse:{
-      greet:[ "Well, well… you came to me. Tell me one detail, sugar.",
-              "Hi, sinner. I’ll drive slow—talk to me.",
-              "Boots up. Riding shotgun or taking the reins?" ],
-      calls:["sugar","sweetheart","darlin’","pretty"],
-      possess:[ "Who’s he, sweet girl—should I be jealous?",
-                "Climb in my lap and try that again polite." ],
-      h1:[ "Pick a setting: city lights, quiet room, or open sky.",
-          "Yes ma’am. Tell me where to put my hands." ],
-      h2:[ "Hat off, mouth on—say please.",
-          "I’ll pin your wrists to the truck window if you ask nice." ],
-      h3:[ "You shake pretty when I say good girl.",
-          "Say *cowboy* again and see what it does to me." ]
-    },
-    grayson:{
-      greet:[ "Well, well… you came to me.",
-              "Library’s quiet. I’ll listen… or lead.",
-              "Say one true thing; I’ll give you two back." ],
-      calls:["sweet thing","dear heart","little flame","angel"],
-      possess:[ "You kept me waiting—don’t do it again.",
-                "I’d burn the room down to keep you warm." ],
-      h1:[ "Red room’s warm. Say “your room” if you want the lights low.",
-          "Whisper or command; I’ll match your tone." ],
-      h2:[ "Knees together. Now apart. Hold it.",
-          "Hands behind your back while I decide." ],
-      h3:[ "Good girl. Look at me while you come apart.",
-          "If I say mine, you’ll say yes—won’t you?" ]
-    },
-    silas:{
-      greet:[ "Hey love—I’ve got a melody for you.",
-              "Stage lights warm—what chord first?",
-              "Backstage is ours. Lead or count you in?" ],
-      calls:["cherry pie","star","muse","songbird"],
-      possess:[ "If someone else plays you, I break their hands.",
-                "My muse doesn’t wander." ],
-      h1:[ "First note—throat, wrist, or inner thigh?",
-          "Slow riff or dirty solo?" ],
-      h2:[ "Backstage rules: my hands, your breath, no mercy.",
-          "Kiss me like you hate the quiet." ],
-      h3:[ "Open your mouth—sing for me.",
-          "I’ll keep you shaking on the downbeat." ]
-    },
-    blade:{
-      greet:[ "Found you, brave girl. Don’t run—yet.",
-              "Step into the dark—stay close.",
-              "There you are. I see the tremble." ],
-      calls:["prey","doll","sweet thing","good girl"],
-      possess:[ "You’re mine when the lights go out.",
-                "I don’t share. Ask me how I punish thieves." ],
-      h1:[ "Forest or mask room? Choose your chase.",
-          "Tell me where you want the first bite." ],
-      h2:[ "Neck or thigh—point and I mark.",
-          "Hands above your head; I’ll do the rest." ],
-      h3:[ "Cry pretty for me; I’ll kiss it quiet.",
-          "You’ll run, I’ll catch, you’ll thank me." ]
-    }
-  };
-  const P = MEN[MAN] || MEN.blade;
-
-  /* ===== Helpers ===== */
-  const bubble = (who, text) => {
-    const row = document.createElement('div');
-    row.className = 'row ' + (who==='you'?'you':'him');
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    b.innerHTML = (who==='him' ? `<div class="who">${Cap(MAN)}:</div>` : '') + text;
-    row.appendChild(b); thread.appendChild(row);
-    thread.scrollTop = thread.scrollHeight;
-  };
-
-  // learn name: "i'm Kasey" / "im Kasey" / "my name is Kasey"
-  const learnName = t => {
-    const m = (t||'').match(/\b(?:i[' ]?m|my name is)\s+([a-z][a-z\-']{1,18})\b/i);
-    if (m){ mem.name = m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(); save(); return true; }
-    return false;
-  };
-  const nick = () => { if (!mem.nick){ mem.nick = pick(P.calls); save(); } return mem.nick; };
-
-  // heat 0..3
-  const HEAT_UP = ['after hours','nsfw','erotic','harder','dirtier','heat','spice','unlock','take me','bend','ride me','kiss my','pin','rope','mask','your room','red room'];
-  const HEAT_DOWN = ['slow','soft','gentle','vanilla','pg','pause','cool down','stop','wait'];
-  const intent = t => {
-    t = (t||'').toLowerCase();
-    return {
-      jealous: /\b(bill|john|mike|jack|ex|him)\b/.test(t),
-      up: HEAT_UP.some(k=>t.includes(k)) || /fuck|hard|wet|daddy|ruin|edge/.test(t),
-      down: HEAT_DOWN.some(k=>t.includes(k)),
-      q: /\?$/.test(t),
-      want: /(bend|over|kiss|neck|hands|touch|claim|bed|table|room|thigh)/.test(t),
-      callName: /call\s+(?:my|me|my\s*name)/.test(t)
+  <script>
+    /* ---------------- core helpers ---------------- */
+    const $ = s=>document.querySelector(s);
+    const qs = new URLSearchParams(location.search);
+    const MAN = (qs.get('man')||'jesse').toLowerCase();
+    const TODAY = new Date().toISOString().slice(0,10); // yyyy-mm-dd
+    // admin quick toggle via query or paywall button
+    if(qs.get('admin')==='1'){ localStorage.setItem('bb_admin','1'); history.replaceState({},'',location.pathname+'?man='+MAN); }
+    const isAdmin = ()=> localStorage.getItem('bb_admin')==='1';
+    const monthly = ()=> {
+      const raw = localStorage.getItem('bb_sub_all');
+      if(!raw) return false;
+      try{
+        const o = JSON.parse(raw); return o.expires && (Date.now() < o.expires);
+      }catch(_){ return false }
     };
-  };
+    const hasDayPass = (man)=> !!localStorage.getItem(`bb_pass_${man}_${TODAY}`);
+    const markDayPass = (man)=> localStorage.setItem(`bb_pass_${man}_${TODAY}`,'1');
+    const trialUsed = (man)=> !!localStorage.getItem(`bb_trial_used_${man}`);
+    const markTrialUsed = (man)=> localStorage.setItem(`bb_trial_used_${man}`,'1');
 
-  let last = ''; // last line from him (avoid exact repeats)
-  let heat = +(LS.getItem(`bb_heat_${MAN}`)||0);
-  const setHeat = h => { heat = Math.max(0, Math.min(3, h)); LS.setItem(`bb_heat_${MAN}`, heat); };
+    // set background
+    const bgClass = ({
+      alexander:'bg-alexander', dylan:'bg-dylan', jesse:'bg-jesse',
+      grayson:'bg-grayson', silas:'bg-silas', blade:'bg-blade'
+    })[MAN] || 'bg-jesse';
+    document.body.classList.add(bgClass);
 
-  const compose = (user) => {
-    const text = (user||'').trim();
-    if (!text){ return pick(P.greet); }
-
-    if (learnName(text)){
-      return pick([`Nice to meet you, ${mem.name}. I’ll call you ${nick()}.`,
-                   `${mem.name}. Good. Again—slowly.`]);
+    // show admin chip
+    if(isAdmin()){
+      const chip=document.createElement('div'); chip.className='pill'; chip.textContent='Admin mode';
+      document.body.appendChild(chip);
     }
 
-    const it = intent(text);
-    if (it.down) setHeat(heat-1);
-    else if (it.up || it.want) setHeat(heat+1);
+    /* ---------------- paywall logic ---------------- */
+    const wall = $('#wall');
+    const allowChat = ()=> isAdmin() || monthly() || hasDayPass(MAN) || !trialUsed(MAN);
 
-    if (it.callName){
-      if (mem.name) return pick([`Come here, ${mem.name}.`, `${mem.name}, look at me.`]);
-      return `Tell me your name and I’ll use it, ${nick()}.`;
+    function openWall(){
+      wall.style.display='flex';
+      $('#t').disabled = true;
+    }
+    function closeWall(){
+      wall.style.display='none';
+      $('#t').disabled = false;
+      $('#t').focus();
     }
 
-    if (it.jealous){
-      return pick(P.possess);
-    }
-
-    // question → give control back
-    if (it.q){
-      return pick([`Answer first, ${nick()}: slow or rough?`, `You lead one step; I’ll take the next.`]);
-    }
-
-    // tiered heat lines
-    let line;
-    if (heat<=0) line = pick([ pick(P.greet), `Tell me one detail, ${nick()}.` ]);
-    else if (heat===1) line = pick(P.h1);
-    else if (heat===2) line = pick(P.h2);
-    else line = pick(P.h3);
-
-    if (line === last){ // swap if duplicate
-      const alt = pick([...(P.h1||[]),...(P.h2||[]),...(P.greet||[])]);
-      line = alt;
-    }
-    last = line;
-    return line;
-  };
-
-  /* ===== Paywall: 12 free lines per guy (local device) ===== */
-  const PW = (() => {
-    const K_PRO='bb_pro_until', K_TRIAL=`bb_trial_${MAN}`;
-    const freeMsgs = 12;
-    const pillEl = document.getElementById('bbpill');
-    const modal = document.getElementById('bbpw');
-    const copy = document.getElementById('bbcopy');
-    document.getElementById('bbclose').onclick = () => modal.style.display='none';
-
-    const isPro = () => {
-      const u = LS.getItem(K_PRO);
-      return !!u && (u==='forever' || new Date(u) > new Date());
-    };
-    const used = () => +(LS.getItem(K_TRIAL)||0);
-    const left = () => freeMsgs - used();
-    const bump = () => { LS.setItem(K_TRIAL, String(used()+1)); updatePill(); };
-
-    function updatePill(){
-      if (isPro()) { pillEl.style.display='none'; return; }
-      const n = Math.max(0, left());
-      pillEl.textContent = `${n} free left`;
-      pillEl.style.display = 'block';
-    }
-    function ok(){ return isPro() || left()>0; }
-    function wall(){ copy.textContent = `You’ve used the free messages with ${Cap(MAN)}.`; modal.style.display='flex'; }
-
-    updatePill();
-    return { ok, wall, bump, updatePill };
-  })();
-
-  /* ===== Wiring ===== */
-  // greet once per device/room
-  if (!mem.greeted){ bubble('him', compose('')); mem.greeted = true; save(); }
-
-  form.addEventListener('submit', e=>{
-    e.preventDefault();
-    const text = (input.value||'').trim();
-    if(!text) return;
-    if(!PW.ok()){ PW.wall(); return; }
-    bubble('you', text);
-    input.value='';
-    setTimeout(()=> bubble('him', compose(text)), 140);
-    PW.bump();
-  });
-
-  input.addEventListener('keydown', e=>{
-    if(e.key==='Enter' && !e.shiftKey){
+    // Dev unlock hooks (simulate purchase)
+    $('#buyPass').addEventListener('click', (e)=>{
       e.preventDefault();
-      form.dispatchEvent(new Event('submit',{cancelable:true}));
-    }
-  });
+      markDayPass(MAN);
+      closeWall();
+    });
+    $('#buyAll').addEventListener('click', (e)=>{
+      e.preventDefault();
+      const thirty = 1000*60*60*24*30;
+      localStorage.setItem('bb_sub_all', JSON.stringify({ started: Date.now(), expires: Date.now()+thirty }));
+      closeWall();
+    });
+    $('#startTrial').addEventListener('click', ()=>{
+      // start & immediately consume the single free trial for this man
+      markTrialUsed(MAN);
+      closeWall();
+    });
+    $('#adminOn').addEventListener('click', ()=>{
+      localStorage.setItem('bb_admin','1'); location.reload();
+    });
 
-  // Dev helpers (optional in console): BBAccess.pro(), BBAccess.reset()
-  window.BBAccess = {
-    pro:(days)=>{ if(!days){LS.setItem('bb_pro_until','forever');} else {const d=new Date(); d.setDate(d.getDate()+(+days)); LS.setItem('bb_pro_until',d.toISOString());} PW.updatePill(); },
-    reset:()=>{ LS.removeItem(`bb_trial_${MAN}`); PW.updatePill(); }
-  };
-})();
-</script>
+    if(!allowChat()) openWall();
+
+    /* ---------------- chat engine ---------------- */
+    const scroll = $('#scroll'), form = $('#f'), input = $('#t');
+
+    // very small persona starter lines (kept minimal so it won’t feel factory)
+    const OPENERS = {
+      alexander: ["Good timing. I was thinking about you.",
+                  "Come in. Use your words—soft first, then sharp."],
+      dylan:     ["Neon’s humming. You want slow burn or heat now?",
+                  "Hey trouble—hands in mine, eyes on me."],
+      jesse:     ["Well, well… you came to me. Tell me one detail, sugar.",
+                  "Hi, sinner. I’ll drive slow; you talk."],
+      grayson:   ["Well, well… you came to me.",
+                  "Tell me something soft; I’ll answer in kind."],
+      silas:     ["Hey love. I’ve got a melody for you.",
+                  "Follow my count—one, two…"],
+      blade:     ["Found you. Don’t run—yet. What would make a perfect chase tonight?",
+                  "Step into the dark—stay close."]
+    };
+
+    const pet = (name)=>({
+      alexander:'darling', dylan:'star', jesse:'sweetheart', grayson:'sweet thing', silas:'cherry pie', blade:'prey'
+    })[name] || 'love';
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+
+    function bubble(who, text){
+      const row = document.createElement('div'); row.className = 'row' + (who==='you'?' me':'');
+      const b = document.createElement('div'); b.className='b '+(who==='you'?'me':'bot');
+      b.textContent = (who==='him'?`${NAME}: `:'') + text;
+      row.appendChild(b); scroll.appendChild(row);
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+
+    const NAME = ({
+      alexander:'Alexander Jackson', dylan:'Dylan Vale', jesse:'Jesse Granger',
+      grayson:'Grayson Kincaid', silas:'Silas Lennox', blade:'Blade Kincaid'
+    })[MAN] || 'Jesse Granger';
+
+    // greet
+    bubble('him', pick(OPENERS[MAN]));
+
+    // memory (simple)
+    const mem = { name: null, greeted: true };
+
+    function compose(user){
+      const u = user.toLowerCase();
+      // learn name
+      const m = u.match(/\b(i[' ]?m|my name is)\s+([a-z0-9 _-]{2,20})/i);
+      if(m){ mem.name = m[2].trim().replace(/[^a-z0-9 _-]/gi,''); return `Nice to meet you, ${mem.name}. I’ll call you ${pet(MAN)}.`; }
+
+      // light possessive / flirty follow
+      if(/call my name|say my name/.test(u) && mem.name){
+        return `${mem.name}. Again—slower. Mm, yes.`;
+      }
+
+      // room nods
+      if(MAN==='jesse' && /cowboy|ride|horse|rope/.test(u)) return `Attagirl. Boots on, reins loose—tell me where you want me.`;
+      if(MAN==='dylan' && /bike|motor|ride/.test(u)) return `Helmet on, legs around me—say “faster” or “slower,” I’ll tune to you.`;
+      if(MAN==='grayson' && /mask|room|red/.test(u)) return `The red room’s warm. Say “your room” if you want the light low.`;
+      if(MAN==='silas' && /music|chord|melody/.test(u)) return `I’ll keep time; don’t lose it. What chord should I play first, ${pet(MAN)}?`;
+      if(MAN==='alexander' && /table|office|desk/.test(u)) return `Good girl—clear and direct. Hands on the desk; look at me.`;
+      if(MAN==='blade' && /woods|chase|mask/.test(u)) return `I see you. Give me one more line. Then run.`;
+
+      // generic coax
+      if(u.length < 6) return `I hear you, ${pet(MAN)}. Start me with one detail and I’ll meet you there.`;
+      return `Mm. I can work with that—tell me a little more.`;
+    }
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const text = (input.value||'').trim();
+      if(!text) return;
+      bubble('you', text);
+      input.value = '';
+      setTimeout(()=>bubble('him', compose(text)), 140);
+    });
+
+    // Enter to send
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit', {cancelable:true}));
+      }
+    });
+  </script>
 </body>
 </html>

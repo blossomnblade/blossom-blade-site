@@ -11,7 +11,7 @@
     *{box-sizing:border-box}
     html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff;background:#0b0b11}
 
-    /* SIMPLE: set backgrounds directly on body by class */
+    /* Backgrounds per man */
     body.bg-alexander{ background:url("/images/bg_alexander_boardroom.jpg") center/cover fixed no-repeat #0b0b11; }
     body.bg-dylan    { background:url("/images/dylan-garage.jpg")           center/cover fixed no-repeat #0b0b11; }
     body.bg-jesse    { background:url("/images/jesse_bg.jpg")               center/cover fixed no-repeat #0b0b11; }
@@ -19,7 +19,6 @@
     body.bg-silas    { background:url("/images/bg_silas_stage.jpg")         center/cover fixed no-repeat #0b0b11; }
     body.bg-blade    { background:url("/images/blade-woods.jpg")            center/cover fixed no-repeat #0b0b11; }
 
-    /* soft dark overlay so bubbles are readable */
     .mask{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.82));pointer-events:none}
 
     .wrap{max-width:920px;margin:0 auto;padding:24px 20px 120px}
@@ -28,13 +27,17 @@
     .brand{font-weight:800;letter-spacing:.4px}
     #roomTitle{font-size:32px;font-weight:800;margin:14px 8px 10px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
 
+    /* Panel now scrolls itself and always keeps latest bubble in view */
     .panel{
       background:rgba(7,7,10,.75);
       border:1px solid rgba(255,255,255,.08);
       border-radius:18px; padding:18px 16px; margin:0 auto; max-width:820px;
       box-shadow:0 10px 28px rgba(0,0,0,.45);
       backdrop-filter: blur(2px);
-      min-height:220px;
+      height:auto;
+      max-height:calc(100vh - 260px);   /* room for title + composer */
+      overflow-y:auto;
+      scroll-behavior:smooth;
     }
     .bubble{
       background:#0f0f14;border-radius:14px;padding:14px 16px;margin:12px 14px;
@@ -72,7 +75,6 @@
   <a class="admin" href="/pay.html">Admin / Pricing</a>
 
   <script>
-    /* -------- room setup -------- */
     const params = new URLSearchParams(location.search);
     const man = (params.get('man') || 'alexander').toLowerCase();
     document.body.classList.add('bg-' + man);
@@ -88,12 +90,18 @@
     const title = NAMES[man] || man;
     document.getElementById('roomTitle').textContent = title;
 
-    /* -------- chat UI helpers -------- */
     const DOM = {
       chat:  document.getElementById('chat'),
       input: document.getElementById('input'),
       form:  document.getElementById('composer')
     };
+
+    function scrollToBottom(){
+      // ensure the scroll happens after layout paints
+      requestAnimationFrame(()=> {
+        DOM.chat.scrollTop = DOM.chat.scrollHeight + 9999;
+      });
+    }
 
     function bubble(who, text){
       const div = document.createElement('div');
@@ -103,37 +111,19 @@
       }
       div.appendChild(document.createTextNode(text));
       DOM.chat.appendChild(div);
-      DOM.chat.scrollTo({top:DOM.chat.scrollHeight,behavior:'smooth'});
+      scrollToBottom();
     }
 
-    /* -------- tiny inline brain (responsive, remembers name) -------- */
+    /* tiny inline brain */
     const mem = { greeted:false, name:null };
 
     const OPENERS = {
-      alexander: [
-        'Good timing. I was thinking about you.',
-        'Clear and direct—keep it that way for me.'
-      ],
-      dylan: [
-        'Neon’s humming. You want slow burn or heat now?',
-        'Copy that—give me one more cue.'
-      ],
-      jesse: [
-        'Well, well… you came to me. Tell me one detail, sugar.',
-        'That’s my sweet thing. Start with one detail.'
-      ],
-      grayson: [
-        'Well, well… you came to me.',
-        'I’ll hold the line. You paint the words.'
-      ],
-      silas: [
-        'Hey love. I’ve got a melody for you.',
-        'Follow my count—one, two…'
-      ],
-      blade: [
-        'Found you, brave girl. Don’t run—yet.',
-        'Step into the dark—stay close.'
-      ]
+      alexander: ['Good timing. I was thinking about you.','Clear and direct—keep it that way for me.'],
+      dylan:     ['Neon’s humming. You want slow burn or heat now?','Copy that—give me one more cue.'],
+      jesse:     ['Well, well… you came to me. Tell me one detail, sugar.','That’s my sweet thing. Start with one detail.'],
+      grayson:   ['Well, well… you came to me.','I’ll hold the line. You paint the words.'],
+      silas:     ['Hey love. I’ve got a melody for you.','Follow my count—one, two…'],
+      blade:     ['Found you, brave girl. Don’t run—yet.','Step into the dark—stay close.']
     };
 
     const FOLLOWUPS = {
@@ -146,7 +136,6 @@
     };
 
     function detectName(txt){
-      // "i'm kasey", "im kasey", "my name is kasey"
       const m = txt.match(/\b(?:i['’]m|im|my name is)\s+([a-z][a-z\-']{1,20})\b/i);
       return m ? m[1][0].toUpperCase()+m[1].slice(1) : null;
     }
@@ -154,16 +143,14 @@
     function compose(user){
       const t = user.trim();
 
-      // learn name
       const n = detectName(t);
-      if(n){ mem.name = n; return `Nice to meet you, ${n}.`; }
+      if(n){ mem.name = n; try{localStorage.setItem('bnb_name', n)}catch{}; return `Nice to meet you, ${n}.`; }
 
-      // ask to be called name
-      if(/call\s+my\s+name/i.test(t) && mem.name){
-        return `There you are, ${mem.name}. Say the next detail.`;
+      if(/call\s+my\s+name/i.test(t) && (mem.name || localStorage.getItem('bnb_name'))){
+        const nm = mem.name || localStorage.getItem('bnb_name');
+        return `There you are, ${nm}. Say the next detail.`;
       }
 
-      // soft naughty permission (you’ll wire the full filter later)
       if(/\b(fuck|bend|spank|ride|lick|neck|take me|over the table)\b/i.test(t)){
         return {
           alexander: `Understood. Tell me pace and place.`,
@@ -175,27 +162,26 @@
         }[man];
       }
 
-      // simple questions
       if(/how are you|you good/i.test(t)){
         return `Focused. On you. Give me one more cue.`;
       }
 
-      // default follow-up
       return FOLLOWUPS[man] || 'Give me one more detail.';
     }
 
     function greetOnce(){
       if(mem.greeted) return;
-      const lines = OPENERS[man] || ['Hey.', 'Start me with one detail.'];
+      const lines = OPENERS[man] || ['Hey.','Start me with one detail.'];
       bubble('him', lines[0]);
-      setTimeout(()=>bubble('him', lines[1]), 650);
+      setTimeout(()=>{ bubble('him', lines[1]); }, 650);
       mem.greeted = true;
     }
 
-    /* start */
+    // restore persisted name if we have it
+    try{ const saved = localStorage.getItem('bnb_name'); if(saved) mem.name = saved; }catch{}
+
     greetOnce();
 
-    /* submit / enter */
     DOM.form.addEventListener('submit', (e)=>{
       e.preventDefault();
       const text = (DOM.input.value||'').trim();

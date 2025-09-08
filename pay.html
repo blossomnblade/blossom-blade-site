@@ -1,83 +1,105 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Pricing · Blossom & Blade</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root{--ink:#eef2ff;--muted:#a7b0c0;--card:#111525;--accent:#b388ff;--accent2:#ff8bd2}
-    *{box-sizing:border-box}
-    body{margin:0;background:#0b0d12;color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
-    .wrap{max-width:900px;margin:40px auto;padding:0 16px}
-    h1{margin:0 0 8px}
-    .sub{color:var(--muted);margin:0 0 22px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-    .plan{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 16px}
-    .price{font-size:34px;font-weight:900;margin:4px 0 14px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;color:transparent}
-    button,a.btn{display:inline-flex;align-items:center;justify-content:center;width:100%;gap:8px;
-      background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0a0a0a;font-weight:900;padding:12px 14px;border-radius:12px;text-decoration:none;border:0;cursor:pointer}
-    .ghost{background:transparent !important;color:var(--ink);border:1px solid rgba(255,255,255,.15)}
-    footer{margin-top:24px;color:var(--muted)}
-    .hint{font-size:12px;color:#9aa3b2;margin-top:10px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pricing · Blossom & Blade</title>
+<style>
+  body{margin:0;background:#0b0b10;color:#e9e9ff;font:16px/1.45 system-ui,Segoe UI,Roboto}
+  header{padding:22px 20px} h1{margin:0 0 8px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 60px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px}
+  .card{background:#0f1118;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.35); padding:18px}
+  h2{margin:0 0 10px}
+  .price{font-size:36px;font-weight:900;margin:4px 0 14px}
+  button,select,input{background:#b38bff;color:#120f23;border:0;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer}
+  select,input{background:#121326;color:#e9e9ff;border:1px solid #262842;margin-right:8px}
+  a{color:#b8baf6}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Unlock after-hours</h1>
-    <p class="sub">Free trial in each room. Day Pass <b>$5.99</b> (one man, today). All-Access Monthly <b>$10.99</b> (every man).</p>
+<header>
+  <h1>Unlock after-hours</h1>
+  <div>Free trial in each room. Day Pass <b>$5.99</b> (one man, today). All-Access Monthly <b>$10.99</b> (every man). We donate $1 per subscription to women’s shelters.</div>
+</header>
 
-    <div class="grid">
-      <div class="plan">
-        <h3>Day Pass</h3>
-        <div class="price">$5.99</div>
-        <p class="sub">Unlocks the current man for the rest of today.</p>
-        <button id="buyPass">Unlock Day Pass</button>
-        <p class="hint">Dev mode: sets a local pass key for today only.</p>
+<div class="wrap">
+  <div class="cards">
+    <div class="card">
+      <h2>Day Pass</h2>
+      <div class="price">$5.99</div>
+      <div style="margin:10px 0 14px">Unlocks a single man for the rest of today.</div>
+      <div style="margin:8px 0">Choose a man:</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="manSel">
+          <option value="alexander">Alexander Jackson</option>
+          <option value="dylan">Dylan Vale</option>
+          <option value="jesse" selected>Jesse Granger</option>
+          <option value="grayson">Grayson Kincaid</option>
+          <option value="silas">Silas Lennox</option>
+          <option value="blade">Blade Kincaid</option>
+        </select>
+        <button id="buyDay">Unlock Day Pass</button>
       </div>
-      <div class="plan">
-        <h3>All-Access Monthly</h3>
-        <div class="price">$10.99</div>
-        <p class="sub">Unlimited access to all men for 30 days.</p>
-        <button id="buyAll">Unlock All-Access</button>
-        <p class="hint">Dev mode: creates a 30-day local subscription token.</p>
-      </div>
-      <div class="plan">
-        <h3>Admin (Dev)</h3>
-        <div class="price">∞</div>
-        <p class="sub">Unlimited access for testing on this device.</p>
-        <button class="ghost" id="adminOn">Enable Admin</button>
-        <button class="ghost" id="adminOff" style="margin-top:8px">Disable Admin</button>
-      </div>
+      <div style="opacity:.7;margin-top:8px">Dev mode: sets a local pass for today.</div>
     </div>
 
-    <footer>
-      <a class="btn ghost" href="index.html" style="margin-top:14px;display:inline-flex;width:auto">← Back to rooms</a>
-    </footer>
+    <div class="card">
+      <h2>All-Access Monthly</h2>
+      <div class="price">$10.99</div>
+      <div style="margin:10px 0 14px">Unlimited access to all men for 30 days.</div>
+      <button id="buyAll">Unlock All-Access</button>
+      <div style="opacity:.7;margin-top:8px">Dev mode: creates a local 30-day token.</div>
+    </div>
+
+    <div class="card">
+      <h2>Admin (Dev)</h2>
+      <div class="price">∞</div>
+      <div style="margin:10px 0 14px">Unlimited access for testing on this device.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="adm" placeholder="enter admin token" />
+        <button id="enAdm">Enable Admin</button>
+        <button id="disAdm" style="background:#384055;color:#cdd0ff">Disable</button>
+      </div>
+      <div style="opacity:.7;margin-top:8px">Default token we used: <code>cherrypie-2025</code></div>
+    </div>
   </div>
 
-  <script>
-    const qs = new URLSearchParams(location.search);
-    const man = (qs.get('man')||'jesse').toLowerCase();
-    const TODAY = new Date().toISOString().slice(0,10);
+  <div style="margin-top:18px"><a href="/index.html">— Back to rooms</a></div>
+</div>
 
-    document.getElementById('buyPass').onclick = ()=>{
-      localStorage.setItem(`bb_pass_${man}_${TODAY}`,'1');
-      alert('Day Pass unlocked for '+man+' (today).'); location.href = `chat.html?man=${man}`;
-    };
-    document.getElementById('buyAll').onclick = ()=>{
-      const thirty = 1000*60*60*24*30;
-      localStorage.setItem('bb_sub_all', JSON.stringify({ started: Date.now(), expires: Date.now()+thirty }));
-      alert('All-Access Monthly unlocked.'); location.href = 'index.html';
-    };
-    document.getElementById('adminOn').onclick = ()=>{
-      localStorage.setItem('bb_admin','1'); alert('Admin enabled'); location.href='index.html';
-    };
-    document.getElementById('adminOff').onclick = ()=>{
-      localStorage.removeItem('bb_admin'); alert('Admin disabled'); location.href='index.html';
-    };
-  </script>
+<script>
+  // day pass
+  document.getElementById('buyDay').onclick = () => {
+    const man = document.getElementById('manSel').value;
+    const day = new Date().toISOString().slice(0,10);
+    localStorage.setItem('bb_daypass', JSON.stringify({ man, day }));
+    alert('Day pass set for ' + man.toUpperCase() + ' • today');
+  };
+
+  // all-access
+  document.getElementById('buyAll').onclick = () => {
+    const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+    localStorage.setItem('bb_allaccess', JSON.stringify({ expires }));
+    alert('All-Access set for 30 days on this device');
+  };
+
+  // admin
+  document.getElementById('enAdm').onclick = async () => {
+    const token = document.getElementById('adm').value.trim();
+    // simple local token check (optional server check could be added later)
+    if (!token) return alert('Enter token');
+    if (token === 'cherrypie-2025') {
+      localStorage.setItem('bb_admin','true');
+      alert('Admin enabled on this device');
+    } else {
+      alert('Bad token');
+    }
+  };
+  document.getElementById('disAdm').onclick = () => {
+    localStorage.removeItem('bb_admin');
+    alert('Admin disabled');
+  };
+</script>
 </body>
 </html>

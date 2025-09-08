@@ -311,6 +311,21 @@
 <script> BBAccess.gate({ freeMsgs: 12, banner: true }); </script>
 <script src="scripts/access.js"></script>
 <script> BBAccess.gate({ freeMsgs: 12, badge: true }); </script>
+<script>
+(function(){
+  const man=(new URLSearchParams(location.search).get('man')||'blade').toLowerCase();
+  const bgMap={
+    alexander:'images/rooms/gentleman.jpg',
+    dylan:'images/rooms/rockstar.jpg',
+    jesse:'images/rooms/garage.jpg',
+    grayson:'images/rooms/room-red.jpg',
+    silas:'images/rooms/guitar.jpg',
+    blade:'images/rooms/woods.jpg'
+  };
+  const url = bgMap[man] || bgMap.blade;
+  document.body.style.background = `#0a0b10 url('${url}') center / cover fixed no-repeat`;
+})();
+</script>
 
 </body>
 </html>

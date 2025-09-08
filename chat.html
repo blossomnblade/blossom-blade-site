@@ -1,102 +1,132 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chat · Blossom & Blade</title>
-<style>
-  :root{--ink:#e9e9ff;--bg:#0b0b10;--chip:#a98bff;}
-  *{box-sizing:border-box} body{margin:0;background:#0b0b10;color:#e9e9ff;font:16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-  header{padding:18px 20px; display:flex; align-items:center; gap:10px}
-  .dot{width:10px;height:10px;border-radius:50%;background:#b98bff;box-shadow:0 0 12px #b98bff}
-  h1{font-size:20px;margin:0}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Chat · Blossom & Blade</title>
+  <link rel="icon" href="/images/logo.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --rail:#6d28d9; --accent:#a855f7 }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff;background:#0b0b11}
+    a{color:inherit;text-decoration:none}
 
-  .hero{position:relative; height:180px; background:#111}
-  .hero::before{content:"";position:absolute;inset:0;background:var(--bgimg) center/cover no-repeat;filter:brightness(.55)}
-  .hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.6))}
-  .hero .title{position:absolute;left:20px;bottom:16px;font-size:28px;font-weight:800}
+    /* Background per room via body classes */
+    body::before{
+      content:""; position:fixed; inset:0;
+      background:#0b0b11 center/cover no-repeat;
+      filter:contrast(1.02) brightness(.9);
+      z-index:-2;
+    }
+    body::after{
+      /* subtle dark overlay so bubbles pop */
+      content:""; position:fixed; inset:0; z-index:-1;
+      background:linear-gradient(180deg,rgba(0,0,0,.35) 0%, rgba(0,0,0,.82) 85%);
+    }
 
-  .wrap{max-width:900px;margin:-60px auto 60px; padding:0 16px}
-  .panel{background:#0e0f14;border-radius:18px;box-shadow:0 10px 28px rgba(0,0,0,.35); padding:14px; height:60vh; overflow:auto}
-  .bubble{max-width:74%; margin:12px 0; padding:14px 16px; border-radius:14px}
-  .bubble.you{margin-left:auto;background:linear-gradient(180deg,#b78cff,#8e69ff); color:white}
-  .bubble.him{background:#121521; color:#e9eaff}
-  form{display:flex; gap:10px; margin-top:12px}
-  textarea{flex:1; background:#0f1118; color:#e9eaff; border:1px solid #22243a;border-radius:12px;padding:12px 14px; resize:none; height:48px}
-  button{background:#b38bff;color:#121225;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
-  .admin{position:fixed; right:18px; bottom:18px; background:#15a36e; color:#00140b; font-weight:800}
-  .note{opacity:.7; font-size:12px; margin:6px 2px}
-  /* kill any counters */
-  .free-left,.trial-badge,#trialBadge{display:none!important}
-</style>
-<script>
-  const BG = {
-    alexander: "url('/images/boardroom.jpg')",
-    dylan:     "url('/images/neon.jpg')",
-    jesse:     "url('/images/rodeo.jpg')",
-    grayson:   "url('/images/redroom.jpg')",
-    silas:     "url('/images/stage.jpg')",
-    blade:     "url('/images/forest.jpg')"
-  };
-  const MAN_LABEL = {
-    alexander: "Alexander Jackson",
-    dylan: "Dylan Vale",
-    jesse: "Jesse Granger",
-    grayson: "Grayson Kincaid",
-    silas: "Silas Lennox",
-    blade: "Blade Kincaid"
-  };
-  const q = new URLSearchParams(location.search);
-  const man = (q.get('man') || 'jesse').toLowerCase();
-  document.documentElement.style.setProperty('--bgimg', BG[man] || BG.jesse);
-  document.title = MAN_LABEL[man] + " — Blossom & Blade";
-</script>
+    /* map classes to your filenames */
+    body.alexander::before{ background-image:url("/images/bg_alexander_boardroom.jpg"); }
+    body.dylan::before    { background-image:url("/images/dylan-garage.jpg"); }
+    body.jesse::before    { background-image:url("/images/jesse_bg.jpg"); }
+    body.grayson::before  { background-image:url("/images/grayson-bg.jpg"); }
+    body.silas::before    { background-image:url("/images/bg_silas_stage.jpg"); }
+    body.blade::before    { background-image:url("/images/blade-woods.jpg"); }
+
+    .wrap{max-width:920px;margin:0 auto;padding:24px 20px 120px}
+    header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .dot{width:10px;height:10px;border-radius:999px;background:#b26dfb;box-shadow:0 0 10px #b26dfb}
+    .brand{font-weight:800;letter-spacing:.4px}
+    .panel{
+      background:rgba(7,7,10,.75);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px; padding:18px 16px; margin:0 auto; max-width:820px;
+      box-shadow:0 10px 28px rgba(0,0,0,.45);
+    }
+    .bubble{
+      background:#0f0f14;border-radius:14px;padding:14px 16px;margin:12px 14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.35);
+    }
+    .you{margin-left:auto; background:linear-gradient(135deg,var(--accent),var(--rail));}
+    .name{opacity:.8;font-weight:800;margin-bottom:6px}
+    .composer{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:22px; width:min(920px,calc(100vw - 32px)); display:flex;gap:10px;
+    }
+    input[type=text]{flex:1;padding:16px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0f0f14;color:#fff}
+    button{padding:14px 18px;border-radius:14px;background:#e9d5ff;color:#280a54;font-weight:800;border:none}
+    .admin{position:fixed;right:20px;bottom:22px;background:#0ea5e9;color:#00131c;font-weight:800;padding:12px 16px;border-radius:14px}
+  </style>
 </head>
 <body>
-  <header><span class="dot"></span><h1>Blossom & Blade</h1></header>
-
-  <section class="hero"><div class="shade"></div>
-    <div class="title" id="title"></div>
-  </section>
-
   <div class="wrap">
-    <div class="panel" id="log"></div>
-    <div class="note">PG-13 by default. After-hours unlocks explicit talk — pricing page.</div>
-    <form id="form">
-      <textarea id="say" placeholder="Say hi…"></textarea>
-      <button type="submit">Send</button>
-    </form>
+    <header>
+      <span class="dot"></span>
+      <div class="brand">Blossom &amp; Blade</div>
+    </header>
+
+    <div id="roomTitle" style="font-size:32px;font-weight:800;margin:14px 8px 6px;"></div>
+
+    <div id="chat" class="panel" aria-live="polite"></div>
   </div>
+
+  <form id="composer" class="composer" autocomplete="off">
+    <input id="input" type="text" placeholder="Say hi…" maxlength="280" />
+    <button id="send" type="submit">Send</button>
+  </form>
 
   <a class="admin" href="/pay.html">Admin / Pricing</a>
 
+  <!-- your chat brain -->
   <script src="/scripts/brain.js"></script>
-  <script>
-    document.getElementById('title').textContent = MAN_LABEL[man] || 'Chat';
-    const log = document.getElementById('log');
-    const form = document.getElementById('form');
-    const say = document.getElementById('say');
 
+  <script>
+    // 1) Get which man from URL
+    const man = new URLSearchParams(location.search).get('man') || 'alexander';
+
+    // 2) Apply body class for background mapping
+    document.body.classList.add(man);
+
+    // 3) Friendly title
+    const pretty = {
+      alexander:'Alexander Jackson',
+      dylan:'Dylan Vale',
+      jesse:'Jesse Granger',
+      grayson:'Grayson Kincaid',
+      silas:'Silas Lennox',
+      blade:'Blade Kincaid'
+    }[man] || man;
+    document.getElementById('roomTitle').textContent = pretty;
+
+    // 4) Minimal bubble helpers (leaves brain.js in charge of replies)
+    const DOM = {
+      chat: document.getElementById('chat'),
+      input: document.getElementById('input'),
+      form: document.getElementById('composer')
+    };
     function bubble(who, text){
-      const b = document.createElement('div');
-      b.className = 'bubble ' + (who==='you'?'you':'him');
-      b.textContent = text;
-      log.appendChild(b);
-      log.scrollTop = log.scrollHeight;
+      const div = document.createElement('div');
+      div.className = 'bubble' + (who==='you' ? ' you' : '');
+      if(who!=='you'){
+        const n = document.createElement('div'); n.className='name'; n.textContent = pretty + ':'; div.appendChild(n);
+      }
+      div.appendChild(document.createTextNode(text));
+      DOM.chat.appendChild(div);
+      DOM.chat.scrollTo({top:DOM.chat.scrollHeight,behavior:'smooth'});
     }
 
-    form.addEventListener('submit', async (e)=>{
+    // 5) Hook your brain.js = window.BladeBrain(man, bubble)
+    //    brain.js should expose window.BladeBrain that returns a {start, onUser} API.
+    const brain = window.BladeBrain ? window.BladeBrain(man, bubble) : null;
+    if(brain && brain.start){ brain.start(); }
+
+    DOM.form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const text = (say.value||'').trim();
+      const text = (DOM.input.value||'').trim();
       if(!text) return;
       bubble('you', text);
-      say.value = '';
-      const reply = await compose(text);
-      bubble('him', reply);
-    });
-
-    say.addEventListener('keydown', e=>{
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); form.requestSubmit(); }
+      DOM.input.value = '';
+      if(brain && brain.onUser) brain.onUser(text);
     });
   </script>
 </body>

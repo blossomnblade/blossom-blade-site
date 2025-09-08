@@ -1,85 +1,145 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Blossom & Blade</title>
-<style>
-  :root{ --ink:#eef3ff; --veil:rgba(5,7,12,.38); --cardFog:rgba(4,6,10,.38) } /* lighter */
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial;
-    background:#0a0d12 url("images/gothic-bg.jpg") center/cover fixed no-repeat;
-  }
-  body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.55));pointer-events:none}
-  header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px}
-  h1{margin:0;font-size:22px}
-  .standards{font-size:12px;opacity:.9}
-  .grid{max-width:1200px;margin:18px auto 60px;padding:0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .card{
-    position:relative;min-height:200px;border-radius:18px;overflow:hidden;cursor:pointer;
-    box-shadow:0 24px 60px rgba(0,0,0,.45);
-    outline:1px solid rgba(190,220,255,.18);
-  }
-  .card .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:saturate(.92);transform:scale(1.02)}
-  .card::after{content:"";position:absolute;inset:0;background:var(--cardFog);backdrop-filter:blur(1.5px)}
-  .card:hover::after{background:rgba(4,6,10,.28)}
-  .inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:18px}
-  .title{font-weight:800;font-size:18px;text-shadow:0 2px 12px rgba(0,0,0,.6)}
-  .tag{opacity:.92;margin-top:6px;font-size:13px}
-  .tip{max-width:1200px;margin:8px auto 26px;padding:0 18px;text-align:center;font-size:12px;opacity:.9}
-  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade</title>
+  <style>
+    :root{
+      --ink:#e5e7eb; --bg:#0b0c12; --muted:#9ca3af;
+      --glow:#a78bfa; --accent:#f472b6;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink);
+      font:500 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #1f2937 0%, rgba(10,11,16,0) 60%),
+        radial-gradient(1200px 600px at 120% 120%, #111827 0%, rgba(10,11,16,0) 60%),
+        var(--bg);
+    }
+    header{padding:28px 20px 10px; display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:1150px; margin:0 auto}
+    h1{margin:0; font:900 32px/1 ui-sans-serif; letter-spacing:.4px}
+    .sub{color:var(--muted); font-weight:600}
+    main{max-width:1150px; margin:12px auto 60px; padding:0 20px}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px}
+    .card{
+      position:relative; height:210px; border-radius:22px; overflow:hidden; background:#111;
+      cursor:pointer; transform:translateZ(0); border:1px solid rgba(255,255,255,.06)
+    }
+    .card:before{content:""; position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.55)); z-index:1}
+    .card img{
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+      filter:contrast(1.05) saturate(1.08) brightness(.92);
+      transform:scale(1.02);
+      transition:transform .35s ease, filter .35s ease
+    }
+    .card:hover img{transform:scale(1.07); filter:contrast(1.08) saturate(1.12) brightness(1)}
+    .meta{position:absolute; left:14px; bottom:14px; z-index:2}
+    .name{font:900 18px/1 ui-sans-serif}
+    .tag{margin-top:6px; font:700 13px/1.1 ui-sans-serif; opacity:.92}
+    .chip{
+      position:absolute; right:12px; top:12px; z-index:2;
+      font:800 11px/1 ui-sans-serif; padding:8px 10px; border-radius:999px; color:#0b0b10;
+      background:linear-gradient(90deg,var(--glow),var(--accent))
+    }
+    a.reset{all:unset}
+    footer{max-width:1150px; margin:28px auto 40px; padding:0 20px; color:var(--muted)}
+  </style>
 </head>
 <body>
   <header>
-    <h1>Blossom & Blade</h1>
-    <div class="standards">PG-13 by default. We follow your lead, within Community Standards.</div>
+    <div>
+      <h1>Blossom &amp; Blade</h1>
+      <div class="sub">Adults only. PG-13 free; “after-hours” unlocks later.</div>
+    </div>
   </header>
 
-  <div id="grid" class="grid"></div>
-  <div class="tip">Tip: press <strong>Enter</strong> when a card is focused.</div>
+  <main>
+    <div class="grid">
+      <!-- Alexander -->
+      <a class="reset" href="chat.html?man=alexander">
+        <div class="card">
+          <div class="chip">Power &amp; polish</div>
+          <img src="images/bg_alexander_boardroom.jpg" alt="Alexander"
+               onerror="this.src='images/background.jpg'">
+          <div class="meta">
+            <div class="name">Alexander Jackson</div>
+            <div class="tag">Boardroom heat, city lights</div>
+          </div>
+        </div>
+      </a>
 
-<script>
-  const guys = [
-    {id:'alexander',name:'Alexander Jackson',tag:'Power, polish, late-night city lights',bg:'images/bg_alexander_boardroom.jpg'},
-    {id:'dylan',name:'Dylan Vale',tag:'Neon, guitar, slow burn to heat',bg:'images/dylan-garage.jpg'},
-    {id:'jesse',name:'Jesse Granger',tag:'Rodeo grit, dusty gold hour',bg:'images/jesse_bg.jpg'},
-    {id:'grayson',name:'Grayson Kincaid',tag:'Silk words, library hush',bg:'images/grayson-bg.jpg'},
-    {id:'silas',name:'Silas Lennox',tag:'Lyric mind, poet hands',bg:'images/bg_silas_stage.jpg'},
-    {id:'blade',name:'Blade Kincaid',tag:'Predatory charm, forest night',bg:'images/blade-woods.jpg'}
-  ];
-  const grid=document.getElementById('grid');
-  grid.innerHTML = guys.map(g=>`
-    <div class="card" tabindex="0" data-id="${g.id}">
-      <div class="bg" style="background-image:url('${g.bg}')"></div>
-      <div class="inner">
-        <div class="title">${g.name}</div>
-        <div class="tag">${g.tag}</div>
-      </div>
-    </div>`).join('');
+      <!-- Dylan -->
+      <a class="reset" href="chat.html?man=dylan">
+        <div class="card">
+          <div class="chip">Neon fever</div>
+          <img src="images/dylan-garage.jpg" alt="Dylan"
+               onerror="this.src='images/background.jpg'">
+          <div class="meta">
+            <div class="name">Dylan Vale</div>
+            <div class="tag">Mechanic hands, stage glow</div>
+          </div>
+        </div>
+      </a>
 
-  function enter(id){
-    try{ localStorage.setItem('bb.character', id); }catch(e){}
-    location.href = 'chat.html?man='+encodeURIComponent(id);
-  }
-  grid.addEventListener('click',e=>{
-    const card=e.target.closest('.card'); if(card) enter(card.dataset.id);
-  });
-  grid.addEventListener('keydown',e=>{
-    if(e.key==='Enter' || e.key===' '){
-      const card=e.target.closest('.card'); if(card){ e.preventDefault(); enter(card.dataset.id); }
-    }
-  });
+      <!-- Jesse -->
+      <a class="reset" href="chat.html?man=jesse">
+        <div class="card">
+          <div class="chip">Dust &amp; gold</div>
+          <img src="images/jesse_bg.jpg" alt="Jesse"
+               onerror="this.src='images/background.jpg'">
+          <div class="meta">
+            <div class="name">Jesse Granger</div>
+            <div class="tag">Rodeo grit, gentleman drawl</div>
+          </div>
+        </div>
+      </a>
 
-  /* graceful fallback if any image fails to load */
-  document.querySelectorAll('.card').forEach(card=>{
-    const bg=card.querySelector('.bg'); const test=new Image(); test.src = bg.style.backgroundImage.slice(5,-2);
-    test.addEventListener('error',()=>{ bg.style.background='linear-gradient(180deg,#1d2230,#0e1118)'; });
-  });
-</script>
+      <!-- Grayson -->
+      <a class="reset" href="chat.html?man=grayson">
+        <div class="card">
+          <div class="chip">Library hush</div>
+          <img src="images/grayson-bg.jpg" alt="Grayson"
+               onerror="this.src='images/background.jpg'">
+          <div class="meta">
+            <div class="name">Grayson Kincaid</div>
+            <div class="tag">Masked intent, silk words</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Silas -->
+      <a class="reset" href="chat.html?man=silas">
+        <div class="card">
+          <div class="chip">Lyric mind</div>
+          <img src="images/bg_silas_stage.jpg" alt="Silas"
+               onerror="this.src='images/background.jpg'">
+          <div class="meta">
+            <div class="name">Silas Lennox</div>
+            <div class="tag">Poet hands, stage heat</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Blade -->
+      <a class="reset" href="chat.html?man=blade">
+        <div class="card">
+          <div class="chip">Predatory charm</div>
+          <img src="images/blade_front_card.jpg" alt="Blade"
+               onerror="this.src='images/blade-woods.jpg'">
+          <div class="meta">
+            <div class="name">Blade Kincaid</div>
+            <div class="tag">Forest night, chase and catch</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>© Blossom &amp; Blade</footer>
 </body>
 </html>

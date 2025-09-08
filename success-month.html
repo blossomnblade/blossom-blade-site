@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<title>Monthly – Unlocked</title>
+<script src="scripts/access.js"></script>
+<script>
+  // Grant 30 days
+  BBAccess.grantDays(30);
+  const back = document.referrer || 'index.html';
+  location.replace(back.includes('success-month.html') ? 'index.html' : back);
+</script>
+<body style="background:#0b0b11;color:#fff;font-family:system-ui;padding:24px">
+  <h1>Monthly Activated</h1>
+  <p>You can close this tab. Taking you back…</p>
+</body>
+</html>

@@ -1,177 +1,98 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blossom & Blade</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0c0d10; --card:#12141a; --ink:#eef2ff; --muted:#9aa3b2;
-      --pill:#e9d5ff; --pill-ink:#4b0f8a; --accent:#b388ff; --accent2:#ff8bd2;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
-      color:var(--ink); background:radial-gradient(1200px 600px at 10% -10%, #1a1c24 0%, #0c0d10 60%);
-    }
-    header{max-width:1100px;margin:40px auto 12px;padding:0 20px}
-    h1{font-size:40px;letter-spacing:.3px;margin:0 0 8px}
-    .tagline{color:var(--muted);margin:0 0 24px}
-    .cta{
-      display:inline-flex; gap:10px; flex-wrap:wrap; align-items:center;
-      color:var(--muted); font-size:14px
-    }
-    .cta a{
-      display:inline-flex; align-items:center; gap:8px; text-decoration:none;
-      background:linear-gradient(90deg, var(--accent), var(--accent2));
-      color:#0a0a0a; font-weight:700; padding:10px 14px; border-radius:12px
-    }
-    main{max-width:1100px;margin:0 auto 80px;padding:0 20px}
-    .grid{
-      display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:22px
-    }
-    .card{
-      position:relative; overflow:hidden; border-radius:18px; background:var(--card);
-      box-shadow:var(--shadow); padding:0; height:230px; cursor:pointer; transition:transform .15s ease;
-      outline:1px solid rgba(255,255,255,.05)
-    }
-    .card:hover{ transform:translateY(-2px) }
-    .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:contrast(.9) brightness(.85)}
-    .veil{position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55))}
-    .meta{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:16px}
-    .pill{
-      position:absolute; top:12px; right:12px; background:var(--pill); color:var(--pill-ink);
-      font-size:12px; padding:6px 10px; border-radius:999px; font-weight:700; box-shadow:0 6px 16px rgba(147,51,234,.25)
-    }
-    .title{font-size:20px;font-weight:800;margin:0}
-    .sub{margin:6px 0 0; color:#d9e0ea; font-size:13px}
-    a.card-link{color:inherit;text-decoration:none}
-    .disabled .veil{background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.85))}
-    .disabled .pill{background:#2b2f3a;color:#9aa3b2;box-shadow:none}
-    .disabled .title{opacity:.8}
-    footer{max-width:1100px;margin:32px auto 40px;padding:0 20px;color:var(--muted);font-size:14px}
-    /* backgrounds */
-    .bg-alexander{background-image:url('rooms/alexander.jpg')}
-    .bg-dylan{background-image:url('rooms/dylan.jpg')}
-    .bg-jesse{background-image:url('rooms/jesse.jpg')}
-    .bg-grayson{background-image:url('rooms/grayson.jpg')}
-    .bg-silas{background-image:url('rooms/silas.jpg')}
-    .bg-blade{background-image:url('rooms/blade.jpg')}
-    .bg-soon{background-image:url('rooms/woods.jpg')}
-    /* admin chip */
-    .admin-chip{
-      position:fixed;bottom:16px;right:16px;background:#10b981;color:#07130e;
-      padding:8px 12px;border-radius:12px;font-weight:800;font-size:12px;box-shadow:var(--shadow)
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Blossom & Blade</title>
+<style>
+  :root{--ink:#e9e9ff;--bg:#0b0b10;--chip:#a98bff}
+  *{box-sizing:border-box} body{margin:0;background:#0b0b10;color:#e9e9ff;font:16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  header{padding:26px 20px 8px}
+  h1{font-size:34px;margin:0 0 8px}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 20px 18px}
+  .charity{font-weight:600;color:#b8baf6}
+  .button{display:inline-flex;align-items:center;gap:8px;background:#b38bff;color:#170f29;border:0;border-radius:12px;padding:10px 14px;font-weight:800;text-decoration:none}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; padding:0 20px 60px; max-width:1240px; margin:0 auto}
+  .card{position:relative; min-height:220px; border-radius:18px; overflow:hidden; background:#12131a; box-shadow:0 10px 28px rgba(0,0,0,.35)}
+  .card::before{content:""; position:absolute; inset:0; background:var(--bg) center/cover no-repeat; filter:brightness(.72)}
+  .card > .c{position:relative; z-index:1; padding:16px}
+  .badge{display:inline-block; font-size:12px; background:rgba(180,140,255,.2); color:#e9e9ff; padding:6px 10px; border-radius:999px; margin-bottom:90px}
+  .title{font-size:20px; font-weight:800}
+  .desc{opacity:.8}
+  footer{opacity:.65; padding:20px}
+  .admin{position:fixed; right:18px; bottom:18px; background:#15a36e; color:#00140b; font-weight:800; border-radius:12px; padding:10px 14px; text-decoration:none}
+</style>
 </head>
 <body>
   <header>
-    <h1>Blossom &amp; Blade</h1>
-    <p class="tagline">
-      Free trial in every room. Day Pass <strong>$5.99</strong> (choose one man). All-Access Monthly <strong>$10.99</strong>.
-      Adults only.
-    </p>
-    <p class="cta">
-      <a href="pay.html">Pricing / Unlock</a>
-    </p>
+    <h1>Blossom & Blade</h1>
   </header>
 
-  <main>
-    <div class="grid">
-      <a class="card-link" href="chat.html?man=alexander">
-        <article class="card">
-          <div class="bg bg-alexander"></div><div class="veil"></div>
-          <div class="pill">Power &amp; polish</div>
-          <div class="meta">
-            <h3 class="title">Alexander Jackson</h3>
-            <p class="sub">Boardroom heat, city lights</p>
-          </div>
-        </article>
-      </a>
+  <div class="row">
+    <div class="charity">Free trial in every room. Day Pass <b>$5.99</b> (choose one man). All-Access Monthly <b>$10.99</b>. Adults only. &nbsp;•&nbsp; We donate <b>$1</b> from every subscription to women’s shelters.</div>
+    <a class="button" href="/pay.html">Pricing / Unlock</a>
+  </div>
 
-      <a class="card-link" href="chat.html?man=dylan">
-        <article class="card">
-          <div class="bg bg-dylan"></div><div class="veil"></div>
-          <div class="pill">Neon fever</div>
-          <div class="meta">
-            <h3 class="title">Dylan Vale</h3>
-            <p class="sub">Mechanic hands, stage glow</p>
-          </div>
-        </article>
-      </a>
+  <main class="grid">
+    <a class="card" href="chat.html?man=alexander" style="--bg:url('/images/boardroom.jpg')">
+      <div class="c">
+        <div class="badge">Power & polish</div>
+        <div class="title">Alexander Jackson</div>
+        <div class="desc">Boardroom heat, city lights</div>
+      </div>
+    </a>
 
-      <a class="card-link" href="chat.html?man=jesse">
-        <article class="card">
-          <div class="bg bg-jesse"></div><div class="veil"></div>
-          <div class="pill">Dust &amp; gold</div>
-          <div class="meta">
-            <h3 class="title">Jesse Granger</h3>
-            <p class="sub">Rodeo grit, gentleman drawl</p>
-          </div>
-        </article>
-      </a>
+    <a class="card" href="chat.html?man=dylan" style="--bg:url('/images/neon.jpg')">
+      <div class="c">
+        <div class="badge">Neon fever</div>
+        <div class="title">Dylan Vale</div>
+        <div class="desc">Mechanic hands, stage glow</div>
+      </div>
+    </a>
 
-      <a class="card-link" href="chat.html?man=grayson">
-        <article class="card">
-          <div class="bg bg-grayson"></div><div class="veil"></div>
-          <div class="pill">Library hush</div>
-          <div class="meta">
-            <h3 class="title">Grayson Kincaid</h3>
-            <p class="sub">Masked intent, silk words</p>
-          </div>
-        </article>
-      </a>
+    <a class="card" href="chat.html?man=jesse" style="--bg:url('/images/rodeo.jpg')">
+      <div class="c">
+        <div class="badge">Dust & gold</div>
+        <div class="title">Jesse Granger</div>
+        <div class="desc">Rodeo grit, gentleman drawl</div>
+      </div>
+    </a>
 
-      <a class="card-link" href="chat.html?man=silas">
-        <article class="card">
-          <div class="bg bg-silas"></div><div class="veil"></div>
-          <div class="pill">Lyric mind</div>
-          <div class="meta">
-            <h3 class="title">Silas Lennox</h3>
-            <p class="sub">Poet hands, stage heat</p>
-          </div>
-        </article>
-      </a>
+    <a class="card" href="chat.html?man=grayson" style="--bg:url('/images/redroom.jpg')">
+      <div class="c">
+        <div class="badge">Library hush</div>
+        <div class="title">Grayson Kincaid</div>
+        <div class="desc">Masked intent, silk words</div>
+      </div>
+    </a>
 
-      <a class="card-link" href="chat.html?man=blade">
-        <article class="card">
-          <div class="bg bg-blade"></div><div class="veil"></div>
-          <div class="pill">Predatory charm</div>
-          <div class="meta">
-            <h3 class="title">Blade Kincaid</h3>
-            <p class="sub">Forest night, chase &amp; catch</p>
-          </div>
-        </article>
-      </a>
+    <a class="card" href="chat.html?man=silas" style="--bg:url('/images/stage.jpg')">
+      <div class="c">
+        <div class="badge">Lyric mind</div>
+        <div class="title">Silas Lennox</div>
+        <div class="desc">Poet hands, stage heat</div>
+      </div>
+    </a>
 
-      <!-- Coming Soon -->
-      <article class="card disabled" title="Coming soon">
-        <div class="bg bg-soon"></div><div class="veil"></div>
-        <div class="pill">Coming soon</div>
-        <div class="meta">
-          <h3 class="title">New Room</h3>
-          <p class="sub">Opens next update</p>
-        </div>
-      </article>
+    <a class="card" href="chat.html?man=blade" style="--bg:url('/images/forest.jpg')">
+      <div class="c">
+        <div class="badge">Predatory charm</div>
+        <div class="title">Blade Kincaid</div>
+        <div class="desc">Forest night, chase & catch</div>
+      </div>
+    </a>
+
+    <!-- coming soon -->
+    <div class="card" style="--bg:url('/images/coming-soon.jpg')">
+      <div class="c">
+        <div class="badge">Coming soon</div>
+        <div class="title">New Room</div>
+        <div class="desc">Opens next update</div>
+      </div>
     </div>
   </main>
 
-  <footer>© Blossom &amp; Blade</footer>
-
-  <script>
-    // Quick admin enable: visit index with ?admin=1 once.
-    const qs=new URLSearchParams(location.search);
-    if(qs.get('admin')==='1'){ localStorage.setItem('bb_admin','1'); history.replaceState({},'',location.pathname); }
-    if(localStorage.getItem('bb_admin')==='1'){
-      const chip=document.createElement('div'); chip.className='admin-chip'; chip.textContent='Admin mode';
-      document.body.appendChild(chip);
-    }
-  </script>
+  <a class="admin" href="/pay.html">Admin / Pricing</a>
+  <footer>© Blossom & Blade</footer>
 </body>
 </html>

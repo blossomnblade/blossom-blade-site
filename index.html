@@ -5,220 +5,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade</title>
   <link rel="icon" href="/images/logo.jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta name="color-scheme" content="dark only" />
   <style>
     :root{
-      --ink:#f5efff;        /* heading ink */
-      --muted:#c9c9d6;
-      --bg:#0b0b11;
-      --card:#101016;
-      --radius:18px;
+      --bg:#0b0a0f;
+      --ink:#ffffff;
+      --muted:#cfc9db;
+      --veil:rgba(0,0,0,.32);
+      --card:rgba(0,0,0,.42);
+      --cardGrad:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 60%, rgba(0,0,0,.65));
+      --line:rgba(255,255,255,.18);
+      --accent1:#c084fc; --accent2:#a855f7;
+      --radius:16px;
+      --shadow:0 14px 40px rgba(0,0,0,.50);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      color:#fff;
-      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:#0b0b11;
+      margin:0; color:var(--ink);
+      font-family: ui-rounded, "SF Pro Rounded", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:var(--bg) url("/images/bg_dark_romance.jpg") center/cover fixed no-repeat;
+    }
+    /* global veil for readability */
+    body::after{
+      content:""; position:fixed; inset:0; background:var(--veil); pointer-events:none; z-index:-1;
     }
 
-    /* Site background (uses your uploaded file) */
-    body::before{
-      content:"";
-      position:fixed; inset:0; z-index:-1;
-      background:
-        radial-gradient(1100px 520px at -10% -10%, rgba(168,85,247,.10), transparent 55%),
-        radial-gradient(900px 420px at 110% 110%, rgba(59,130,246,.08), transparent 55%),
-        url("/images/bg_dark_romance.jpg") center / cover no-repeat fixed;
-      opacity:.95;            /* lighter overall */
-      pointer-events:none;
-    }
-
-    .wrap{max-width:1160px;margin:44px auto 84px;padding:0 20px}
-    .top{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    }
-    h1{
-      margin:0;font-size:40px;line-height:1.05;font-weight:800;color:var(--ink);
-      text-shadow:0 6px 22px rgba(0,0,0,.55);
+    .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 110px}
+    header{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap}
+    h1{margin:6px 0 10px; font-size:clamp(28px,4vw,48px); letter-spacing:.3px; line-height:1.05}
+    .tag{
+      margin:0 0 18px; font-size:clamp(16px,2.2vw,19px); color:var(--ink);
+      text-wrap:balance;
     }
     .cta{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:12px 18px;border-radius:999px;font-weight:800;
-      background:linear-gradient(180deg,#b983ff,#7c3aed);color:#0b0612;
-      box-shadow:0 12px 26px rgba(124,58,237,.35);text-decoration:none;
+      display:inline-flex; align-items:center; gap:.6ch; padding:12px 16px; border-radius:999px;
+      background:linear-gradient(180deg,var(--accent1),var(--accent2)); color:#0a0612; font-weight:900;
+      text-decoration:none; box-shadow:var(--shadow); border:0;
+      transition:filter .15s ease, transform .08s ease;
     }
-    .strap{margin:10px 0 24px;color:var(--muted);font-size:18px}
-    .strap b{color:#fff}
-
-    /* Grid */
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:22px}
-    .span-6{grid-column:span 6}
-    @media (max-width:900px){.span-6{grid-column:1/-1}}
-
-    .room-card{
-      position:relative;overflow:hidden;border-radius:var(--radius);
-      min-height:280px;background:var(--card);
-      outline:1px solid rgba(255,255,255,.06);
-      box-shadow:0 14px 40px rgba(0,0,0,.40);
-      transition:transform .15s ease, box-shadow .15s ease, outline-color .15s ease;
-      color:#fff;text-decoration:none;
-    }
-    .room-card:hover{
-      transform:translateY(-2px);
-      outline-color:rgba(255,255,255,.14);
-      box-shadow:0 20px 52px rgba(0,0,0,.52);
+    .cta:hover{filter:brightness(1.05)}
+    .cta:active{transform:translateY(1px)}
+    .admin{
+      position:fixed; right:16px; bottom:16px; padding:12px 16px; border-radius:999px;
+      background:#0d1e14; color:#caffd1; border:1px solid #2b503a; box-shadow:var(--shadow);
+      font-weight:900; text-decoration:none;
     }
 
-    /* ---- HAZE FIX: brighten images & reduce overlay ---- */
-    .room-bg{
-      position:absolute;inset:0;background-position:center;background-size:cover;
-      opacity:.78;                               /* was ~.34/.58 — much clearer now */
-      filter:grayscale(.03) contrast(1.06) brightness(1.14);
-      transition:opacity .18s ease, transform .18s ease, filter .18s ease;
-    }
-    .room-card:hover .room-bg{
-      opacity:.90; transform:scale(1.02);
-      filter:grayscale(0) contrast(1.10) brightness(1.18);
-    }
+    /* grid of rooms */
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px}
+    .span-3{grid-column:span 12}
+    @media(min-width:740px){ .span-3{grid-column:span 6} }
+    @media(min-width:1040px){ .span-3{grid-column:span 3} }
 
-    /* soften the sheen so it’s not foggy */
-    .room-card::after{
-      content:"";position:absolute;inset:0;pointer-events:none;
-      background:linear-gradient(60deg, rgba(255,255,255,.02), rgba(255,255,255,0) 35%);
+    .card{
+      position:relative; isolation:isolate; overflow:hidden;
+      border-radius:var(--radius); border:1px solid var(--line);
+      background:var(--card); box-shadow:var(--shadow); min-height:240px;
+      display:flex; flex-direction:column; justify-content:flex-end; padding:18px;
+      transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
     }
-
-    /* very light bottom fade so white text reads without killing the image */
-    .fade{
-      position:absolute;inset:0;pointer-events:none;
-      background:linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,.22));
+    .card::before{
+      content:""; position:absolute; inset:0; z-index:-1;
+      background-size:cover; background-position:center;
+      filter:brightness(.88) contrast(1.02) saturate(1.02);
     }
-
-    .pill{
-      position:absolute;top:14px;left:14px;
-      background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);
-      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;backdrop-filter:blur(6px);
+    .card::after{
+      content:""; position:absolute; inset:0; z-index:0; background:var(--cardGrad);
     }
-
-    .copy{
-      position:absolute;left:18px;right:18px;bottom:16px;z-index:2;
-      text-shadow:0 6px 20px rgba(0,0,0,.60);
+    .card:hover{transform:translateY(-3px) scale(1.02); filter:brightness(1.03); box-shadow:0 18px 46px rgba(0,0,0,.55)}
+    .chip{
+      position:absolute; left:14px; top:14px; z-index:1;
+      font-size:12px; font-weight:800; letter-spacing:.2px;
+      background:rgba(0,0,0,.55); border:1px solid var(--line); border-radius:999px; padding:6px 10px;
+      box-shadow:var(--shadow)
     }
-    .title{margin:0 0 6px;font-size:26px;font-weight:800;color:#fff}
-    .sub{margin:0;color:#e6e6f6}
+    .ttl{font-size:20px; font-weight:900; margin:0 0 6px}
+    .sub{margin:0; color:var(--muted); font-size:14.5px}
+    a.room{color:inherit; text-decoration:none; display:block}
 
-    /* Coming-soon logo card */
-    .soon-tag{
-      position:absolute;top:14px;left:14px;font-size:12px;font-weight:800;
-      background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);
-      border-radius:999px;padding:6px 10px;z-index:2;
-    }
-    .soon-logo{position:absolute;inset:0;display:grid;place-items:center;z-index:2}
-    .soon-logo img{width:180px;max-width:65%;filter:drop-shadow(0 10px 22px rgba(0,0,0,.55));opacity:.96}
+    /* room backgrounds */
+    .alex::before   {background-image:url("/images/bg_alexander_boardroom.jpg")}
+    .dylan::before  {background-image:url("/images/dylan-garage.jpg")}
+    .jesse::before  {background-image:url("/images/jesse_bg.jpg")}
+    .grayson::before{background-image:url("/images/grayson-bg.jpg")}
+    .silas::before  {background-image:url("/images/bg_silas_stage.jpg")}
+    .blade::before  {background-image:url("/images/blade-woods.jpg")}
+    .coming::before {background-image:url("/images/logo.jpg"); background-size:contain; background-repeat:no-repeat; background-position:center}
 
-    footer{display:flex;justify-content:flex-end;margin-top:26px}
-    .admin{background:#10b981;color:#04130e;box-shadow:0 12px 26px rgba(16,185,129,.28)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:999px;font-weight:800;text-decoration:none}
+    /* helpers */
+    .tight{max-width:880px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <h1>Blossom &amp; Blade</h1>
-      <a class="cta" href="/pay.html">Pricing / Unlock</a>
-    </div>
-
-    <p class="strap">
-      Free trial in every room. Day Pass <b>$5.99</b> (choose one man).
-      All-Access Monthly <b>$10.99</b>. Adults only. • We donate <b>$1</b> from every subscription to women’s shelters.
-    </p>
-
-    <div class="grid">
-      <!-- Alexander -->
-      <a class="room-card span-6" href="/gentleman.html">
-        <div class="room-bg" style="background-image:url('/images/bg_alexander_boardroom.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Power &amp; polish</span>
-        <div class="copy">
-          <h3 class="title">Alexander Jackson</h3>
-          <p class="sub">Boardroom heat, city lights</p>
-        </div>
-      </a>
-
-      <!-- Dylan -->
-      <a class="room-card span-6" href="/garage.html">
-        <div class="room-bg" style="background-image:url('/images/dylan-garage.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Neon fever</span>
-        <div class="copy">
-          <h3 class="title">Dylan Vale</h3>
-          <p class="sub">Mechanic hands, stage glow</p>
-        </div>
-      </a>
-
-      <!-- Jesse (uses underscore filename) -->
-      <a class="room-card span-6" href="/cowboy.html">
-        <div class="room-bg" style="background-image:url('/images/jesse_bg.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Dust &amp; gold</span>
-        <div class="copy">
-          <h3 class="title">Jesse Granger</h3>
-          <p class="sub">Rodeo grit, gentleman drawl</p>
-        </div>
-      </a>
-
-      <!-- Grayson -->
-      <a class="room-card span-6" href="/mask.html">
-        <div class="room-bg" style="background-image:url('/images/grayson-bg.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Library hush</span>
-        <div class="copy">
-          <h3 class="title">Grayson Kincaid</h3>
-          <p class="sub">Masked intent, silk words</p>
-        </div>
-      </a>
-
-      <!-- Silas -->
-      <a class="room-card span-6" href="/rockstar.html">
-        <div class="room-bg" style="background-image:url('/images/bg_silas_stage.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Lyric mind</span>
-        <div class="copy">
-          <h3 class="title">Silas Lennox</h3>
-          <p class="sub">Poet hands, stage heat</p>
-        </div>
-      </a>
-
-      <!-- Blade -->
-      <a class="room-card span-6" href="/woods.html">
-        <div class="room-bg" style="background-image:url('/images/blade-woods.jpg')"></div>
-        <div class="fade"></div>
-        <span class="pill">Predatory charm</span>
-        <div class="copy">
-          <h3 class="title">Blade Kincaid</h3>
-          <p class="sub">Forest night, chase &amp; catch</p>
-        </div>
-      </a>
-
-      <!-- Coming soon (logo) -->
-      <div class="room-card span-6" aria-disabled="true">
-        <div class="room-bg" style="background-image:url('/images/grayson-bg.jpg')"></div>
-        <div class="fade"></div>
-        <span class="soon-tag">Coming soon</span>
-        <div class="soon-logo">
-          <img src="/images/logo.jpg" alt="Blossom &amp; Blade logo">
-        </div>
-        <div class="copy">
-          <h3 class="title">New Room</h3>
-          <p class="sub">Opens next update</p>
-        </div>
+    <header>
+      <div>
+        <h1>Blossom &amp; Blade</h1>
+        <p class="tag tight">
+          Free trial in every room. Day Pass <b>$5.99</b> (choose one man). All-Access Monthly <b>$10.99</b> (recurring).
+          &nbsp;•&nbsp; We donate <b>$1</b> from every subscription to women’s shelters.
+        </p>
       </div>
-    </div>
+      <a class="cta" href="/pay.html">Pricing / Unlock</a>
+    </header>
 
-    <footer>
-      <a class="btn admin" href="/pay.html">Admin / Pricing</a>
-    </footer>
+    <section class="grid" aria-label="Rooms">
+      <a class="room span-3" href="/chat.html?man=alexander">
+        <article class="card alex">
+          <span class="chip">Power &amp; polish</span>
+          <h3 class="ttl">Alexander Jackson</h3>
+          <p class="sub">Boardroom heat, city lights</p>
+        </article>
+      </a>
+
+      <a class="room span-3" href="/chat.html?man=dylan">
+        <article class="card dylan">
+          <span class="chip">Neon fever</span>
+          <h3 class="ttl">Dylan Vale</h3>
+          <p class="sub">Mechanic hands, stage glow</p>
+        </article>
+      </a>
+
+      <a class="room span-3" href="/chat.html?man=jesse">
+        <article class="card jesse">
+          <span class="chip">Dust &amp; gold</span>
+          <h3 class="ttl">Jesse Granger</h3>
+          <p class="sub">Rodeo grit, gentleman drawl</p>
+        </article>
+      </a>
+
+      <a class="room span-3" href="/chat.html?man=grayson">
+        <article class="card grayson">
+          <span class="chip">Library hush</span>
+          <h3 class="ttl">Grayson Kincaid</h3>
+          <p class="sub">Masked intent, silk words</p>
+        </article>
+      </a>
+
+      <a class="room span-3" href="/chat.html?man=silas">
+        <article class="card silas">
+          <span class="chip">Lyric mind</span>
+          <h3 class="ttl">Silas Lennox</h3>
+          <p class="sub">Poet hands, stage heat</p>
+        </article>
+      </a>
+
+      <a class="room span-3" href="/chat.html?man=blade">
+        <article class="card blade">
+          <span class="chip">Predatory charm</span>
+          <h3 class="ttl">Blade Kincaid</h3>
+          <p class="sub">Forest night, chase &amp; catch</p>
+        </article>
+      </a>
+
+      <article class="card span-3 coming" aria-disabled="true" role="note" title="Opens next update">
+        <span class="chip">Coming soon</span>
+        <h3 class="ttl">New Room</h3>
+        <p class="sub">Opens next update</p>
+      </article>
+    </section>
+
+    <a class="admin" href="/pay.html">Admin / Pricing</a>
   </div>
 </body>
 </html>

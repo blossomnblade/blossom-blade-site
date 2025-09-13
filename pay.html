@@ -1,288 +1,145 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pricing / Unlock — Blossom & Blade</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pricing • Blossom & Blade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/images/logo.jpg">
   <style>
     :root{
-      --bg:#0e0e13; --panel:#151821; --ink:#e9e9f2; --muted:#a6a8b8;
-      --accent:#9b6cff; --accent-2:#ff7ad9; --ok:#5fe1a1; --warn:#ffcc66; --bad:#ff7a86;
-      --card:#10131b; --edge:#23273a; --chip:#2a2f44;
+      --ink:#e9d5ff;
+      --ink-dim:#c7b7ff;
+      --accent:#a855f7;
+      --corner:18px;
     }
     *{box-sizing:border-box}
+    html,body{margin:0}
     body{
-      margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--ink); background: radial-gradient(1000px 600px at 20% -10%, #20102a 0%, #0e0e13 60%) no-repeat, var(--bg);
+      min-height:100dvh;
+      color:#fff;
+      background:#0b0b11;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
-    header{max-width:1100px;margin:40px auto 12px;padding:0 16px}
-    h1{margin:0 0 6px;font-size:40px;letter-spacing:.2px}
-    .sub{color:var(--muted)}
-    .sub strong{color:var(--ink)}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));max-width:1100px;margin:22px auto;padding:0 16px}
+    /* Page background for paywall (fixes missing bg) */
+    body::before{
+      content:""; position:fixed; inset:0; z-index:-1;
+      background:
+        radial-gradient(1200px 600px at -10% -10%, rgba(167,66,255,.12), transparent 60%),
+        radial-gradient(900px 500px at 110% 110%, rgba(255,80,171,.10), transparent 60%),
+        url("/images/dylan-garage.jpg") center / cover no-repeat fixed;
+      filter:brightness(.78) saturate(1.05);
+      opacity:.85; pointer-events:none;
+    }
+
+    .wrap{max-width:980px; margin:56px auto 80px; padding:0 20px}
+    h1{margin:0 0 10px; font-size:38px; font-weight:800; color:var(--ink)}
+    .lead{margin:0 0 24px; font-size:18px; color:var(--ink-dim)}
+    .lead b{color:#fff}
+
+    .grid{
+      display:grid; gap:20px;
+      grid-template-columns: repeat(12,1fr);
+    }
+    .span-4{grid-column:span 4}
+    @media (max-width:950px){ .span-4{grid-column:1/-1} }
+
     .card{
-      background:linear-gradient(180deg, #171b28, #121620);
-      border:1px solid var(--edge); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,.35);
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--corner);
+      padding:22px 22px 18px;
+      box-shadow:0 14px 40px rgba(0,0,0,.4);
+      backdrop-filter:blur(8px);
     }
-    .price{font-size:40px;font-weight:800; letter-spacing:.3px}
-    .pill{display:inline-block;background:var(--chip);border:1px solid var(--edge);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px;margin-bottom:10px}
-    .cta{display:inline-block;margin-top:14px;padding:12px 18px;border-radius:12px;
-      border:0;background:var(--accent);color:#fff;font-weight:700;font-size:16px;cursor:pointer}
-    .cta[disabled]{opacity:.45;cursor:not-allowed}
-    .outline{background:transparent;border:1px solid var(--edge);color:var(--ink)}
-    .ok{color:var(--ok)} .bad{color:var(--bad)} .muted{color:var(--muted)}
-    hr.sep{border:0;height:1px;background:linear-gradient(90deg,transparent, #2b2f45 50%, transparent);margin:28px 0}
-    /* Consent block */
-    .consent{max-width:1100px;margin:18px auto;padding:0 16px}
-    .consent .box{background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:18px}
-    .consent h2{margin:0 0 10px}
-    .check{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;margin:10px 0}
-    .check input{transform:translateY(3px);accent-color:var(--accent)}
-    .hint{font-size:13px;color:var(--muted)}
-    /* Receipt */
-    #receipt{max-width:900px;margin:28px auto;padding:0 16px;display:none}
-    #receipt .box{background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:18px}
-    .kvs{display:grid;grid-template-columns:160px 1fr;gap:10px;margin:6px 0}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .tiny{font-size:12px;color:var(--muted)}
-    footer{max-width:1100px;margin:40px auto;padding:0 16px 40px;color:var(--muted)}
-    a{color:#caa9ff}
+    .price{font-size:40px; font-weight:800; margin:0 0 4px}
+    .kicker{margin:0 0 16px; color:#d6d7eb}
+    .cta{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:12px 16px; border-radius:999px; font-weight:700;
+      color:#fff; background:linear-gradient(180deg, #b27cff, #7d4bff);
+      box-shadow:0 10px 26px rgba(125,75,255,.35);
+      text-decoration:none;
+    }
+    .cta:hover{filter:brightness(1.06); transform:translateY(-1px)}
+    .cta:active{transform:none}
+    .fine{margin:12px 0 0; font-size:13px; color:#cfd0e6}
+
+    .back{display:inline-block; margin-top:26px; color:#fff; opacity:.85; text-decoration:none}
+    .back:hover{opacity:1}
+
+    /* 18+ acknowledge box at top */
+    .gate{
+      display:flex; gap:10px; align-items:flex-start;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      padding:14px 16px; border-radius:12px; margin:16px 0 26px;
+    }
+    .gate input{margin-top:3px; width:18px; height:18px}
   </style>
 </head>
 <body>
-  <header>
+  <div class="wrap">
     <h1>Unlock after-hours</h1>
-    <div class="sub">
-      <strong>Adults 18+ only.</strong> Free trial in each room, then pick a pass. We donate
-      <strong>50% of charitable set-asides</strong> toward domestic-violence shelters and suicide-prevention efforts.
-    </div>
-  </header>
+    <p class="lead">
+      Free trial in each room. Day Pass <b>$5.99</b> (one man, today).
+      All-Access Monthly <b>$10.99</b> (every man, recurring).
+      Adults 18+ only. • We donate <b>$1</b> from every subscription to women’s shelters.
+    </p>
 
-  <!-- CONSENT / AGE -->
-  <section class="consent">
-    <div class="box">
-      <h2>Before you continue</h2>
-      <div class="hint">To unlock, please confirm all five:</div>
+    <!-- age acknowledgement (UI only; wire to your logic as needed) -->
+    <label class="gate">
+      <input type="checkbox" id="gate18">
+      <span>
+        I confirm I am <b>18+</b> and agree to respectful use. No refunds after 24 hours.  
+        If you’re in crisis, please call or text the Suicide & Crisis Lifeline at <b>988</b>.
+      </span>
+    </label>
 
-      <label class="check">
-        <input type="checkbox" id="c_age">
-        <span>I am <strong>18+ (adult)</strong>. I understand rooms may include erotic language and roleplay.</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="c_minor">
-        <span><strong>No minors</strong>—I will not request, portray, or describe minors in any sexual context. Hard stop.</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="c_selfharm">
-        <span><strong>No self-harm requests.</strong> If I’m in crisis I’ll use the hotline (US/988 or local equivalent). We may surface the number in-app.</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="c_policy">
-        <span>I agree to <a href="standards.html" target="_blank" rel="noopener">community standards</a> and will keep things consensual and legal.</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="c_refund">
-        <span>I understand the <strong>refund policy</strong>: refunds not available after <strong>24 hours</strong> except for verified technical outage.</span>
-      </label>
-
-      <div class="hint">When all boxes are checked, the unlock buttons below will activate. Your acceptance is stored and printed on the receipt.</div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section class="grid">
-    <article class="card">
-      <span class="pill">Day Pass</span>
-      <div class="price">$5.99</div>
-      <div class="muted">Unlocks the current man for the rest of today.</div>
-      <button id="btn-day" class="cta" disabled>Unlock Day Pass</button>
-      <div class="tiny">Dev note: this sets a local “today” pass token.</div>
-    </article>
-
-    <article class="card">
-      <span class="pill">All-Access Monthly</span>
-      <div class="price">$10.99</div>
-      <div class="muted">Unlimited access to every man for 30 days (auto-renews when you wire up billing).</div>
-      <button id="btn-month" class="cta" disabled>Unlock All-Access</button>
-      <div class="tiny">Dev note: this sets a local 30-day token (no real billing yet).</div>
-    </article>
-
-    <article class="card">
-      <span class="pill">Admin (Dev)</span>
-      <div class="muted">Unlimited access for testing on this device.</div>
-      <div class="toolbar">
-        <button id="btn-admin-on" class="cta outline">Enable Admin</button>
-        <button id="btn-admin-off" class="cta outline">Disable Admin</button>
+    <div class="grid">
+      <!-- Day Pass -->
+      <div class="card span-4">
+        <div class="kicker">Day Pass</div>
+        <div class="price">$5.99</div>
+        <p class="kicker">Unlocks the current man for the rest of today.</p>
+        <a class="cta" href="/checkout-day.html" id="btn-day">Unlock Day Pass</a>
+        <p class="fine">Dev/test mode: route to a local mock checkout if desired.</p>
       </div>
-      <div class="tiny">Admin writes a local flag only.</div>
-    </article>
-  </section>
 
-  <hr class="sep"/>
-
-  <!-- RECEIPT -->
-  <section id="receipt">
-    <div class="box">
-      <h2>Receipt</h2>
-      <div id="r-summary" class="muted"></div>
-
-      <div class="kvs"><div>Order #</div><div id="r-id"></div></div>
-      <div class="kvs"><div>Date</div><div id="r-date"></div></div>
-      <div class="kvs"><div>Plan</div><div id="r-plan"></div></div>
-      <div class="kvs"><div>Amount</div><div id="r-amt"></div></div>
-      <div class="kvs"><div>Device</div><div id="r-device"></div></div>
-
-      <h3 style="margin:16px 0 8px">Your confirmations</h3>
-      <ul id="r-checks"></ul>
-
-      <div class="toolbar">
-        <button class="cta outline" onclick="window.print()">Print / Save PDF</button>
-        <a id="r-back" class="cta" href="/index.html">Return to Rooms</a>
+      <!-- Monthly -->
+      <div class="card span-4">
+        <div class="kicker">All-Access Monthly</div>
+        <div class="price">$10.99</div>
+        <p class="kicker">Unlimited access to all men for 30 days (recurring).</p>
+        <a class="cta" href="/checkout-month.html" id="btn-month">Unlock All-Access</a>
+        <p class="fine">Renews monthly until cancelled. Manage any time from your receipt.</p>
       </div>
-      <div class="tiny" style="margin-top:8px">
-        For crisis help (US): 988 Suicide & Crisis Lifeline. Domestic violence: 1-800-799-SAFE (7233). We care about your safety.
+
+      <!-- Admin / Dev -->
+      <div class="card span-4">
+        <div class="kicker">Admin (Dev)</div>
+        <div class="price">∞</div>
+        <p class="kicker">Unlimited access for testing on this device.</p>
+        <a class="cta" href="/unlock.html">Enable Admin</a>
+        <p class="fine">Tip: clear site data to disable, or visit <code>/unlock.html</code> to toggle.</p>
       </div>
     </div>
-  </section>
 
-  <footer>
-    <a href="/index.html">← Back to rooms</a>
-  </footer>
+    <a class="back" href="/index.html">← Back to rooms</a>
+  </div>
 
   <script>
-    // ---------------------------
-    // Helpers / constants
-    // ---------------------------
-    const $ = (s, r=document) => r.querySelector(s);
-    const checks = ["c_age","c_minor","c_selfharm","c_policy","c_refund"].map(id => $("#"+id));
-    const btnDay = $("#btn-day"), btnMonth = $("#btn-month");
-    const btnAdminOn = $("#btn-admin-on"), btnAdminOff = $("#btn-admin-off");
-
-    const STORAGE = {
-      AGE_AT: "age_verified_at",
-      CONSENT_SNAPSHOT: "consent_snapshot",
-      DAY_PASS_UNTIL: "pass_until",
-      MONTH_UNTIL: "all_access_until",
-      ADMIN: "admin_ok",
-      LAST_RECEIPT: "last_receipt"
-    };
-
-    // Enable buttons only when all consent boxes are checked
-    function refreshButtons(){
-      const ok = checks.every(c => c.checked);
-      btnDay.disabled = !ok;
-      btnMonth.disabled = !ok;
-    }
-    checks.forEach(c => c.addEventListener('change', refreshButtons));
-    refreshButtons();
-
-    // Save the consent snapshot + age timestamp
-    function saveConsentSnapshot(){
-      const snap = {
-        time: Date.now(),
-        items: checks.map(c => ({ id:c.id, text: c.parentElement.innerText.trim(), checked: c.checked }))
-      };
-      localStorage.setItem(STORAGE.CONSENT_SNAPSHOT, JSON.stringify(snap));
-      localStorage.setItem(STORAGE.AGE_AT, String(Date.now())); // for 24-hour re-check in chat
-      return snap;
-    }
-
-    // Create a random-ish order id
-    function orderId(){ return "BNB-" + Math.random().toString(36).slice(2,8).toUpperCase(); }
-
-    // Calculate end-of-day (local) for Day Pass
-    function endOfToday(){
-      const d = new Date(); d.setHours(23,59,59,999); return d.getTime();
-    }
-
-    // Dev unlocks (replace with real gateway later)
-    function unlockDayPass(){
-      const snap = saveConsentSnapshot();
-      localStorage.setItem(STORAGE.DAY_PASS_UNTIL, String(endOfToday()));
-      showReceipt({
-        plan: "Day Pass (one room, rest of today)",
-        amount: "$5.99",
-        transaction: orderId(),
-        details: "Local dev token applied; replace with real checkout in production.",
-        consent: snap
-      });
-    }
-    function unlockMonth(){
-      const snap = saveConsentSnapshot();
-      const until = Date.now() + 30*24*60*60*1000; // 30 days
-      localStorage.setItem(STORAGE.MONTH_UNTIL, String(until));
-      showReceipt({
-        plan: "All-Access Monthly (every room, 30 days)",
-        amount: "$10.99",
-        transaction: orderId(),
-        details: "Local dev token applied; replace with real subscription in production.",
-        consent: snap
-      });
-    }
-
-    // Admin (dev)
-    btnAdminOn.onclick = ()=>{ localStorage.setItem(STORAGE.ADMIN, "1"); alert("Admin enabled on this device."); };
-    btnAdminOff.onclick = ()=>{ localStorage.removeItem(STORAGE.ADMIN); alert("Admin disabled."); };
-
-    btnDay.onclick = unlockDayPass;
-    btnMonth.onclick = unlockMonth;
-
-    // Receipt render
-    function showReceipt({plan, amount, transaction, details, consent}){
-      const now = new Date();
-      $("#r-id").textContent = transaction;
-      $("#r-date").textContent = now.toLocaleString();
-      $("#r-plan").textContent = plan;
-      $("#r-amt").textContent = amount;
-      $("#r-device").textContent = navigator.userAgent;
-      $("#r-summary").innerHTML = details ? `<span class="muted">${details}</span>` : "";
-
-      const list = $("#r-checks");
-      list.innerHTML = "";
-      (consent?.items || []).forEach(it=>{
-        if(it.checked){
-          const li = document.createElement("li");
-          li.textContent = it.text;
-          list.appendChild(li);
+    // Simple front-end guard so buttons require the 18+ checkbox
+    const gate = document.getElementById('gate18');
+    for (const id of ['btn-day','btn-month']){
+      const a = document.getElementById(id);
+      a.addEventListener('click', (e)=>{
+        if (!gate.checked){
+          e.preventDefault();
+          alert('Please confirm you are 18+ to continue.');
         }
       });
-
-      // persist last receipt for a separate success page if you add one
-      localStorage.setItem(STORAGE.LAST_RECEIPT, JSON.stringify({
-        id:transaction, date: now.toISOString(), plan, amount,
-        consent: consent?.items?.map(x=>x.text) || []
-      }));
-
-      // Return URL to prior room, if provided
-      const back = $("#r-back");
-      const params = new URLSearchParams(location.search);
-      const from = params.get("from"); // e.g., /chat.html?man=jesse
-      back.href = from ? from : "/index.html";
-
-      $("#receipt").style.display = "block";
-      // Auto-scroll to receipt
-      $("#receipt").scrollIntoView({behavior:"smooth",block:"start"});
     }
-
-    // ---------------------------
-    // NOTE for your chat pages
-    // ---------------------------
-    // To enforce the 24-hour pop-up in chat, paste this small check
-    // near the top of your chat.js (or inline before chat boots):
-    //
-    //   const AGE_KEY = "age_verified_at";
-    //   const needAge = !localStorage.getItem(AGE_KEY) ||
-    //                   (Date.now() - parseInt(localStorage.getItem(AGE_KEY),10)) > 24*60*60*1000;
-    //   if (needAge) {
-    //     if (!confirm("Adults only (18+). By continuing you confirm you are 18+.")) {
-    //       location.href = "/pay.html?from=" + encodeURIComponent(location.pathname + location.search);
-    //     } else {
-    //       localStorage.setItem(AGE_KEY, String(Date.now()));
-    //     }
-    //   }
-    //
-    // This keeps the chat room UI clean and only prompts when the 24-hour timer expires.
-
   </script>
 </body>
 </html>

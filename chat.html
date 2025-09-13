@@ -1,203 +1,224 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chat · Blossom & Blade</title>
-  <link rel="icon" href="/images/logo.jpg">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/images/logo.jpg" />
+  <meta name="color-scheme" content="dark only" />
   <style>
-    :root{ --rail:#6d28d9; --accent:#a855f7 }
+    :root{
+      --bg:#0b0a0f; --ink:#ffffff; --muted:#cfc9db;
+      --veil:rgba(0,0,0,.32);
+      --panel:#0f0f19;
+      --you:#8b5cf6;            /* my bubble */
+      --him:#0f1322;            /* his bubble */
+      --line:rgba(255,255,255,.18);
+      --radius:16px;
+      --shadow:0 14px 40px rgba(0,0,0,.50);
+      --accent1:#c084fc; --accent2:#a855f7;
+    }
     *{box-sizing:border-box}
-    html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff;background:#0b0b11}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink);
+      font-family: ui-rounded, "SF Pro Rounded", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:var(--bg) center/cover fixed no-repeat;
+    }
+    body::after{content:""; position:fixed; inset:0; background:var(--veil); z-index:-1}
+    .wrap{max-width:980px; margin:0 auto; padding:24px 16px 22px}
+    header{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+    .dot{width:10px; height:10px; background:#b57cff; border-radius:50%}
+    h1{margin:0; font-size:22px; letter-spacing:.3px}
+    .chip{
+      margin-left:auto; background:rgba(0,0,0,.55); border:1px solid var(--line);
+      border-radius:999px; padding:6px 10px; font-weight:800; font-size:12px
+    }
 
-    /* Backgrounds per man */
-    body.bg-alexander{ background:url("/images/bg_alexander_boardroom.jpg") center/cover fixed no-repeat #0b0b11; }
-    body.bg-dylan    { background:url("/images/dylan-garage.jpg")           center/cover fixed no-repeat #0b0b11; }
-    body.bg-jesse    { background:url("/images/jesse_bg.jpg")               center/cover fixed no-repeat #0b0b11; }
-    body.bg-grayson  { background:url("/images/grayson-bg.jpg")             center/cover fixed no-repeat #0b0b11; }
-    body.bg-silas    { background:url("/images/bg_silas_stage.jpg")         center/cover fixed no-repeat #0b0b11; }
-    body.bg-blade    { background:url("/images/blade-woods.jpg")            center/cover fixed no-repeat #0b0b11; }
-
-    .mask{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.82));pointer-events:none}
-
-    .wrap{max-width:920px;margin:0 auto;padding:24px 20px 120px}
-    header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .dot{width:10px;height:10px;border-radius:999px;background:#b26dfb;box-shadow:0 0 10px #b26dfb}
-    .brand{font-weight:800;letter-spacing:.4px}
-    #roomTitle{font-size:32px;font-weight:800;margin:14px 8px 10px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
-
-    /* Panel now scrolls itself and always keeps latest bubble in view */
     .panel{
-      background:rgba(7,7,10,.75);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px; padding:18px 16px; margin:0 auto; max-width:820px;
-      box-shadow:0 10px 28px rgba(0,0,0,.45);
-      backdrop-filter: blur(2px);
-      height:auto;
-      max-height:calc(100vh - 260px);   /* room for title + composer */
-      overflow-y:auto;
+      border:1px solid var(--line); border-radius:var(--radius); background:rgba(0,0,0,.45);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    #log{
+      max-height:64vh; overflow:auto; padding:18px;
+      display:flex; flex-direction:column; gap:14px;
       scroll-behavior:smooth;
+      background:linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.35));
     }
+    .row{display:flex}
+    .row.you{justify-content:flex-end}
     .bubble{
-      background:#0f0f14;border-radius:14px;padding:14px 16px;margin:12px 14px;
-      box-shadow:0 6px 18px rgba(0,0,0,.35);max-width:760px;line-height:1.35
+      max-width:72ch; padding:14px 16px; border-radius:14px; line-height:1.4; white-space:pre-wrap;
+      border:1px solid var(--line); box-shadow:var(--shadow)
     }
-    .you{margin-left:auto; background:linear-gradient(135deg,var(--accent),var(--rail));}
-    .name{opacity:.8;font-weight:800;margin-bottom:6px}
-    .composer{
-      position:fixed;left:50%;transform:translateX(-50%);
-      bottom:22px; width:min(920px,calc(100vw - 32px)); display:flex;gap:10px;
+    .you .bubble{background:var(--you); color:#140a1d}
+    .him .bubble{background:var(--him); color:#dfe7ff}
+
+    /* form */
+    form{display:flex; gap:10px; align-items:stretch; padding:12px; background:rgba(0,0,0,.5); border-top:1px solid var(--line)}
+    textarea{
+      flex:1; resize:none; min-height:48px; max-height:32vh; padding:14px; border-radius:12px;
+      border:1px solid var(--line); background:#0c0f19; color:var(--ink); outline:none;
+      box-shadow:inset 0 0 0 999px rgba(255,255,255,0); transition:border-color .15s ease;
     }
-    input[type=text]{flex:1;padding:16px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0f0f14;color:#fff}
-    button{padding:14px 18px;border-radius:14px;background:#e9d5ff;color:#280a54;font-weight:800;border:none}
-    .admin{position:fixed;right:20px;bottom:22px;background:#0ea5e9;color:#00131c;font-weight:800;padding:12px 16px;border-radius:14px}
+    textarea:focus{border-color:rgba(255,255,255,.35)}
+    button{
+      padding:0 18px; border-radius:12px; border:0; cursor:pointer; font-weight:900;
+      background:linear-gradient(180deg,var(--accent1),var(--accent2)); color:#0c0613; box-shadow:var(--shadow);
+      transition:filter .15s ease, transform .08s ease;
+    }
+    button:hover{filter:brightness(1.05)} button:active{transform:translateY(1px)}
+    .admin{position:fixed; right:16px; bottom:16px; background:#0d1e14; color:#caffd1;
+      border:1px solid #2b503a; padding:12px 16px; border-radius:999px; text-decoration:none; font-weight:900}
+
+    /* age modal */
+    .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); padding:20px}
+    .modal.on{display:grid}
+    .sheet{max-width:720px; width:100%; background:rgba(0,0,0,.75); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
+    .sheet h2{margin:4px 0 10px}
+    .gate label{display:flex; gap:12px; margin:10px 0; line-height:1.35}
+    .gate input{transform:translateY(2px)}
+    .ok{margin-top:12px}
   </style>
 </head>
-<body>
-  <div class="mask"></div>
-
+<body id="body">
   <div class="wrap">
     <header>
-      <span class="dot"></span>
-      <div class="brand">Blossom &amp; Blade</div>
+      <span class="dot" aria-hidden="true"></span>
+      <h1>Blossom &amp; Blade</h1>
+      <span class="chip" id="manChip">Jesse</span>
     </header>
 
-    <div id="roomTitle"></div>
-    <div id="chat" class="panel" aria-live="polite"></div>
+    <section class="panel">
+      <div id="log" aria-live="polite" aria-label="Messages"></div>
+      <form id="form" autocomplete="off">
+        <textarea id="input" placeholder="Say hi…" rows="2"></textarea>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
   </div>
-
-  <form id="composer" class="composer" autocomplete="off">
-    <input id="input" type="text" placeholder="Say hi…" maxlength="280" />
-    <button id="send" type="submit">Send</button>
-  </form>
 
   <a class="admin" href="/pay.html">Admin / Pricing</a>
 
+  <!-- Age gate (24h) -->
+  <div class="modal" id="ageModal" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+    <div class="sheet">
+      <h2 id="ageTitle">Quick check</h2>
+      <div class="gate">
+        <label><input id="g18" type="checkbox" /> I confirm I am <b>18+</b> and understand this is consensual fantasy roleplay.</label>
+        <label><input id="g988" type="checkbox" /> I understand help is available — call/text <b>988</b> in the U.S. if in crisis.</label>
+      </div>
+      <button class="ok" id="gateOk" disabled>Continue</button>
+    </div>
+  </div>
+
   <script>
-    const params = new URLSearchParams(location.search);
-    const man = (params.get('man') || 'alexander').toLowerCase();
-    document.body.classList.add('bg-' + man);
-
-    const NAMES = {
-      alexander:'Alexander Jackson',
-      dylan:'Dylan Vale',
-      jesse:'Jesse Granger',
-      grayson:'Grayson Kincaid',
-      silas:'Silas Lennox',
-      blade:'Blade Kincaid'
+    /* ---------- background per man ---------- */
+    const qs = new URLSearchParams(location.search);
+    const man = (qs.get('man') || 'jesse').toLowerCase();
+    const bgMap = {
+      alexander:'/images/bg_alexander_boardroom.jpg',
+      dylan:'/images/dylan-garage.jpg',
+      jesse:'/images/jesse_bg.jpg',
+      grayson:'/images/grayson-bg.jpg',
+      silas:'/images/bg_silas_stage.jpg',
+      blade:'/images/blade-woods.jpg'
     };
-    const title = NAMES[man] || man;
-    document.getElementById('roomTitle').textContent = title;
+    document.getElementById('body').style.backgroundImage =
+      `url("${bgMap[man] || '/images/gothic-bg.jpg'}")`;
+    document.getElementById('manChip').textContent =
+      man.charAt(0).toUpperCase() + man.slice(1);
 
-    const DOM = {
-      chat:  document.getElementById('chat'),
-      input: document.getElementById('input'),
-      form:  document.getElementById('composer')
-    };
-
-    function scrollToBottom(){
-      // ensure the scroll happens after layout paints
-      requestAnimationFrame(()=> {
-        DOM.chat.scrollTop = DOM.chat.scrollHeight + 9999;
-      });
-    }
+    /* ---------- simple chat plumbing (keeps your /scripts/chat.js compatible) ---------- */
+    const log = document.getElementById('log');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
 
     function bubble(who, text){
-      const div = document.createElement('div');
-      div.className = 'bubble' + (who==='you' ? ' you' : '');
-      if(who!=='you'){
-        const n = document.createElement('div'); n.className='name'; n.textContent = title + ':'; div.appendChild(n);
-      }
-      div.appendChild(document.createTextNode(text));
-      DOM.chat.appendChild(div);
-      scrollToBottom();
+      const row = document.createElement('div');
+      row.className = 'row ' + (who === 'you' ? 'you' : 'him');
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.textContent = text;
+      row.appendChild(b);
+      log.appendChild(row);
+      log.scrollTop = log.scrollHeight;
     }
 
-    /* tiny inline brain */
-    const mem = { greeted:false, name:null };
+    // First line – light intro; your existing chat.js can add more after
+    bubble('him', {
+      alexander: "Good timing. I was thinking about you.",
+      dylan:     "Hey trouble—hands in mine, eyes on me.",
+      jesse:     "Nice to meet you, darlin’. Tell me one detail.",
+      grayson:   "Well… you came to me. Start with one line.",
+      silas:     "Hey love. I’ve got a melody for you.",
+      blade:     "Glitch on my side—say it again, slower."
+    }[man] || "You made it. Let’s start with one detail.");
 
-    const OPENERS = {
-      alexander: ['Good timing. I was thinking about you.','Clear and direct—keep it that way for me.'],
-      dylan:     ['Neon’s humming. You want slow burn or heat now?','Copy that—give me one more cue.'],
-      jesse:     ['Well, well… you came to me. Tell me one detail, sugar.','That’s my sweet thing. Start with one detail.'],
-      grayson:   ['Well, well… you came to me.','I’ll hold the line. You paint the words.'],
-      silas:     ['Hey love. I’ve got a melody for you.','Follow my count—one, two…'],
-      blade:     ['Found you, brave girl. Don’t run—yet.','Step into the dark—stay close.']
-    };
-
-    const FOLLOWUPS = {
-      alexander: "Mm. I can work with that—tell me a little more.",
-      dylan:     "Copy. Keep it clean, keep it hot—give me the next cue.",
-      jesse:     "Attagirl. Boots on, reins loose—tell me where.",
-      grayson:   "I hear you. Keep going.",
-      silas:     "Nice spark—again, slowly.",
-      blade:     "I see you. Give me one more line."
-    };
-
-    function detectName(txt){
-      const m = txt.match(/\b(?:i['’]m|im|my name is)\s+([a-z][a-z\-']{1,20})\b/i);
-      return m ? m[1][0].toUpperCase()+m[1].slice(1) : null;
-    }
-
-    function compose(user){
-      const t = user.trim();
-
-      const n = detectName(t);
-      if(n){ mem.name = n; try{localStorage.setItem('bnb_name', n)}catch{}; return `Nice to meet you, ${n}.`; }
-
-      if(/call\s+my\s+name/i.test(t) && (mem.name || localStorage.getItem('bnb_name'))){
-        const nm = mem.name || localStorage.getItem('bnb_name');
-        return `There you are, ${nm}. Say the next detail.`;
+    // Enter submits (Shift+Enter = newline)
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        form.requestSubmit();
       }
+    });
 
-      if(/\b(fuck|bend|spank|ride|lick|neck|take me|over the table)\b/i.test(t)){
-        return {
-          alexander: `Understood. Tell me pace and place.`,
-          dylan:     `Tools are ready. Faster or slower?`,
-          jesse:     `Cowboy’s got you—how rough do you want it?`,
-          grayson:   `Noted. I’ll keep the light low—guide me.`,
-          silas:     `Count it out for me—one, two…`,
-          blade:     `Closer. Show me exactly how you want it.`
-        }[man];
-      }
-
-      if(/how are you|you good/i.test(t)){
-        return `Focused. On you. Give me one more cue.`;
-      }
-
-      return FOLLOWUPS[man] || 'Give me one more detail.';
-    }
-
-    function greetOnce(){
-      if(mem.greeted) return;
-      const lines = OPENERS[man] || ['Hey.','Start me with one detail.'];
-      bubble('him', lines[0]);
-      setTimeout(()=>{ bubble('him', lines[1]); }, 650);
-      mem.greeted = true;
-    }
-
-    // restore persisted name if we have it
-    try{ const saved = localStorage.getItem('bnb_name'); if(saved) mem.name = saved; }catch{}
-
-    greetOnce();
-
-    DOM.form.addEventListener('submit', (e)=>{
+    form.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const text = (DOM.input.value||'').trim();
+      const text = (input.value||'').trim();
       if(!text) return;
       bubble('you', text);
-      DOM.input.value = '';
-      setTimeout(()=>bubble('him', compose(text)), 140);
+      input.value='';
+
+      // If your /scripts/chat.js exists and exposes compose(), use it
+      try{
+        if (window.compose) {
+          const reply = await window.compose(text, man);
+          if (reply) bubble('him', reply);
+          return;
+        }
+      }catch(_){}
+
+      // Fallback tiny reply so the UI isn't dead if chat.js isn't loaded
+      const prompts = [
+        "Mm. I can work with that—tell me a little more.",
+        "Copy. Keep it clean or make it dirty—your lead.",
+        "Good. Again—slowly. Paint the scene for me.",
+        "Tell me “faster or slower,” I’ll tune to you."
+      ];
+      bubble('him', prompts[Math.floor(Math.random()*prompts.length)]);
     });
 
-    DOM.input.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault();
-        DOM.form.requestSubmit ? DOM.form.requestSubmit()
-                               : DOM.form.dispatchEvent(new Event('submit',{cancelable:true}));
+    // Keep auto-scroll if external scripts append
+    new MutationObserver(()=>{ log.scrollTop = log.scrollHeight; })
+      .observe(log, {childList:true});
+
+    /* ---------- Age gate (24h) ---------- */
+    const AGE_KEY='bb_age_ok_at';
+    const modal = document.getElementById('ageModal');
+    const g18 = document.getElementById('g18');
+    const g988= document.getElementById('g988');
+    const ok  = document.getElementById('gateOk');
+
+    function updateGate(){ ok.disabled = !(g18.checked && g988.checked); }
+    g18.addEventListener('change', updateGate);
+    g988.addEventListener('change', updateGate);
+
+    try{
+      const prev = +localStorage.getItem(AGE_KEY) || 0;
+      const now = Date.now();
+      if (now - prev > 24*60*60*1000) { // older than 24h
+        modal.classList.add('on');
       }
-    });
+      ok.addEventListener('click', ()=>{
+        try{ localStorage.setItem(AGE_KEY, String(Date.now())); }catch(_){}
+        modal.classList.remove('on');
+      });
+    }catch(_){}
   </script>
+
+  <!-- If you have your own chat logic, keep this: -->
+  <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

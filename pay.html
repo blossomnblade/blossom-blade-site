@@ -1,126 +1,197 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Pricing • Blossom & Blade</title>
-  <link rel="icon" href="/images/logo.jpg">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pricing · Blossom & Blade</title>
+  <link rel="icon" href="/images/logo.jpg" />
+  <meta name="color-scheme" content="dark only" />
   <style>
     :root{
-      --ink:#f5efff;
-      --ink-d:#c9c9d6;
-      --accent1:#b983ff;
-      --accent2:#7c3aed;
-      --corner:18px;
+      --bg:#0c0613;
+      --ink:#ffffff;               /* text color */
+      --muted:#c9c3d3;
+      --line:rgba(255,255,255,.18);
+      --veil:rgba(0,0,0,.35);
+      --card:rgba(0,0,0,.48);
+      --gate:rgba(0,0,0,.55);
+      --accent1:#c084fc;           /* gradient top (orchid) */
+      --accent2:#a855f7;           /* gradient bottom */
+      --pill:#20162b;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --err:#ef4444;
+      --radius:14px;
+      --shadow:0 10px 30px rgba(0,0,0,.45);
     }
+
     *{box-sizing:border-box}
-    html,body{margin:0;height:100%}
+    html,body{height:100%}
     body{
-      color:#fff; background:#0b0b11;
-      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      min-height:100dvh;
+      margin:0;
+      font-family: ui-rounded, "SF Pro Rounded", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background:var(--bg) url("/images/bg_dark_romance.jpg") center/cover fixed no-repeat;
     }
-    /* Background (uses your uploaded chalk image) */
-    body::before{
-      content:""; position:fixed; inset:0; z-index:-1;
-      background:
-        radial-gradient(1100px 520px at -10% -10%, rgba(168,85,247,.10), transparent 55%),
-        radial-gradient(900px 420px at 110% 110%, rgba(59,130,246,.08), transparent 55%),
-        url("/images/bg_dark_romance.jpg") center / cover no-repeat fixed;
-      opacity:.95; pointer-events:none;
+    /* global subtle veil for readability */
+    body.contrast::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:var(--veil);
+      z-index:-1;
+      pointer-events:none;
     }
 
-    .wrap{max-width:1000px; margin:56px auto 86px; padding:0 20px}
-    .hdr{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap}
-    h1{margin:0; font-size:38px; font-weight:800; color:var(--ink); text-shadow:0 6px 22px rgba(0,0,0,.55)}
-    .badge18{font-weight:800; font-size:12px; padding:8px 12px; border-radius:999px;
-      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.16)}
-    .lead{margin:12px 0 22px; font-size:18px; color:var(--ink-d)}
-    .lead b{color:#fff}
+    a{color:var(--ink); text-decoration:underline}
+    .wrap{max-width:1000px; margin:0 auto; padding:32px 20px 80px}
 
+    h1{
+      font-size:clamp(28px, 4vw, 44px);
+      line-height:1.05;
+      margin:8px 0 12px;
+      text-shadow:0 8px 28px rgba(0,0,0,.65);
+      letter-spacing:.3px;
+    }
+    .lead{
+      margin:0 0 18px;
+      font-size:clamp(16px, 2.2vw, 19px);
+      color:var(--ink);
+    }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:.5ch;
+      background:var(--pill); border:1px solid var(--line);
+      border-radius:999px; padding:6px 12px; font-weight:800;
+      font-size:12.5px; letter-spacing:.2px;
+      box-shadow:var(--shadow);
+    }
+
+    /* --- gate (checkbox panel) --- */
     .gate{
-      background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14);
-      border-radius:12px; padding:16px;
-      display:grid; gap:10px;
-      box-shadow:0 14px 40px rgba(0,0,0,.35); backdrop-filter:blur(6px);
-      margin:10px 0 26px;
-    }
-    .gate label{display:flex; gap:10px; align-items:flex-start; line-height:1.35}
-    .gate input[type="checkbox"]{width:18px; height:18px; margin-top:2px}
-
-    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:20px}
-    .span-4{grid-column:span 4}
-    @media (max-width:950px){ .span-4{grid-column:1 / -1} }
-
-    .card{
-      background:rgba(0,0,0,.28);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:var(--corner);
-      padding:22px 22px 18px;
-      box-shadow:0 14px 40px rgba(0,0,0,.4);
+      margin:14px 0 22px; padding:18px 18px 16px;
+      border-radius:var(--radius);
+      background:var(--gate);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
       backdrop-filter:blur(8px);
     }
-    .kicker{margin:0 0 8px; color:#e0e0f2; font-weight:700}
-    .price{margin:0 0 6px; font-size:40px; font-weight:800}
-    .desc{margin:0 0 16px; color:#d6d7eb}
+    .gate label{display:flex; gap:12px; align-items:flex-start; margin:10px 0; line-height:1.35}
+    .gate input[type=checkbox]{margin-top:2px; transform:translateY(2px) scale(1.12)}
+    .fine{color:var(--muted); font-size:13px}
 
-    .cta{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:12px 16px; border-radius:999px; font-weight:800; text-decoration:none;
-      background:linear-gradient(180deg, var(--accent1), var(--accent2)); color:#0c0613;
-      box-shadow:0 12px 26px rgba(124,58,237,.35);
-      transition:transform .15s ease, filter .15s ease, opacity .15s ease;
+    /* --- pricing cards --- */
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:16px}
+    .span-4{grid-column:span 12}
+    @media (min-width:860px){ .span-4{grid-column:span 4} }
+
+    .card{
+      border-radius:var(--radius);
+      background:var(--card);
+      border:1px solid var(--line);
+      padding:20px 18px 16px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+      display:flex; flex-direction:column; gap:10px;
+      min-height: 240px;
     }
-    .cta:hover{transform:translateY(-1px); filter:brightness(1.06)}
-    .cta[disabled]{opacity:.45; pointer-events:none; filter:none}
+    .kicker{font-weight:900; text-transform:uppercase; letter-spacing:.5px; color:#fff; opacity:.92}
+    .price{font-size:42px; font-weight:900; margin-top:4px}
+    .desc{color:var(--ink)}
+    .cta{
+      margin-top:auto;
+      display:inline-flex; justify-content:center; align-items:center; gap:.6ch;
+      padding:12px 14px; border-radius:12px; font-weight:900; text-decoration:none;
+      background:linear-gradient(180deg,var(--accent1),var(--accent2));
+      color:#0c0613; border:none; cursor:pointer; box-shadow:var(--shadow);
+      transition:transform .08s ease, filter .15s ease;
+    }
+    .cta:hover{filter:brightness(1.05)}
+    .cta:active{transform:translateY(1px)}
+    .cta[disabled]{opacity:.45; filter:grayscale(1); cursor:not-allowed; pointer-events:none}
 
-    .fine{margin:12px 0 0; font-size:13px; color:#cfd0e6}
-    .back{display:inline-block; margin-top:28px; color:#fff; opacity:.85; text-decoration:none}
-    .back:hover{opacity:1}
-    .footnote{margin-top:14px; font-size:13px; color:#cfd0e6}
+    /* --- picker (Day Pass choose a man) --- */
+    .picker{margin:6px 0 10px}
+    .picklab{display:block; font-weight:900; margin:0 0 6px}
+    .seg{display:flex; flex-wrap:wrap; gap:8px}
+    .segbtn{
+      appearance:none; border:1px solid rgba(255,255,255,.28); color:#fff;
+      background:rgba(255,255,255,.06); padding:8px 12px; border-radius:999px;
+      font-weight:800; cursor:pointer; transition:filter .15s ease, transform .1s ease;
+    }
+    .segbtn:hover{filter:brightness(1.08)}
+    .segbtn.is-on{
+      border-color:transparent;
+      background:linear-gradient(180deg, var(--accent1), var(--accent2));
+      color:#0c0613;
+    }
+
+    /* admin dev note in tiny text */
+    .tiny{font-size:12px; color:var(--muted)}
   </style>
 </head>
-<body>
+<body class="contrast">
   <div class="wrap">
-    <div class="hdr">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
       <h1>Unlock after-hours</h1>
-      <span class="badge18">Adults 18+ only</span>
+      <span class="badge">Adults 18+ only</span>
     </div>
 
     <p class="lead">
-      Free trial in each room. Day Pass <b>$5.99</b> (one man, today). All-Access Monthly <b>$10.99</b> (every man, recurring).
-      We donate <b>$1</b> from every subscription to women’s shelters.
+      Free trial in each room. Day Pass <b>$5.99</b> (choose one man). All-Access Monthly <b>$10.99</b> (every man, recurring).
+      &nbsp;•&nbsp; We donate <b>$1</b> from every subscription to women’s shelters.
     </p>
 
-    <!-- Required acknowledgements (protect you) -->
+    <!-- consent / standards / policy -->
     <div class="gate" id="gate">
-      <label><input type="checkbox" id="c18">
-        <span>I confirm I am <b>18+</b> and understand this is consensual fantasy roleplay. If you’re in crisis, call or text <b>988</b> (U.S.).</span>
+      <label><input id="c18" type="checkbox" />
+        <span>I confirm I am <b>18+</b> and understand this is consensual fantasy roleplay.
+        If you’re in crisis, call or text <b>988</b> (U.S.).</span>
       </label>
-      <label><input type="checkbox" id="cStandards">
-        <span>I agree to the site’s <a href="/standards.html" style="color:#fff; text-decoration:underline">Community Standards</a> (no self-harm, no minors, no hate, be respectful).</span>
+
+      <label><input id="cStandards" type="checkbox" />
+        <span>I agree to the site’s <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a>
+          (no self-harm, no minors, no hate, be respectful).</span>
       </label>
-      <label><input type="checkbox" id="cRefunds">
-        <span>I understand the <b>No Refunds after 24 hours</b> policy for digital access. If there’s platform downtime, access will be extended.</span>
+
+      <label><input id="cRefunds" type="checkbox" />
+        <span>I understand the <b>No Refunds after 24 hours</b> policy for digital access. If there’s platform downtime,
+          access will be extended.</span>
       </label>
-      <label><input type="checkbox" id="cTerms">
-        <span>I agree to the <a href="/terms.html" style="color:#fff; text-decoration:underline">Terms of Service</a> and <a href="/privacy.html" style="color:#fff; text-decoration:underline">Privacy Policy</a>.</span>
+
+      <label><input id="cTerms" type="checkbox" />
+        <span>I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and
+          <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
       </label>
-      <!-- Shown/required only for Monthly -->
-      <label id="renewRow" style="display:block;"><input type="checkbox" id="cRenew">
+
+      <label><input id="cRenew" type="checkbox" />
         <span><b>Monthly auto-renew:</b> I authorize recurring billing each month until I cancel in Billing.</span>
       </label>
     </div>
 
+    <!-- pricing grid -->
     <div class="grid">
       <!-- Day Pass -->
       <div class="card span-4">
         <div class="kicker">Day Pass</div>
         <div class="price">$5.99</div>
         <p class="desc">Unlocks the current man for the rest of today.</p>
+
+        <!-- Choose a man -->
+        <div class="picker">
+          <label class="picklab">Choose a man</label>
+          <div class="seg">
+            <button type="button" class="segbtn is-on" data-man="alexander">Alexander</button>
+            <button type="button" class="segbtn" data-man="dylan">Dylan</button>
+            <button type="button" class="segbtn" data-man="jesse">Jesse</button>
+            <button type="button" class="segbtn" data-man="grayson">Grayson</button>
+            <button type="button" class="segbtn" data-man="silas">Silas</button>
+            <button type="button" class="segbtn" data-man="blade">Blade</button>
+          </div>
+        </div>
+
         <a class="cta" id="btnDay" href="/checkout-day.html" disabled>Unlock Day Pass</a>
-        <p class="fine">You'll get an emailed receipt with your 18+ acknowledgment and refund window.</p>
+        <div class="tiny">Dev note: forwards to <code>/checkout-day.html?man=…</code>.</div>
       </div>
 
       <!-- Monthly -->
@@ -128,29 +199,31 @@
         <div class="kicker">All-Access Monthly</div>
         <div class="price">$10.99</div>
         <p class="desc">Unlimited access to all men for 30 days (recurring).</p>
+
         <a class="cta" id="btnMonth" href="/checkout-month.html" disabled>Unlock All-Access</a>
-        <p class="fine">Renews monthly until cancelled. Manage anytime from your receipt.</p>
+        <div class="tiny">Cancel anytime from your billing receipt.</div>
       </div>
 
-      <!-- Admin / Dev -->
+      <!-- Admin Dev -->
       <div class="card span-4">
         <div class="kicker">Admin (Dev)</div>
-        <div class="price">∞</div>
+        <div style="font-size:42px; font-weight:900; margin-top:4px">∞</div>
         <p class="desc">Unlimited access for testing on this device.</p>
-        <a class="cta" href="/unlock.html">Enable Admin</a>
-        <p class="fine">Tip: clear site data to disable, or revisit <code>/unlock.html</code> to toggle.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:auto">
+          <button class="cta" id="btnAdminOn" type="button">Enable Admin</button>
+          <button class="cta" id="btnAdminOff" type="button" style="background:rgba(255,255,255,.1); color:#fff;">Disable Admin</button>
+        </div>
+        <div class="tiny">Dev mode stores a local flag only (clears with browser data).</div>
       </div>
     </div>
 
-    <a class="back" href="/index.html">← Back to rooms</a>
-
-    <div class="footnote">
-      By proceeding, you agree we do not display advertisements inside chat. Content is AI-generated and intended for adult fantasy roleplay only.
-    </div>
+    <p class="fine" style="margin-top:18px">
+      By unlocking you agree this is fantasy entertainment, not professional advice. If you need help, call/text <b>988</b>.
+    </p>
   </div>
 
   <script>
-    // Enable buttons only when required boxes are checked.
+    // -------- gate logic --------
     const ids = ['c18','cStandards','cRefunds','cTerms','cRenew'];
     const c = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
     const btnDay   = document.getElementById('btnDay');
@@ -163,6 +236,33 @@
     }
     ids.forEach(id => c[id].addEventListener('change', updateCTAs));
     updateCTAs();
+
+    // -------- day pass: man picker routing --------
+    let selectedMan = 'alexander';
+    const segBtns = document.querySelectorAll('.segbtn');
+    function setMan(man){
+      selectedMan = man;
+      segBtns.forEach(b => b.classList.toggle('is-on', b.dataset.man === man));
+      btnDay.href = `/checkout-day.html?man=${encodeURIComponent(selectedMan)}`;
+    }
+    segBtns.forEach(b => b.addEventListener('click', () => setMan(b.dataset.man)));
+    setMan(selectedMan);
+
+    // -------- Admin dev toggles (local only) --------
+    const on  = document.getElementById('btnAdminOn');
+    const off = document.getElementById('btnAdminOff');
+    on.addEventListener('click', () => {
+      try {
+        localStorage.setItem('bb_admin','1');
+        alert('Admin enabled on this device.');
+      } catch(e){}
+    });
+    off.addEventListener('click', () => {
+      try {
+        localStorage.removeItem('bb_admin');
+        alert('Admin disabled on this device.');
+      } catch(e){}
+    });
   </script>
 </body>
 </html>

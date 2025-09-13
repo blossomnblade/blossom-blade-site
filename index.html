@@ -10,7 +10,7 @@
     :root{
       --ink:#e9d5ff;          /* heading accent */
       --muted:#a6a6b2;        /* soft text */
-      --bg:#0b0b11;           /* page background */
+      --bg:#0b0b11;           /* page background base */
       --card:#0f0f14;         /* card background */
       --accent:#a855f7;       /* pill/button */
       --pill:#e9d5ff10;       /* pill tint */
@@ -22,7 +22,10 @@
     html,body{height:100%}
     body{
       margin:0;
-      background:var(--bg);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(168,85,247,.14), transparent 60%),
+        radial-gradient(900px 400px at 90% 110%, rgba(59,130,246,.10), transparent 60%),
+        var(--bg);
       color:#e8e8ef;
       font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
@@ -32,28 +35,16 @@
 
     .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
 
-    header{
-      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
-      margin-bottom:18px;
-    }
-
-    h1{
-      font-size:40px;line-height:1.1;margin:0;
-      color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.35);
-    }
-
-    .pitch{
-      margin:10px 0 24px;
-      color:var(--muted);
-      font-size:18px;
-    }
-    .pitch b{color:#fff}
-
+    .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+    h1{font-size:40px;line-height:1.1;margin:0;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.35)}
     .cta{
       display:inline-block;background:linear-gradient(180deg,#b983ff,#7c3aed);
       color:#0b0612;font-weight:800;padding:12px 18px;border-radius:999px;
       box-shadow:0 10px 22px rgba(124,58,237,.35);
     }
+
+    .pitch{margin:10px 0 24px;color:var(--muted);font-size:18px}
+    .pitch b{color:#fff}
 
     .rooms{
       display:grid;
@@ -69,20 +60,46 @@
       border-radius:var(--radius);
       min-height:220px;
       box-shadow:var(--shadow);
-      transition:transform .15s ease, box-shadow .15s ease;
       outline:1px solid rgba(255,255,255,.04);
+      transition:
+        transform .18s cubic-bezier(.2,.8,.2,1),
+        box-shadow .18s ease,
+        outline-color .18s ease;
+      cursor:pointer;
     }
     @media (min-width:900px){
       .room-card{grid-column:span 3}
     }
-    .room-card:hover{ transform:translateY(-2px); box-shadow:0 18px 40px rgba(0,0,0,.55); }
+    .room-card:hover{
+      transform:translateY(-4px) scale(1.02);
+      box-shadow:0 22px 50px rgba(0,0,0,.65);
+      outline-color:rgba(233,213,255,.14);
+    }
 
     .room-bg{
-      position:absolute;inset:0;background-position:center;background-size:cover;opacity:.23;
-      filter:grayscale(.15) contrast(1.1) brightness(.85);
-      transition:opacity .2s ease, transform .2s ease;
+      position:absolute;inset:0;
+      background-position:center;background-size:cover;
+      opacity:.34;                         /* brighter base */
+      filter:grayscale(.1) contrast(1.1) brightness(.9);
+      transition:opacity .2s ease, transform .2s ease, filter .2s ease;
     }
-    .room-card:hover .room-bg{opacity:.28;transform:scale(1.02)}
+    .room-card:hover .room-bg{
+      opacity:.52;                         /* brighter on hover */
+      transform:scale(1.06);
+      filter:grayscale(0) contrast(1.15) brightness(.98);
+    }
+
+    /* soft diagonal sheen */
+    .room-card::after{
+      content:"";
+      position:absolute;inset:-20% -10% auto -10%;
+      height:160%;
+      background:linear-gradient(60deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
+      transform:translateX(-8%);
+      transition:transform .6s ease;
+      pointer-events:none;
+    }
+    .room-card:hover::after{ transform:translateX(6%) }
 
     .pill{
       position:absolute;top:14px;left:14px;
@@ -107,12 +124,11 @@
       pointer-events:none;
     }
     .logo-mark{
-      width:120px;max-width:56%;opacity:.9;
+      width:120px;max-width:56%;opacity:.95;
       filter: drop-shadow(0 8px 22px rgba(0,0,0,.55));
       transition: transform .2s ease;
     }
     .logo-card:hover .logo-mark{ transform:scale(1.03); }
-
     .pill-soon{ background:#6b7280; color:#fff; border-color:transparent; }
 
     /* floating admin/pricing */
@@ -120,12 +136,6 @@
       position:fixed;right:20px;bottom:22px;z-index:20;
       background:#10b981;color:#03130e;border:none;
       border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:var(--shadow);
-    }
-    .fab.secondary{right:auto;left:20px;background:#111827;color:#e5e7eb}
-
-    /* small helper */
-    .topbar{
-      display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between
     }
   </style>
 </head>
@@ -218,7 +228,6 @@
     </section>
   </div>
 
-  <!-- Floating buttons -->
   <a class="fab" href="/pay.html">Admin / Pricing</a>
 </body>
 </html>

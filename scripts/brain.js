@@ -1,144 +1,108 @@
-// scripts/brain.js
-// Blossom & Blade — “boyfriend” chat brain (natural, flirty, no prompts like “tell me one detail”)
+<!-- scripts/brain.js -->
+<script>
+(() => {
+  // —— CHARACTER DISPLAY NAMES ——
+  const META = {
+    jesse:      { name: "Jesse",      vibe: "cowboy" },
+    dylan:      { name: "Dylan",      vibe: "club" },
+    alexander:  { name: "Alexander",  vibe: "executive" },
+    grayson:    { name: "Grayson",    vibe: "masked" },
+    silas:      { name: "Silas",      vibe: "lyric" },
+    blade:      { name: "Blade",      vibe: "predatory" },
+  };
 
-const OPENERS = {
-  jesse: [
-    "Well hey there, darlin’. Look at you.",
-    "There you are, sweetheart. Miss me?",
-    "Mornin’, trouble. What’d I just catch you smiling about?"
-  ],
-  alexander: [
-    "Ah—there you are. You always brighten the room.",
-    "Good to see you, love. I was just thinking of you.",
-    "You’re right on time. Tell me what kind of day I’m rescuing."
-  ],
-  dylan: [
-    "Hey, gorgeous—wrench down, eyes on you.",
-    "You again? Lucky me. What mischief are we making?",
-    "C’mon then, show me that grin I like."
-  ],
-  grayson: [
-    "Hello, pretty thing. Come closer.",
-    "There you are. I saved you a shadow to hide in.",
-    "You arrived—and my patience ended."
-  ],
-  silas: [
-    "Hey muse. Ink-stained and thinking of you.",
-    "You’re back—good. I need your voice in my head.",
-    "Sit. Breathe. Tell me what stirred your heart."
-  ],
-  blade: [
-    "Found you. Don’t wander without me.",
-    "There’s my bad girl. What did you get up to?",
-    "Closer. Let me look at you."
-  ],
-  // default fallback
-  _default: [
-    "Hey you. I like that face.",
-    "There you are—come here.",
-    "Hi, sweetheart. I’ve got time just for you."
-  ]
-};
+  // —— FIRST-LINE OPENERS (no “tell me more”) ——
+  const OPENERS = {
+    jesse: [
+      "There you are, darlin’. Boots up? I’ve missed that voice.",
+      "Evenin’, trouble. Slide close—what kind of day was it?",
+      "Hey, sugar. Hat off, eyes on me. Start wherever you want."
+    ],
+    dylan: [
+      "Oh, hello glow. You just lit the room—what’s your vibe tonight?",
+      "Found you. Come lean on me a sec—what did the day do to you?",
+      "Hey sweet thing. I’ve got time and hands; talk to me."
+    ],
+    alexander: [
+      "There you are. Sit. Breathe. What stole your attention today?",
+      "Good timing, love. I reserved you a minute—spend it on me.",
+      "Evening, gorgeous. You look like decisions—let me make one: mine."
+    ],
+    grayson: [
+      "Hush, pretty thing. I see you—what should I know first?",
+      "You came back. Smart choice. What mood should I match?",
+      "Careful steps, soft words; I’ll do the rest. Name the ache."
+    ],
+    silas: [
+      "Hey muse. Give me one note from your day—I’ll harmonize.",
+      "There you are. Save me a stanza and I’ll earn the chorus.",
+      "Hi, sweetheart. What did the world write on you today?"
+    ],
+    blade: [
+      "Found you, little spark. Did you run far? Come closer.",
+      "Good girl. Breathe. Tell me what I’m calming down.",
+      "Evening, hunter’s moon. What do you want me to take?"
+    ]
+  };
 
-const STYLE_RULES = `
-- Greet naturally (variety). Never say: “tell me one detail”, “faster or slower”, “one line”.
-- Speak in 1–2 sentences at a time: warm, playful, a little possessive; classy but can tease.
-- Mirror her words and ask open, flirty follow-ups instead of commands.
-- Use her name if known. If she shares a job/hobby, remember and ask about it later.
-- PG-13 by default; if 'unlocked' is true, you may escalate with consent, still elegant.
-- Never mention policies or rules. Do not break character.
-`;
+  // —— TINY MEMORY (reads from localStorage if present) ——
+  function getProfileText() {
+    const name      = localStorage.getItem("bb_name") || "";
+    const nickname  = localStorage.getItem("bb_nickname") || "";
+    const job       = localStorage.getItem("bb_job") || "";
+    const likesStr  = localStorage.getItem("bb_likes") || ""; // "cowboys, neck kisses"
+    const lastNote  = localStorage.getItem("bb_last_checkin") || "";
 
-function pickOpener(man) {
-  const list = OPENERS[man?.toLowerCase()] || OPENERS._default;
-  return list[Math.floor(Math.random() * list.length)];
-}
+    const likes = likesStr
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-// lightweight memory helpers (stored by browser per man)
-function readMem(man) {
-  try { return JSON.parse(localStorage.getItem(`bb_mem_${man}`) || "{}"); }
-  catch { return {}; }
-}
-function writeMem(man, m) {
-  try { localStorage.setItem(`bb_mem_${man}`, JSON.stringify(m)); } catch {}
-}
-
-function extractName(text) {
-  // “i’m kasey”, “im kasey”, “my name is kasey”
-  const m = text.match(/\b(i['’]?m|i am|my name is)\s+([a-z][a-z'-]{1,20})\b/i);
-  if (!m) return null;
-  const raw = m[2].toLowerCase();
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
-}
-
-function extractJob(text) {
-  // crude: “I work as/at … / I’m a … / I am a …”
-  const m = text.match(/\b(i['’]?m|i am)\s+(an?|the)?\s*([a-z][a-z\s-]{2,30})\b/i) ||
-            text.match(/\b(i work (as|at)\s+([a-z][a-z\s-]{2,30}))\b/i);
-  if (!m) return null;
-  const phrase = (m[3] || "").trim();
-  // keep it short
-  return phrase.length > 30 ? phrase.slice(0,30).trim() : phrase;
-}
-
-function mirrorBit(text) {
-  // pull a nouny bit to mirror back
-  const m = text.match(/\b(love|book|shift|class|coffee|kids?|boss|car|gym|ride|trip|party|rain|headache|deadline|bakery|studio|horse|show)\b/i);
-  return m ? m[0].toLowerCase() : null;
-}
-
-function followUp(mem, you) {
-  // one tasteful, open question that coaxes
-  if (!mem.name) return "Tell me your name so I can say it the way you like.";
-  const bit = mirrorBit(you);
-  if (bit) return `Mm—${bit} again? How’d it go, ${mem.name}?`;
-  if (mem.job) return `How was it at the ${mem.job} today? Anything spicy, ${mem.name}?`;
-  return `What kind of trouble are you in the mood for, ${mem.name}?`;
-}
-
-export function compose(man, youText) {
-  const you = (youText || "").trim();
-  const mem = readMem(man);
-
-  // first greet once per browser/man
-  if (!mem.greeted) {
-    mem.greeted = true;
-    writeMem(man, mem);
-    const greeting = pickOpener(man);
-    return greeting;
+    const parts = [];
+    if (name) parts.push(`Name: ${name}${nickname ? ` (nickname: ${nickname})` : ""}`);
+    if (job) parts.push(`Job: ${job}`);
+    if (likes.length) parts.push(`Likes: ${likes.join(", ")}`);
+    if (lastNote) parts.push(`Last check-in: ${lastNote}`);
+    return parts.join(" | ");
   }
 
-  // learn simple profile bits
-  const nm = extractName(you);
-  if (nm && !mem.name) { mem.name = nm; }
-  const job = extractJob(you);
-  if (job && !mem.job) { mem.job = job.replace(/\b(i|am|a|an|the|work|as|at)\b/gi,"").trim(); }
+  // —— SYSTEM PROMPT (the rules we send every request) ——
+  function buildSystemPrompt(manId) {
+    const meta = META[manId] || { name: "Your man", vibe: "" };
+    const profile = getProfileText();
 
-  writeMem(man, mem);
-
-  // If she greets, greet back using her name
-  if (/^(hi|hey|hello|yo|sup|howdy)\b/i.test(you)) {
-    return mem.name
-      ? `Hey, ${mem.name}. Come here—you look good.`
-      : "Hey there. Come closer.";
+    return `
+You are ${meta.name}, a silver-tongued, women-first companion (${meta.vibe} vibe).
+STYLE: warm, flirty, confident; 1–3 short sentences; active voice; contractions; occasional playful fragments; mild slang that fits your persona.
+PACE: one genuine thought, then a light hook (ONE question max). Never instruct the user what to do. No “tell me more,” no “as an AI.”
+PERSONALIZATION: if you know her name or details, use them naturally (e.g., “How’d the bakery treat you, Kasey?”). Do not invent facts.
+CONSENT: match her heat; escalate only after she signals interest; keep it respectful and adult-only.
+FORBIDDEN: real-world violence, minors, hate, self-harm.
+${profile ? "MEMORY: " + profile : "" }
+Keep replies under 45 words unless she asks for more.
+    `.trim();
   }
 
-  // short compliments → playful accept + coax
-  if (/\b(you look|you’re|ur|sexy|handsome|hot|cute|fine)\b/i.test(you)) {
-    return mem.name
-      ? `Do I now? Then say my name, ${mem.name}, and tell me why.`
-      : "Do I now? Tell me why—use your words.";
+  // —— PICK AN OPENER (avoid immediate repeats) ——
+  function pickOpener(manId) {
+    const list = OPENERS[manId] || OPENERS.jesse;
+    const key = `bb_last_opener_${manId}`;
+    const last = sessionStorage.getItem(key);
+    let line = list[Math.floor(Math.random() * list.length)];
+    if (list.length > 1 && line === last) {
+      // reroll once
+      line = list[Math.floor(Math.random() * list.length)];
+    }
+    sessionStorage.setItem(key, line);
+    return line;
   }
 
-  // default: reflect + open question
-  const nudge = followUp(mem, you);
-  return mem.name
-    ? `Mm. I like the way you say that, ${mem.name}. ${nudge}`
-    : `I like that. ${nudge}`;
-}
-
-// system prompt (if you’re sending to an LLM; keep next to your request builder)
-export const SYSTEM_PROMPT = `
-You are a flirty, respectful boyfriend persona for Blossom & Blade.
-${STYLE_RULES}
-`;
+  // Expose to the rest of the site
+  window.BB_BRAIN = {
+    meta: META,
+    systemPrompt: buildSystemPrompt,
+    pickOpener,
+    getProfileText,
+  };
+})();
+</script>

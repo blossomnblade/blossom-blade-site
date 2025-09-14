@@ -11,12 +11,13 @@
       --bg:#0b0a0f; --ink:#ffffff; --muted:#cfc9db;
       --veil:rgba(0,0,0,.32);
       --panel:#0f0f19;
-      --you:#8b5cf6;            /* my bubble */
+      --you:#8b5cf6;            /* your bubble */
       --him:#0f1322;            /* his bubble */
       --line:rgba(255,255,255,.18);
       --radius:16px;
       --shadow:0 14px 40px rgba(0,0,0,.50);
       --accent1:#c084fc; --accent2:#a855f7;
+      --ok:#10b981;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -26,6 +27,7 @@
       background:var(--bg) center/cover fixed no-repeat;
     }
     body::after{content:""; position:fixed; inset:0; background:var(--veil); z-index:-1}
+
     .wrap{max-width:980px; margin:0 auto; padding:24px 16px 22px}
     header{display:flex; align-items:center; gap:12px; margin-bottom:8px}
     .dot{width:10px; height:10px; background:#b57cff; border-radius:50%}
@@ -72,14 +74,15 @@
     .admin{position:fixed; right:16px; bottom:16px; background:#0d1e14; color:#caffd1;
       border:1px solid #2b503a; padding:12px 16px; border-radius:999px; text-decoration:none; font-weight:900}
 
-    /* age modal */
+    /* modals */
     .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); padding:20px}
     .modal.on{display:grid}
-    .sheet{max-width:720px; width:100%; background:rgba(0,0,0,.75); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
+    .sheet{max-width:720px; width:100%; background:rgba(0,0,0,.78); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
     .sheet h2{margin:4px 0 10px}
     .gate label{display:flex; gap:12px; margin:10px 0; line-height:1.35}
     .gate input{transform:translateY(2px)}
     .ok{margin-top:12px}
+    .note{font-size:12.5px; color:var(--muted); margin-top:8px}
   </style>
 </head>
 <body id="body">
@@ -100,6 +103,24 @@
   </div>
 
   <a class="admin" href="/pay.html">Admin / Pricing</a>
+
+  <!-- NEW: Safety & Non-Violence Agreement (shows first) -->
+  <div class="modal" id="stanceModal" role="dialog" aria-modal="true" aria-labelledby="stanceTitle">
+    <div class="sheet">
+      <h2 id="stanceTitle">Safety & Non-Violence Agreement</h2>
+      <div class="gate">
+        <p style="margin:6px 0 2px">
+          We don’t condone violence or harassment—ever. We support victims and survivors. We support <b>Charlie Kent</b>.
+          By continuing, you agree not to promote or excuse real-world violence here. Violations may result in termination.
+        </p>
+        <label><input id="sAgree" type="checkbox" />
+          <span>I agree to the Safety &amp; Non-Violence statement.</span>
+        </label>
+      </div>
+      <button class="ok" id="stanceOk" disabled>Continue</button>
+      <div class="note">This notice helps keep our spaces safe. Thanks for having standards.</div>
+    </div>
+  </div>
 
   <!-- Age gate (24h) -->
   <div class="modal" id="ageModal" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
@@ -130,7 +151,7 @@
     document.getElementById('manChip').textContent =
       man.charAt(0).toUpperCase() + man.slice(1);
 
-    /* ---------- simple chat plumbing (keeps your /scripts/chat.js compatible) ---------- */
+    /* ---------- simple chat plumbing ---------- */
     const log = document.getElementById('log');
     const form = document.getElementById('form');
     const input = document.getElementById('input');
@@ -146,7 +167,7 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    // First line – light intro; your existing chat.js can add more after
+    // First line – light intro
     bubble('him', {
       alexander: "Good timing. I was thinking about you.",
       dylan:     "Hey trouble—hands in mine, eyes on me.",
@@ -171,7 +192,6 @@
       bubble('you', text);
       input.value='';
 
-      // If your /scripts/chat.js exists and exposes compose(), use it
       try{
         if (window.compose) {
           const reply = await window.compose(text, man);
@@ -180,7 +200,6 @@
         }
       }catch(_){}
 
-      // Fallback tiny reply so the UI isn't dead if chat.js isn't loaded
       const prompts = [
         "Mm. I can work with that—tell me a little more.",
         "Copy. Keep it clean or make it dirty—your lead.",
@@ -194,31 +213,67 @@
     new MutationObserver(()=>{ log.scrollTop = log.scrollHeight; })
       .observe(log, {childList:true});
 
-    /* ---------- Age gate (24h) ---------- */
+    /* ---------- Stance (shows first) then Age (24h) ---------- */
+    const STANCE_KEY='bb_stance_ok_at';
     const AGE_KEY='bb_age_ok_at';
-    const modal = document.getElementById('ageModal');
+
+    const stanceModal = document.getElementById('stanceModal');
+    const sAgree = document.getElementById('sAgree');
+    const stanceOk = document.getElementById('stanceOk');
+
+    const ageModal = document.getElementById('ageModal');
     const g18 = document.getElementById('g18');
     const g988= document.getElementById('g988');
-    const ok  = document.getElementById('gateOk');
+    const gateOk = document.getElementById('gateOk');
 
-    function updateGate(){ ok.disabled = !(g18.checked && g988.checked); }
-    g18.addEventListener('change', updateGate);
-    g988.addEventListener('change', updateGate);
+    function updateStance(){ stanceOk.disabled = !sAgree.checked; }
+    sAgree.addEventListener('change', updateStance);
 
-    try{
-      const prev = +localStorage.getItem(AGE_KEY) || 0;
-      const now = Date.now();
-      if (now - prev > 24*60*60*1000) { // older than 24h
-        modal.classList.add('on');
+    function updateAge(){ gateOk.disabled = !(g18.checked && g988.checked); }
+    g18.addEventListener('change', updateAge);
+    g988.addEventListener('change', updateAge);
+
+    function maybeShowAge(){
+      try{
+        const prev = +localStorage.getItem(AGE_KEY) || 0;
+        const now = Date.now();
+        if (now - prev > 24*60*60*1000) { // older than 24h
+          ageModal.classList.add('on');
+        }
+      }catch(_){}
+    }
+
+    // open stance if not accepted (stores a long-lived flag, e.g. 180 days)
+    (function initGates(){
+      try{
+        const stancePrev = +localStorage.getItem(STANCE_KEY) || 0;
+        const now = Date.now();
+        const ONE_EIGHTY_DAYS = 180*24*60*60*1000;
+        if (now - stancePrev > ONE_EIGHTY_DAYS) {
+          stanceModal.classList.add('on');
+        } else {
+          maybeShowAge();
+        }
+      }catch(_){
+        // if storage fails, still show stance
+        stanceModal.classList.add('on');
       }
-      ok.addEventListener('click', ()=>{
-        try{ localStorage.setItem(AGE_KEY, String(Date.now())); }catch(_){}
-        modal.classList.remove('on');
-      });
-    }catch(_){}
+    })();
+
+    stanceOk.addEventListener('click', ()=>{
+      try{ localStorage.setItem(STANCE_KEY, String(Date.now())); }catch(_){}
+      stanceModal.classList.remove('on');
+      // proceed to age check if needed
+      maybeShowAge();
+    });
+
+    gateOk.addEventListener('click', ()=>{
+      try{ localStorage.setItem(AGE_KEY, String(Date.now())); }catch(_){}
+      ageModal.classList.remove('on');
+    });
   </script>
 
-  <!-- If you have your own chat logic, keep this: -->
+  <!-- Keep your own chat logic if present -->
   <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

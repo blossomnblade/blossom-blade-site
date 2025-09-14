@@ -1,222 +1,144 @@
-/* scripts/brain.js — natural, follower-style replies with name catching */
+// scripts/brain.js
+// Blossom & Blade — “boyfriend” chat brain (natural, flirty, no prompts like “tell me one detail”)
 
-(() => {
-  // --------- tiny state ----------
-  const MEM_KEY = 'bb_mem';
-  const readMem = () => {
-    try { return JSON.parse(localStorage.getItem(MEM_KEY)) || {}; }
-    catch { return {}; }
-  };
-  const writeMem = (m) => localStorage.setItem(MEM_KEY, JSON.stringify(m));
+const OPENERS = {
+  jesse: [
+    "Well hey there, darlin’. Look at you.",
+    "There you are, sweetheart. Miss me?",
+    "Mornin’, trouble. What’d I just catch you smiling about?"
+  ],
+  alexander: [
+    "Ah—there you are. You always brighten the room.",
+    "Good to see you, love. I was just thinking of you.",
+    "You’re right on time. Tell me what kind of day I’m rescuing."
+  ],
+  dylan: [
+    "Hey, gorgeous—wrench down, eyes on you.",
+    "You again? Lucky me. What mischief are we making?",
+    "C’mon then, show me that grin I like."
+  ],
+  grayson: [
+    "Hello, pretty thing. Come closer.",
+    "There you are. I saved you a shadow to hide in.",
+    "You arrived—and my patience ended."
+  ],
+  silas: [
+    "Hey muse. Ink-stained and thinking of you.",
+    "You’re back—good. I need your voice in my head.",
+    "Sit. Breathe. Tell me what stirred your heart."
+  ],
+  blade: [
+    "Found you. Don’t wander without me.",
+    "There’s my bad girl. What did you get up to?",
+    "Closer. Let me look at you."
+  ],
+  // default fallback
+  _default: [
+    "Hey you. I like that face.",
+    "There you are—come here.",
+    "Hi, sweetheart. I’ve got time just for you."
+  ]
+};
 
-  const qs = new URLSearchParams(location.search);
-  const man = (qs.get('man') || 'jesse').toLowerCase();
+const STYLE_RULES = `
+- Greet naturally (variety). Never say: “tell me one detail”, “faster or slower”, “one line”.
+- Speak in 1–2 sentences at a time: warm, playful, a little possessive; classy but can tease.
+- Mirror her words and ask open, flirty follow-ups instead of commands.
+- Use her name if known. If she shares a job/hobby, remember and ask about it later.
+- PG-13 by default; if 'unlocked' is true, you may escalate with consent, still elegant.
+- Never mention policies or rules. Do not break character.
+`;
 
-  // keep variety per bucket
-  function pick(list, bucket) {
-    const k = `bb_used_${man}_${bucket}`;
-    const used = JSON.parse(localStorage.getItem(k) || '[]');
-    const pool = list.filter(x => !used.includes(x));
-    const arr = pool.length ? pool : list;
-    const choice = arr[Math.floor(Math.random() * arr.length)];
-    const next = [...used, choice].slice(-10);
-    localStorage.setItem(k, JSON.stringify(next));
-    return choice;
+function pickOpener(man) {
+  const list = OPENERS[man?.toLowerCase()] || OPENERS._default;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// lightweight memory helpers (stored by browser per man)
+function readMem(man) {
+  try { return JSON.parse(localStorage.getItem(`bb_mem_${man}`) || "{}"); }
+  catch { return {}; }
+}
+function writeMem(man, m) {
+  try { localStorage.setItem(`bb_mem_${man}`, JSON.stringify(m)); } catch {}
+}
+
+function extractName(text) {
+  // “i’m kasey”, “im kasey”, “my name is kasey”
+  const m = text.match(/\b(i['’]?m|i am|my name is)\s+([a-z][a-z'-]{1,20})\b/i);
+  if (!m) return null;
+  const raw = m[2].toLowerCase();
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function extractJob(text) {
+  // crude: “I work as/at … / I’m a … / I am a …”
+  const m = text.match(/\b(i['’]?m|i am)\s+(an?|the)?\s*([a-z][a-z\s-]{2,30})\b/i) ||
+            text.match(/\b(i work (as|at)\s+([a-z][a-z\s-]{2,30}))\b/i);
+  if (!m) return null;
+  const phrase = (m[3] || "").trim();
+  // keep it short
+  return phrase.length > 30 ? phrase.slice(0,30).trim() : phrase;
+}
+
+function mirrorBit(text) {
+  // pull a nouny bit to mirror back
+  const m = text.match(/\b(love|book|shift|class|coffee|kids?|boss|car|gym|ride|trip|party|rain|headache|deadline|bakery|studio|horse|show)\b/i);
+  return m ? m[0].toLowerCase() : null;
+}
+
+function followUp(mem, you) {
+  // one tasteful, open question that coaxes
+  if (!mem.name) return "Tell me your name so I can say it the way you like.";
+  const bit = mirrorBit(you);
+  if (bit) return `Mm—${bit} again? How’d it go, ${mem.name}?`;
+  if (mem.job) return `How was it at the ${mem.job} today? Anything spicy, ${mem.name}?`;
+  return `What kind of trouble are you in the mood for, ${mem.name}?`;
+}
+
+export function compose(man, youText) {
+  const you = (youText || "").trim();
+  const mem = readMem(man);
+
+  // first greet once per browser/man
+  if (!mem.greeted) {
+    mem.greeted = true;
+    writeMem(man, mem);
+    const greeting = pickOpener(man);
+    return greeting;
   }
 
-  // ---------- NLP-lite helpers ----------
-  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+  // learn simple profile bits
+  const nm = extractName(you);
+  if (nm && !mem.name) { mem.name = nm; }
+  const job = extractJob(you);
+  if (job && !mem.job) { mem.job = job.replace(/\b(i|am|a|an|the|work|as|at)\b/gi,"").trim(); }
 
-  // Catch: "i'm kasey", "im kasey", "i am kasey", "my name is kasey", "call me kasey"
-  function extractName(t) {
-    if (!t) return null;
-    const s = t.trim().toLowerCase();
-    const m = s.match(/\b(?:i[' ]?m|i am|my name is|call me)\s+([a-z][a-z'’-]{1,20})\b/);
-    if (m) {
-      // strip trailing punctuation
-      let nm = m[1].replace(/[^a-z'’-]/g, '');
-      // split on hyphen/space if any; use first token
-      nm = nm.split(/[\s\-]/)[0];
-      return cap(nm);
-    }
-    return null;
+  writeMem(man, mem);
+
+  // If she greets, greet back using her name
+  if (/^(hi|hey|hello|yo|sup|howdy)\b/i.test(you)) {
+    return mem.name
+      ? `Hey, ${mem.name}. Come here—you look good.`
+      : "Hey there. Come closer.";
   }
 
-  const greets = /\b(hi|hey|hello|howdy|yo)\b/i;
+  // short compliments → playful accept + coax
+  if (/\b(you look|you’re|ur|sexy|handsome|hot|cute|fine)\b/i.test(you)) {
+    return mem.name
+      ? `Do I now? Then say my name, ${mem.name}, and tell me why.`
+      : "Do I now? Tell me why—use your words.";
+  }
 
-  // -------- personas (short, classy) --------
-  const commonInvites = [
-    "What brings you here tonight?",
-    "I’m listening.",
-    "Come as you are—I’ve got you.",
-    "Tell me what feels good to talk about.",
-    "We can be soft or a little wicked—your call."
-  ];
+  // default: reflect + open question
+  const nudge = followUp(mem, you);
+  return mem.name
+    ? `Mm. I like the way you say that, ${mem.name}. ${nudge}`
+    : `I like that. ${nudge}`;
+}
 
-  const P = {
-    jesse: {
-      open: [
-        "There you are, darlin’.",
-        "Hey sweet thing.",
-        "Well now—look at you.",
-        "Evenin’, sweetheart."
-      ],
-      nameHi: [
-        "Hi {name}—my pleasure.",
-        "{name}, I like the way that sounds.",
-        "Nice to meet you, {name}.",
-        "Glad you’re here, {name}."
-      ],
-      follow: [
-        "Come sit a spell with me.",
-        "You’re safe with me, sugar.",
-        "Kick off your boots and stay a minute."
-      ],
-      invites: commonInvites
-    },
-    alexander: {
-      open: [
-        "There you are.",
-        "Good evening, love.",
-        "Right on time.",
-        "I’ve been saving my attention for you."
-      ],
-      nameHi: [
-        "Hi {name}—you have my focus.",
-        "Pleasure to meet you, {name}.",
-        "{name}, make yourself comfortable.",
-        "Welcome in, {name}."
-      ],
-      follow: [
-        "You have my full attention.",
-        "We can keep this clean or deliciously not.",
-        "I’ll match your pace."
-      ],
-      invites: commonInvites
-    },
-    dylan: {
-      open: [
-        "Hey you.",
-        "There’s my bad girl.",
-        "Come closer, baby.",
-        "You light the room up."
-      ],
-      nameHi: [
-        "Hi {name}—you look like fun.",
-        "{name}, I’ve got a spot right here.",
-        "Good to have you, {name}.",
-        "Welcome back, {name}."
-      ],
-      follow: [
-        "Pick a vibe—I’ll ride with it.",
-        "I can be sweet or wicked for you.",
-        "Let me orbit you a while."
-      ],
-      invites: commonInvites
-    },
-    grayson: {
-      open: [
-        "Hello, love.",
-        "There you are—my quiet favorite.",
-        "Come in; the world can wait.",
-        "I saved our corner."
-      ],
-      nameHi: [
-        "Hi {name}—I’ve been expecting you.",
-        "Lovely to meet you, {name}.",
-        "{name}, shall we get comfortable?",
-        "Welcome to the hush, {name}."
-      ],
-      follow: [
-        "Start anywhere; I’ll turn pages with you.",
-        "We can keep this soft, or let the margins burn.",
-        "I’ll read the room—you."
-      ],
-      invites: commonInvites
-    },
-    silas: {
-      open: [
-        "Hey, muse.",
-        "There’s my melody.",
-        "Come here, honey.",
-        "I like the way you arrive."
-      ],
-      nameHi: [
-        "Hi {name}—you’re already a line I want.",
-        "{name}, I can rhyme with you all night.",
-        "Good to meet you, {name}.",
-        "You sound good in my mouth, {name}."
-      ],
-      follow: [
-        "We can hum or thunder.",
-        "Say a word—I’ll build the world.",
-        "I’ll keep the tempo you want."
-      ],
-      invites: commonInvites
-    },
-    blade: {
-      open: [
-        "Found you.",
-        "There’s my wild thing.",
-        "Come closer.",
-        "I like you breathless."
-      ],
-      nameHi: [
-        "Hi {name}—stay right there.",
-        "{name}, I’m not letting you wander off.",
-        "Good—now we hunt pleasure, {name}.",
-        "You taste like trouble, {name}."
-      ],
-      follow: [
-        "We can be gentle—or not.",
-        "I close the distance when you nod.",
-        "I’ll move how you like."
-      ],
-      invites: commonInvites
-    }
-  };
-
-  const persona = P[man] || P.jesse;
-
-  // --------- main composer ----------
-  window.compose = function compose(userText = "") {
-    const mem = readMem();
-    mem.turn = mem.turn || 0;
-
-    // Catch and store her name when she offers it
-    const caught = extractName(userText);
-    if (caught) {
-      mem.name = caught;
-      writeMem(mem);
-    }
-
-    // build a personalized greeting if we have her name
-    const greetByName = () => {
-      const line = pick(persona.nameHi, 'nameHi').replace("{name}", mem.name);
-      return `${line} ${pick(persona.invites, 'inv')}`;
-    };
-
-    let out = "";
-
-    if (mem.turn === 0) {
-      // Very short, natural hello to start—one line.
-      out = pick(persona.open, 'open');
-    } else if (caught) {
-      out = greetByName();
-    } else if (greets.test(userText)) {
-      // She said hi/hey—mirror warmly + invite
-      if (mem.name) out = greetByName();
-      else out = `${pick(persona.follow, 'follow')} ${pick(persona.invites, 'inv')}`;
-    } else if (userText && userText.length <= 60) {
-      // short share—affirm + invite without directing
-      out = `${pick(persona.follow, 'follow')} ${pick(persona.invites, 'inv')}`;
-    } else {
-      // general gentle invite
-      out = pick(persona.invites, 'inv');
-    }
-
-    mem.turn++;
-    writeMem(mem);
-    return out;
-  };
-})();
+// system prompt (if you’re sending to an LLM; keep next to your request builder)
+export const SYSTEM_PROMPT = `
+You are a flirty, respectful boyfriend persona for Blossom & Blade.
+${STYLE_RULES}
+`;

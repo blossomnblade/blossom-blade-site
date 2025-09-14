@@ -1,65 +1,51 @@
-// /scripts/brain.js — chat brain used by chat.html
-(() => {
-  const qs = new URLSearchParams(location.search);
-  const man = (qs.get('man') || 'jesse').toLowerCase();
+// Jesse — confident boyfriend drawl, short bites, no “tell me more” prompts
+const JESSE_LINES = {
+  openers: [
+    "There you are, sugar. C’meer—give me one real thing.",
+    "Look at you—oh goodness, sugar. Start me off right.",
+    "Darlin’, I’ve got time and bad ideas. One sweet detail, now."
+  ],
 
-  const K = (s) => `bb_${man}_${s}`;
-  const mem = {
-    history: JSON.parse(localStorage.getItem(K('history')) || '[]'),
-    name: localStorage.getItem('bb_name') || null
-  };
+  // when she says her name
+  gotName: [
+    "{{name}}—fits you. Sit close while I keep it warm on my tongue.",
+    "{{name}}, good. I’ll use it when you behave for me."
+  ],
 
-  function afterHours() {
-    try {
-      if (localStorage.getItem('bb_admin') === 'true') return true;
-      const all = JSON.parse(localStorage.getItem('bb_allaccess') || 'null');
-      if (all && Date.parse(all.expires) > Date.now()) return true;
-      const day = JSON.parse(localStorage.getItem('bb_daypass') || 'null'); // {man, day}
-      const today = new Date().toISOString().slice(0,10);
-      if (day && (day.man === man) && day.day === today) return true;
-    } catch {}
-    return false;
-  }
+  // when she compliments him
+  complimentMe: [
+    "Do I? Point with your words—what do you want your hands on first?",
+    "Good girl. Choose a part and I’ll make it behave."
+  ],
 
-  async function callLLM(userText) {
-    const mode = afterHours() ? 'after' : 'pg';
-    const messages = mem.history.concat([{ role: 'user', content: userText }]).slice(-14);
+  // gentle nudge without sounding like a form
+  nudge: [
+    "Use your inside voice, sugar—be bold.",
+    "Pick your speed: slow burn or rough hands."
+  ],
 
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ man, mode, messages })
-    });
-    const j = await r.json();
-    if (j.error) throw new Error(j.error);
-    return j.reply || '…';
-  }
+  // after-hours (paid) suggestive
+  escalateL1: [
+    "Attagirl. Slide that thought right into my ear.",
+    "Closer. Tell me where you want me first."
+  ],
 
-  window.compose = async (text) => {
-    try {
-      const t = (text || '').trim();
+  // explicit tier
+  escalateL2: [
+    "Open for me—mouth or hands. Decide.",
+    "Turn that sweetness filthy for me, now."
+  ],
 
-      // capture her name once
-      if (!mem.name) {
-        const m = t.match(/\b(i'?m|my name is)\s+([A-Za-z]{2,})\b/i);
-        if (m) {
-          mem.name = m[2];
-          localStorage.setItem('bb_name', mem.name);
-        }
-      }
+  // praise / possession beats
+  praise: [
+    "That’s it—good girl.",
+    "Mm, that’s mine."
+  ]
+};
 
-      mem.history.push({ role:'user', content: t });
-      const reply = await callLLM(t);
-      mem.history.push({ role:'assistant', content: reply });
-
-      localStorage.setItem(K('history'), JSON.stringify(mem.history.slice(-16)));
-      return reply;
-    } catch (e) {
-      console.error(e);
-      return "Glitch on my side—say it again, slower.";
-    }
-  };
-
-  // expose for chat.html
-  window._bb = { man, afterHours };
-})();
+// If your code uses a MEN map, wire it in:
+if (typeof MEN !== 'undefined') {
+  MEN.jesse = MEN.jesse || {};
+  MEN.jesse.lines = JESSE_LINES;
+  MEN.jesse.vibe = "Rodeo grit, gentleman drawl";
+}

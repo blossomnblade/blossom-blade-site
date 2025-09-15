@@ -1,8 +1,8 @@
-/* Blossom & Blade — brain.js (memory + backgrounds + openers)
-   - Remembers user's name (localStorage), reads ?name= too
-   - Per-man backgrounds (Jesse has fallbacks)
-   - Personalized openers using name + pet names
-   - Auto-applies on chat.html; exposes window.BB
+/* Blossom & Blade — brain.js (v3)
+   - Remembers user's name (many phrasings, incl. "im kasey")
+   - Per-man backgrounds (Jesse has fallbacks; easy to add more)
+   - Personalized openers using name or pet names
+   - Exposes window.BB (getName, setName, applyChatUI)
 */
 (function(){
   // ---- LIGHT MEMORY ----
@@ -10,7 +10,8 @@
 
   function getName() {
     try {
-      const qsName = new URLSearchParams(location.search).get('name');
+      const qs = new URLSearchParams(location.search);
+      const qsName = qs.get('name') || qs.get('user') || qs.get('n');
       if (qsName) { setName(qsName); return cleanName(qsName); }
       const raw = localStorage.getItem(LS_KEYS.name);
       return raw ? cleanName(raw) : null;
@@ -25,14 +26,12 @@
     if (!n) return null;
     const t = String(n).trim().replace(/[^a-zA-Z .'-]/g, '');
     if (!t) return null;
-    // Capitalize first letter of each word
     return t.replace(/\b([a-z])/g, (m,c)=>c.toUpperCase());
   }
 
   // Pet names to sprinkle in
   const PETS = ['love','darlin’','pretty thing','trouble','star','beautiful','gorgeous'];
-
-  function pet() { return PETS[Math.floor(Math.random()*PETS.length)]; }
+  const pet = () => PETS[Math.floor(Math.random()*PETS.length)];
 
   // ---- BACKGROUNDS ----
   const BG_BY_MAN = {
@@ -44,36 +43,37 @@
     jesse:     '/images/jesse_bg.jpg', // primary (underscore)
   };
 
-  // Jesse fallbacks so he never renders black
+  // Jesse fallbacks — add any new Copilot images here
   const JESSE_CANDIDATES = [
     '/images/jesse_bg.jpg',
     '/images/jesse-bg.jpg',
     '/images/jesse_bg.jpeg',
     '/images/jesse-bg.jpeg',
-    '/images/dylan-garage.jpg'
+    // drop your new filenames below (examples):
+    '/images/jesse_shop_neon.jpg',
+    '/images/jesse_shop_alt.jpg',
+    '/images/dylan-garage.jpg' // last-resort visual so it's never blank
   ];
 
   // ---- OPENERS (base lines, then personalized) ----
   const OPENERS = {
-    alexander: ["There you are, {name}.","Evening, {name}. Miss me?","You clean up trouble like a pro, {nameOrPet}."],
+    alexander: ["Evening, {nameOrPet}. Miss me?","There you are, {name}.","You clean up trouble like a pro, {nameOrPet}."],
     dylan:     ["Hey {nameOrPet}.","Slide in, {name} — I wiped the seat.","Got grease or gossip for me, {nameOrPet}?"],
     grayson:   ["You found me, {name}.","Stay close, {nameOrPet}.","What kind of mischief tonight, {name}?"],
-    silas:     ["Backstage again, {name}?","There you are, {nameOrPet}.","Wanna tune me up or turn me up, {name}?"],
+    silas:     ["Backstage again, {name}?","There you are, {nameOrPet}.","Turn me up or tune me up, {name}?"],
     blade:     ["Hey trouble… {name}.","I like how you show up, {nameOrPet}.","Helmet off or on, {name}?"],
     jesse:     ["Knew you’d come back, {name}.","C’mon, let’s make some noise, {nameOrPet}.","You and me against the slow day, {name}."]
   };
 
   function personalize(line, nm) {
     const nameOrPet = nm || pet();
-    return line
-      .replaceAll('{name}', nm || nameOrPet)
-      .replaceAll('{nameOrPet}', nameOrPet);
+    return line.replaceAll('{name}', nm || nameOrPet).replaceAll('{nameOrPet}', nameOrPet);
   }
 
   function pickOpener(man){
     const nm = getName();
     const list = OPENERS[man] || ["There you are, {nameOrPet}."];
-    const raw = list[Math.floor(Math.random() * list.length)];
+    const raw = list[Math.floor(Math.random()*list.length)];
     return personalize(raw, nm);
   }
 

@@ -17,11 +17,9 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      color:#fff;
+      margin:0; color:#fff;
       font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
       background:#000;
-      /* Main site background */
       background-image:url("/images/bg_dark_romance.jpg");
       background-size:cover; background-position:center; background-repeat:no-repeat;
     }
@@ -33,75 +31,37 @@
     .title{margin:0; font-size:clamp(24px, 4vw, 34px); letter-spacing:.3px}
     .sub{margin:4px 0 0; color:var(--muted); font-size:14px}
 
-    /* tile grid */
     .grid{display:grid; gap:14px; grid-template-columns:repeat(2, 1fr); margin-top:14px}
-    @media (min-width: 860px){
-      .grid{grid-template-columns:repeat(3, 1fr)}
-    }
+    @media (min-width: 860px){ .grid{grid-template-columns:repeat(3, 1fr)} }
 
     .card{
-      position:relative;
-      display:block;
-      height:220px;
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:var(--card);
-      overflow:hidden;
-      text-decoration:none;
-      color:inherit;
-      box-shadow:var(--shadow);
-      isolation:isolate;
+      position:relative; display:block; height:220px;
+      border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--card); overflow:hidden; text-decoration:none; color:inherit;
+      box-shadow:var(--shadow); isolation:isolate;
     }
     .card::before{
-      content:"";
-      position:absolute; inset:0;
+      content:""; position:absolute; inset:0;
       background-size:cover; background-position:center; background-repeat:no-repeat;
-      opacity:.95;
-      transition:transform .25s ease, filter .25s ease;
-      z-index:0;
+      opacity:.95; transition:transform .25s ease, filter .25s ease; z-index:0;
+      background-image: var(--tile-bg, none); /* allows JS to set per-card image */
     }
     .card:hover::before{transform:translateY(-3px) scale(1.02); filter:brightness(1.03)}
     .chip{
       position:absolute; left:14px; top:14px; z-index:1;
       font-size:12px; font-weight:800; letter-spacing:.2px;
-      background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:6px 10px;
-      box-shadow:var(--shadow)
+      background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:6px 10px; box-shadow:var(--shadow)
     }
-    .ttl{
-      position:absolute; left:14px; bottom:12px; z-index:1;
-      font-size:20px; font-weight:900; margin:0;
-    }
-    .subT{
-      position:absolute; right:12px; bottom:12px; z-index:1;
-      color:var(--muted); font-size:14px; margin:0;
-    }
+    .ttl{position:absolute; left:14px; bottom:12px; z-index:1; font-size:20px; font-weight:900; margin:0}
+    .subT{position:absolute; right:12px; bottom:12px; z-index:1; color:var(--muted); font-size:14px; margin:0}
 
-    /* room backgrounds (keep filenames in sync with /images) */
-    .alex::before    { background-image:url("/images/bg_alexander_boardroom.jpg") }
-    .dylan::before   { background-image:url("/images/dylan-garage.jpg") }
-    /* Jesse: try several filenames so it never renders blank */
-    .jesse::before{
-      background-image:
-        url("/images/jesse_bg.jpg"),
-        url("/images/jesse-bg.jpg"),
-        url("/images/jesse_bg.jpeg"),
-        url("/images/jesse-bg.jpeg");
-      background-size:cover; background-position:center; background-repeat:no-repeat;
-    }
-    .grayson::before { background-image:url("/images/grayson-bg.jpg") }
-    .silas::before   { background-image:url("/images/bg_silas_stage.jpg") }
-    .blade::before   { background-image:url("/images/blade-woods.jpg") }
-    .coming::before  { background-image:url("/images/logo.jpg"); background-size:contain; background-repeat:no-repeat; background-position:center }
-
-    /* helpers */
-    .tight{max-width:880px}
-    .cta-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      padding:12px 14px; border-radius:12px; border:1px solid var(--line);
-      background:#fff; color:#000; font-weight:800; text-decoration:none;
-    }
-    .btn.ghost{background:transparent; color:#fff}
+    /* Non-JS defaults (work immediately if paths exist) */
+    .alex   { --tile-bg: url("/images/bg_alexander_boardroom.jpg"); }
+    .dylan  { --tile-bg: url("/images/dylan-garage.jpg"); }
+    .grayson{ --tile-bg: url("/images/grayson-bg.jpg"); }
+    .silas  { --tile-bg: url("/images/bg_silas_stage.jpg"); }
+    .blade  { --tile-bg: url("/images/blade-woods.jpg"); }
+    /* Jesse will be set by JS fallback below */
   </style>
 </head>
 <body>
@@ -115,58 +75,62 @@
       <div class="badge">Adults 18+ only</div>
     </header>
 
-    <div class="cta-row">
-      <a class="btn" href="/pay.html">Unlock access</a>
-      <a class="btn ghost" href="/age.html">Age check</a>
-      <a class="btn ghost" href="/assets-check.html">Assets check</a>
+    <div class="cta-row" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px">
+      <a class="btn" href="/pay.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#000;font-weight:800;text-decoration:none">Unlock access</a>
+      <a class="btn ghost" href="/age.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:#fff;font-weight:800;text-decoration:none">Age check</a>
+      <a class="btn ghost" href="/assets-check.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:#fff;font-weight:800;text-decoration:none">Assets check</a>
     </div>
 
-    <!-- Tile grid -->
     <section class="grid" aria-label="Choose your man">
       <a class="card alex room"    href="/chat.html?man=alexander&sub=night" aria-label="Enter Alexander’s room">
-        <span class="chip">Boardroom</span>
-        <h3 class="ttl">Alexander</h3>
-        <p class="subT">Night</p>
+        <span class="chip">Boardroom</span><h3 class="ttl">Alexander</h3><p class="subT">Night</p>
       </a>
 
       <a class="card dylan room"   href="/chat.html?man=dylan&sub=night" aria-label="Enter Dylan’s room">
-        <span class="chip">Garage</span>
-        <h3 class="ttl">Dylan</h3>
-        <p class="subT">Night</p>
+        <span class="chip">Garage</span><h3 class="ttl">Dylan</h3><p class="subT">Night</p>
       </a>
 
-      <a class="card jesse room"   href="/chat.html?man=jesse&sub=night" aria-label="Enter Jesse’s room">
-        <span class="chip">Shop</span>
-        <h3 class="ttl">Jesse</h3>
-        <p class="subT">Night</p>
+      <a id="jesse-tile" class="card jesse room" href="/chat.html?man=jesse&sub=night" aria-label="Enter Jesse’s room">
+        <span class="chip">Shop</span><h3 class="ttl">Jesse</h3><p class="subT">Night</p>
       </a>
 
       <a class="card grayson room" href="/chat.html?man=grayson&sub=night" aria-label="Enter Grayson’s room">
-        <span class="chip">Ops</span>
-        <h3 class="ttl">Grayson</h3>
-        <p class="subT">Night</p>
+        <span class="chip">Ops</span><h3 class="ttl">Grayson</h3><p class="subT">Night</p>
       </a>
 
       <a class="card silas room"   href="/chat.html?man=silas&sub=night" aria-label="Enter Silas’s room">
-        <span class="chip">Stage</span>
-        <h3 class="ttl">Silas</h3>
-        <p class="subT">Night</p>
+        <span class="chip">Stage</span><h3 class="ttl">Silas</h3><p class="subT">Night</p>
       </a>
 
       <a class="card blade room"   href="/chat.html?man=blade&sub=night" aria-label="Enter Blade’s room">
-        <span class="chip">Woods</span>
-        <h3 class="ttl">Blade</h3>
-        <p class="subT">Night</p>
+        <span class="chip">Woods</span><h3 class="ttl">Blade</h3><p class="subT">Night</p>
       </a>
-
-      <!-- Optional “coming soon” tile
-      <a class="card coming" href="#" aria-label="More coming soon">
-        <span class="chip">Soon</span>
-        <h3 class="ttl">More</h3>
-        <p class="subT">Stay tuned</p>
-      </a>
-      -->
     </section>
   </div>
+
+  <script>
+    // Jesse tile fallback probe — picks the first image that actually loads
+    (function(){
+      const el = document.getElementById('jesse-tile');
+      if (!el) return;
+      const candidates = [
+        '/images/jesse_bg.jpg',
+        '/images/jesse-bg.jpg',
+        '/images/jesse_bg.jpeg',
+        '/images/jesse-bg.jpeg',
+        '/images/dylan-garage.jpg' // last-resort visual
+      ];
+      let i = 0;
+      function tryNext(){
+        if (i >= candidates.length) return; // leave blank if truly nothing
+        const src = candidates[i++];
+        const img = new Image();
+        img.onload = ()=> el.style.setProperty('--tile-bg', `url(${src})`);
+        img.onerror = tryNext;
+        img.src = src;
+      }
+      tryNext();
+    })();
+  </script>
 </body>
 </html>

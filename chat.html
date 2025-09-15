@@ -8,7 +8,8 @@
     :root { --room-bg:none; }
     html,body{height:100%}
     body{
-      margin:0; font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      margin:0;
+      font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
       color:#fff; background:#000;
       background-image: var(--room-bg);
       background-size: cover; background-position: center; background-repeat: no-repeat;
@@ -19,12 +20,17 @@
     .pill{background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); padding:6px 10px; border-radius:999px; font-size:12px; backdrop-filter: blur(6px)}
     .chat{flex:1; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px); overflow:auto}
     .row{display:flex; gap:8px}
-    .msg{max-width:80%; padding:10px 12px; border-radius:12px}
+    .msg{max-width:80%; padding:10px 12px; border-radius:12px; color:#fff}
     .me{align-self:flex-end}
-    .me .msg{background:#ff4da6; color:#000; border-top-right-radius:4px}
-    .bot .msg{background:rgba(255,255,255,0.08); border-top-left-radius:4px}
+    .me .msg{background:#ff4da6; color:#fff; border-top-right-radius:4px}
+    .bot .msg{background:rgba(255,255,255,0.10); border-top-left-radius:4px}
     .input{display:flex; gap:8px}
-    .input input{flex:1; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.55); color:#fff}
+    .input input{
+      flex:1; padding:12px 14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,0.18);
+      background:rgba(0,0,0,0.55); color:#fff;
+    }
+    .input input::placeholder{color:#bbb}
     .input button{padding:12px 14px; border-radius:12px; border:0; font-weight:700; background:#ff4da6; color:#000}
   </style>
 </head>
@@ -55,7 +61,6 @@
       const input = document.getElementById('text');
       const btn = document.getElementById('send');
 
-      // Submit on click or Enter (no more “stuck on first line”)
       btn.addEventListener('click', send);
       input.addEventListener('keydown', (e)=>{
         if (e.key === 'Enter') { e.preventDefault(); send(); }
@@ -72,48 +77,22 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
-      // Super-simple “bot” so you can test multiple turns without the LLM
       function botReply(user, man){
-        // light, flirty echoes; swap with real API when BB_AI_ENABLED=true
-        const lines = {
+        const bank = {
           default: [
             "mm, tell me more.",
-            "come closer—what do you want tonight?",
-            "say that again, slower.",
-            "i like that tone on you."
+            "closer—what do you want tonight?",
+            "say that again… slower.",
+            "i’m listening."
           ],
-          alexander: [
-            "Direct. I appreciate that.",
-            "You have my attention.",
-            "Let's negotiate terms… softly."
-          ],
-          dylan: [
-            "Hop in—leave the door open.",
-            "Grease or gossip first?",
-            "Your hands look better on the wheel."
-          ],
-          grayson: [
-            "I saw you coming a mile away.",
-            "You found me. Stay.",
-            "Red room suits you."
-          ],
-          silas: [
-            "Backstage again?—good.",
-            "Sing that into my ear.",
-            "Turn me up, star."
-          ],
-          blade: [
-            "Helmet off. Eyes on me.",
-            "You look dangerous, pretty.",
-            "I ride better with you."
-          ],
-          jesse: [
-            "C’mon, let’s make some noise.",
-            "I like your energy, darlin’.",
-            "You and me, right now."
-          ]
+          alexander: ["Direct. I appreciate that.","You have my attention.","Let's negotiate terms… softly."],
+          dylan: ["Hop in—leave the door open.","Grease or gossip first?","Your hands look better on the wheel."],
+          grayson: ["I saw you coming.","You found me. Stay.","Red room suits you."],
+          silas: ["Backstage again? good.","Sing that into my ear.","Turn me up, star."],
+          blade: ["Helmet off. Eyes on me.","You look dangerous, pretty.","I ride better with you."],
+          jesse: ["C’mon, let’s make some noise.","I like your energy, darlin’.","You and me, right now."]
         };
-        const list = lines[man] || lines.default;
+        const list = bank[man] || bank.default;
         return list[Math.floor(Math.random()*list.length)];
       }
 
@@ -123,15 +102,13 @@
         input.value = '';
         addRow('me', text);
 
-        // get current man from URL to flavor replies
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();
 
-        // simulate thinking, then reply
-        setTimeout(()=> addRow('bot', botReply(text, man)), 300);
+        setTimeout(()=> addRow('bot', botReply(text, man)), 250);
       }
 
-      // Gate on load so paid/admin can come/go freely
+      // gate on load
       (function gate(){
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();

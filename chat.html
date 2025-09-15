@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-gated>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,7 +34,6 @@
 
     <div class="chat">
       <div class="msg" data-chat-opener>There you are, love.</div>
-      <!-- your messages will stack here -->
       <div class="input">
         <input type="text" placeholder="Say hi…" aria-label="Message" />
         <button type="button">Send</button>
@@ -42,6 +41,8 @@
     </div>
   </div>
 
+  <!-- Order matters: access → brain -->
+  <script src="/scripts/access.js"></script>
   <script src="/scripts/brain.js"></script>
 </body>
 </html>

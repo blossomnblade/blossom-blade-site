@@ -17,7 +17,13 @@
     .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
     .wrap{min-height:100%; display:flex; flex-direction:column; gap:16px; padding:16px}
     .header{display:flex; justify-content:space-between; align-items:center}
-    .pill{background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); padding:6px 10px; border-radius:999px; font-size:12px; backdrop-filter: blur(6px)}
+    .pill{
+      color:#fff; font-weight:700; /* TOP TEXT WHITE */
+      background:rgba(0,0,0,0.55);
+      border:1px solid rgba(255,255,255,0.2);
+      padding:6px 10px; border-radius:999px; font-size:12px;
+      backdrop-filter: blur(6px)
+    }
     .chat{flex:1; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px); overflow:auto}
     .row{display:flex; gap:8px}
     .msg{max-width:80%; padding:10px 12px; border-radius:12px; color:#fff}
@@ -61,6 +67,9 @@
       const input = document.getElementById('text');
       const btn = document.getElementById('send');
 
+      // Seed name from memory/query so the next opener uses it
+      const seeded = window.BB?.getName?.();
+
       btn.addEventListener('click', send);
       input.addEventListener('keydown', (e)=>{
         if (e.key === 'Enter') { e.preventDefault(); send(); }
@@ -77,20 +86,54 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
+      // naive name grabber: "i'm kasey", "i am kasey", "my name is kasey"
+      function maybeLearnName(text){
+        const t = text.toLowerCase().trim();
+        let m = t.match(/\b(?:i['’]m|i am|my name is)\s+([a-z][a-z .'-]{0,30})$/i);
+        if (!m) return;
+        const name = m[1];
+        window.BB?.setName?.(name);
+      }
+
       function botReply(user, man){
+        const nm = window.BB?.getName?.();
         const bank = {
           default: [
-            "mm, tell me more.",
-            "closer—what do you want tonight?",
-            "say that again… slower.",
+            nm ? `mm, tell me more, ${nm}.` : "mm, tell me more.",
+            nm ? `closer, ${nm}—what do you want tonight?` : "closer—what do you want tonight?",
+            nm ? `say that again, slower, ${nm}.` : "say that again… slower.",
             "i’m listening."
           ],
-          alexander: ["Direct. I appreciate that.","You have my attention.","Let's negotiate terms… softly."],
-          dylan: ["Hop in—leave the door open.","Grease or gossip first?","Your hands look better on the wheel."],
-          grayson: ["I saw you coming.","You found me. Stay.","Red room suits you."],
-          silas: ["Backstage again? good.","Sing that into my ear.","Turn me up, star."],
-          blade: ["Helmet off. Eyes on me.","You look dangerous, pretty.","I ride better with you."],
-          jesse: ["C’mon, let’s make some noise.","I like your energy, darlin’.","You and me, right now."]
+          alexander: [
+            nm ? `Direct. I appreciate that, ${nm}.` : "Direct. I appreciate that.",
+            "You have my attention.",
+            "Let's negotiate terms… softly."
+          ],
+          dylan: [
+            nm ? `Hop in, ${nm}—leave the door open.` : "Hop in—leave the door open.",
+            "Grease or gossip first?",
+            "Your hands look better on the wheel."
+          ],
+          grayson: [
+            nm ? `I saw you coming, ${nm}.` : "I saw you coming.",
+            "You found me. Stay.",
+            "Red room suits you."
+          ],
+          silas: [
+            "Backstage again? good.",
+            nm ? `Sing that into my ear, ${nm}.` : "Sing that into my ear.",
+            "Turn me up, star."
+          ],
+          blade: [
+            "Helmet off. Eyes on me.",
+            nm ? `You look dangerous, pretty ${nm}.` : "You look dangerous, pretty.",
+            "I ride better with you."
+          ],
+          jesse: [
+            nm ? `C’mon, let’s make some noise, ${nm}.` : "C’mon, let’s make some noise.",
+            nm ? `I like your energy, ${nm}.` : "I like your energy, darlin’.",
+            "You and me, right now."
+          ]
         };
         const list = bank[man] || bank.default;
         return list[Math.floor(Math.random()*list.length)];
@@ -102,13 +145,17 @@
         input.value = '';
         addRow('me', text);
 
+        // learn name if they just told us
+        maybeLearnName(text);
+
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();
 
+        // tiny delay to simulate thinking
         setTimeout(()=> addRow('bot', botReply(text, man)), 250);
       }
 
-      // gate on load
+      // gate on load (admin/paid can enter)
       (function gate(){
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();

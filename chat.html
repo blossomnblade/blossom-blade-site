@@ -14,30 +14,32 @@
       background-image: var(--room-bg);
       background-size: cover; background-position: center; background-repeat: no-repeat;
     }
+    /* Force ALL text bright white everywhere */
+    body, body * { color:#fff !important; }
+
     .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
     .wrap{min-height:100%; display:flex; flex-direction:column; gap:16px; padding:16px}
     .header{display:flex; justify-content:space-between; align-items:center}
     .pill{
-      color:#fff; font-weight:700;
       background:rgba(0,0,0,0.55);
       border:1px solid rgba(255,255,255,0.2);
       padding:6px 10px; border-radius:999px; font-size:12px;
-      backdrop-filter: blur(6px)
+      font-weight:700; backdrop-filter: blur(6px)
     }
     .chat{flex:1; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px); overflow:auto}
     .row{display:flex; gap:8px}
-    .msg{max-width:80%; padding:10px 12px; border-radius:12px; color:#fff}
+    .msg{max-width:80%; padding:10px 12px; border-radius:12px}
     .me{align-self:flex-end}
-    .me .msg{background:#ff4da6; color:#fff; border-top-right-radius:4px}
+    .me .msg{background:#ff4da6; border-top-right-radius:4px}
     .bot .msg{background:rgba(255,255,255,0.10); border-top-left-radius:4px}
     .input{display:flex; gap:8px}
     .input input{
       flex:1; padding:12px 14px; border-radius:12px;
       border:1px solid rgba(255,255,255,0.18);
-      background:rgba(0,0,0,0.55); color:#fff;
+      background:rgba(0,0,0,0.55);
     }
-    .input input::placeholder{color:#bbb}
-    .input button{padding:12px 14px; border-radius:12px; border:0; font-weight:700; background:#ff4da6; color:#000}
+    .input input::placeholder{color:#eee}
+    .input button{padding:12px 14px; border-radius:12px; border:0; font-weight:700; background:#ff4da6; color:#000 !important}
   </style>
 </head>
 <body data-chat-root>
@@ -49,7 +51,7 @@
     </div>
 
     <div id="chat" class="chat" aria-live="polite">
-      <div class="row bot"><div class="msg" data-chat-opener>There you are, love.</div></div>
+      <div class="row bot"><div class="msg" data-chat-opener>There you are.</div></div>
     </div>
 
     <div class="input">
@@ -58,16 +60,17 @@
     </div>
   </div>
 
+  <!-- Order matters: access → brain -->
   <script src="/scripts/access.js"></script>
   <script src="/scripts/brain.js"></script>
   <script>
     (function(){
-      const chat = document.getElementById('chat');
+      const chat  = document.getElementById('chat');
       const input = document.getElementById('text');
-      const btn = document.getElementById('send');
+      const btn   = document.getElementById('send');
 
-      btn.addEventListener('click', send);
-      input.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); send(); } });
+      // tiny rolling history for realism
+      const convo = []; // {role:'user'|'assistant', content:'...'}
 
       function addRow(side, text){
         const row = document.createElement('div');
@@ -80,94 +83,81 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
-      // learn name from lots of phrasings, incl. "im kasey"
+      // call the serverless route → OpenAI
+      async function callAI(man, text){
+        const memory = { name: localStorage.getItem('bb_user_name') || null };
+        try{
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'content-type':'application/json'},
+            body: JSON.stringify({
+              room: man,
+              userText: text,
+              memory,
+              dirty: 'high',         // dial can be 'high' or 'medium'
+              history: convo.slice(-6) // last 3 exchanges
+            })
+          });
+          if (!res.ok) throw new Error('bad status');
+          const { reply } = await res.json();
+          return reply || "Come closer. Tell me what you want.";
+        }catch(_){
+          // fallback line if API hiccups
+          return "mm, tell me more.";
+        }
+      }
+
+      // learn “i’m kasey / im kasey / i am … / my name is …”
       function maybeLearnName(text){
-        const t = text.trim();
-        const patterns = [
+        const t = (text||'').trim();
+        const rxs = [
           /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
           /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
-          /\bi['’]m\s+([a-z][a-z .'-]{0,30})$/i,
-          /\bim\s+([a-z][a-z .'-]{0,30})$/i,           // no apostrophe variant
+          /\bi['’]?m\s+([a-z][a-z .'-]{0,30})$/i
         ];
-        for (const rx of patterns){
+        for (const rx of rxs){
           const m = t.match(rx);
           if (m){
-            const name = m[1];
-            window.BB?.setName?.(name);
-            const nice = window.BB?.getName?.() || name;
-            addRow('bot', `Noted, ${nice}. I like how that sounds.`);
+            const pretty = window.BB?.learnNameFromMessage?.(t) || m[1];
+            addRow('bot', `Noted, ${pretty}. I like how that sounds.`);
+            convo.push({role:'assistant', content:`Noted, ${pretty}. I like how that sounds.`});
             return true;
           }
         }
         return false;
       }
 
-      function botReply(user, man){
-        const nm = window.BB?.getName?.();
-        const bank = {
-          default: [
-            nm ? `mm, tell me more, ${nm}.` : "mm, tell me more.",
-            nm ? `closer, ${nm}—what do you want tonight?` : "closer—what do you want tonight?",
-            nm ? `say that again, slower, ${nm}.` : "say that again… slower.",
-            "i’m listening."
-          ],
-          alexander: [
-            nm ? `Direct. I appreciate that, ${nm}.` : "Direct. I appreciate that.",
-            "You have my attention.",
-            "Let's negotiate terms… softly."
-          ],
-          dylan: [
-            nm ? `Hop in, ${nm}—leave the door open.` : "Hop in—leave the door open.",
-            "Grease or gossip first?",
-            "Your hands look better on the wheel."
-          ],
-          grayson: [
-            nm ? `I saw you coming, ${nm}.` : "I saw you coming.",
-            "You found me. Stay.",
-            "Red room suits you."
-          ],
-          silas: [
-            "Backstage again? good.",
-            nm ? `Sing that into my ear, ${nm}.` : "Sing that into my ear.",
-            "Turn me up, star."
-          ],
-          blade: [
-            "Helmet off. Eyes on me.",
-            nm ? `You look dangerous, pretty ${nm}.` : "You look dangerous, pretty.",
-            "I ride better with you."
-          ],
-          jesse: [
-            nm ? `C’mon, let’s make some noise, ${nm}.` : "C’mon, let’s make some noise.",
-            nm ? `I like your energy, ${nm}.` : "I like your energy, darlin’.",
-            "You and me, right now."
-          ]
-        };
-        const list = bank[man] || bank.default;
-        return list[Math.floor(Math.random()*list.length)];
-      }
-
-      function send(){
+      async function send(){
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
-        addRow('me', text);
 
-        // learn name if they just told us
-        const learned = maybeLearnName(text);
-        if (learned) return; // the acknowledgment already got added
+        addRow('me', text);
+        convo.push({role:'user', content:text});
+
+        // learn name immediately if she told us
+        if (maybeLearnName(text)) return;
 
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();
 
-        setTimeout(()=> addRow('bot', botReply(text, man)), 250);
+        const reply = await callAI(man, text);
+        addRow('bot', reply);
+        convo.push({role:'assistant', content:reply});
       }
 
-      // gate on load (admin/paid can enter)
+      btn.addEventListener('click', send);
+      input.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); send(); } });
+
+      // gate check (admin/paid)
       (function gate(){
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();
         if (window.BB_ACCESS && !window.BB_ACCESS.gateCheckFor(man)) return;
       })();
+
+      // background + opener (uses remembered name if present)
+      window.BB?.applyChatUI?.();
     })();
   </script>
 </body>

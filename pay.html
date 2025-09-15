@@ -3,165 +3,198 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Choose Your Access</title>
-  <meta name="description" content="Adult 18+ only. Choose day or monthly access and confirm community standards." />
+  <title>Blossom & Blade — Unlock Access</title>
+  <meta name="description" content="Choose a single guy or unlock all rooms. Adult 18+ only. Clear standards and consent." />
   <style>
     :root{
-      --bg-scrim: rgba(0,0,0,0.45);
-      --card-bg: rgba(0,0,0,0.55);
-      --text: #ffffff;
-      --muted: #d7d7d7;
-      --accent: #ff4da6; /* romantic pink */
-      --accent-2: #8ef;   /* subtle cyan for focus rings */
-      --ok: #25d366;
-      --danger: #ff7373;
-      --shadow: 0 10px 30px rgba(0,0,0,0.45);
-      --radius: 18px;
+      --card: rgba(0,0,0,0.55);
+      --line: rgba(255,255,255,0.14);
+      --text: #fff;
+      --muted:#d7d7d7;
+      --accent:#ff4da6;
+      --accent2:#8ef;
+      --ok:#25d366;
+      --danger:#ff7373;
+      --radius:18px;
+      --shadow:0 10px 30px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0; color:var(--text);
-      font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background:#000; /* your graffiti BG can remain via global CSS; this is a safe fallback */
+      font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      background:#000;
+      /* GOTH background behind paywall */
+      background-image:url("/images/goth-bg.jpg"); /* <-- if your file name differs, adjust */
+      background-size:cover; background-position:center; background-repeat:no-repeat;
     }
-    .page{position:relative; min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px}
-    .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.65)); pointer-events:none}
-    .badge{position:fixed; top:14px; left:14px; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.12); padding:6px 10px; border-radius:999px; font-size:12px; letter-spacing:.3px; backdrop-filter: blur(6px)}
+    .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.7)); pointer-events:none}
+    .page{min-height:100%; display:flex; align-items:center; justify-content:center; padding:22px}
+    .badge{position:fixed; top:14px; left:14px; background:rgba(0,0,0,.6); border:1px solid var(--line); padding:6px 10px; border-radius:999px; font-size:12px; backdrop-filter: blur(6px)}
+    .card{width:min(920px,100%); background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter: blur(10px) saturate(1.1); -webkit-backdrop-filter: blur(10px) saturate(1.1); overflow:hidden}
+    .card header{padding:18px 18px 8px}
+    h1{margin:0; font-size:clamp(22px,4vw,28px)}
+    .sub{margin:6px 0 0; color:var(--muted); font-size:14px}
 
-    .card{
-      width:min(820px, 100%);
-      background:var(--card-bg);
-      backdrop-filter: blur(10px) saturate(1.1);
-      -webkit-backdrop-filter: blur(10px) saturate(1.1);
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+    .plans{display:grid; grid-template-columns:1fr; gap:14px; padding:10px 16px}
+    @media (min-width:800px){ .plans{grid-template-columns:1fr 1fr} }
+    .plan{border:1px solid var(--line); border-radius:14px; background:rgba(0,0,0,.35); padding:14px 16px}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .price{font-weight:800; font-size:20px}
+
+    .field{margin-top:10px}
+    label{font-weight:700}
+    select, .toggle{
+      margin-top:6px; width:100%;
+      padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+      background:rgba(0,0,0,.45); color:var(--text)
     }
-    .card > header{padding:22px 22px 12px}
-    .title{margin:0; font-size: clamp(22px, 4vw, 28px); letter-spacing:.3px}
-    .subtitle{margin:6px 0 0; color:var(--muted); font-size:14px}
 
-    .price-grid{display:grid; grid-template-columns:1fr; gap:14px; padding:10px 16px}
-    .plan{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 16px; border:1px solid rgba(255,255,255,0.14); border-radius:14px; background:rgba(0,0,0,0.35)}
-    .plan h3{margin:0; font-size:18px}
-    .plan .price{font-weight:700; font-size:20px}
+    .toggle{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none}
+    .toggle input{appearance:none; width:40px; height:22px; border-radius:999px; background:#666; position:relative; outline:none; border:1px solid var(--line)}
+    .toggle input::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s ease}
+    .toggle input:checked{background:var(--ok)}
+    .toggle input:checked::after{left:20px}
 
-    .checks{padding:8px 18px 0}
+    .checks{padding:0 16px}
     .check{display:flex; align-items:flex-start; gap:12px; margin:12px 0}
     .check input{appearance:none; width:22px; height:22px; border:2px solid #fff; border-radius:5px; display:grid; place-items:center; cursor:pointer; outline:none}
-    .check input:focus-visible{box-shadow:0 0 0 3px var(--accent-2)}
+    .check input:focus-visible{box-shadow:0 0 0 3px var(--accent2)}
     .check input:checked{background:var(--ok); border-color:var(--ok)}
     .check input:checked::after{content:"✓"; font-weight:900; font-size:14px; line-height:1}
-    .check label{cursor:pointer}
 
-    .actions{display:flex; flex-wrap:wrap; gap:10px; padding:16px; border-top:1px solid rgba(255,255,255,0.12); background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))}
-    .btn{flex:1 1 220px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; font-weight:700; text-decoration:none; color:#000; background:var(--accent); border-radius:12px; border:none; cursor:not-allowed; opacity:.6}
-    .btn.secondary{background:#fff}
-    .btn[aria-disabled="false"]{cursor:pointer; opacity:1}
-    .btn:focus-visible{outline:3px solid var(--accent-2)}
+    .banners{padding:10px 16px; display:grid; gap:10px}
+    .banner{border:1px dashed var(--line); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.06)}
+    .banner strong{color:#fff}
 
-    .legal{padding:12px 18px 18px; color:var(--muted); font-size:12px}
-    .danger{color:var(--danger)}
-
-    @media (min-width: 720px){
-      .price-grid{grid-template-columns:1fr 1fr}
-    }
-
-    /* Accessibility helper */
-    .visually-hidden{position:absolute!important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap}
+    .actions{display:flex; flex-wrap:wrap; gap:10px; padding:14px 16px; border-top:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))}
+    .btn{flex:1 1 220px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; font-weight:800; text-decoration:none; color:#000; background:#fff; border-radius:12px; border:0}
+    .btn.primary{background:var(--accent)}
+    .btn[aria-disabled="true"]{opacity:.6; pointer-events:none}
+    .legal{padding:10px 16px 16px; color:var(--muted); font-size:12px}
+    .foot{padding:12px 16px 16px; color:#ddd; font-size:12px; border-top:1px solid var(--line); background:rgba(0,0,0,.35)}
+    .foot a{color:#fff}
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="scrim" aria-hidden="true"></div>
-    <div class="badge" aria-label="Adults only">Adults 18+ only</div>
+  <div class="scrim" aria-hidden="true"></div>
+  <div class="badge">Adults 18+ only</div>
 
+  <div class="page">
     <main class="card" role="main">
       <header>
-        <h1 class="title">Choose your access</h1>
-        <p class="subtitle">Instant digital access. Adult 18+ only. Downtime results in extended access — <strong>no refunds after 24h</strong>.</p>
+        <h1>Unlock Access</h1>
+        <p class="sub">Pick a single guy for <strong>$5.99</strong> or unlock <strong>all six</strong> for <strong>$10.99</strong>. Downtime → we extend your access. No refunds after 24h.</p>
       </header>
 
-      <section class="price-grid" aria-label="Plans">
-        <div class="plan" data-plan="day">
-          <div>
-            <h3>Day Pass</h3>
-            <p class="subtitle">24 hours access · single charge</p>
+      <section class="plans" aria-label="Plans">
+        <!-- Single guy -->
+        <div class="plan" id="plan-single">
+          <div class="row">
+            <div>
+              <h3 style="margin:0">Single Guy</h3>
+              <p class="sub" style="margin:4px 0 0">One-time access · choose your guy</p>
+            </div>
+            <div class="price">$5.99</div>
           </div>
-          <div class="price">$5.99</div>
+
+          <div class="field">
+            <label for="manSelect">Pick your guy</label>
+            <select id="manSelect">
+              <option value="grayson" selected>Grayson</option>
+              <option value="alexander">Alexander</option>
+              <option value="dylan">Dylan</option>
+              <option value="jesse">Jesse</option>
+              <option value="silas">Silas</option>
+              <option value="blade">Blade</option>
+            </select>
+          </div>
         </div>
-        <div class="plan" data-plan="month">
-          <div>
-            <h3>Monthly</h3>
-            <p class="subtitle">Recurring · cancel anytime</p>
+
+        <!-- All six -->
+        <div class="plan" id="plan-all">
+          <div class="row">
+            <div>
+              <h3 style="margin:0">All Rooms</h3>
+              <p class="sub" style="margin:4px 0 0">Full access to all six</p>
+            </div>
+            <div class="price">$10.99 / month</div>
           </div>
-          <div class="price">$10.99</div>
+
+          <div class="field">
+            <label class="toggle" title="Auto-renew monthly">
+              <input id="renewToggle" type="checkbox" checked>
+              <span><strong>Renew monthly?</strong> (recommended)</span>
+            </label>
+          </div>
         </div>
       </section>
 
+      <!-- Required checks -->
       <section class="checks" aria-labelledby="consent">
-        <h2 id="consent" class="visually-hidden">Consent & Standards</h2>
-        <div class="check">
-          <input id="c18" type="checkbox" aria-describedby="c18d" />
-          <label for="c18"><strong>I am 18+.</strong></label>
-        </div>
-        <p id="c18d" class="visually-hidden">Age verification statement</p>
+        <h2 id="consent" style="position:absolute;left:-9999px">Consent & Standards</h2>
+        <div class="check"><input id="c18" type="checkbox"><label for="c18"><strong>I am 18+.</strong></label></div>
+        <div class="check"><input id="cstd" type="checkbox"><label for="cstd">I agree to community standards: <strong>no self-harm, real-world violence, or hate.</strong></label></div>
+        <div class="check"><input id="cnr" type="checkbox"><label for="cnr">I understand <strong>no refunds after 24 hours</strong> for digital access. Downtime → <strong>extended access</strong>.</label></div>
+        <div class="check"><input id="ctos" type="checkbox"><label for="ctos">I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>.</label></div>
+        <div class="check"><input id="cauto" type="checkbox"><label for="cauto">If I choose monthly, I acknowledge auto-renew unless I toggle it off.</label></div>
+      </section>
 
-        <div class="check">
-          <input id="cstd" type="checkbox" />
-          <label for="cstd">I agree to community standards: <strong>no self-harm, real-world violence, or hate.</strong></label>
-        </div>
-
-        <div class="check">
-          <input id="cnr" type="checkbox" />
-          <label for="cnr">I understand <strong>no refunds after 24 hours</strong> for digital access. Site downtime will result in <strong>extended access</strong>.</label>
-        </div>
-
-        <div class="check">
-          <input id="ctos" type="checkbox" />
-          <label for="ctos">I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</label>
-        </div>
-
-        <div class="check">
-          <input id="cauto" type="checkbox" />
-          <label for="cauto">Monthly plan auto-renews; I can cancel anytime in my account or by contacting support.</label>
-        </div>
+      <!-- Info banners -->
+      <section class="banners" aria-label="Info">
+        <div class="banner"><strong>Subscription</strong>: Monthly plan can be set to auto-renew or one-month only. Cancel anytime.</div>
+        <div class="banner"><strong>Donation</strong>: We donate <strong>$1</strong> from each purchase to DV support initiatives.</div>
       </section>
 
       <div class="actions">
-        <a id="btn-day" class="btn secondary" href="/checkout-day.html" aria-disabled="true">Continue — Day Pass</a>
-        <a id="btn-month" class="btn" href="/checkout-month.html" aria-disabled="true">Continue — Monthly</a>
+        <a id="btn-single" class="btn" href="#" aria-disabled="true">Unlock — $5.99 (Single)</a>
+        <a id="btn-all" class="btn primary" href="#" aria-disabled="true">Unlock — $10.99 (All Rooms)</a>
       </div>
 
-      <p class="legal">Need help? Email <a href="mailto:support@blossomnblade.com">support@blossomnblade.com</a>. Violations of standards may result in termination of access. We explicitly support victims and do not condone real-world violence.</p>
+      <p class="legal">Buttons enable after all checkboxes are ticked.</p>
+
+      <div class="foot">
+        <p><strong>Safety:</strong> We do not condone real-world violence. If you or someone you know is in danger, call 911. For confidential help: National Domestic Violence Hotline <a href="tel:18007997233">1-800-799-SAFE</a> · 988 Suicide & Crisis Lifeline <a href="tel:988">988</a>.</p>
+      </div>
     </main>
   </div>
 
+  <!-- Scripts -->
+  <script src="/scripts/access.js"></script>
   <script>
-    // Enable buttons only when all required checkboxes are ticked
-    const requiredIds = ["c18","cstd","cnr","ctos","cauto"];
-    const btnDay = document.getElementById('btn-day');
-    const btnMonth = document.getElementById('btn-month');
-    const boxes = requiredIds.map(id => document.getElementById(id));
-
-    function update(){
-      const ok = boxes.every(b => b && b.checked);
-      [btnDay, btnMonth].forEach(btn => {
-        btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
-        if(ok){ btn.removeAttribute('tabindex'); } else { btn.setAttribute('tabindex','-1'); }
-      });
+    // Enable buttons when all checks are ticked
+    const req = ["c18","cstd","cnr","ctos","cauto"].map(id=>document.getElementById(id));
+    const btnSingle = document.getElementById('btn-single');
+    const btnAll = document.getElementById('btn-all');
+    function updateBtns(){
+      const ok = req.every(b => b && b.checked);
+      [btnSingle, btnAll].forEach(b => b.setAttribute('aria-disabled', ok ? 'false' : 'true'));
     }
-    boxes.forEach(b => b.addEventListener('change', update));
-    update();
+    req.forEach(b => b.addEventListener('change', updateBtns));
+    updateBtns();
 
-    // Allow clicking on plan cards to preselect (simple visual)
-    document.querySelectorAll('.plan').forEach(plan => {
-      plan.addEventListener('click', () => {
-        document.querySelectorAll('.plan').forEach(p=>p.style.borderColor='rgba(255,255,255,0.14)');
-        plan.style.borderColor = 'var(--accent)';
-      });
+    // Click handlers (MVP: set localStorage and route)
+    const manSelect = document.getElementById('manSelect');
+    const renewToggle = document.getElementById('renewToggle');
+
+    btnSingle.addEventListener('click', (e)=>{
+      e.preventDefault();
+      if (btnSingle.getAttribute('aria-disabled') === 'true') return;
+      const man = (manSelect.value || 'grayson').toLowerCase();
+      window.BB_ACCESS?.setPaidSingle(man, {recurring:false});
+      // Route them directly into that room
+      location.href = `/chat.html?man=${encodeURIComponent(man)}`;
+    });
+
+    btnAll.addEventListener('click', (e)=>{
+      e.preventDefault();
+      if (btnAll.getAttribute('aria-disabled') === 'true') return;
+      const recurring = !!renewToggle.checked;
+      window.BB_ACCESS?.setPaidAll({recurring});
+      // Route to last page (if any) or home
+      const qs = new URLSearchParams(location.search);
+      const next = qs.get('next');
+      location.href = next ? decodeURIComponent(next) : '/index.html';
     });
   </script>
 </body>

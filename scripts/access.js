@@ -1,29 +1,42 @@
-/* Blossom & Blade — access.js
-   - Simple client-side flags for MVP
-   - Admin bypass via ?admin=cherrypie-2025
-   - "Paid" flag via /unlock.html or query
+/* Blossom & Blade — access.js (MVP gating)
+   - Admin bypass via ?admin=cherrypie-2025 (persists in localStorage)
+   - Paid access:
+       * Single guy:   type=single, man=<name>, recurring=false
+       * All rooms:    type=all,   recurring=true|false
+   - Helpers:
+       BB_ACCESS.setPaidSingle(man, {recurring:false})
+       BB_ACCESS.setPaidAll({recurring:true})
+       BB_ACCESS.clearPaid()
+       BB_ACCESS.gateCheckFor(man)  // unlocks if admin or paid for that man
 */
 
 (function(){
   const ADMIN_QS_KEY = 'admin';
   const ADMIN_TOKEN  = 'cherrypie-2025'; // matches your brief
-  const LS = {
-    admin: 'bb_admin',     // "1" when admin
-    paid:  'bb_paid'       // "1" when user has access
+
+  const LS_KEYS = {
+    admin: 'bb_admin',    // "1"
+    paid:  'bb_paid_v2'   // JSON: {type:'single'|'all', man?:'jesse'|..., recurring?:bool, ts:number}
   };
 
-  // Read/write helpers
-  function setLS(k,v){ try{ localStorage.setItem(k,String(v)); }catch(e){} }
-  function getLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  // LocalStorage safe helpers
+  function setLS(k,v){ try{ localStorage.setItem(k, typeof v==='string'? v : JSON.stringify(v)); }catch(_){} }
+  function getLS(k){
+    try{
+      const raw = localStorage.getItem(k);
+      if(!raw) return null;
+      try { return JSON.parse(raw); } catch { return raw; }
+    }catch(_){ return null; }
+  }
+  function delLS(k){ try{ localStorage.removeItem(k); }catch(_){} }
 
-  // Enable admin from query (?admin=cherrypie-2025)
+  // Enable admin from query (?admin=cherrypie-2025) and then clean URL
   (function maybeEnableAdminFromQuery(){
     const qs = new URLSearchParams(location.search);
     const tok = qs.get(ADMIN_QS_KEY);
     if (tok && tok === ADMIN_TOKEN){
-      setLS(LS.admin, '1');
+      setLS(LS_KEYS.admin, '1');
       console.log('[B&B] Admin mode enabled');
-      // Clean URL so the token isn’t left in history
       try {
         qs.delete(ADMIN_QS_KEY);
         const clean = location.pathname + (qs.toString() ? ('?' + qs.toString()) : '');
@@ -32,38 +45,58 @@
     }
   })();
 
-  // Debug helper: ?paid=1 sets paid flag (useful during demos)
-  (function maybeSetPaidFromQuery(){
+  // Debug: ?paid=all or ?paid=single:grayson
+  (function maybeDebugPaid(){
     const qs = new URLSearchParams(location.search);
-    const paid = qs.get('paid');
-    if (paid === '1'){ setLS(LS.paid, '1'); }
+    const paid = qs.get('paid'); // "all" or "single:man"
+    if (paid) {
+      if (paid === 'all') setPaidAll({recurring:false});
+      else if (paid.startsWith('single:')) {
+        const man = paid.split(':')[1] || 'grayson';
+        setPaidSingle(man, {recurring:false});
+      }
+    }
   })();
 
-  // Gate check: returns true if user may enter content
-  function isAdmin(){ return getLS(LS.admin) === '1'; }
-  function isPaid(){  return getLS(LS.paid)  === '1'; }
+  function isAdmin(){ return getLS(LS_KEYS.admin) === '1'; }
 
-  function gateCheck(){
-    if (isAdmin() || isPaid()){
+  // Paid state
+  function getPaid(){ return getLS(LS_KEYS.paid); }
+  function setPaidSingle(man, opts={}){
+    const rec = !!opts.recurring;
+    setLS(LS_KEYS.paid, { type:'single', man: String(man).toLowerCase(), recurring: rec, ts: Date.now() });
+  }
+  function setPaidAll(opts={}){
+    const rec = !!opts.recurring;
+    setLS(LS_KEYS.paid, { type:'all', recurring: rec, ts: Date.now() });
+  }
+  function clearPaid(){ delLS(LS_KEYS.paid); }
+
+  function isPaidFor(man){
+    const p = getPaid();
+    if (!p) return false;
+    if (p.type === 'all') return true;
+    if (p.type === 'single') return String(man).toLowerCase() === String(p.man).toLowerCase();
+    return false;
+  }
+
+  // Gate check for a specific man (from chat.html ?man=...)
+  function gateCheckFor(man){
+    if (isAdmin() || isPaidFor(man)) {
       document.documentElement.classList.add('bb-unlocked');
       return true;
     }
-    // Not allowed: kick to pay page
+    // Not allowed → send to pay page
     if (!/pay\.html$/i.test(location.pathname) && !/age\.html$/i.test(location.pathname)){
-      location.href = '/pay.html';
+      const back = encodeURIComponent(location.pathname + location.search);
+      location.href = '/pay.html?next='+back;
     }
     return false;
   }
 
-  // Expose tiny API
-  window.BB_ACCESS = { gateCheck, isAdmin, isPaid, setPaid: () => setLS(LS.paid, '1') };
-
-  // Auto-run on pages that declare data-gated
-  if (document.documentElement.hasAttribute('data-gated')) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', gateCheck);
-    } else {
-      gateCheck();
-    }
-  }
+  // Expose API
+  window.BB_ACCESS = {
+    isAdmin, getPaid, isPaidFor, gateCheckFor,
+    setPaidSingle, setPaidAll, clearPaid
+  };
 })();

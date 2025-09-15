@@ -20,7 +20,8 @@
       margin:0; color:#fff;
       font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
       background:#000;
-      background-image:url("/images/bg_dark_romance.jpg");
+      /* Landing background = your books texture */
+      background-image:url("/images/jesse-books-day.jpg");
       background-size:cover; background-position:center; background-repeat:no-repeat;
     }
     .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
@@ -44,7 +45,7 @@
       content:""; position:absolute; inset:0;
       background-size:cover; background-position:center; background-repeat:no-repeat;
       opacity:.95; transition:transform .25s ease, filter .25s ease; z-index:0;
-      background-image: var(--tile-bg, none); /* allows JS to set per-card image */
+      background-image: var(--tile-bg, none);
     }
     .card:hover::before{transform:translateY(-3px) scale(1.02); filter:brightness(1.03)}
     .chip{
@@ -55,13 +56,13 @@
     .ttl{position:absolute; left:14px; bottom:12px; z-index:1; font-size:20px; font-weight:900; margin:0}
     .subT{position:absolute; right:12px; bottom:12px; z-index:1; color:var(--muted); font-size:14px; margin:0}
 
-    /* Non-JS defaults (work immediately if paths exist) */
+    /* Tile backgrounds */
     .alex   { --tile-bg: url("/images/bg_alexander_boardroom.jpg"); }
     .dylan  { --tile-bg: url("/images/dylan-garage.jpg"); }
     .grayson{ --tile-bg: url("/images/grayson-bg.jpg"); }
     .silas  { --tile-bg: url("/images/bg_silas_stage.jpg"); }
     .blade  { --tile-bg: url("/images/blade-woods.jpg"); }
-    /* Jesse will be set by JS fallback below */
+    .jesse  { --tile-bg: url("/images/jesse-bull-night.jpg"); } /* rodeo shot */
   </style>
 </head>
 <body>
@@ -90,7 +91,7 @@
         <span class="chip">Garage</span><h3 class="ttl">Dylan</h3><p class="subT">Night</p>
       </a>
 
-      <a id="jesse-tile" class="card jesse room" href="/chat.html?man=jesse&sub=night" aria-label="Enter Jesse’s room">
+      <a class="card jesse room"   href="/chat.html?man=jesse&sub=night" aria-label="Enter Jesse’s room">
         <span class="chip">Shop</span><h3 class="ttl">Jesse</h3><p class="subT">Night</p>
       </a>
 
@@ -107,30 +108,5 @@
       </a>
     </section>
   </div>
-
-  <script>
-    // Jesse tile fallback probe — picks the first image that actually loads
-    (function(){
-      const el = document.getElementById('jesse-tile');
-      if (!el) return;
-      const candidates = [
-        '/images/jesse_bg.jpg',
-        '/images/jesse-bg.jpg',
-        '/images/jesse_bg.jpeg',
-        '/images/jesse-bg.jpeg',
-        '/images/dylan-garage.jpg' // last-resort visual
-      ];
-      let i = 0;
-      function tryNext(){
-        if (i >= candidates.length) return; // leave blank if truly nothing
-        const src = candidates[i++];
-        const img = new Image();
-        img.onload = ()=> el.style.setProperty('--tile-bg', `url(${src})`);
-        img.onerror = tryNext;
-        img.src = src;
-      }
-      tryNext();
-    })();
-  </script>
 </body>
 </html>

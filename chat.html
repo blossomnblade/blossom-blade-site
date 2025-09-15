@@ -17,8 +17,12 @@
     .wrap{min-height:100%; display:flex; flex-direction:column; gap:16px; padding:16px}
     .header{display:flex; justify-content:space-between; align-items:center}
     .pill{background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); padding:6px 10px; border-radius:999px; font-size:12px; backdrop-filter: blur(6px)}
-    .chat{flex:1; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px)}
-    .msg{background:rgba(255,255,255,0.06); padding:10px 12px; border-radius:12px}
+    .chat{flex:1; display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px); overflow:auto}
+    .row{display:flex; gap:8px}
+    .msg{max-width:80%; padding:10px 12px; border-radius:12px}
+    .me{align-self:flex-end}
+    .me .msg{background:#ff4da6; color:#000; border-top-right-radius:4px}
+    .bot .msg{background:rgba(255,255,255,0.08); border-top-left-radius:4px}
     .input{display:flex; gap:8px}
     .input input{flex:1; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.55); color:#fff}
     .input button{padding:12px 14px; border-radius:12px; border:0; font-weight:700; background:#ff4da6; color:#000}
@@ -32,17 +36,108 @@
       <div class="pill">Safety: no self-harm / real-world violence / hate</div>
     </div>
 
-    <div class="chat">
-      <div class="msg" data-chat-opener>There you are, love.</div>
-      <div class="input">
-        <input type="text" placeholder="Say hi…" aria-label="Message" />
-        <button type="button">Send</button>
-      </div>
+    <div id="chat" class="chat" aria-live="polite">
+      <div class="row bot"><div class="msg" data-chat-opener>There you are, love.</div></div>
+    </div>
+
+    <div class="input">
+      <input id="text" type="text" placeholder="Say hi…" aria-label="Message" autocomplete="off" />
+      <button id="send" type="button">Send</button>
     </div>
   </div>
 
   <!-- Order matters: access → brain -->
   <script src="/scripts/access.js"></script>
   <script src="/scripts/brain.js"></script>
+  <script>
+    (function(){
+      const chat = document.getElementById('chat');
+      const input = document.getElementById('text');
+      const btn = document.getElementById('send');
+
+      // Submit on click or Enter (no more “stuck on first line”)
+      btn.addEventListener('click', send);
+      input.addEventListener('keydown', (e)=>{
+        if (e.key === 'Enter') { e.preventDefault(); send(); }
+      });
+
+      function addRow(side, text){
+        const row = document.createElement('div');
+        row.className = 'row ' + side;
+        const bubble = document.createElement('div');
+        bubble.className = 'msg';
+        bubble.textContent = text;
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      // Super-simple “bot” so you can test multiple turns without the LLM
+      function botReply(user, man){
+        // light, flirty echoes; swap with real API when BB_AI_ENABLED=true
+        const lines = {
+          default: [
+            "mm, tell me more.",
+            "come closer—what do you want tonight?",
+            "say that again, slower.",
+            "i like that tone on you."
+          ],
+          alexander: [
+            "Direct. I appreciate that.",
+            "You have my attention.",
+            "Let's negotiate terms… softly."
+          ],
+          dylan: [
+            "Hop in—leave the door open.",
+            "Grease or gossip first?",
+            "Your hands look better on the wheel."
+          ],
+          grayson: [
+            "I saw you coming a mile away.",
+            "You found me. Stay.",
+            "Red room suits you."
+          ],
+          silas: [
+            "Backstage again?—good.",
+            "Sing that into my ear.",
+            "Turn me up, star."
+          ],
+          blade: [
+            "Helmet off. Eyes on me.",
+            "You look dangerous, pretty.",
+            "I ride better with you."
+          ],
+          jesse: [
+            "C’mon, let’s make some noise.",
+            "I like your energy, darlin’.",
+            "You and me, right now."
+          ]
+        };
+        const list = lines[man] || lines.default;
+        return list[Math.floor(Math.random()*list.length)];
+      }
+
+      function send(){
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        addRow('me', text);
+
+        // get current man from URL to flavor replies
+        const params = new URLSearchParams(location.search);
+        const man = (params.get('man') || 'alexander').toLowerCase();
+
+        // simulate thinking, then reply
+        setTimeout(()=> addRow('bot', botReply(text, man)), 300);
+      }
+
+      // Gate on load so paid/admin can come/go freely
+      (function gate(){
+        const params = new URLSearchParams(location.search);
+        const man = (params.get('man') || 'alexander').toLowerCase();
+        if (window.BB_ACCESS && !window.BB_ACCESS.gateCheckFor(man)) return;
+      })();
+    })();
+  </script>
 </body>
 </html>

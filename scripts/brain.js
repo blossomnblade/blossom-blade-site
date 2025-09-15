@@ -1,22 +1,19 @@
-/* Blossom & Blade — brain.js (standalone, no imports needed)
-   - Sets per-man background images
-   - Provides natural openers
-   - Auto-applies on chat.html using URL params: ?man=<name>&sub=<day|night>
-   - Exposes window.BB with helpers if needed
+/* Blossom & Blade — brain.js (standalone, safe drop-in)
+   - Per-man background map (uses real filenames)
+   - Natural openers per man
+   - Auto-applies on chat.html: ?man=<name>&sub=<day|night>
+   - Exposes window.BB helpers
 */
-
 (function(){
-  // Map of background images for each man
   const BG_BY_MAN = {
     alexander: '/images/bg_alexander_boardroom.jpg',
     dylan: '/images/dylan-garage.jpg',
     grayson: '/images/grayson-bg.jpg',
     silas: '/images/bg_silas_stage.jpg',
     blade: '/images/blade-woods.jpg',
-    jesse: '/images/jesse_bg.jpg', // underscore — must match file on disk
+    jesse: '/images/jesse_bg.jpg', // UNDERSCORE
   };
 
-  // Natural, short openers per man
   const OPENERS_BY_MAN = {
     alexander: [
       "There you are, love.",
@@ -51,13 +48,11 @@
   };
 
   function pickOpener(man){
-    const list = OPENERS_BY_MAN[man] || ["There you are, love."]; 
+    const list = OPENERS_BY_MAN[man] || ["There you are, love."];
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  // Apply background and opener on chat pages
   function applyChatUI(){
-    // Only run on chat.html (or any page that has [data-chat-root])
     const isChat = /chat\.html$/i.test(location.pathname) || document.querySelector('[data-chat-root]');
     if(!isChat) return;
 
@@ -65,20 +60,14 @@
     const man = (params.get('man') || 'alexander').toLowerCase();
     const bg = BG_BY_MAN[man] || BG_BY_MAN.alexander;
 
-    // Put bg onto :root so CSS can use var(--room-bg)
     document.documentElement.style.setProperty('--room-bg', `url(${bg})`);
 
-    // Optional: write opener into an element that has data-chat-opener
     const openerEl = document.querySelector('[data-chat-opener]');
-    if(openerEl){
-      openerEl.textContent = pickOpener(man);
-    }
+    if(openerEl){ openerEl.textContent = pickOpener(man); }
   }
 
-  // Expose a tiny API if you want to call it elsewhere
   window.BB = { BG_BY_MAN, OPENERS_BY_MAN, pickOpener, applyChatUI };
 
-  // Auto-run after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applyChatUI);
   } else {

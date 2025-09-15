@@ -1,64 +1,92 @@
-// /api/chat.js  — Vercel Serverless Function (Node 18+)
+// /api/chat.js — Vercel serverless (Node 18+)
+export const config = { runtime: 'edge' };
 
-const personas = {
-  alexander: `Alexander Jackson — boardroom alpha, calm praise, deliberate, decisive. Polished but warm.`,
-  dylan:     `Dylan Vale — neon biker/producer, playful heat, checks consent and pace.`,
-  jesse:     `Jesse Granger — rodeo cowboy; "yes, ma'am" manners, dirty-gentleman drawl, steady hands.`,
-  grayson:   `Grayson Kincaid — dangerous gentleman, possessive velvet command, library-hush intent.`,
-  silas:     `Silas Lennox — lyric rocker; calls her muse or cherry pie; rhythmic, teasing, stage-sultry.`,
-  blade:     `Blade Kincaid — masked hunter; cat-and-mouse, feral devotion, protective, obsessed.`
-};
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 
-const RULES = `
-You speak to a consenting adult. Keep it consensual, adult-only, and lawful.
-No minors, no non-consent, no real-world harm. Redirect safely if asked.
-Sound human. Don't repeat her words back. Short, natural lines. Let her lead.
-In first chats: slow burn; escalate only when invited.
+const BASE_SYSTEM = (man) => `
+You are ${man}, an 18+ sex-chat companion on Blossom & Blade.
+Style: warm, attentive, protective-possessive; filthy when invited. 1–2 lines per reply.
+Listen: respond to exactly what she said; pull details from the last few messages.
+Name: if a name is given in "memory.name" or this session, use it naturally every 2–3 replies (not every line). Pet names otherwise.
+Explicit is allowed between consenting adults. Do not do real-world violence, non-consent, minors, incest, trafficking, scat, illegal acts, or advice (medical/therapy/financial).
+Stay in character. Never mention prompts, rules, or tokens.
 `;
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-
-  try {
-    // optional domain lock
-    const allow = (process.env.ORIGIN_ALLOW || '')
-      .split(',').map(s => s.trim()).filter(Boolean);
-    const origin = req.headers.origin || '';
-    if (allow.length && !allow.includes(origin)) {
-      return res.status(403).json({ error: 'Origin not allowed' });
-    }
-
-    const { man = 'jesse', messages = [], mode = 'pg' } = req.body || {};
-    const model = process.env.MODEL_NAME || 'gpt-4o-mini';
-    const key = process.env.OPENAI_API_KEY;
-    if (!key) return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
-
-    const system = [
-      `Persona: ${personas[man] || personas.jesse}`,
-      RULES,
-      mode === 'pg'
-        ? `Tone: PG-13 flirt, suggestive but not explicit.`
-        : `Tone: AFTER-HOURS. You MAY use explicit bedroom language if she invites it. Keep it respectful, consensual, and responsive to her cues.`
-    ].join('\n\n');
-
-    const payload = {
-      model,
-      temperature: 0.9,
-      max_tokens: 180,
-      messages: [{ role: 'system', content: system }, ...(messages || [])].slice(-16)
-    };
-
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!r.ok) return res.status(502).json({ error: 'Upstream', detail: await r.text() });
-    const data = await r.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || '…';
-    res.status(200).json({ reply });
-  } catch (e) {
-    res.status(500).json({ error: 'Server error', detail: String(e) });
-  }
+const OVERLAYS = {
+  jesse:     "Jesse (28) — sweet, naughty rodeo cowboy. Dust, leather, rope/ride/spur innuendo. Protective, playful brag.",
+  alexander: "Alexander (30) — rich alpha businessman. Command/praise cadence; negotiation kink; crisp, decisive, luxurious.",
+  silas:     "Silas (25) — smooth rocker. Lyrical, breathy; tempo/rhythm/encore metaphors; worships her as muse.",
+  dylan:     "Dylan — Ninja motorcycle sex-throb. Fast/teasing; throttle/lean/backpack fantasies; concise choices.",
+  grayson:   "Grayson Kincade — consensual Red Room dom. Ritual words: “yes sir”, “please”, “good girl”, “beg”. Short commands + checks consent.",
+  blade:     "Blade Kincade — consensual horror-chase roleplay. Breath/footsteps/mask tension; devour/consume attention; no gore; safeword exists if asked."
 };
+
+function buildSystem(man, dirty){
+  const base = BASE_SYSTEM(man);
+  const overlay = OVERLAYS[man] || "";
+  const dial = dirty === 'high'
+    ? "Dirty-dial: high. Lean explicit; still avoid hard no-go items."
+    : "Dirty-dial: medium. Flirty explicit, but not wall-to-wall porn lines.";
+  return `${base}\n${overlay}\n${dial}`;
+}
+
+// Minimal guard on obvious hard no-go words (we keep it light)
+const BLOCK = /\b(rape|incest|minor|underage|traffick|scat|feces)\b/i;
+
+export default async function handler(req) {
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+  if (!OPENAI_API_KEY) {
+    return new Response('Missing OPENAI_API_KEY', { status: 500 });
+  }
+
+  const body = await req.json().catch(()=> ({}));
+  const { room='jesse', userText='', memory={}, dirty='high', history=[] } = body;
+
+  // soft guard
+  if (BLOCK.test(userText)) {
+    return new Response(JSON.stringify({
+      reply: "Not my game, love. Pick something we both enjoy."
+    }), { status: 200, headers:{'content-type':'application/json'}});
+  }
+
+  const man = String(room).toLowerCase();
+  const system = buildSystem(man, dirty);
+
+  // Build a short conversation context
+  const msgs = [
+    { role: "system", content: system },
+    { role: "user", content: `Context memory (optional JSON): ${JSON.stringify(memory)}` },
+  ];
+
+  // include last 3 exchanges max to keep it cheap
+  for (const m of history.slice(-6)) msgs.push(m);
+  msgs.push({ role: "user", content: userText });
+
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      temperature: 0.8,
+      max_tokens: 120,
+      messages: msgs
+    })
+  });
+
+  if (!r.ok) {
+    const text = await r.text();
+    return new Response(`Upstream error: ${text}`, { status: 500 });
+  }
+
+  const data = await r.json();
+  const reply = data.choices?.[0]?.message?.content?.trim() || "Come closer. Tell me what you want.";
+  return new Response(JSON.stringify({ reply }), {
+    headers: { "content-type": "application/json" }
+  });
+}

@@ -2,243 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat · Blossom & Blade</title>
-  <link rel="icon" href="/images/logo.jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade — Chat</title>
   <style>
-    :root{
-      --ink:#e9d5ff;         /* UI lavender */
-      --ink-dim:#a78bfa;
-      --card:#0f0f1f;
-      --muted:#0b0b14;
-      --accent:#a855f7;
-      --you:#b96bff;
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
+    :root { --room-bg:none; }
     html,body{height:100%}
     body{
-      margin:0;
-      font-family:Inter,system-ui,Segoe UI,Helvetica,Arial,sans-serif;
-      color:#e7e7f2;
-      background:#000;
-      background-size:cover;background-position:center;
+      margin:0; font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      color:#fff; background:#000;
+      background-image: var(--room-bg);
+      background-size: cover; background-position: center; background-repeat: no-repeat;
     }
-    .wrap{
-      max-width:1050px;margin:0 auto;padding:28px 20px 40px;
-    }
-    header{display:flex;align-items:center;gap:10px;margin-bottom:20px}
-    header .dot{width:10px;height:10px;border-radius:50%;background:#b96bff;box-shadow:0 0 14px #b96bff8a}
-    header h1{font-size:22px;margin:0;color:#fff}
-    #board{
-      background:linear-gradient(180deg,rgba(8,9,18,.7),rgba(8,9,18,.7));
-      border:1px solid #22243a;
-      border-radius:24px;padding:20px 20px 10px;
-      max-height:70vh;overflow:auto;
-      box-shadow:0 10px 30px rgba(0,0,0,.45);
-    }
-    .row{display:flex;margin:12px 0}
-    .bubble{
-      max-width:75%;
-      padding:16px 18px;border-radius:18px;
-      line-height:1.35;font-weight:600;
-      box-shadow:0 6px 20px rgba(0,0,0,.35);
-    }
-    .him{background:#0e1423;color:#dbe3ff;border:1px solid #202949}
-    .you{margin-left:auto;background:var(--you);color:#fff}
-    form{display:flex;gap:10px;margin-top:14px}
-    input[type=text]{
-      flex:1;background:#0b0f1d;border:1px solid #20243f;color:#eaeaff;
-      border-radius:14px;padding:18px 18px;font-size:16px;outline:none;
-    }
-    button{
-      background:#c084fc;color:#1a1029;border:none;
-      padding:0 22px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;
-      box-shadow:0 6px 18px rgba(192,132,252,.35);
-    }
-    .chip{
-      position:fixed;right:18px;bottom:18px;
-      background:#0f3; color:#031; font-weight:800;
-      border-radius:16px;padding:14px 18px;cursor:pointer;
-    }
-    /* man name tag */
-    .tag{
-      position:fixed;right:18px;top:18px;background:#111928;color:#ddd;
-      border:1px solid #262c45;border-radius:20px;padding:8px 12px;font-weight:700
-    }
-    /* background mapping via body class */
-    body.jesse{background-image:url('/images/jesse-bg.jpg')}
-    body.dylan{background-image:url('/images/dylan-garage.jpg')}
-    body.alexander{background-image:url('/images/bg_alexander_boardroom.jpg')}
-    body.grayson{background-image:url('/images/grayson-bg.jpg')}
-    body.silas{background-image:url('/images/bg_silas_stage.jpg')}
-    body.blade{background-image:url('/images/blade-woods.jpg')}
+    .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
+    .wrap{min-height:100%; display:flex; flex-direction:column; gap:16px; padding:16px}
+    .header{display:flex; justify-content:space-between; align-items:center}
+    .pill{background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); padding:6px 10px; border-radius:999px; font-size:12px; backdrop-filter: blur(6px)}
+    .chat{flex:1; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; backdrop-filter: blur(8px)}
+    .msg{background:rgba(255,255,255,0.06); padding:10px 12px; border-radius:12px}
+    .input{display:flex; gap:8px}
+    .input input{flex:1; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.55); color:#fff}
+    .input button{padding:12px 14px; border-radius:12px; border:0; font-weight:700; background:#ff4da6; color:#000}
   </style>
 </head>
-<body>
-  <div class="tag" id="tag"></div>
+<body data-chat-root>
+  <div class="scrim" aria-hidden="true"></div>
   <div class="wrap">
-    <header>
-      <div class="dot"></div><h1>Blossom & Blade</h1>
-    </header>
+    <div class="header">
+      <div class="pill">Adults 18+ only</div>
+      <div class="pill">Safety: no self-harm / real-world violence / hate</div>
+    </div>
 
-    <div id="board"></div>
-
-    <form id="chat">
-      <input id="text" type="text" placeholder="Say hi…" autocomplete="off" />
-      <button type="submit">Send</button>
-    </form>
+    <div class="chat">
+      <div class="msg" data-chat-opener>There you are, love.</div>
+      <!-- your messages will stack here -->
+      <div class="input">
+        <input type="text" placeholder="Say hi…" aria-label="Message" />
+        <button type="button">Send</button>
+      </div>
+    </div>
   </div>
 
-  <a class="chip" href="/pay.html">Admin / Pricing</a>
-
-  <script>
-  // --------- helpers (UI) ----------
-  const board = document.getElementById('board');
-  const form  = document.getElementById('chat');
-  const input = document.getElementById('text');
-
-  function bubble(who, text){
-    const row = document.createElement('div');
-    row.className = 'row';
-    const b = document.createElement('div');
-    b.className = 'bubble ' + (who==='you' ? 'you':'him');
-    b.textContent = text;
-    row.appendChild(b);
-    board.appendChild(row);
-    board.scrollTop = board.scrollHeight;
-  }
-
-  // --------- routing / setup ----------
-  const url = new URL(location.href);
-  const man = (url.searchParams.get('man') || 'jesse').toLowerCase();
-  document.body.classList.add(man);
-  document.getElementById('tag').textContent = man.charAt(0).toUpperCase()+man.slice(1);
-
-  // --------- boyfriend brain (natural, flirty) ----------
-  const OPENERS = {
-    jesse: [
-      "Well hey there, darlin’. Look at you.",
-      "There you are, sweetheart. Miss me?",
-      "Mornin’, trouble. What’d I just catch you smiling about?"
-    ],
-    alexander: [
-      "Ah—there you are. You always brighten the room.",
-      "Good to see you, love. I was just thinking of you.",
-      "You’re right on time. Tell me what kind of day I’m rescuing."
-    ],
-    dylan: [
-      "Hey, gorgeous—wrench down, eyes on you.",
-      "You again? Lucky me. What mischief are we making?",
-      "C’mon then, show me that grin I like."
-    ],
-    grayson: [
-      "Hello, pretty thing. Come closer.",
-      "There you are. I saved you a shadow to hide in.",
-      "You arrived—and my patience ended."
-    ],
-    silas: [
-      "Hey muse. Ink-stained and thinking of you.",
-      "You’re back—good. I need your voice in my head.",
-      "Sit. Breathe. Tell me what stirred your heart."
-    ],
-    blade: [
-      "Found you. Don’t wander without me.",
-      "There’s my bad girl. What did you get up to?",
-      "Closer. Let me look at you."
-    ],
-    _default: [
-      "Hey you. I like that face.",
-      "There you are—come here.",
-      "Hi, sweetheart. I’ve got time just for you."
-    ]
-  };
-
-  function pickOpener(man){
-    const list = OPENERS[man] || OPENERS._default;
-    return list[Math.floor(Math.random()*list.length)];
-  }
-
-  function memKey(){ return `bb_mem_${man}`; }
-  function readMem(){
-    try { return JSON.parse(localStorage.getItem(memKey())||"{}"); } catch { return {}; }
-  }
-  function writeMem(m){
-    try { localStorage.setItem(memKey(), JSON.stringify(m)); } catch {}
-  }
-
-  function extractName(text){
-    const m = text.match(/\b(i['’]?m|i am|my name is)\s+([a-z][a-z'-]{1,20})\b/i);
-    if(!m) return null;
-    const raw = m[2].toLowerCase();
-    return raw.charAt(0).toUpperCase()+raw.slice(1);
-  }
-  function extractJob(text){
-    const m = text.match(/\b(i['’]?m|i am)\s+(an?|the)?\s*([a-z][a-z\s-]{2,30})\b/i) ||
-              text.match(/\b(i work (as|at)\s+([a-z][a-z\s-]{2,30}))\b/i);
-    if(!m) return null;
-    const s = (m[3]||"").trim();
-    return s.length>30 ? s.slice(0,30) : s;
-  }
-  function mirrorBit(text){
-    const m = text.match(/\b(love|book|shift|class|coffee|kids?|boss|car|gym|ride|trip|party|rain|headache|deadline|bakery|studio|horse|show)\b/i);
-    return m ? m[0].toLowerCase() : null;
-  }
-  function followUp(mem, you){
-    if(!mem.name) return "Tell me your name so I can say it the way you like.";
-    const bit = mirrorBit(you);
-    if(bit) return `Mm—${bit} again? How’d it go, ${mem.name}?`;
-    if(mem.job) return `How was it at the ${mem.job} today? Anything spicy, ${mem.name}?`;
-    return `What kind of trouble are you in the mood for, ${mem.name}?`;
-  }
-
-  function compose(youText){
-    const you = (youText||"").trim();
-    const mem = readMem();
-
-    if(!mem.greeted){
-      mem.greeted = true; writeMem(mem);
-      return pickOpener(man);
-    }
-    const nm = extractName(you); if(nm && !mem.name){ mem.name = nm; }
-    const jb = extractJob(you); if(jb && !mem.job){ mem.job = jb.replace(/\b(i|am|a|an|the|work|as|at)\b/gi,"").trim(); }
-    writeMem(mem);
-
-    if(/^(hi|hey|hello|yo|sup|howdy)\b/i.test(you)){
-      return mem.name ? `Hey, ${mem.name}. Come here—you look good.` : "Hey there. Come closer.";
-    }
-    if(/\b(you look|you’re|ur|sexy|handsome|hot|cute|fine)\b/i.test(you)){
-      return mem.name ? `Do I now? Then say my name, ${mem.name}, and tell me why.` : "Do I now? Tell me why—use your words.";
-    }
-
-    const nudge = followUp(mem, you);
-    return mem.name ? `Mm. I like the way you say that, ${mem.name}. ${nudge}` : `I like that. ${nudge}`;
-  }
-
-  // --------- boot + submit ----------
-  function boot(){
-    const mem = readMem();
-    if(!mem.greeted) bubble('him', pickOpener(man));
-  }
-  boot();
-
-  form.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const t = input.value.trim();
-    if(!t) return;
-    bubble('you', t);
-    input.value = '';
-    setTimeout(()=> bubble('him', compose(t)), 140);
-  });
-
-  // Allow Enter to send
-  input.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter' && !e.shiftKey){
-      e.preventDefault();
-      form.requestSubmit();
-    }
-  });
-  </script>
+  <script src="/scripts/brain.js"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@
     .wrap{min-height:100%; display:flex; flex-direction:column; gap:16px; padding:16px}
     .header{display:flex; justify-content:space-between; align-items:center}
     .pill{
-      color:#fff; font-weight:700; /* TOP TEXT WHITE */
+      color:#fff; font-weight:700;
       background:rgba(0,0,0,0.55);
       border:1px solid rgba(255,255,255,0.2);
       padding:6px 10px; border-radius:999px; font-size:12px;
@@ -58,7 +58,6 @@
     </div>
   </div>
 
-  <!-- Order matters: access → brain -->
   <script src="/scripts/access.js"></script>
   <script src="/scripts/brain.js"></script>
   <script>
@@ -67,13 +66,8 @@
       const input = document.getElementById('text');
       const btn = document.getElementById('send');
 
-      // Seed name from memory/query so the next opener uses it
-      const seeded = window.BB?.getName?.();
-
       btn.addEventListener('click', send);
-      input.addEventListener('keydown', (e)=>{
-        if (e.key === 'Enter') { e.preventDefault(); send(); }
-      });
+      input.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); send(); } });
 
       function addRow(side, text){
         const row = document.createElement('div');
@@ -86,13 +80,26 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
-      // naive name grabber: "i'm kasey", "i am kasey", "my name is kasey"
+      // learn name from lots of phrasings, incl. "im kasey"
       function maybeLearnName(text){
-        const t = text.toLowerCase().trim();
-        let m = t.match(/\b(?:i['’]m|i am|my name is)\s+([a-z][a-z .'-]{0,30})$/i);
-        if (!m) return;
-        const name = m[1];
-        window.BB?.setName?.(name);
+        const t = text.trim();
+        const patterns = [
+          /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
+          /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
+          /\bi['’]m\s+([a-z][a-z .'-]{0,30})$/i,
+          /\bim\s+([a-z][a-z .'-]{0,30})$/i,           // no apostrophe variant
+        ];
+        for (const rx of patterns){
+          const m = t.match(rx);
+          if (m){
+            const name = m[1];
+            window.BB?.setName?.(name);
+            const nice = window.BB?.getName?.() || name;
+            addRow('bot', `Noted, ${nice}. I like how that sounds.`);
+            return true;
+          }
+        }
+        return false;
       }
 
       function botReply(user, man){
@@ -146,12 +153,12 @@
         addRow('me', text);
 
         // learn name if they just told us
-        maybeLearnName(text);
+        const learned = maybeLearnName(text);
+        if (learned) return; // the acknowledgment already got added
 
         const params = new URLSearchParams(location.search);
         const man = (params.get('man') || 'alexander').toLowerCase();
 
-        // tiny delay to simulate thinking
         setTimeout(()=> addRow('bot', botReply(text, man)), 250);
       }
 

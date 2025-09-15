@@ -1,42 +1,41 @@
-/* Blossom & Blade — brain.js (standalone, safe drop-in)
-   - Per-man background map (real filenames)
-   - Jesse gets multi-path fallback so he never renders blank
+/* Blossom & Blade — brain.js
+   - Backgrounds per man (with Jesse fallbacks)
    - Natural openers
-   - Auto-applies on chat.html and exposes window.BB
+   - Auto-apply on chat.html and expose window.BB
 */
 (function(){
   const BG_BY_MAN = {
     alexander: '/images/bg_alexander_boardroom.jpg',
-    dylan: '/images/dylan-garage.jpg',
-    grayson: '/images/grayson-bg.jpg',
-    silas: '/images/bg_silas_stage.jpg',
-    blade: '/images/blade-woods.jpg',
-    // primary for Jesse; we’ll probe fallbacks in applyChatUI
-    jesse: '/images/jesse_bg.jpg',
+    dylan:     '/images/dylan-garage.jpg',
+    grayson:   '/images/grayson-bg.jpg',
+    silas:     '/images/bg_silas_stage.jpg',
+    blade:     '/images/blade-woods.jpg',
+    jesse:     '/images/jesse_bg.jpg', // primary (underscore)
   };
 
+  // If Jesse’s primary path fails, try these; last one is a safe generic.
   const JESSE_CANDIDATES = [
     '/images/jesse_bg.jpg',
     '/images/jesse-bg.jpg',
     '/images/jesse_bg.jpeg',
-    '/images/jesse-bg.jpeg'
+    '/images/jesse-bg.jpeg',
+    '/images/dylan-garage.jpg' // final visual fallback so it’s never black
   ];
 
-  const OPENERS_BY_MAN = {
+  const OPENERS = {
     alexander: ["There you are, love.","Evening. Miss me?","You clean up trouble like a pro."],
-    dylan: ["Hey pretty thing.","Slide in, I wiped the seat.","Got grease or gossip for me?"],
-    grayson: ["You found me.","Stay close.","What kind of mischief tonight?"],
-    silas: ["Backstage passes again?","There you are, star.","Wanna tune me up or turn me up?"],
-    blade: ["Hey trouble.","I like how you show up.","Helmet off or on, gorgeous?"],
-    jesse: ["Knew you’d come back.","C’mon, let’s make some noise.","You and me against the slow day."]
+    dylan:     ["Hey pretty thing.","Slide in, I wiped the seat.","Got grease or gossip for me?"],
+    grayson:   ["You found me.","Stay close.","What kind of mischief tonight?"],
+    silas:     ["Backstage passes again?","There you are, star.","Wanna tune me up or turn me up?"],
+    blade:     ["Hey trouble.","I like how you show up.","Helmet off or on, gorgeous?"],
+    jesse:     ["Knew you’d come back.","C’mon, let’s make some noise.","You and me against the slow day."]
   };
 
   function pickOpener(man){
-    const list = OPENERS_BY_MAN[man] || ["There you are, love."];
+    const list = OPENERS[man] || ["There you are, love."];
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  // Try a list of image paths; pick the first that loads
   function resolveImage(paths, cb){
     let i = 0;
     function tryNext(){
@@ -51,14 +50,12 @@
   }
 
   function applyChatUI(){
-    // Only on chat pages
     const isChat = /chat\.html$/i.test(location.pathname) || document.querySelector('[data-chat-root]');
     if(!isChat) return;
 
     const params = new URLSearchParams(window.location.search);
     const man = (params.get('man') || 'alexander').toLowerCase();
 
-    // Jesse gets robust fallback so it never shows blank
     if (man === 'jesse'){
       resolveImage(JESSE_CANDIDATES, (src)=>{
         const bg = src || BG_BY_MAN.jesse;
@@ -69,7 +66,6 @@
       document.documentElement.style.setProperty('--room-bg', `url(${bg})`);
     }
 
-    // opener slot
     const openerEl = document.querySelector('[data-chat-opener]');
     if(openerEl){ openerEl.textContent = pickOpener(man); }
   }

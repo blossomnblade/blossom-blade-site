@@ -20,7 +20,10 @@
       margin:0;
       color:#fff;
       font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
-      background:#000; /* your graffiti BG from /images/bg_dark_romance... can stay via global/site CSS */
+      background:#000;
+      /* Main site background */
+      background-image:url("/images/bg_dark_romance.jpg");
+      background-size:cover; background-position:center; background-repeat:no-repeat;
     }
     .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
 
@@ -76,7 +79,15 @@
     /* room backgrounds (keep filenames in sync with /images) */
     .alex::before    { background-image:url("/images/bg_alexander_boardroom.jpg") }
     .dylan::before   { background-image:url("/images/dylan-garage.jpg") }
-    .jesse::before   { background-image:url("/images/jesse_bg.jpg") }  /* UNDERSCORE */
+    /* Jesse: try several filenames so it never renders blank */
+    .jesse::before{
+      background-image:
+        url("/images/jesse_bg.jpg"),
+        url("/images/jesse-bg.jpg"),
+        url("/images/jesse_bg.jpeg"),
+        url("/images/jesse-bg.jpeg");
+      background-size:cover; background-position:center; background-repeat:no-repeat;
+    }
     .grayson::before { background-image:url("/images/grayson-bg.jpg") }
     .silas::before   { background-image:url("/images/bg_silas_stage.jpg") }
     .blade::before   { background-image:url("/images/blade-woods.jpg") }
@@ -148,8 +159,7 @@
         <p class="subT">Night</p>
       </a>
 
-      <!-- Optional “coming soon” tile -->
-      <!--
+      <!-- Optional “coming soon” tile
       <a class="card coming" href="#" aria-label="More coming soon">
         <span class="chip">Soon</span>
         <h3 class="ttl">More</h3>

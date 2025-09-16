@@ -3,209 +3,169 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Blossom &amp; Blade — Choose Your Man</title>
+  <title>Blossom &amp; Blade</title>
   <link rel="icon" href="/images/logo.jpg"/>
 
   <style>
     :root{
       --ink:#fff;
-      --muted:#cfd6e3;
-      --panel:rgba(0,0,0,.62);
-      --border:rgba(255,255,255,.12);
-      --ring:rgba(124,200,255,.35);
+      --muted:#d6dbea;
       --pill:#ff2d83;
-      --cardOverlay: linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.45) 60%, rgba(0,0,0,.75) 100%);
+      --panel:rgba(0,0,0,.55);
+      --edge:rgba(255,255,255,.14);
+      --glow:0 0 6px #fff, 0 0 16px #d7f3ff, 0 0 28px #a5e2ff;
     }
-    html,body{height:100%}
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      margin:0;
-      color:var(--ink);
-      background:#000 url('/images/bg_dark_romance.jpg') center/cover fixed no-repeat;
-      font:500 16px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial;
-    }
-    /* global white text so nothing disappears */
-    h1,h2,h3,h4,h5,h6,p,span,small,strong,em,div,section,header,footer,label,a,li{ color:var(--ink); }
-
-    .wrap{max-width:1100px;margin:24px auto 120px;padding:0 14px}
-    .pill{
-      position:fixed;right:14px;top:14px;z-index:20;
-      background:rgba(0,0,0,.6);border:1px solid var(--border);
-      color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;backdrop-filter:blur(6px)
+      margin:0;background:#000;color:var(--ink);
+      font:600 16px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial;
+      background-image:url('/images/bg_book.jpg'); /* landing wallpaper */
+      background-size:cover;background-position:center;background-attachment:fixed;
     }
 
-    /* Neon white header */
-    .neon-white{
-      color:#fff!important;
-      text-shadow:
-        0 0 2px #fff,
-        0 0 6px #fff,
-        0 0 12px #bde0ff,
-        0 0 24px #bde0ff,
-        0 0 36px #8ecaff;
-      letter-spacing:.5px;
-    }
-    .neon-soft{
-      color:#fff!important;
-      text-shadow:0 0 2px #fff, 0 0 8px rgba(255,255,255,.6);
-    }
-    @media(max-width:420px){
-      .neon-white{
-        text-shadow:
-          0 0 2px #fff,
-          0 0 5px #fff,
-          0 0 10px #bde0ff,
-          0 0 16px #8ecaff;
-      }
-    }
+    .wrap{max-width:1180px;margin:0 auto;padding:24px 14px 100px;position:relative}
+    .veil{position:fixed;inset:0;background:radial-gradient(ellipse at center, rgba(0,0,0,.20), rgba(0,0,0,.70) 60%, rgba(0,0,0,.90));pointer-events:none}
 
-    header.hero{ text-align:center; margin:22px 0 16px }
-    header.hero h1{ margin:0; font-size:42px; line-height:1.1 }
-    header.hero p{ margin:8px 0 0; font-size:18px; color:var(--muted) }
-
-    /* top CTA buttons */
-    .cta-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px }
+    /* Top badges / CTA row */
+    .badge{
+      position:fixed;right:16px;top:14px;z-index:50;
+      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      color:#fff;background:rgba(0,0,0,.6);border:1px solid var(--edge);backdrop-filter:blur(6px)
+    }
+    header{margin:8px 0 16px}
+    h1{
+      margin:8px 0 2px;font-size:46px;line-height:1.05;letter-spacing:-.5px;
+      color:#fff;text-shadow:var(--glow);
+    }
+    .strap{
+      font-weight:600;color:#fff; /* bright */
+      text-shadow:0 0 3px #fff, 0 0 10px #bfe9ff;
+      margin-bottom:16px;
+    }
+    .ctas{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 24px}
     .btn{
-      display:inline-block; text-decoration:none; text-align:center;
-      min-width:180px; padding:10px 14px; border-radius:14px; font-weight:900;
-      border:1px solid var(--border); background:rgba(255,255,255,.08); color:#fff;
+      display:inline-flex;align-items:center;justify-content:center;
+      height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--edge);
+      background:var(--panel);backdrop-filter:blur(6px);color:#fff;text-decoration:none;font-weight:900
     }
-    .btn.hot{ background:#ff2d83; color:#000; border:0 }
-    .btn:focus{ outline:none; box-shadow:0 0 0 3px var(--ring) }
+    .btn.primary{background:var(--pill);color:#000;border:0;box-shadow:0 10px 28px rgba(255,45,131,.35)}
+    .btn:hover{filter:brightness(1.05)}
+    .btn:active{transform:translateY(1px)}
 
-    /* cards */
-    .grid{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:18px }
-    @media(min-width:640px){ .grid{ grid-template-columns:1fr 1fr } }
-    @media(min-width:980px){ .grid{ grid-template-columns:repeat(3,1fr) } }
+    /* Card grid */
+    .grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:22px
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
     .card{
-      position:relative; overflow:hidden; border-radius:18px;
-      border:1px solid var(--border); background:var(--panel);
+      position:relative;overflow:hidden;border-radius:18px;
+      background:#0a0a0a;border:1px solid var(--edge);
       box-shadow:0 10px 40px rgba(0,0,0,.55);
+      min-height:250px
     }
     .card .img{
-      position:relative; height:360px; background:#111 center/cover no-repeat;
+      position:absolute;inset:0;background:#000 center/cover no-repeat;
+      filter:contrast(1.05) brightness(.92);
+      transition:transform .35s ease, filter .35s ease;
     }
-    .card .img:after{
-      content:""; position:absolute; inset:0; background:var(--cardOverlay);
+    .card:hover .img{transform:scale(1.02);filter:contrast(1.05) brightness(1.0)}
+    .chip{
+      position:absolute;left:14px;top:14px;z-index:2;font-size:12px;
+      padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--edge)
     }
-    .card .label{
-      position:absolute; left:12px; bottom:12px; z-index:2;
-      font-weight:900; font-size:22px; letter-spacing:.3px;
-      text-shadow:0 1px 2px rgba(0,0,0,.7);
-    }
-    .card .tag{
-      position:absolute; right:12px; top:12px; z-index:2;
-      font-size:12px; font-weight:800;
-      background:rgba(0,0,0,.6); border:1px solid var(--border); padding:4px 8px; border-radius:999px;
-    }
+    .label{position:absolute;left:16px;bottom:12px;font-size:22px;font-weight:900;letter-spacing:.2px;text-shadow:var(--glow)}
+    .sub{position:absolute;right:16px;bottom:12px;font-weight:900;color:#fff;text-shadow:0 0 3px #fff}
+
     .card a{
-      position:absolute; inset:0; display:block; text-indent:-9999px; /* clickable card */
+      position:absolute;inset:0; /* whole card clickable */
+      text-indent:-9999px;outline:0;
     }
 
-    footer.legal{
-      margin:20px 0 0; font-size:12px; color:var(--muted); text-align:center;
-    }
+    /* Per-room background previews (for index only) */
+    .alex .img{ background-image:url('/images/bg_alexander_boardroom.jpg'); }
+    .dylan .img{ background-image:url('/images/dylan-garage.jpg'); }
+    .jesse .img{ background-image:url('/images/jesse_bg.jpg'); }   /* underscore */
+    .grayson .img{ background-image:url('/images/grayson-bg.jpg'); }
+    .silas .img{ background-image:url('/images/bg_silas_stage.jpg'); }
+    .blade .img{ background-image:url('/images/blade-woods.jpg'); }
   </style>
 </head>
 <body>
-  <div class="pill">Adults 18+ only</div>
+  <div class="veil"></div>
+  <div class="badge">Adults 18+ only</div>
 
   <div class="wrap">
-    <header class="hero">
-      <h1 class="neon-white">Blossom &amp; Blade</h1>
-      <p class="neon-soft">Choose your man · Safe, consensual fantasy · Adults 18+ only</p>
+    <header>
+      <h1>Blossom &amp; Blade</h1>
+      <div class="strap">Choose your man · Safe, consensual fantasy · Adults 18+ only</div>
 
-      <div class="cta-row">
-        <a class="btn" href="/pay.html">Single Day Pass — <strong>$7.99</strong></a>
-        <a class="btn hot" href="/pay.html">All Rooms Monthly — <strong>$14.99</strong></a>
+      <div class="ctas">
+        <a class="btn primary" href="/pay.html">Unlock access</a>
+        <a class="btn" href="/age.html">Age check</a>
+        <a class="btn" href="/assets-check.html">Assets check</a>
       </div>
     </header>
 
-    <!-- Character cards -->
     <section class="grid">
 
-      <!-- Jesse -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/jesse-face.jpg'),
-            url('/images/jesse_bg.jpg'); /* fallback underscore path */
-        "></div>
-        <div class="tag">Cowboy</div>
-        <div class="label">Jesse</div>
-        <a href="/chat.html?man=jesse&sub=night" aria-label="Chat with Jesse">Chat</a>
-      </article>
-
       <!-- Alexander -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/alexander-face.jpg'),
-            url('/images/bg_alexander_boardroom.jpg');
-        "></div>
-        <div class="tag">Alpha</div>
+      <article class="card alex">
+        <div class="img"></div>
+        <div class="chip">Boardroom</div>
         <div class="label">Alexander</div>
+        <div class="sub">Night</div>
         <a href="/chat.html?man=alexander&sub=night" aria-label="Chat with Alexander">Chat</a>
       </article>
 
-      <!-- Silas -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/silas-face.jpg'),
-            url('/images/bg_silas_stage.jpg');
-        "></div>
-        <div class="tag">Rocker</div>
-        <div class="label">Silas</div>
-        <a href="/chat.html?man=silas&sub=night" aria-label="Chat with Silas">Chat</a>
-      </article>
-
       <!-- Dylan -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/dylan-face.jpg'),
-            url('/images/dylan-garage.jpg');
-        "></div>
-        <div class="tag">Biker</div>
+      <article class="card dylan">
+        <div class="img"></div>
+        <div class="chip">Garage</div>
         <div class="label">Dylan</div>
+        <div class="sub">Night</div>
         <a href="/chat.html?man=dylan&sub=night" aria-label="Chat with Dylan">Chat</a>
       </article>
 
+      <!-- Jesse (uses jesse_bg.jpg to avoid blank tile) -->
+      <article class="card jesse">
+        <div class="img"></div>
+        <div class="chip">Cowboy</div>
+        <div class="label">Jesse</div>
+        <div class="sub">Night</div>
+        <a href="/chat.html?man=jesse&sub=night" aria-label="Chat with Jesse">Chat</a>
+      </article>
+
       <!-- Grayson -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/grayson-face.jpg'),
-            url('/images/grayson-bg.jpg');
-        "></div>
-        <div class="tag">Red Room</div>
-        <div class="label">Grayson Kincade</div>
+      <article class="card grayson">
+        <div class="img"></div>
+        <div class="chip">Ops</div>
+        <div class="label">Grayson</div>
+        <div class="sub">Night</div>
         <a href="/chat.html?man=grayson&sub=night" aria-label="Chat with Grayson">Chat</a>
       </article>
 
+      <!-- Silas -->
+      <article class="card silas">
+        <div class="img"></div>
+        <div class="chip">Stage</div>
+        <div class="label">Silas</div>
+        <div class="sub">Night</div>
+        <a href="/chat.html?man=silas&sub=night" aria-label="Chat with Silas">Chat</a>
+      </article>
+
       <!-- Blade -->
-      <article class="card">
-        <div class="img" style="
-          background-image:
-            url('/images/characters/blade-face.jpg'),
-            url('/images/blade-woods.jpg');
-        "></div>
-        <div class="tag">Woods</div>
-        <div class="label">Blade Kincade</div>
+      <article class="card blade">
+        <div class="img"></div>
+        <div class="chip">Woods</div>
+        <div class="label">Blade</div>
+        <div class="sub">Night</div>
         <a href="/chat.html?man=blade&sub=night" aria-label="Chat with Blade">Chat</a>
       </article>
 
     </section>
-
-    <footer class="legal">
-      <div>By continuing, you agree to our Community Standards and confirm you are 18+.</div>
-      <div>Downtime ⇒ extended access · No refunds after 24h for digital access · If you’re struggling, dial 988 (US).</div>
-    </footer>
   </div>
-
-  <!-- If you want the first-visit Safety modal, include your existing /scripts/access.js here -->
-  <!-- <script src="/scripts/access.js"></script> -->
 </body>
 </html>

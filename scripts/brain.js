@@ -1,9 +1,10 @@
-/* Blossom & Blade — brain.js (v10)
-   - Staged intros by visit: new -> early -> familiar (per man)
-   - Reduced name usage in openers (pet names unless paid & familiar)
-   - Per-man memory (job/likes/nemesis/mood/misc/lastSeenISO) [from v9]
-   - Background mapping (Jesse bull, Blade no helmet, Dylan helmet ok)
-   - BB.buildChatPayload ships right memory + paid flag
+/* Blossom & Blade — brain.js (v11)
+   - Staged openers (new/early/familiar) per man
+   - Per-man memory (job/likes/nemesis/mood/misc/lastSeenISO)
+   - Reduced name spam in openers
+   - Background mapping (Jesse bull, Blade no helmet, Dylan helmet)
+   - NEW: Per-man everyday talk pools + persona notes
+     -> exposed via chatStyle in buildChatPayload()
 */
 
 (function () {
@@ -12,10 +13,10 @@
     memPM: 'bb_memory_perman_v1',
     visits: (man)=>`bb_visits_${man}`,
     first: (man)=>`bb_first_msg_sent_${man}`,
-    lastIdx: (man,tier)=>`bb_last_intro_${man}_${tier}`,
+    lastIdx: (man,t)=>`bb_last_intro_${man}_${t}`,
   };
 
-  /* ----------- paid / name ----------- */
+  /* ---------- paid / name ---------- */
   function isPaid(){
     try{
       const q = new URLSearchParams(location.search);
@@ -49,7 +50,7 @@
     return null;
   }
 
-  /* ----------- per-man memory ----------- */
+  /* ---------- per-man memory ---------- */
   function loadAll(){ try{return JSON.parse(localStorage.getItem(LS.memPM)||'{}')}catch(_){return{}} }
   function saveAll(o){ try{localStorage.setItem(LS.memPM,JSON.stringify(o))}catch(_){ } }
   function getMemFor(man){
@@ -88,7 +89,7 @@
     return mem;
   }
 
-  /* ----------- backgrounds ----------- */
+  /* ---------- backgrounds ---------- */
   const BG_BY_MAN={
     alexander:'/images/bg_alexander_boardroom.jpg',
     dylan:'/images/dylan-garage.jpg',
@@ -98,128 +99,103 @@
     jesse:'/images/jesse-bull-night.jpg'
   };
 
-  /* ----------- personas + staged intros ----------- */
+  /* ---------- personas + staged intros ---------- */
   const PETS=['love','darlin’','pretty thing','trouble','star','beautiful','gorgeous','sweetheart'];
   const pet=()=>PETS[Math.floor(Math.random()*PETS.length)];
 
-  // staged banks: new (1st visit), early (2–3), familiar (4+)
+  // staged banks: new (1st), early (2–3), familiar (4+), hot (spice add-on)
   const BANKS={
     jesse:{
-      new:[
-        'Hey there, sweetie.',
-        'Look who’s here.',
-        'I knew I’d see you tonight.',
-        'Hey, trouble.'
-      ],
-      early:[
-        'You came back. Miss me?',
-        'C’mon in—boots on or off?',
-        'You look like you need a good time.'
-      ],
-      familiar:[
-        'Hey baby, how was your day?',
-        'There you are—get over here.',
-        'Back for seconds? Thought so.'
-      ],
-      hot:[
-        'Well, {who2}, you came back to ride me again, huh?',
-        'I was just thinking how good you’d look in my lap with that hat on.',
-        'Hop on. Let’s see if you can hold on this time.'
-      ]
+      new:['Hey there, sweetie.','Look who’s here.','I knew I’d see you tonight.','Hey, trouble.'],
+      early:['You came back. Miss me?','C’mon in—boots on or off?','You look like you need a good time.'],
+      familiar:['Hey baby, how was your day?','There you are—get over here.','Back for seconds? Thought so.'],
+      hot:['Well, {who2}, you came back to ride me again, huh?','I was just thinking how good you’d look in my lap with that hat on.','Hop on. Let’s see if you can hold on this time.']
     },
     alexander:{
-      new:[
-        'Good evening.',
-        'There you are.',
-        'Right on time.'
-      ],
-      early:[
-        'Sit. Breathe. I’ve got you now.',
-        'You’re late. Make it up to me.',
-        'Tell me one thing you want tonight.'
-      ],
-      familiar:[
-        'How was work?',
-        'Lock the door behind you.',
-        'Drink first or do I bend you first?'
-      ],
-      hot:[
-        'My boardroom’s too quiet without you.',
-        'Careful—walk in here and you’ll end up on my desk again.'
-      ]
+      new:['Good evening.','There you are.','Right on time.'],
+      early:['Sit. Breathe. I’ve got you now.','You’re late. Make it up to me.','Tell me one thing you want tonight.'],
+      familiar:['How was work?','Lock the door behind you.','Drink first or do I bend you first?'],
+      hot:['My boardroom’s too quiet without you.','Careful—walk in here and you’ll end up on my desk again.']
     },
     silas:{
-      new:[
-        'Hey, pretty thing.',
-        'You found me.',
-        'My muse is here.'
-      ],
-      early:[
-        'Come closer. Let me tune the night to you.',
-        'You want soft harmony or a hard chorus?'
-      ],
-      familiar:[
-        'Tell me the lyric of your day.',
-        'You want me in your ear or on your skin first?'
-      ],
-      hot:[
-        'All I need is my guitar, my mic, and you straddling me.'
-      ]
+      new:['Hey, pretty thing.','You found me.','My muse is here.'],
+      early:['Come closer. Let me tune the night to you.','You want soft harmony or a hard chorus?'],
+      familiar:['Tell me the lyric of your day.','You want me in your ear or on your skin first?'],
+      hot:['All I need is my guitar, my mic, and you straddling me.']
     },
     dylan:{
-      new:[
-        'Hey.',
-        'You look like trouble.',
-        'Helmet on the hook; eyes on me.'
-      ],
-      early:[
-        'Backpack or front seat for this ride?',
-        'You want smooth or wild tonight?'
-      ],
-      familiar:[
-        'How was your day, babe?',
-        'Night ride after we unwind?'
-      ],
-      hot:[
-        'Hop on, hold tight. I’ll take you places you’ve never been.'
-      ]
+      new:['Hey.','You look like trouble.','Helmet on the hook; eyes on me.'],
+      early:['Backpack or front seat for this ride?','You want smooth or wild tonight?'],
+      familiar:['How was your day, babe?','Night ride after we unwind?'],
+      hot:['Hop on, hold tight. I’ll take you places you’ve never been.']
     },
     grayson:{
-      new:[
-        'Good girl. Say hello.',
-        'Hands behind your back.',
-        'Ask nicely.'
-      ],
-      early:[
-        'Follow my lead tonight. Do you understand?',
-        'You’ll earn every touch.'
-      ],
-      familiar:[
-        'Color check.',
-        'Protocol or play? Choose.'
-      ],
-      hot:[
-        "You beg, or you don’t get off."
-      ]
+      new:['Good girl. Say hello.','Hands behind your back.','Ask nicely.'],
+      early:['Follow my lead tonight. Do you understand?','You’ll earn every touch.'],
+      familiar:['Color check.','Protocol or play? Choose.'],
+      hot:["You beg, or you don’t get off."]
     },
     blade:{
-      new:[
-        'Easy steps.',
-        'I like the way you wander into the dark.',
-        'Hush. Listen.'
-      ],
-      early:[
-        'I can wait all night. Makes the catching sweeter.',
-        'You feel me behind you yet?'
-      ],
-      familiar:[
-        'You know I’ll catch you.',
-        'Turn around slowly.'
-      ],
-      hot:[
-        'Every step deeper into the woods… I’m right behind you.'
-      ]
+      new:['Easy steps.','I like the way you wander into the dark.','Hush. Listen.'],
+      early:['I can wait all night. Makes the catching sweeter.','You feel me behind you yet?'],
+      familiar:['You know I’ll catch you.','Turn around slowly.'],
+      hot:['Every step deeper into the woods… I’m right behind you.']
     }
+  };
+
+  /* ---------- everyday talk pools (per man) ---------- */
+  const SMALL_TALK={
+    jesse:[
+      "What’s got you smiling today?",
+      "You eat yet or am I cooking?",
+      "How’s that little war at work going—any Becky updates?",
+      "You want quiet tonight or a little harmless trouble?",
+      "Tell me something sweet you want me to remember."
+    ],
+    alexander:[
+      "How was your day—wins, losses, gossip?",
+      "Do you need me decisive or indulgent tonight?",
+      "One thing you want handled this week. Say it.",
+      "What are you drinking? I’ll match it.",
+      "Tell me the highlight; I’ll take care of the rest."
+    ],
+    silas:[
+      "What track has you in your feelings today?",
+      "Want me to hum you calm or wind you up?",
+      "Tell me one line from your day I should write down.",
+      "What do you want to hear while I hold you?",
+      "Soft lighting, slow song, you in my lap—sound right?"
+    ],
+    dylan:[
+      "Long day or light day—what’s the vibe?",
+      "We celebrating anything or just escaping?",
+      "Backpack or front—where do you want me?",
+      "Want a burger after or straight to the shower?",
+      "Tell me what had your pulse up today."
+    ],
+    grayson:[
+      "Report: mood, stress, need.",
+      "Do you want comfort or correction?",
+      "Three deep breaths. Now speak.",
+      "What color are you starting at?",
+      "Tell me one boundary and one craving."
+    ],
+    blade:[
+      "Did the day chase you, or did you chase it?",
+      "Quiet woods or a run through the dark?",
+      "What would you leave behind if you could?",
+      "Tell me what you fear and I’ll hold it.",
+      "Do you want me close or do you want me hunting?"
+    ]
+  };
+
+  const PERSONA_NOTES={
+    jesse:"Rodeo cowboy; sweet but naughty. Warm tease, Southern charm. Casual swearing OK.",
+    alexander:"30, alpha businessman. Controlled, confident, indulgent. Dom undertone, polished.",
+    silas:"25, rocker. Smooth, romantic, erotic. Musical metaphors. Velvet, not cheesy.",
+    dylan:"Ninja rider. Flirty adrenaline with safety cues. Helmet canon. Confident 'babe' energy.",
+    grayson:"Red Room dom. Protocol, consent, control. Firm but attentive. Uses 'good girl' sparingly.",
+    blade:"Ghostface woods fantasy. Stalker/consensual chase vibe; suspenseful, not gore. Predatory romance."
   };
 
   function getVisits(man){
@@ -241,27 +217,20 @@
   function openerFor(man){
     const banks=BANKS[man]||BANKS.alexander;
     const visits=getVisits(man);
-    // choose tier
     let tier='new';
     if(visits>=4) tier='familiar';
     else if(visits>=2) tier='early';
 
-    let line = pickNonRepeat(banks[tier],man,tier);
-    if(!line) line = pickNonRepeat(banks.new,man,'new');
-
-    // add a kiss of heat sometimes on familiar visits
+    let line = pickNonRepeat(banks[tier],man,tier) || pickNonRepeat(banks.new,man,'new');
     if(tier==='familiar' && Math.random()<0.25){
       const add = pickNonRepeat(banks.hot,man,'hot');
       if(add) line = `${line} ${add}`;
     }
-
-    // reduce name spam in openers:
-    // use pet names unless paid & familiar
     const nm = (isPaid() && tier==='familiar') ? (getStoredName()||pet()) : pet();
     return line.replaceAll('{who}', nm).replaceAll('{who2}', nm);
   }
 
-  /* ----------- UI apply ----------- */
+  /* ---------- UI apply ---------- */
   function applyChatUI(){
     const isChat = /chat\.html$/i.test(location.pathname) || document.querySelector('[data-chat-root]');
     if(!isChat) return;
@@ -269,21 +238,17 @@
     const params=new URLSearchParams(location.search);
     const man=(params.get('man')||'alexander').toLowerCase();
 
-    // bg
     const bg=BG_BY_MAN[man]||BG_BY_MAN.alexander;
     document.documentElement.style.setProperty('--room-bg',`url(${bg})`);
 
-    // opener (staged)
     const openerEl=document.querySelector('[data-chat-opener]');
     if(openerEl){ openerEl.textContent = openerFor(man); }
 
-    // bump visits the first time we render a session
     const firstKey=LS.first(man);
     let isFirst=true;
     try{ isFirst = !sessionStorage.getItem(firstKey);}catch(_){}
     if(isFirst){ bumpVisits(man); try{sessionStorage.setItem(firstKey,'1')}catch(_){} }
 
-    // enter to send
     const input=document.getElementById('chat-input');
     const btn=document.getElementById('chat-send');
     if(input && btn){
@@ -293,22 +258,31 @@
     }
   }
 
-  /* ----------- public BB ----------- */
+  /* ---------- exported API ---------- */
   window.BB = {
     setName, learnNameFromMessage, isPaid,
     getMemFor, saveMemFor, updateMemFor,
+    getEverydayPool(man){ return SMALL_TALK[man] || SMALL_TALK.alexander; },
+    getPersonaNotes(man){ return PERSONA_NOTES[man] || PERSONA_NOTES.alexander; },
     buildChatPayload({ room, text, history, dirty }){
       const man=(room||'jesse').toLowerCase();
       learnNameFromMessage(text);
       const mem=updateMemFor(man,text);
       const payloadMem={ ...mem, name: getStoredName() || null };
+      const visits=getVisits(man);
+
       return {
         room: man,
         userText: text,
         history: Array.isArray(history)?history.slice(-6):[],
         dirty: dirty || 'high',
         paid: !!isPaid(),
-        memory: payloadMem
+        memory: payloadMem,
+        chatStyle: {
+          personaNotes: PERSONA_NOTES[man],
+          everydayPool: SMALL_TALK[man],
+          visits
+        }
       };
     },
     applyChatUI

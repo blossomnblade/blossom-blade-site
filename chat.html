@@ -5,36 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Chat</title>
   <link rel="icon" href="/images/logo.jpg"/>
-  <style>
-    :root { --room-bg: url('/images/bg_alexander_boardroom.jpg'); }
-    html, body { height: 100% }
-    body {
-      margin: 0;
-      background: #000 var(--room-bg) center/cover fixed no-repeat;
-      color: #fff;
-      font: 500 16px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial;
-    }
-    /* force white text everywhere for readability */
-    body, body * { color:#fff !important }
-
-    .pill { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25);
-      border-radius: 999px; padding: 6px 10px; font-weight: 800; font-size: 12px; backdrop-filter: blur(6px) }
-
-    .wrap { max-width: 1100px; margin: 28px auto; padding: 0 14px 110px }
-    .chat { background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 16px; min-height: 60vh; backdrop-filter: blur(8px); }
-    .msg { max-width: 70%; margin: 10px 0; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.12); word-wrap: break-word; }
-    .me { margin-left: auto; background: #ff4da6; color: #000 !important; font-weight:700 }
-    .opener { opacity: .95; }
-
-    .inputbar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); border-top: 1px solid rgba(255,255,255,.2);
-      padding: 10px 14px; backdrop-filter: blur(8px) }
-    .row { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 120px; gap: 10px; }
-    #chat-input { background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 12px 14px; }
-    #chat-send { border: 0; border-radius: 12px; background: #ff4da6; color: #000; font-weight: 900; cursor: pointer; }
-  </style>
+  <!-- Mobile-ready styles -->
+  <link rel="stylesheet" href="/styles/chat.css">
 </head>
 <body>
   <div class="pill">Adults 18+ only</div>
+
   <div class="wrap">
     <div class="chat" id="chat">
       <div class="msg opener" data-chat-opener>…</div>
@@ -48,9 +24,24 @@
     </div>
   </div>
 
-  <!-- Load in this order -->
+  <!-- iOS keyboard & safe scroll helper -->
+  <script>
+    (function(){
+      const chat = document.getElementById('chat');
+      const input = document.getElementById('chat-input');
+      function toBottom(){ if(chat) chat.scrollTop = chat.scrollHeight; }
+      ['focus','blur','input'].forEach(ev=>{
+        window.addEventListener(ev, toBottom, { passive:true });
+        if(input) input.addEventListener(ev, toBottom, { passive:true });
+      });
+      window.addEventListener('resize', toBottom, { passive:true });
+    })();
+  </script>
+
+  <!-- Script order matters: brain -> prompts -> moderation -> chat -->
   <script src="/scripts/brain.js"></script>
-  <script src="/scripts/prompt.js"></script>
-  <script src="/scripts/chat.js"></script>
+  <script src="/scripts/prompts.js"></script>   <!-- depth + pacing -->
+  <script src="/scripts/mod.js"></script>       <!-- strike logging -->
+  <script src="/scripts/chat.js"></script>      <!-- wiring -->
 </body>
 </html>

@@ -1,130 +1,185 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Unlock Access</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Blossom &amp; Blade — Unlock Access</title>
+  <link rel="icon" href="/images/logo.jpg"/>
   <style>
-    :root { --bg:url("/images/goth-bg.jpg"); }  /* change path if your file name differs */
+    :root{
+      --bg: #0b0b0c;
+      --panel: rgba(0,0,0,.60);
+      --ink: #ffffff;
+      --muted: #b8c0cc;
+      --pill: #ff2d83;
+      --pill-ink: #111;
+      --ring: rgba(255,255,255,.25);
+    }
     html,body{height:100%}
+    *{box-sizing:border-box}
     body{
-      margin:0; font:500 16px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial;
-      background:#000 var(--bg) center/cover no-repeat fixed;
-      color:#fff;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background:#000 url('/images/goth-bg.jpg') center/cover fixed no-repeat; /* <- goth paywall bg */
     }
-    /* FORCE BRIGHT WHITE EVERYWHERE */
-    body, body * { color:#fff !important }
-    a{ text-decoration:underline }
-    .wrap{ max-width:980px; margin:28px auto; padding:0 14px }
-    .pill{ position:fixed; top:16px; right:16px; background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.2); padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; backdrop-filter:blur(6px)}
-    h1{ font-size:34px; margin:0 0 12px }
-    .lede{opacity:.9; margin-bottom:18px}
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px }
+
+    .wrap{max-width:980px;margin:40px auto;padding:0 16px}
+    h1{font-size:40px;line-height:1.1;margin:0 0 22px}
+    p.lead{color:var(--muted);margin:0 0 24px}
+
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:860px){ .grid{grid-template-columns:1fr 1fr}}
+
     .card{
-      background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.18);
-      border-radius:16px; padding:16px; backdrop-filter:blur(8px)
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 10px 40px rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
     }
-    .price{ font-size:22px; font-weight:900; margin-left:auto }
-    .row{ display:flex; align-items:center; gap:10px; }
-    select, .toggle{
-      background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.22); border-radius:10px; padding:10px 12px;
+    .card h2{margin:4px 0 8px;font-size:28px}
+    .price{font-weight:800;font-size:28px;margin:0 0 10px}
+
+    label, .hint, .checkboxes label{color:var(--ink)}
+    select, .toggle, .btn{
       width:100%;
+      font-size:16px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      padding:14px 14px;
+      background:rgba(255,255,255,.06);
+      color:var(--ink);
+      outline: none;
+      box-shadow: inset 0 0 0 1px transparent;
     }
-    .toggle-row{ display:flex; align-items:center; gap:12px; }
-    .toggle input{ width:22px; height:22px; accent-color:#ff4da6; }
-    .checks{ display:grid; gap:10px; margin:16px 0 }
-    .check{ display:flex; gap:10px; align-items:flex-start }
-    .check input{ width:20px; height:20px; margin-top:2px; accent-color:#ff4da6 }
-    .note{ background:rgba(0,0,0,.5); border:1px dashed rgba(255,255,255,.25);
-      border-radius:12px; padding:10px 12px; margin-top:10px; font-size:14px }
-    .cta{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap }
-    .btn{ background:#ff4da6; color:#000 !important; border:0; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer }
-    .muted{ opacity:.9 }
+    select:focus, .toggle:focus, .btn:focus{box-shadow:0 0 0 3px var(--ring)}
+
+    .row{display:flex;align-items:center;gap:12px}
+    .toggle{display:flex;align-items:center;gap:12px;cursor:pointer}
+    .toggle input{appearance:none;width:42px;height:24px;border-radius:999px;background:#333;position:relative;outline:none;border:none}
+    .toggle input:checked{background:#7cf}
+    .toggle input:before{
+      content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:999px;background:#111;transition:transform .18s ease
+    }
+    .toggle input:checked:before{transform:translateX(18px)}
+
+    .btn{
+      background:var(--pill);
+      color:#fff;
+      font-weight:800;
+      border:none;
+      cursor:pointer;
+      transition:transform .08s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .checkboxes{margin-top:18px}
+    .checkboxes label{display:flex;align-items:flex-start;gap:10px;margin:10px 0}
+    .checkboxes input{width:18px;height:18px;margin-top:3px}
+
+    .note{margin-top:14px;border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;color:var(--muted)}
+
+    /* adults-only pill */
+    .ao{position:fixed;right:18px;top:18px;background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.12);
+        padding:6px 10px;border-radius:999px;font-size:12px}
+
+    a, a:visited{color:#fff;text-decoration:underline}
   </style>
 </head>
 <body>
-  <div class="pill">Adults 18+ only</div>
+  <div class="ao">Adults 18+ only</div>
   <div class="wrap">
     <h1>Unlock Access</h1>
-    <div class="lede">Pick a single guy for <strong>$5.99</strong> or unlock all six for <strong>$10.99 / month</strong>. Downtime → we extend your access. No refunds after 24h.</div>
+    <p class="lead">Pick a single guy for <strong>$5.99</strong> or unlock all six for <strong>$10.99 / month</strong>. Downtime → we extend your access. No refunds after 24h.</p>
 
     <div class="grid">
-      <!-- Single guy -->
+      <!-- Single -->
       <div class="card">
-        <div class="row">
-          <h2 style="margin:0">Single Guy</h2>
-          <div class="price">$5.99</div>
-        </div>
-        <div class="muted" style="margin:6px 0 12px">One-time access • choose your guy</div>
-        <label for="guy" class="muted" style="font-weight:700">Pick your guy</label>
-        <select id="guy">
+        <h2>Single Guy</h2>
+        <p class="price">$5.99</p>
+        <label for="guy">Pick your guy</label>
+        <select id="guy" aria-label="Choose your guy">
           <option>Grayson</option>
           <option>Alexander</option>
           <option>Dylan</option>
-          <option>Jesse</option>
           <option>Silas</option>
+          <option>Jesse</option>
           <option>Blade</option>
         </select>
-        <div class="cta">
-          <button class="btn" id="buy-one">Unlock single</button>
+        <div style="margin-top:12px">
+          <button id="btn-single" class="btn">Unlock single</button>
         </div>
       </div>
 
-      <!-- All rooms -->
+      <!-- All Rooms -->
       <div class="card">
-        <div class="row">
-          <h2 style="margin:0">All Rooms</h2>
-          <div class="price">$10.99 / month</div>
-        </div>
-        <div class="muted" style="margin:6px 0 12px">Full access to all six</div>
-        <div class="toggle-row">
-          <label class="muted" style="font-weight:700">Renew monthly? (recommended)</label>
-          <label class="toggle"><input id="auto" type="checkbox" checked> Auto-renew</label>
-        </div>
-        <div class="cta">
-          <button class="btn" id="buy-all">Unlock all rooms</button>
+        <h2>All Rooms</h2>
+        <p class="price">$10.99 / month</p>
+        <label class="toggle" tabindex="0">
+          <input id="auto" type="checkbox" checked aria-label="Auto-renew monthly"/>
+          <span>Auto-renew (recommended)</span>
+        </label>
+        <div style="margin-top:12px">
+          <button id="btn-all" class="btn">Unlock all rooms</button>
         </div>
       </div>
     </div>
 
-    <!-- required checkboxes -->
-    <div class="card">
-      <div class="checks">
-        <label class="check"><input type="checkbox" id="c1"> <span>I am 18+.</span></label>
-        <label class="check"><input type="checkbox" id="c2"> <span>I agree to community standards: no self-harm, real-world violence, or hate.</span></label>
-        <label class="check"><input type="checkbox" id="c3"> <span>I understand no refunds after 24 hours for digital access. Downtime → extended access.</span></label>
-        <label class="check"><input type="checkbox" id="c4"> <span>I agree to the <a href="/terms.html">Terms</a> and <a href="/privacy.html">Privacy</a>.</span></label>
-        <label class="check"><input type="checkbox" id="c5"> <span>If I choose monthly, I acknowledge auto-renew unless I toggle it off.</span></label>
+    <!-- Must-checks -->
+    <div class="card" style="margin-top:16px">
+      <div class="checkboxes" id="checks">
+        <label><input type="checkbox" id="c18"> <span><strong>I am 18+.</strong></span></label>
+        <label><input type="checkbox" id="cstd"> <span>I agree to community standards: no self-harm, real-world violence, or hate.</span></label>
+        <label><input type="checkbox" id="cnr"> <span>I understand <strong>no refunds after 24 hours</strong> for digital access. Downtime → extended access.</span></label>
+        <label><input type="checkbox" id="ctp"> <span>I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy</a>.</span></label>
+        <label><input type="checkbox" id="cauto"> <span>If I choose monthly, I acknowledge auto-renew unless I toggle it off.</span></label>
       </div>
-      <div class="note"><strong>Subscription:</strong> Monthly plan can be set to auto-renew or one-month only. Cancel anytime.</div>
-      <div class="note"><strong>Donation:</strong> We donate $1 from each purchase to DV support initiatives.</div>
-    </div>
 
-    <div class="cta">
-      <a class="btn" href="/index.html">Back to men</a>
+      <div class="note">
+        <strong>Subscription:</strong> Monthly plan can be set to auto-renew or one-month only. Cancel anytime.<br/>
+        <strong>Donation:</strong> We donate $1 from each purchase to DV support initiatives.
+      </div>
     </div>
   </div>
 
   <script>
-    // gate: require all checks
-    function allChecked(){ return ['c1','c2','c3','c4','c5'].every(id=>document.getElementById(id).checked); }
+    // Force white text on any stray element that creeps in
+    (function forceWhite(){
+      const style = document.createElement('style');
+      style.textContent = `*, *:before, *:after { color: inherit !important }`;
+      document.head.appendChild(style);
+    })();
+
+    const btnSingle = document.getElementById('btn-single');
+    const btnAll = document.getElementById('btn-all');
+    const auto = document.getElementById('auto');
+    const guy = document.getElementById('guy');
+
+    function checksOK(){
+      const ids = ['c18','cstd','cnr','ctp','cauto'];
+      return ids.every(id => document.getElementById(id).checked);
+    }
     function requireChecks(){
-      if(allChecked()) return true;
-      alert("Please check all boxes to continue.");
+      if (checksOK()) return true;
+      alert('Please check all the consent boxes first.');
       return false;
     }
-    document.getElementById('buy-one').onclick = ()=>{
-      if(!requireChecks()) return;
-      const man = (document.getElementById('guy').value || 'Grayson').toLowerCase();
-      // demo: send to unlock stub; replace with processor later
-      location.href = `/unlock.html?plan=single&man=${encodeURIComponent(man)}`;
-    };
-    document.getElementById('buy-all').onclick = ()=>{
-      if(!requireChecks()) return;
-      const auto = document.getElementById('auto').checked ? 1 : 0;
-      location.href = `/unlock.html?plan=all&auto=${auto}`;
-    };
+
+    btnSingle.addEventListener('click', ()=>{
+      if (!requireChecks()) return;
+      const sel = (guy.value || 'Grayson').toLowerCase();
+      // stub routes you already had
+      location.href = `/checkout-day.html?man=${encodeURIComponent(sel)}`;
+    });
+
+    btnAll.addEventListener('click', ()=>{
+      if (!requireChecks()) return;
+      const renew = auto.checked ? 1 : 0;
+      location.href = `/checkout-month.html?auto=${renew}`;
+    });
   </script>
 </body>
 </html>

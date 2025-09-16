@@ -1,4 +1,8 @@
-/* Blossom & Blade — /scripts/chat.js (with mod CSV button) */
+/* Blossom & Blade — /scripts/chat.js
+   - Wires chat UI to /api/chat
+   - Uses brain.js (memory) + prompts.js (pacing) + mod.js (receipts)
+   - Rolling history, enter-to-send, auto-scroll, admin strike banner
+*/
 
 (function(){
   const chatEl  = document.getElementById('chat');
@@ -12,6 +16,7 @@
   const HISTORY_MAX = 8;
   const history = [];
 
+  // --- Admin strike banner (only if ?admin=1) ---
   let bannerEl = null;
   function mountAdminBanner(){
     if(!admin) return;
@@ -76,12 +81,21 @@
     }catch(e){ console.warn('mod check failed', e); }
 
     try { BB.learnNameFromMessage(userText); } catch(e){}
-    const payload = BB.buildChatPayload({ room: man, text: userText, history, dirty: 'high' });
 
+    // Build payload (memory, visits, etc.)
+    const payload = BB.buildChatPayload({
+      room: man,
+      text: userText,
+      history,
+      dirty: 'high'
+    });
+
+    // Build model messages with pacing/persona (prompts.js)
     const messages = (typeof buildBnbMessages === 'function')
       ? buildBnbMessages(payload)
       : [{ role:'user', content: userText }];
 
+    // track my turn
     history.push({ role:'user', content:userText });
     while(history.length > HISTORY_MAX) history.shift();
 
@@ -112,9 +126,9 @@
     }
   }
 
-  if (document.getElementById('chat-send')) document.getElementById('chat-send').addEventListener('click', send);
-  if (document.getElementById('chat-input')) {
-    document.getElementById('chat-input').addEventListener('keydown', (e)=>{
+  if (sendBtn) sendBtn.addEventListener('click', send);
+  if (inputEl) {
+    inputEl.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
     });
   }

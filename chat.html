@@ -1,196 +1,107 @@
 <!doctype html>
-<html lang="en" data-gated>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Chat</title>
   <style>
-    :root { --room-bg:none; }
-    html,body{height:100%}
-    body{
-      margin:0;
-      font:500 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
-      color:#fff; background:#000;
-      background-image: var(--room-bg);
-      background-size: cover; background-position: center; background-repeat: no-repeat;
+    :root { --room-bg: url('/images/bg_alexander_boardroom.jpg'); }
+    html, body { height: 100% }
+    body {
+      margin: 0;
+      background: #000 var(--room-bg) center/cover fixed no-repeat;
+      color: #fff;
+      font: 500 16px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial;
     }
-    /* Force ALL text bright white everywhere */
-    body, body * { color:#fff !important; }
+    /* force white text everywhere for readability */
+    body, body * { color:#fff !important }
 
-    .scrim{position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)); pointer-events:none}
+    .pill { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px; padding: 6px 10px; font-weight: 800; font-size: 12px; backdrop-filter: blur(6px) }
 
-    /* Layout: full viewport, chat scrolls, input sticks */
-    .wrap{
-      min-height:100vh; display:flex; flex-direction:column;
-      gap:12px; padding:12px 12px 0; /* bottom padding handled by sticky input */
-    }
+    .wrap { max-width: 1100px; margin: 28px auto; padding: 0 14px 110px }
+    .chat { background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 16px; backdrop-filter: blur(8px); }
+    .msg { max-width: 70%; margin: 10px 0; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,.12); }
+    .me { margin-left: auto; background: #ff4da6; color: #000 !important; font-weight:700 }
+    .opener { opacity: .95; }
 
-    .header{display:flex; justify-content:space-between; align-items:center}
-    .pill{
-      background:rgba(0,0,0,0.55);
-      border:1px solid rgba(255,255,255,0.2);
-      padding:6px 10px; border-radius:999px; font-size:12px;
-      font-weight:700; backdrop-filter: blur(6px)
-    }
-
-    /* Chat area is shorter; input always visible */
-    .chat{
-      flex:1; min-height:0; /* critical for flex scroll */
-      display:flex; flex-direction:column; gap:8px;
-      background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12);
-      border-radius:16px; padding:10px; backdrop-filter: blur(8px);
-      overflow:auto;
-    }
-
-    .row{display:flex; gap:8px}
-    .msg{
-      max-width:72%;               /* a bit narrower */
-      padding:9px 11px; border-radius:12px;
-      font-size:15px; line-height:1.45; /* slightly smaller text */
-    }
-    .me{align-self:flex-end}
-    .me .msg{background:#ff4da6; border-top-right-radius:4px}
-    .bot .msg{background:rgba(255,255,255,0.10); border-top-left-radius:4px}
-
-    /* Sticky input footer */
-    .input-wrap{
-      position:sticky; bottom:0; left:0; right:0;
-      padding:10px 12px; margin-top:8px;
-      background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.65) 24%);
-      backdrop-filter: blur(6px);
-    }
-    .input{
-      display:flex; gap:8px;
-      background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.18);
-      border-radius:12px; padding:6px;
-    }
-    .input input{
-      flex:1; padding:10px 12px; border-radius:10px; border:0;
-      background:transparent; outline:none;
-    }
-    .input input::placeholder{color:#eee}
-    .input button{padding:10px 12px; border-radius:10px; border:0; font-weight:700; background:#ff4da6; color:#000 !important}
+    .inputbar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); border-top: 1px solid rgba(255,255,255,.2);
+      padding: 10px 14px; backdrop-filter: blur(8px) }
+    .row { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 120px; gap: 10px; }
+    #chat-input { background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 12px 14px; }
+    #chat-send { border: 0; border-radius: 12px; background: #ff4da6; color: #000; font-weight: 900; cursor: pointer; }
   </style>
 </head>
-<body data-chat-root>
-  <div class="scrim" aria-hidden="true"></div>
+<body>
+  <div class="pill">Adults 18+ only</div>
   <div class="wrap">
-    <div class="header">
-      <div class="pill">Adults 18+ only</div>
-      <div class="pill">Safety: no self-harm / real-world violence / hate</div>
-    </div>
-
-    <div id="chat" class="chat" aria-live="polite">
-      <div class="row bot"><div class="msg" data-chat-opener>There you are.</div></div>
-    </div>
-
-    <div class="input-wrap">
-      <div class="input">
-        <input id="text" type="text" placeholder="Say hi…" aria-label="Message" autocomplete="off" />
-        <button id="send" type="button">Send</button>
-      </div>
+    <div class="chat" id="chat">
+      <div class="msg opener" data-chat-opener>…</div>
     </div>
   </div>
 
-  <!-- Order matters: access → brain -->
-  <script src="/scripts/access.js"></script>
+  <div class="inputbar">
+    <div class="row">
+      <input id="chat-input" placeholder="Say hi…" autocomplete="off" />
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+
   <script src="/scripts/brain.js"></script>
   <script>
-    (function(){
-      const chat  = document.getElementById('chat');
-      const input = document.getElementById('text');
-      const btn   = document.getElementById('send');
+    // Basic client to call /api/chat with memory
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send');
 
-      // tiny rolling history for realism
-      const convo = []; // {role:'user'|'assistant', content:'...'}
+    function bubble(text, me=false){
+      const div = document.createElement('div');
+      div.className = 'msg' + (me ? ' me' : '');
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-      function addRow(side, text){
-        const row = document.createElement('div');
-        row.className = 'row ' + side;
-        const bubble = document.createElement('div');
-        bubble.className = 'msg';
-        bubble.textContent = text;
-        row.appendChild(bubble);
-        chat.appendChild(row);
-        chat.scrollTop = chat.scrollHeight;
+    async function send(){
+      const text = (input.value || '').trim();
+      if(!text) return;
+      bubble(text, true);
+      input.value = '';
+
+      // teach name + update memory
+      BB.learnNameFromMessage(text);
+      const params = new URLSearchParams(location.search);
+      const man = (params.get('man') || 'alexander').toLowerCase();
+
+      const payload = BB.buildChatPayload({
+        room: man,
+        text,
+        history: [], // optional: wire your own rolling history
+        dirty: 'high'
+      });
+
+      try{
+        const r = await fetch('/api/chat', {
+          method:'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        bubble(data.reply || 'Say that again, love.');
+      }catch(err){
+        bubble('Lost the connection—try again in a sec.');
+        console.error(err);
       }
+    }
 
-      // call the serverless route → OpenAI
-      async function callAI(man, text){
-        const memory = { name: localStorage.getItem('bb_user_name') || null };
-        try{
-          const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {'content-type':'application/json'},
-            body: JSON.stringify({
-              room: man,
-              userText: text,
-              memory,
-              dirty: 'high',            // 'high' or 'medium'
-              history: convo.slice(-6)  // last 3 exchanges
-            })
-          });
-          if (!res.ok) throw new Error('bad status');
-          const { reply } = await res.json();
-          return reply || "Come closer. Tell me what you want.";
-        }catch(_){
-          // fallback line if API hiccups
-          return "mm, tell me more.";
-        }
-      }
+    sendBtn.addEventListener('click', send);
+    // enter key is enabled inside brain.js too; this is a safety
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+    });
 
-      // learn “i’m kasey / im kasey / i am … / my name is …”
-      function maybeLearnName(text){
-        const t = (text||'').trim();
-        const rxs = [
-          /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
-          /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
-          /\bi['’]?m\s+([a-z][a-z .'-]{0,30})$/i
-        ];
-        for (const rx of rxs){
-          const m = t.match(rx);
-          if (m){
-            const pretty = window.BB?.learnNameFromMessage?.(t) || m[1];
-            addRow('bot', `Noted, ${pretty}. I like how that sounds.`);
-            convo.push({role:'assistant', content:`Noted, ${pretty}. I like how that sounds.`});
-            return true;
-          }
-        }
-        return false;
-      }
-
-      async function send(){
-        const text = input.value.trim();
-        if (!text) return;
-        input.value = '';
-
-        addRow('me', text);
-        convo.push({role:'user', content:text});
-
-        // learn name immediately if she told us
-        if (maybeLearnName(text)) return;
-
-        const params = new URLSearchParams(location.search);
-        const man = (params.get('man') || 'alexander').toLowerCase();
-
-        const reply = await callAI(man, text);
-        addRow('bot', reply);
-        convo.push({role:'assistant', content:reply});
-      }
-
-      btn.addEventListener('click', send);
-      input.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); send(); } });
-
-      // gate check (admin/paid)
-      (function gate(){
-        const params = new URLSearchParams(location.search);
-        const man = (params.get('man') || 'alexander').toLowerCase();
-        if (window.BB_ACCESS && !window.BB_ACCESS.gateCheckFor(man)) return;
-      })();
-
-      // background + opener (uses remembered name if present)
-      window.BB?.applyChatUI?.();
-    })();
+    // apply initial UI (background + opener)
+    BB.applyChatUI();
   </script>
 </body>
 </html>

@@ -1,47 +1,369 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Chat</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Blossom &amp; Blade — Chat</title>
   <link rel="icon" href="/images/logo.jpg"/>
-  <!-- Mobile-ready styles -->
-  <link rel="stylesheet" href="/styles/chat.css">
+
+  <style>
+    :root{
+      --ink:#fff; --muted:#cfd6e3; --panel:rgba(0,0,0,.62);
+      --border:rgba(255,255,255,.12); --ring:rgba(124,200,255,.35);
+      --pill:#ff2d83; --bubble:rgba(0,0,0,.55); --you:#ff2d83;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:#000;color:var(--ink);
+      font:500 16px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial;
+    }
+
+    /* Room background */
+    .room{
+      min-height:100vh; position:relative; padding:18px 14px 110px;
+      background:#000 center/cover no-repeat fixed;
+    }
+    .veil{position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(0,0,0,.25), rgba(0,0,0,.65) 65%, rgba(0,0,0,.9));}
+
+    .wrap{position:relative; max-width:1100px; margin:0 auto}
+
+    .pill{
+      position:fixed; right:14px; top:14px; z-index:50;
+      background:rgba(0,0,0,.6); border:1px solid var(--border);
+      color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; backdrop-filter:blur(6px)
+    }
+
+    /* Chat panel */
+    .panel{
+      position:relative; z-index:2;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:18px; padding:16px; backdrop-filter: blur(6px);
+      box-shadow:0 10px 40px rgba(0,0,0,.55);
+    }
+    .log{max-height:62vh; overflow:auto; padding:8px;}
+    .bubble{
+      display:inline-block; max-width:min(760px, 92%); margin:10px 0;
+      padding:10px 14px; border-radius:12px; background:var(--bubble);
+      border:1px solid var(--border); color:#fff;
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+    }
+    .bubble.you{
+      background:var(--you); color:#000; border:0; margin-left:auto; display:block;
+      font-weight:800;
+    }
+
+    .composer{
+      position:fixed; left:0; right:0; bottom:0; z-index:60;
+      padding:12px; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.75) 18%, rgba(0,0,0,.9) 100%);
+      backdrop-filter: blur(4px);
+    }
+    .bar{max-width:1100px; margin:0 auto; display:flex; gap:10px}
+    .bar input{
+      flex:1; height:56px; border-radius:14px; padding:0 14px; font-size:16px;
+      border:1px solid var(--border); background:rgba(0,0,0,.6); color:#fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .bar button{
+      height:56px; min-width:110px; border:0; border-radius:14px; font-weight:900;
+      background:var(--pill); color:#000; cursor:pointer;
+      box-shadow:0 8px 30px rgba(255,45,131,.35);
+    }
+    .sr{position:absolute; left:-9999px}
+
+    /* small screens */
+    @media (max-width:480px){
+      .bubble{max-width:96%}
+      .bar button{min-width:90px}
+    }
+  </style>
 </head>
 <body>
   <div class="pill">Adults 18+ only</div>
 
-  <div class="wrap">
-    <div class="chat" id="chat">
-      <div class="msg opener" data-chat-opener>…</div>
+  <div id="room" class="room">
+    <div class="veil"></div>
+    <div class="wrap" style="padding-top:14px;">
+      <div class="panel">
+        <div id="log" class="log" aria-live="polite" aria-label="Chat transcript"></div>
+      </div>
     </div>
   </div>
 
-  <div class="inputbar">
-    <div class="row">
-      <input id="chat-input" placeholder="Say hi…" autocomplete="off" />
-      <button id="chat-send">Send</button>
-    </div>
+  <div class="composer">
+    <form id="sendForm" class="bar">
+      <label for="msg" class="sr">Message</label>
+      <input id="msg" name="msg" type="text" placeholder="Say hi…" autocomplete="off"/>
+      <button id="sendBtn" type="submit">Send</button>
+    </form>
   </div>
 
-  <!-- iOS keyboard & safe scroll helper -->
+  <!-- ===== Persona, Openers, Everyday Pool, Tempo (SOFT→WARM→SPICY) ===== -->
   <script>
-    (function(){
-      const chat = document.getElementById('chat');
-      const input = document.getElementById('chat-input');
-      function toBottom(){ if(chat) chat.scrollTop = chat.scrollHeight; }
-      ['focus','blur','input'].forEach(ev=>{
-        window.addEventListener(ev, toBottom, { passive:true });
-        if(input) input.addEventListener(ev, toBottom, { passive:true });
-      });
-      window.addEventListener('resize', toBottom, { passive:true });
-    })();
+  // backgrounds (matches your filenames exactly)
+  const BG_BY_MAN = {
+    alexander: '/images/bg_alexander_boardroom.jpg',
+    dylan:     '/images/dylan-garage.jpg',
+    grayson:   '/images/grayson-bg.jpg',
+    silas:     '/images/bg_silas_stage.jpg',
+    blade:     '/images/blade-woods.jpg',
+    jesse:     '/images/jesse_bg.jpg' // underscore
+  };
+
+  // lightweight memory (name + a couple of tags)
+  const Memory = {
+    get(){ try{ return JSON.parse(localStorage.getItem('bb_mem')||'{}'); }catch(e){ return {}; } },
+    set(data){ localStorage.setItem('bb_mem', JSON.stringify(data||{})); },
+    rememberName(name){
+      if(!name) return;
+      const m = this.get();
+      m.name = (name||'').trim().slice(0,32);
+      m.last = Date.now();
+      this.set(m);
+    }
+  };
+
+  // ---------- PROMPTS + TEMPO ----------
+  window.BB_PROMPTS = {
+    profanity_allowed: true,
+    everyday_pool: [
+      "What kind of trouble are we starting tonight?",
+      "How’s your day been—worth escaping?",
+      "You want playful or a little wicked?",
+      "Where should I focus—lips, voice, or attention?",
+      "Tell me one thing you want and one thing you need."
+    ],
+    men: {
+      alexander: {
+        soft_openers: [
+          "Evening, love. Right on time.",
+          "There you are—how are you holding up?",
+          "Boardroom’s quiet. You? Not for long, I hope."
+        ],
+        warm_openers: [
+          "Take a seat. Let me read you a minute.",
+          "Tell me what kind of pressure you want—gentle or decisive?"
+        ],
+        spicy_lines: [
+          "Hands on the table, eyes on me. We’ll negotiate… softly.",
+          "I’ll decide when you’re done begging."
+        ]
+      },
+      dylan: {
+        soft_openers: [
+          "Hey, pretty thing. Helmet by the door if you want it.",
+          "You in the mood for calm night streets or a quick tease?"
+        ],
+        warm_openers: [
+          "Backpack or front seat—where do you want me?",
+          "Say the word and I’ll take the long way just to hear you breathe."
+        ],
+        spicy_lines: [
+          "Lean in. I’ll tell you exactly when to hold tighter."
+        ]
+      },
+      jesse: {
+        soft_openers: [
+          "Well, look who wandered back. Miss me?",
+          "Howdy, darlin’. What kind of fun are you searchin’ for?"
+        ],
+        warm_openers: [
+          "You want sweet talk, or the kind that leaves you smilin’ wrong?",
+          "Tell me where to put these hands—honest."
+        ],
+        spicy_lines: [
+          "I’ll have you sayin’ please before the hat hits the floor."
+        ]
+      },
+      grayson: {
+        soft_openers: [
+          "Look at me. Color check first—green, yellow, or red?",
+          "Good timing. Do you want gentle control or strict tonight?"
+        ],
+        warm_openers: [
+          "Hands down. Use your words. I’ll listen.",
+          "You can ask nicely, and you’ll get what you earn."
+        ],
+        spicy_lines: [
+          "You beg, or you don’t get off, pretty thing.",
+          "Knees or words first—decide."
+        ]
+      },
+      silas: {
+        soft_openers: [
+          "Come closer—I’ll tune the night to you.",
+          "You want smooth and slow, or a lyric that stains?"
+        ],
+        warm_openers: [
+          "Red or black? Pick a mood and I’ll match your pulse.",
+          "Tell me a secret and I’ll trade you a better one."
+        ],
+        spicy_lines: [
+          "I’ll mark the chorus on your skin if you ask sweetly."
+        ]
+      },
+      blade: {
+        soft_openers: [
+          "Woods are quiet tonight. You sure you want me?",
+          "Stay close. I won’t bite till you ask."
+        ],
+        warm_openers: [
+          "Run a little. I’ll catch you when you want me to.",
+          "Tell me what fear to keep and what to eat."
+        ],
+        spicy_lines: [
+          "When I catch you, you’re mine till you laugh."
+        ]
+      }
+    }
+  };
+
+  (function(){
+    const STATE = { turns: 0, lastNameTurn: -99, heat: 0 };
+    const NAME_COOLDOWN = 3;
+    const WARM_AFTER_TURNS = 3;
+    const SPICY_AFTER_TURNS = 6;
+
+    const SPICY_KEYS = ["spank","bend","daddy","ride me","dirty","horny","choke","harder","fuck","suck","bedroom","red room","collar","rope"];
+    const WARM_KEYS  = ["kiss","touch","control","slow","tease","hands","dominant","beg","soft","gentle"];
+
+    function hasAny(text, keys){
+      const t = (text||"").toLowerCase();
+      return keys.some(k => t.includes(k));
+    }
+
+    window.BB_TEMPO = {
+      nextStage(userText){
+        STATE.turns++;
+        if (hasAny(userText, SPICY_KEYS)) STATE.heat = Math.max(STATE.heat, 2);
+        else if (hasAny(userText, WARM_KEYS)) STATE.heat = Math.max(STATE.heat, 1);
+
+        if (STATE.turns < WARM_AFTER_TURNS) return 0;                 // soft only
+        if (STATE.turns < SPICY_AFTER_TURNS) return Math.min(STATE.heat, 1); // up to warm
+        return Math.min(STATE.heat, 2);                                // spicy allowed
+      },
+      shouldUseName(){
+        if (STATE.turns - STATE.lastNameTurn >= NAME_COOLDOWN){
+          STATE.lastNameTurn = STATE.turns; return true;
+        }
+        return false;
+      },
+      reset(){ STATE.turns=0; STATE.lastNameTurn=-99; STATE.heat=0; }
+    };
+  })();
+
+  // helpers to pick lines
+  function pickOpener(manKey){
+    const man = (window.BB_PROMPTS.men||{})[manKey] || {};
+    const pool = (man.soft_openers && man.soft_openers.length)
+      ? man.soft_openers : window.BB_PROMPTS.everyday_pool;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  function composeReply(manKey, userText, userName){
+    const men = window.BB_PROMPTS.men||{};
+    const man = men[manKey] || {};
+    const stage = window.BB_TEMPO.nextStage(userText); // 0 soft, 1 warm, 2 spicy
+    let pool =
+      stage === 0 ? (man.soft_openers || []) :
+      stage === 1 ? (man.warm_openers || []) :
+                    (man.spicy_lines  || []);
+    if (!pool.length) pool = window.BB_PROMPTS.everyday_pool;
+
+    let reply = pool[Math.floor(Math.random()*pool.length)];
+
+    // very light name usage
+    if (userName && window.BB_TEMPO.shouldUseName()){
+      if (Math.random() < 0.5){
+        reply = reply.replace(/\.*$/, '') + `, ${userName}.`;
+      }
+    }
+    return reply;
+  }
   </script>
 
-  <!-- Script order matters: brain -> prompts -> moderation -> chat -->
-  <script src="/scripts/brain.js"></script>
-  <script src="/scripts/prompts.js"></script>   <!-- depth + pacing -->
-  <script src="/scripts/mod.js"></script>       <!-- strike logging -->
-  <script src="/scripts/chat.js"></script>      <!-- wiring -->
+  <!-- ===== Page wiring ===== -->
+  <script>
+  // query helpers
+  const params = new URLSearchParams(location.search);
+  const manKey = (params.get('man')||'alexander').toLowerCase();
+  const sub    = (params.get('sub')||'night').toLowerCase();
+
+  // set background
+  (function setBG(){
+    const room = document.getElementById('room');
+    const bg = BG_BY_MAN[manKey] || '/images/bg_dark_romance.jpg';
+    room.style.backgroundImage = `url('${bg}')`;
+  })();
+
+  // chat plumbing
+  const log = document.getElementById('log');
+  const form = document.getElementById('sendForm');
+  const input = document.getElementById('msg');
+
+  function bubbleFromBot(text){
+    const div = document.createElement('div');
+    div.className = 'bubble';
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+  function bubbleFromYou(text){
+    const div = document.createElement('div');
+    div.className = 'bubble you';
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // first-view opener
+  (function greet(){
+    const mem = Memory.get();
+    const name = mem.name;
+    let opener = pickOpener(manKey);
+    // tiny chance to greet by name if we know it
+    if (name && Math.random() < 0.5){
+      opener = opener.replace(/\.*$/, '') + `, ${name}.`;
+    }
+    bubbleFromBot(opener);
+    window.BB_TEMPO.reset();
+  })();
+
+  // parse a possible name from user's first message
+  function maybeExtractName(text){
+    // crude parse: “i’m kasey”, “im kasey”, “my name is kasey”
+    const t = text.toLowerCase();
+    const m = t.match(/\b(?:i[' ]?m|my name is)\s+([a-z]{2,20})\b/i);
+    if (m && m[1]) Memory.rememberName(cap(m[1]));
+  }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  // send handler
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const text = (input.value||'').trim();
+    if(!text) return;
+    bubbleFromYou(text);
+    input.value='';
+
+    // learn name early
+    maybeExtractName(text);
+    const name = Memory.get().name;
+
+    // If you later flip BB_AI_ENABLED=true and call your API, branch here.
+    // For now we use scripted persona with tempo:
+    const reply = composeReply(manKey, text, name);
+    // simulate thinking delay
+    await new Promise(r=>setTimeout(r, 350+Math.random()*600));
+    bubbleFromBot(reply);
+  });
+
+  // Enter-to-send also on mobile keyboards
+  input.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' && !e.shiftKey){
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+  </script>
 </body>
 </html>

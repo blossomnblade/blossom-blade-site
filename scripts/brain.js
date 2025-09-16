@@ -1,28 +1,29 @@
-/* Blossom & Blade — brain.js (v8: personas + warm openers + memory scratchpad)
-   - First opener is softer, then hotter intros
-   - Paid-name gate; learn name from "i'm ___ / my name is ___"
-   - Background per man; Dylan helmet OK; Blade no helmet
-   - Memory scratchpad (name, job, likes, nemesis, mood, misc) in localStorage
-   - Helpers to attach memory to API requests
+/* Blossom & Blade — brain.js (v9: per-man memory)
+   - First opener = softer; later = hotter (persona banks)
+   - Paid-name gate (or ?paid=1 for testing)
+   - Backgrounds per man; Dylan helmet OK; Blade no helmet
+   - **Per-man memory**: { [man]: { job, likes[], nemesis[], mood, misc[], lastSeenISO } }
+     Global name stays once and is mirrored into payload.
+   - Helpers: BB.buildChatPayload({ room, text, history, dirty })
 */
 
 (function () {
-  /* -------------------- PAID / NAME -------------------- */
+  /* -------------------- KEYS / STORAGE -------------------- */
   const LS = {
-    name: 'bb_user_name',
-    mem: 'bb_memory_v1',
+    name: 'bb_user_name',          // global pretty name
+    memPM: 'bb_memory_perman_v1',  // per-man memory blob
   };
 
+  /* -------------------- PAID FLAG -------------------- */
   function isPaid() {
     try {
       const q = new URLSearchParams(location.search);
       if ((q.get('paid') || '') === '1') return true; // manual test override
       return !!(window.BB_ACCESS && window.BB_ACCESS.isPaid && window.BB_ACCESS.isPaid());
-    } catch (_) {
-      return false;
-    }
+    } catch (_) { return false; }
   }
 
+  /* -------------------- NAME (GLOBAL) -------------------- */
   function cleanName(n) {
     if (!n) return null;
     const t = String(n).trim().replace(/[^a-zA-Z .'-]/g, '');
@@ -33,10 +34,6 @@
     const v = cleanName(n);
     if (!v) return;
     try { localStorage.setItem(LS.name, v); } catch (_) {}
-    // also mirror into memory
-    const mem = getMemory();
-    mem.name = v;
-    saveMemory(mem);
   }
   function getStoredName() {
     try {
@@ -44,7 +41,6 @@
       return raw ? cleanName(raw) : null;
     } catch (_) { return null; }
   }
-
   // seed from query
   (function seedFromQuery() {
     try {
@@ -53,6 +49,91 @@
       if (qn) setName(qn);
     } catch (_) {}
   })();
+
+  /* -------------------- PER-MAN MEMORY -------------------- */
+  // Schema: { [man]: { job, likes[], nemesis[], mood, misc[], lastSeenISO } }
+  function loadAllPM() {
+    try { return JSON.parse(localStorage.getItem(LS.memPM) || '{}'); } catch (_) { return {}; }
+  }
+  function saveAllPM(obj) {
+    try { localStorage.setItem(LS.memPM, JSON.stringify(obj)); } catch (_) {}
+  }
+  function getMemFor(man) {
+    const all = loadAllPM();
+    const init = { job: null, likes: [], nemesis: [], mood: null, misc: [], lastSeenISO: null };
+    return { ...(all[man] || init) };
+  }
+  function saveMemFor(man, mem) {
+    const all = loadAllPM();
+    all[man] = {
+      job: mem.job || null,
+      likes: Array.isArray(mem.likes) ? mem.likes.slice(0, 12) : [],
+      nemesis: Array.isArray(mem.nemesis) ? mem.nemesis.slice(0, 8) : [],
+      mood: mem.mood || null,
+      misc: Array.isArray(mem.misc) ? mem.misc.slice(0, 12) : [],
+      lastSeenISO: new Date().toISOString()
+    };
+    saveAllPM(all);
+  }
+
+  // lightweight extractors → update ONLY this man's memory
+  function updateMemFor(man, text) {
+    const msg = String(text || '');
+    const mem = getMemFor(man);
+
+    // nemesis (Becky, etc.)
+    const nem = msg.match(/\b(becky|jessica|karen|manager|ex)\b/i);
+    if (nem) {
+      const who = nem[1][0].toUpperCase() + nem[1].slice(1).toLowerCase();
+      if (!mem.nemesis.includes(who)) mem.nemesis.unshift(who);
+    }
+
+    // job/role shallow extraction
+    const job = msg.match(/\b(i\swork\s(at|in|for)\s([^.,!?]+)|my\sjob\s(is|:)\s([^.,!?]+))\b/i);
+    if (job) {
+      const j = (job[3] || job[5] || '').trim();
+      if (j) mem.job = j.slice(0, 60);
+    }
+
+    // likes
+    const like = msg.match(/\b(i\s(like|love|want)\s([^.,!?]+))\b/i);
+    if (like) {
+      const thing = like[3].trim().toLowerCase();
+      if (thing && !mem.likes.includes(thing)) mem.likes.unshift(thing);
+    }
+
+    // mood
+    const mood = msg.match(/\b(i\sfeel\s([^.,!?]+)|i['’]?m\s(feeling|so)\s([^.,!?]+))\b/i);
+    if (mood) mem.mood = (mood[2] || mood[4] || '').trim().toLowerCase().slice(0, 40);
+
+    // misc (short snippets, no URLs)
+    if (msg.length <= 120 && !/http/i.test(msg)) {
+      const clean = msg.replace(/\s+/g, ' ').trim();
+      if (clean && !mem.misc.includes(clean)) {
+        mem.misc.unshift(clean);
+        if (mem.misc.length > 12) mem.misc.length = 12;
+      }
+    }
+
+    saveMemFor(man, mem);
+    return mem;
+  }
+
+  // learn name from message (global)
+  function learnNameFromMessage(text) {
+    const t = String(text || '').trim();
+    const patterns = [
+      /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
+      /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
+      /\bi['’]m\s+([a-z][a-z .'-]{0,30})$/i,
+      /\bim\s+([a-z][a-z .'-]{0,30})$/i,
+    ];
+    for (const rx of patterns) {
+      const m = t.match(rx);
+      if (m) { setName(m[1]); return cleanName(m[1]); }
+    }
+    return null;
+  }
 
   /* -------------------- BACKGROUNDS -------------------- */
   const BG_BY_MAN = {
@@ -64,7 +145,7 @@
     jesse: '/images/jesse-bull-night.jpg',
   };
 
-  /* -------------------- PERSONAS -------------------- */
+  /* -------------------- PERSONAS (soft/hot pools) -------------------- */
   const PERSONAS = {
     jesse: {
       name: 'Jesse',
@@ -208,92 +289,7 @@
     return raw;
   }
 
-  /* -------------------- MEMORY SCRATCHPAD -------------------- */
-  // schema:
-  // { name, job, likes:[], nemesis:[], mood:null, lastSeenISO, misc:[] }
-  function getMemory() {
-    try {
-      const raw = localStorage.getItem(LS.mem);
-      const obj = raw ? JSON.parse(raw) : {};
-      return {
-        name: getStoredName() || obj.name || null,
-        job: obj.job || null,
-        likes: Array.isArray(obj.likes) ? obj.likes.slice(0, 12) : [],
-        nemesis: Array.isArray(obj.nemesis) ? obj.nemesis.slice(0, 8) : [],
-        mood: obj.mood || null,
-        misc: Array.isArray(obj.misc) ? obj.misc.slice(0, 12) : [],
-        lastSeenISO: obj.lastSeenISO || null,
-      };
-    } catch (_) {
-      return { name: getStoredName() || null, job: null, likes: [], nemesis: [], mood: null, misc: [], lastSeenISO: null };
-    }
-  }
-  function saveMemory(mem) {
-    try {
-      mem.lastSeenISO = new Date().toISOString();
-      localStorage.setItem(LS.mem, JSON.stringify(mem));
-    } catch (_) {}
-  }
-
-  // lightweight extractors
-  function learnNameFromMessage(text) {
-    const t = String(text || '').trim();
-    const patterns = [
-      /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bi['’]m\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bim\s+([a-z][a-z .'-]{0,30})$/i,
-    ];
-    for (const rx of patterns) {
-      const m = t.match(rx);
-      if (m) { setName(m[1]); return cleanName(m[1]); }
-    }
-    return null;
-  }
-
-  function updateMemoryFromUser(text) {
-    const msg = String(text || '');
-    const mem = getMemory();
-
-    // nemesis / Becky detection
-    const nem = msg.match(/\b(becky|jessica|karen|manager|ex)\b/i);
-    if (nem) {
-      const who = nem[1][0].toUpperCase() + nem[1].slice(1).toLowerCase();
-      if (!mem.nemesis.includes(who)) mem.nemesis.unshift(who);
-    }
-
-    // job/role shallow extraction
-    const job = msg.match(/\b(i\swork\s(at|in|for)\s([^.,!?]+)|my\sjob\s(is|:)\s([^.,!?]+))\b/i);
-    if (job) {
-      const j = (job[3] || job[5] || '').trim();
-      if (j) mem.job = j.slice(0, 60);
-    }
-
-    // likes (food/drink/music)
-    const like = msg.match(/\b(i\s(like|love|want)\s([^.,!?]+))\b/i);
-    if (like) {
-      const thing = like[3].trim().toLowerCase();
-      if (thing && !mem.likes.includes(thing)) mem.likes.unshift(thing);
-    }
-
-    // mood
-    const mood = msg.match(/\b(i\sfeel\s([^.,!?]+)|i['’]?m\s(feeling|so)\s([^.,!?]+))\b/i);
-    if (mood) mem.mood = (mood[2] || mood[4] || '').trim().toLowerCase().slice(0, 40);
-
-    // catch-all small tidbits (short)
-    if (msg.length <= 120 && !/http/i.test(msg)) {
-      const clean = msg.replace(/\s+/g, ' ').trim();
-      if (clean && !mem.misc.includes(clean)) {
-        mem.misc.unshift(clean);
-        if (mem.misc.length > 12) mem.misc.length = 12;
-      }
-    }
-
-    saveMemory(mem);
-    return mem;
-  }
-
-  /* -------------------- CHAT PAGE WIRING -------------------- */
+  /* -------------------- UI APPLY -------------------- */
   function applyChatUI() {
     const isChat = /chat\.html$/i.test(location.pathname) || document.querySelector('[data-chat-root]');
     if (!isChat) return;
@@ -309,7 +305,7 @@
     const openerEl = document.querySelector('[data-chat-opener]');
     if (openerEl) { openerEl.textContent = pickOpener(man); }
 
-    // enter-to-send if the page uses standard ids
+    // optional enter-to-send if standard ids exist
     const input = document.getElementById('chat-input');
     const btn = document.getElementById('chat-send');
     if (input && btn) {
@@ -321,25 +317,34 @@
 
   /* -------------------- PUBLIC API -------------------- */
   window.BB = {
-    // memory
-    getMemory,
-    saveMemory,
-    updateMemoryFromUser,
-    learnNameFromMessage,
+    // global name ops
+    learnNameFromMessage: learnNameFromMessage,
     setName,
     isPaid,
 
-    // convenience: attach memory when calling API
+    // per-man memory ops
+    getMemFor: getMemFor,
+    saveMemFor: saveMemFor,
+    updateMemFor: updateMemFor,
+
+    // payload builder (ships the right man's memory + global name)
     buildChatPayload({ room, text, history, dirty }) {
-      const mem = updateMemoryFromUser(text);
+      const man = (room || 'jesse').toLowerCase();
+      // teach global name if present in this message
+      learnNameFromMessage(text);
+      // update this man's memory from message
+      const mem = updateMemFor(man, text);
+      // attach global name separately (API uses it under Name policy)
+      const payloadMem = { ...mem, name: getStoredName() || null };
+
       const paid = !!isPaid();
       return {
-        room: (room || 'jesse').toLowerCase(),
+        room: man,
         userText: text,
         history: Array.isArray(history) ? history.slice(-6) : [],
         dirty: dirty || 'high',
         paid,
-        memory: mem,
+        memory: payloadMem,
       };
     },
 

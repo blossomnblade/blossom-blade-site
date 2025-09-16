@@ -28,7 +28,6 @@
 
   // --- ids ---
   function uuid(){
-    // RFC4122-ish v4
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
       const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
       const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -44,7 +43,6 @@
   }
   function getUserId(){
     try{
-      // Prefer a site user id if you have one
       if (window.BB_ACCESS && window.BB_ACCESS.userId) {
         localStorage.setItem(UID_KEY, String(window.BB_ACCESS.userId));
         return String(window.BB_ACCESS.userId);
@@ -81,7 +79,6 @@
         body: JSON.stringify(event)
       });
     }catch(e){
-      // best-effort only
       console.warn('Mod webhook failed', e);
     }
   }

@@ -1,0 +1,122 @@
+/* Blossom & Blade — mobile-first chat.css */
+
+/* Vars */
+:root{
+  --bg: rgba(0,0,0,.55);
+  --ink: #fff;
+  --me: #ff4da6;
+  --ring: rgba(124,200,255,.35);
+  --border: rgba(255,255,255,.22);
+}
+
+/* Base */
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+* { box-sizing: border-box; }
+
+body{
+  margin: 0;
+  color: var(--ink);
+  background: #000 var(--room-bg) center/cover fixed no-repeat;
+  font: 500 16px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial;
+}
+
+/* readable white everywhere */
+body, body * { color:#fff !important }
+
+/* “18+” pill */
+.pill {
+  position: fixed; top: 12px; right: 12px; z-index: 20;
+  background: rgba(0,0,0,.55);
+  border: 1px solid var(--border);
+  border-radius: 999px; padding: 6px 10px;
+  font-weight: 800; font-size: 12px; backdrop-filter: blur(6px);
+}
+
+/* Layout */
+.wrap { max-width: 1100px; margin: 16px auto 100px; padding: 0 12px; }
+.chat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  min-height: 60vh;
+  backdrop-filter: blur(8px);
+  overflow: auto; /* scroll chat area, not whole page */
+}
+
+/* Messages */
+.msg {
+  max-width: 86%;
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.12);
+  word-wrap: break-word;
+}
+.me {
+  margin-left: auto;
+  background: var(--me);
+  color: #000 !important;
+  font-weight: 700;
+}
+.opener { opacity: .95; }
+
+/* Input bar */
+.inputbar{
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: rgba(0,0,0,.78);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.row{
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 110px; gap: 8px;
+}
+
+#chat-input{
+  width: 100%;
+  background: rgba(0,0,0,.5);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 14px;
+  min-height: 44px; /* thumb target */
+  outline: none;
+}
+#chat-input:focus{ box-shadow: 0 0 0 3px var(--ring); }
+
+#chat-send{
+  border: 0; border-radius: 12px;
+  background: var(--me); color: #000; font-weight: 900;
+  min-height: 44px; /* thumb target */
+  cursor: pointer;
+}
+#chat-send:active{ transform: translateY(1px); }
+
+/* Audio controls (when you add TTS) */
+.voice-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 12px; border-radius:10px;
+  border:1px solid var(--border); background:rgba(255,255,255,.08);
+  font-weight:700; cursor:pointer;
+}
+.voice-btn[aria-pressed="true"]{ background:rgba(255,255,255,.18); }
+
+/* Small phones */
+@media (max-width: 420px){
+  .wrap{ margin: 12px auto 96px; padding: 0 10px; }
+  .row{ grid-template-columns: 1fr 96px; gap: 6px; }
+  .msg{ max-width: 92%; font-size: 15px; }
+}
+
+/* Tall screens can show more chat */
+@media (min-height: 800px){
+  .chat{ min-height: 68vh; }
+}
+
+/* Safe area (iPhone notch) */
+@supports(padding:max(0px)){
+  .inputbar{ padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+}

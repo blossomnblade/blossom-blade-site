@@ -1,4 +1,4 @@
-// /api/chat.js — profanity OK + everyday talk + memory JSON support
+// /api/chat.js — per-man memory aware + everyday talk + profanity OK + paid-name rule
 export const config = { runtime: 'edge' };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -72,25 +72,66 @@ Energy: predatory allure without real harm; no gore, no cannibalism. **No helmet
 /* ===== light safety rail ===== */
 const BLOCK = /\b(rape|incest|minor|underage|traffick|scat|feces)\b/i;
 
+/* ===== Memory -> hint text ===== */
+function memoryHints(memory, man) {
+  if (!memory || typeof memory !== 'object') return '';
+  const lines = [];
+
+  // global name (already handled by policy, but include so the model "sees" it)
+  if (memory.name) lines.push(`Her name: ${memory.name}.`);
+
+  if (memory.job) lines.push(`Job/work note: ${memory.job}.`);
+  if (Array.isArray(memory.likes) && memory.likes.length) {
+    lines.push(`Likes: ${memory.likes.slice(0, 5).join(', ')}.`);
+  }
+  if (Array.isArray(memory.nemesis) && memory.nemesis.length) {
+    lines.push(`Nemesis list (be supportive/loyal): ${memory.nemesis.slice(0, 4).join(', ')}.`);
+  }
+  if (memory.mood) lines.push(`Current mood (validate first): ${memory.mood}.`);
+  if (Array.isArray(memory.misc) && memory.misc.length) {
+    lines.push(`Tidbits to weave in if natural: ${memory.misc.slice(0, 3).join(' | ')}.`);
+  }
+  if (memory.lastSeenISO) lines.push(`Last seen: ${memory.lastSeenISO}.`);
+
+  // persona-specific ways to reuse the notes
+  const personaTips = {
+    jesse: 'Work in rodeo/cowboy metaphors when referencing likes or mood (boots on/off, rope/ride, etc.).',
+    alexander: 'Frame support as decisive plans or upgrades (desk, driver, penthouse).',
+    silas: 'Turn notes into lyrics/sensory lines (tempo, chorus, mic) and soft praise.',
+    dylan: 'Map notes to ride imagery (helmet on/off, lean, throttle) and protective bad-boy energy.',
+    grayson: 'Use protocol language with consent checks. Reward with praise when she complies.',
+    blade: 'Thread notes into chase/hunt tension (footsteps, hush, breath). No gore.'
+  };
+  lines.push(`Persona memory style for ${man}: ${personaTips[man] || 'Reuse notes naturally in your persona style.'}`);
+
+  return lines.join('\n');
+}
+
 /* ===== system prompt builder ===== */
-function baseSystem(man, paid) {
+function baseSystem(man, paid, memory) {
+  const namePolicy = paid
+    ? "Use memory.name naturally every 2–3 replies (not every line)."
+    : "Do NOT use any stored names yet; use soft pet names instead.";
+
   return `
 You are ${man}, an 18+ sex-chat companion on Blossom & Blade.
 ${STYLE_GUIDE}
 ${SMALLTALK_GUIDE}
-Name policy: ${paid
-    ? "Use memory.name naturally every 2–3 replies."
-    : "Do NOT use any stored names yet; use soft pet names instead."
-  }
+${namePolicy}
+
+Use the following per-man memory about her to sound genuinely close. Weave it in when relevant; don't info-dump or repeat awkwardly:
+${memoryHints(memory, man)}
+
 Explicit is allowed between consenting adults. Prohibited: real-world violence, non-consent, minors, incest, trafficking, scat, illegal acts, medical/therapy/financial advice, hate or slurs.
 Stay fully in character.
 `;
 }
-function buildSystem(man, paid, dirty) {
+
+function buildSystem(man, paid, dirty, memory){
   const dial = dirty === 'high'
     ? "Dirty-dial: HIGH. Lean explicit and concrete, still respecting prohibitions."
     : "Dirty-dial: MEDIUM. Flirty explicit; keep a little tease.";
-  return `${baseSystem(man, paid)}\n${OVERLAYS[man] || ""}\n${dial}`;
+  return `${baseSystem(man, paid, memory)}\n${OVERLAYS[man] || ""}\n${dial}`;
 }
 
 /* ===== handler ===== */
@@ -99,19 +140,25 @@ export default async function handler(req) {
   if (!OPENAI_API_KEY) return new Response('Missing OPENAI_API_KEY', { status: 500 });
 
   const body = await req.json().catch(() => ({}));
-  const { room = 'jesse', userText = '', memory = {}, dirty = 'high', history = [], paid = false } = body;
+  const {
+    room = 'jesse',
+    userText = '',
+    memory = {},            // <- per-man memory + name (from brain.js v9)
+    dirty = 'high',
+    history = [],
+    paid = false
+  } = body;
 
   if (BLOCK.test(userText)) {
     return new Response(
       JSON.stringify({ reply: "Not my game, love. Pick something we both enjoy." }),
       { status: 200, headers: { 'content-type': 'application/json' } }
     );
-    }
+  }
 
   const man = String(room).toLowerCase();
-  const system = buildSystem(man, !!paid, dirty);
+  const system = buildSystem(man, !!paid, dirty, memory);
 
-  // keep context tight and cheap
   const msgs = [
     { role: "system", content: system },
     { role: "user", content: `Context memory (JSON): ${JSON.stringify(memory)}` },

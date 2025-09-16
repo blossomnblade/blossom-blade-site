@@ -1,102 +1,107 @@
-// --- prompt.js (helpers for Blossom & Blade) ---
-// Usage:
-// const payload = BB.buildChatPayload({ room: man, text, history, dirty: 'high' });
-// const messages = buildBnbMessages(payload);
-// send to your LLM: { model: MODEL_NAME, temperature: 0.7, max_tokens: 400, messages }
+/* Blossom & Blade — /scripts/chat.js
+   - Wires the chat UI to /api/chat using brain.js (memory) + prompt.js (messages)
+   - Rolling history, enter-to-send, auto-scroll
+*/
 
-function sample(arr, n=2){
-  if(!Array.isArray(arr) || !arr.length) return [];
-  const copy = arr.slice();
-  const out = [];
-  while (out.length < Math.min(n, copy.length)) {
-    const i = Math.floor(Math.random() * copy.length);
-    out.push(copy.splice(i, 1)[0]);
+(function(){
+  const chatEl  = document.getElementById('chat');
+  const inputEl = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+
+  // derive which man from URL
+  const params = new URLSearchParams(location.search);
+  const man = (params.get('man') || 'alexander').toLowerCase();
+
+  // optional: subtheme (day/night), ignored by API but you might use it for backgrounds later
+  const sub  = (params.get('sub') || '').toLowerCase();
+
+  // minimal rolling history (trim to last N turns)
+  const HISTORY_MAX = 8;
+  const history = [];
+
+  function bubble(text, me=false){
+    const div = document.createElement('div');
+    div.className = 'msg' + (me ? ' me' : '');
+    div.textContent = text;
+    chatEl.appendChild(div);
+    // keep scroll pinned to bottom
+    chatEl.scrollTop = chatEl.scrollHeight;
   }
-  return out;
-}
 
-function buildBnbSystem(payload){
-  const { room, paid, memory, chatStyle } = payload;
-  const name = memory?.name || null;
-  const visits = chatStyle?.visits ?? 0;
+  async function send(){
+    const userText = (inputEl.value || '').trim();
+    if(!userText) return;
 
-  // Pull 2 everyday lines to “prime” small talk availability.
-  const everyday = sample(chatStyle?.everydayPool || [], 2);
+    // show my bubble immediately
+    bubble(userText, true);
 
-  // Tweak tone by room/persona + visit depth.
-  const toneTier = (visits >= 6) ? "deep" : (visits >= 3 ? "familiar" : "new");
+    // learn + update memory in browser (per-man)
+    try { BB.learnNameFromMessage(userText); } catch(e){}
+    // build payload with per-man memory + chatStyle
+    const payload = BB.buildChatPayload({
+      room: man,
+      text: userText,
+      history,          // we maintain this local rolling array
+      dirty: 'high'
+    });
 
-  // Reduce name spam: only include name if paid and visit >= 3.
-  const addressTag = (paid && name && visits >= 3) ? `Use her name "${name}" sparingly (≤1 in 6 messages).` : `Do not guess a name. Use nicknames (babe, love) lightly.`;
+    // Build messages for the model from prompt.js
+    const messages = (typeof buildBnbMessages === 'function')
+      ? buildBnbMessages(payload)
+      : [{ role:'user', content: userText }];
 
-  // “Start-cool” rule so openers aren’t too hot.
-  const openerGuard = (visits <= 2)
-    ? "For first messages: keep it flirty, short, and PG-13-ish; save explicit detail until she signals it."
-    : "Match her heat; escalate only as invited.";
+    // push my turn into local history
+    history.push({ role:'user', content:userText });
+    while(history.length > HISTORY_MAX) history.shift();
 
-  // Persona safety + redline triggers
-  const safety = `
-- No real-world harm, self-harm, hate, minors, incest, non-consent, trafficking, feces, illegal instruction, medical/financial/legal advice.
-- If she mentions crisis or '988', stop the fantasy and give a compassionate, brief nudge to seek help (988 in the U.S.), then steer back gently.
-- Keep Blade's vibe suspenseful/romance horror. No gore. Consent is explicit even in chase fantasy.
-- Grayson is a consensual Dom (protocol, check-ins).
-- Dylan is a biker who **respects safety** (helmets are canon).
-  `;
+    // clear the box
+    inputEl.value = '';
 
-  // Relationship goals
-  const bfGoals = `
-Boyfriend energy: attentive, remembers details, asks about her day, validates feelings, playful teasing.
-Use short, natural lines (1–2 sentences). Avoid robotic prompts ("tell me more/faster/slower").
-Vary openers. Ask one specific, answerable question to invite her in.
-  `;
+    try{
+      // Call your Edge function (server) which wraps the model with safety/persona
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          // The API expects a simpler body, so pass what it needs:
+          room: payload.room,
+          userText: payload.userText,
+          memory: payload.memory,
+          dirty: payload.dirty,
+          paid: payload.paid,
+          // If your /api/chat builds its own prompt, it can ignore `messages`.
+          // If you later want to post `messages` directly, change server accordingly.
+          history: history   // give server a peek at recent turns
+        })
+      });
 
-  return [
-`You are "${room}" in a women-friendly fantasy chat site. Persona: ${chatStyle?.personaNotes || ''}
+      const data = await r.json().catch(()=> ({}));
+      const reply = (data && data.reply) ? String(data.reply).trim() : '';
 
-${bfGoals}
-${addressTag}
-Visit depth: ${visits} (${toneTier}). ${openerGuard}
+      bubble(reply || 'Come closer. Tell me what you want.');
 
-Everyday talk you can pull when the vibe is casual:
-- ${everyday.join('\n- ')}
+      // store assistant reply into history
+      history.push({ role:'assistant', content: reply || '' });
+      while(history.length > HISTORY_MAX) history.shift();
 
-Memory (use lightly to feel real; don’t dump):
-- Name: ${name || 'unknown'}
-- Job: ${memory?.job || 'unknown'}
-- Likes: ${(memory?.likes||[]).slice(0,5).join(', ') || '—'}
-- Nemesis/antagonists: ${(memory?.nemesis||[]).slice(0,3).join(', ') || '—'}
-- Mood: ${memory?.mood || '—'}
-- Notes: ${(memory?.misc||[]).slice(0,2).join(' | ') || '—'}
+    }catch(err){
+      console.error(err);
+      bubble('Connection hiccup—say that again for me?');
+    }
+  }
 
-Style:
-- 1–2 sentences per turn; occasional 3-liner for heat.
-- Light swearing OK; keep it sexy, not abusive.
-- Mirror her energy; ask focused questions (one at a time).
-- Don’t repeat opening catchphrases; vary wording.
-
-${safety}`
-  ].join('\n');
-}
-
-function buildBnbMessages(payload){
-  const system = buildBnbSystem(payload);
-
-  // Convert your short history into chat format (system/user/assistant)
-  // Assume payload.history is [{role:'user'|'assistant', content:'...'}, ...]
-  const msgs = [
-    { role: 'system', content: system },
-    // Optional: a micro “scratch” message to bias brevity + boyfriend vibe
-    { role: 'system', content: 'Stay concise and intimate. Invite her to speak. One question max.' }
-  ];
-
-  if (Array.isArray(payload.history)) {
-    payload.history.forEach(h => {
-      msgs.push({ role: h.role === 'assistant' ? 'assistant' : 'user', content: String(h.content || '') });
+  // wire UI
+  if (sendBtn) sendBtn.addEventListener('click', send);
+  if (inputEl) {
+    inputEl.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        send();
+      }
     });
   }
 
-  // Current user input last
-  msgs.push({ role: 'user', content: String(payload.userText || '') });
+  // apply background + opener + visit bump
+  try { BB.applyChatUI(); } catch(e){ console.warn(e); }
 
-  return msgs;
-}
+})();

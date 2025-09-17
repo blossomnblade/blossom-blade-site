@@ -1,112 +1,174 @@
-<script>
-// ------------------------------
-// Chat page controller
-// ------------------------------
-(() => {
-  // helpers
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const qs = new URLSearchParams(location.search);
-  const man = (qs.get('man') || 'alexander').toLowerCase();
-  const sub = (qs.get('sub') || 'night').toLowerCase();
+/*
+  /scripts/chat.js
+  REQUIREMENTS in chat.html:
+    - <div id="chat"></div> : message list container
+    - <input id="user-input" /> : text box
+    - <button id="send-btn">Send</button> : send button (Enter also works)
+    - set window.currentCharacter (e.g., from ?g=jesse)
+  WHAT THIS FILE PROVIDES:
+    - Single opener (no double bug)
+    - Enter-to-send
+    - Lightweight memory (remembers user's name if they share it)
+    - Pacing/escalation rules from VENUS_RULES
+    - Strike/ban logging to localStorage with export
+    - (Stub) hook where OpenAI API call would go
+*/
 
-  // DOM
-  const logEl   = $('#log');          // chat transcript container
-  const inputEl = $('#msg');          // <input>/<textarea> for user text
-  const sendBtn = $('#sendBtn');      // send button
+import { VENUS_RULES, getPersona } from "./prompts.js";
 
-  // guard if markup IDs differ
-  if (!logEl || !inputEl || !sendBtn) {
-    console.warn('[chat.js] Required elements not found (#log, #msg, #sendBtn). Aborting init to avoid errors.');
+// --- State ---
+const ui = {
+  chat: document.getElementById("chat"),
+  input: document.getElementById("user-input"),
+  send: document.getElementById("send-btn"),
+};
+
+const urlParams = new URLSearchParams(location.search);
+const charKey = (window.currentCharacter || urlParams.get("g") || "blade").toLowerCase();
+const persona = getPersona(charKey);
+
+const memory = {
+  userName: null,
+  turnCount: 0,
+  consentGiven: false,
+};
+
+const LOG_KEY = "vv_mod_log";
+
+// --- Logging (strike/ban receipts) ---
+function logEvent(type, data = {}) {
+  const now = new Date().toISOString();
+  const entry = { ts: now, type, charKey, ...data };
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || "[]");
+  log.push(entry);
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+}
+export function exportLog() {
+  const data = localStorage.getItem(LOG_KEY) || "[]";
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `venus-venue-log-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// --- UI helpers ---
+function addMsg(who, text) {
+  const row = document.createElement("div");
+  row.className = `msg msg-${who}`; // style in CSS as needed
+  row.textContent = text;
+  ui.chat.appendChild(row);
+  ui.chat.scrollTop = ui.chat.scrollHeight;
+}
+
+function getNameFromText(t) {
+  // naive: “I’m Kasey”, “I am Kasey”, “My name is Kasey”
+  const patterns = [
+    /i['’]m\s+([A-Za-z]+)\b/i,
+    /\bi am\s+([A-Za-z]+)\b/i,
+    /\bmy name is\s+([A-Za-z]+)\b/i,
+  ];
+  for (const p of patterns) {
+    const m = t.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function detectConsent(t) {
+  const low = t.toLowerCase();
+  return VENUS_RULES.pacing.consentKeywords.some(k => low.includes(k.toLowerCase()));
+}
+
+// --- Content selection based on pacing ---
+function pickLine(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function nextBotLine(userText) {
+  // update simple memory
+  if (!memory.userName) {
+    const maybeName = getNameFromText(userText);
+    if (maybeName) memory.userName = maybeName;
+  }
+
+  // consent?
+  if (VENUS_RULES.pacing.requireConsent && detectConsent(userText)) {
+    memory.consentGiven = true;
+  }
+
+  const t = memory.turnCount;
+  const { minTurnsBeforeSimmer, minTurnsBeforeSteamy } = VENUS_RULES.pacing;
+
+  if (t < minTurnsBeforeSimmer) {
+    return pickLine(persona.smalltalk);
+  }
+  if (t < minTurnsBeforeSteamy) {
+    return pickLine(persona.simmer);
+  }
+  if (memory.consentGiven) {
+    return pickLine(persona.steamy);
+  }
+  // no consent yet → stay at simmer
+  return pickLine(persona.simmer);
+}
+
+// --- Fake LLM call (stub) ---
+async function llmReply(userText, draftText) {
+  // If you want to wire OpenAI later, use draftText as the "assistant_suggested"
+  // and send persona.vibe, VENUS_RULES.tone, memory.userName as system/context.
+  // For now we return the draft as final.
+  return draftText.replaceAll("{name}", memory.userName || "you");
+}
+
+// --- Send handler ---
+async function handleSend() {
+  const txt = (ui.input.value || "").trim();
+  if (!txt) return;
+  addMsg("user", txt);
+  ui.input.value = "";
+  memory.turnCount++;
+
+  // moderation example: simple strike on banned words (expand list later)
+  const banned = ["violent act", "minor", "explicit"];
+  if (banned.some(w => txt.toLowerCase().includes(w))) {
+    logEvent("strike", { reason: "banned-term", text: txt });
+    addMsg("bot", "Hey—let’s keep this safe and respectful. I can’t go there.");
     return;
   }
 
-  // memory keys
-  const INTRO_FLAG = `bb:introFired:${man}`;
-  const MEM_KEY    = `bb:mem:${man}`;
+  const draft = nextBotLine(txt);
+  const reply = await llmReply(txt, draft);
+  addMsg("bot", reply);
+}
 
-  // simple store
-  const mem = {
-    get() {
-      try { return JSON.parse(localStorage.getItem(MEM_KEY) || '{}'); }
-      catch { return {}; }
-    },
-    put(obj) {
-      localStorage.setItem(MEM_KEY, JSON.stringify({ ...(mem.get()), ...obj }));
+// --- Single opener once ---
+function doOpenerOnce() {
+  const openedKey = `vv_opened_${charKey}`;
+  if (sessionStorage.getItem(openedKey)) return;
+  sessionStorage.setItem(openedKey, "1");
+  const opener = pickLine(persona.openers);
+  addMsg("bot", opener);
+}
+
+function attachEvents() {
+  ui.send?.addEventListener("click", handleSend);
+  ui.input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSend();
     }
-  };
-
-  // UI helpers
-  const scrollToBottom = () => { logEl.scrollTop = logEl.scrollHeight; };
-
-  const addBubble = (text, who = 'ai') => {
-    const wrap = document.createElement('div');
-    wrap.className = `row ${who}`;
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    b.textContent = text;
-    wrap.appendChild(b);
-    logEl.appendChild(wrap);
-    scrollToBottom();
-  };
-
-  // --- transport to model ---
-  // Uses window.BB.ask if present (your existing client), else falls back to a harmless local echo (for safety).
-  async function askModel(prompt, opts = {}) {
-    if (window.BB && typeof window.BB.ask === 'function') {
-      return await window.BB.ask({ man, sub, prompt, memory: mem.get(), ...opts });
-    }
-    // Fallback: don't break dev if BB is off
-    return { text: '…', memoryUpdates: {} };
-  }
-
-  // --- openers (one-time) ---
-  async function runIntroOnce() {
-    if (sessionStorage.getItem(INTRO_FLAG)) return;               // ✅ prevents double intro
-    sessionStorage.setItem(INTRO_FLAG, '1');
-
-    // let the existing persona prompts do the heavy lifting;
-    // we just kick the conversation off with a single request
-    const res = await askModel('__INTRO__');                      // your backend treats __INTRO__ as "give opener"
-    if (res?.text) addBubble(res.text, 'ai');
-    if (res?.memoryUpdates) mem.put(res.memoryUpdates);
-  }
-
-  // --- send flow ---
-  let sending = false;
-
-  async function handleSend() {
-    const raw = inputEl.value.trim();
-    if (!raw || sending) return;
-
-    sending = true;
-    // user bubble
-    addBubble(raw, 'me');
-
-    // light name-capture memory (first time they say "i'm NAME" / "im NAME" / "my name is")
-    const nameMatch = raw.match(/\b(?:i['’]m|i am|my name is)\s+([A-Za-z][A-Za-z\-']{1,30})\b/i);
-    if (nameMatch) mem.put({ user_name: nameMatch[1] });
-
-    try {
-      const res = await askModel(raw);
-      if (res?.text) addBubble(res.text, 'ai');
-      if (res?.memoryUpdates) mem.put(res.memoryUpdates);
-    } catch (e) {
-      console.error(e);
-      addBubble('Sorry—lost the thread for a second. Say that again?', 'ai');
-    } finally {
-      inputEl.value = '';
-      sending = false;
-      inputEl.focus();
-    }
-  }
-
-  // events
-  sendBtn.addEventListener('click', handleSend);
-  inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } // ✅ Enter-to-send
   });
+}
 
-  // kick off
-  runIntroOnce();                                                  // ✅ only once per tab/session per man
+// --- Init ---
+(function init() {
+  if (!ui.chat || !ui.input) {
+    console.warn("Missing #chat or #user-input in chat.html");
+  }
+  doOpenerOnce();
+  attachEvents();
 })();
-</script>

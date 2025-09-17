@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Thanks — Blossom & Blade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{margin:0;padding:0;min-height:100dvh;display:grid;place-items:center;background:#0b0b0f;color:#f6f6fb;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .box{width:min(720px,92vw);background:#121218;border:1px solid #ffffff14;border-radius:16px;padding:24px;text-align:center}
+    h1{margin:0 0 8px}
+    p{color:#b8b8c7;margin:8px 0}
+    a.btn{display:inline-block;margin-top:14px;padding:12px 16px;border-radius:12px;background:#fff;color:#111;font-weight:800;text-decoration:none}
+    .fine{font-size:12px;color:#b8b8c7;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>You're in. 🎟️</h1>
+    <p id="summary"></p>
+    <a class="btn" href="/index.html">Go to rooms</a>
+    <p class="fine">$1 from every purchase supports women’s DV charities.</p>
+  </div>
+
+  <script>
+    const q = new URLSearchParams(location.search);
+    const plan = q.get("plan");
+    const amt = q.get("amt");
+    const id  = q.get("r");
+    const names = {
+      day_single: "Day Pass (one man)",
+      monthly_all: "Monthly (all rooms)"
+    };
+    document.getElementById("summary").textContent =
+      `${names[plan] || "Your pass"} — $${amt || "—"} · Receipt ${id || "pending"}`;
+  </script>
+</body>
+</html>

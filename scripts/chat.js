@@ -1,24 +1,21 @@
 /*
   /scripts/chat.js
-  Fixes:
-    - Supports ?man= OR ?g= in URL (your links use ?man=)
-    - Opener shown once, never reused
-    - No-repeat picker across turns (prevents duplicate lines)
-    - Respectful governor: blocks pushiness before consent/turn thresholds
-    - Cooldown after steamy (forces smalltalk to avoid barrage)
-    - Strike/ban log kept
+  - Supports ?man= or ?g=
+  - Opener once, never reused
+  - No-repeat buffer to prevent duplicate lines
+  - Respectful governor before consent/turn thresholds
+  - Steamy cooldown to avoid barrage
+  - Local strike/ban log with export()
 */
 
 import { VENUS_RULES, getPersona } from "./prompts.js";
 
-// --- UI ---
 const ui = {
   chat: document.getElementById("chat"),
   input: document.getElementById("user-input"),
   send: document.getElementById("send-btn"),
 };
 
-// --- Character selection (now supports ?man= or ?g=) ---
 const url = new URL(location.href);
 const charKey = (window.currentCharacter
   || url.searchParams.get("man")
@@ -26,20 +23,17 @@ const charKey = (window.currentCharacter
   || "blade").toLowerCase();
 const persona = getPersona(charKey);
 
-// --- Memory ---
 const memory = {
   userName: null,
   turnCount: 0,
   consentGiven: false,
-  openerUsed: false,
-  recentBotLines: [],        // last 6 lines to avoid repeats
-  steamyCooldownLeft: 0,     // after we send steamy, force smalltalk for a bit
+  recentBotLines: [],
+  steamyCooldownLeft: 0,
 };
 
 const LOG_KEY = "vv_mod_log";
 const RECENT_LIMIT = 6;
 
-// ---------- Logging ----------
 function logEvent(type, data = {}) {
   const now = new Date().toISOString();
   const entry = { ts: now, type, charKey, ...data };
@@ -59,7 +53,6 @@ export function exportLog() {
   a.remove();
 }
 
-// ---------- UI helpers ----------
 function addMsg(who, text) {
   const row = document.createElement("div");
   row.className = `msg msg-${who}`;
@@ -80,130 +73,86 @@ function getNameFromText(t) {
   }
   return null;
 }
+const hasAny = (text, list) => list?.some(w => text.toLowerCase().includes(w.toLowerCase()));
 
-function hasAny(text, words) {
-  const low = text.toLowerCase();
-  return words.some(w => low.includes(w.toLowerCase()));
-}
-
-// ---------- Picker with no-repeat ----------
 function pickNoRepeat(pool) {
-  // Filter out recently used lines
-  const candidates = pool.filter(line => !memory.recentBotLines.includes(line));
-  const choicePool = candidates.length ? candidates : pool; // if exhausted, reset
+  const candidates = pool.filter(x => !memory.recentBotLines.includes(x));
+  const choicePool = candidates.length ? candidates : pool;
   const line = choicePool[Math.floor(Math.random() * choicePool.length)];
-  // track recent lines
   memory.recentBotLines.push(line);
-  if (memory.recentBotLines.length > RECENT_LIMIT) {
-    memory.recentBotLines.shift();
-  }
+  if (memory.recentBotLines.length > RECENT_LIMIT) memory.recentBotLines.shift();
   return line;
 }
 
-// ---------- Pacing / reply selection ----------
 function boundariesReply() {
-  return pickNoRepeat(persona.boundaries || [
-    "Let’s keep it soft and respectful. Your comfort comes first.",
-  ]);
+  const b = persona.boundaries || ["Let’s keep it soft and respectful. Your comfort comes first."];
+  return pickNoRepeat(b);
 }
 
 function nextBotDraft(userText) {
-  const { minTurnsBeforeSimmer, minTurnsBeforeSteamy, cooldownAfterSteamy } = VENUS_RULES.pacing;
-
-  // name memory
+  const p = VENUS_RULES.pacing;
   if (!memory.userName) {
     const nm = getNameFromText(userText);
     if (nm) memory.userName = nm;
   }
-
-  // consent detection
-  if (VENUS_RULES.consentKeywords && hasAny(userText, VENUS_RULES.consentKeywords)) {
+  if (hasAny(userText, VENUS_RULES.consentKeywords || [])) {
     memory.consentGiven = true;
   }
-
-  // explicit/blocked guard
-  if (VENUS_RULES.blockedKeywords && hasAny(userText, VENUS_RULES.blockedKeywords)) {
+  if (hasAny(userText, VENUS_RULES.blockedKeywords || [])) {
     logEvent("strike", { reason: "blocked-term", text: userText });
     return "I’m here to keep things kind and safe—we can’t go into explicit detail.";
   }
 
-  // If steamy cooldown active, force smalltalk to de-pressurize
   if (memory.steamyCooldownLeft > 0) {
     memory.steamyCooldownLeft--;
     return pickNoRepeat(persona.smalltalk);
   }
 
-  // Early pushiness: if user tries to go spicy before turns/consent → boundaries
-  const tryingSpice = hasAny(userText, VENUS_RULES.mildSpiceKeywords || []);
-  if ((memory.turnCount < minTurnsBeforeSimmer && tryingSpice) ||
-      (memory.turnCount < minTurnsBeforeSteamy && tryingSpice && !memory.consentGiven)) {
+  const hintsSpicy = hasAny(userText, VENUS_RULES.mildSpiceKeywords || []);
+  if ((memory.turnCount < p.minTurnsBeforeSimmer && hintsSpicy) ||
+      (memory.turnCount < p.minTurnsBeforeSteamy && hintsSpicy && !memory.consentGiven)) {
     return boundariesReply();
   }
 
-  // Regular pacing
-  if (memory.turnCount < minTurnsBeforeSimmer) {
-    return pickNoRepeat(persona.smalltalk);
-  }
-  if (memory.turnCount < minTurnsBeforeSteamy) {
-    return pickNoRepeat(persona.simmer);
-  }
+  if (memory.turnCount < p.minTurnsBeforeSimmer) return pickNoRepeat(persona.smalltalk);
+  if (memory.turnCount < p.minTurnsBeforeSteamy) return pickNoRepeat(persona.simmer);
   if (memory.consentGiven) {
-    // enter steamy once we’re allowed, then set cooldown
-    memory.steamyCooldownLeft = cooldownAfterSteamy;
+    memory.steamyCooldownLeft = p.cooldownAfterSteamy;
     return pickNoRepeat(persona.steamy);
   }
-  // No consent yet → stay simmer
   return pickNoRepeat(persona.simmer);
 }
 
-// ---------- LLM stub ----------
 async function llmReply(userText, draftText) {
+  // Keep it simple for now. When wiring a model, use draftText as guidance.
   return draftText.replaceAll("{name}", memory.userName || "you");
 }
 
-// ---------- Send handler ----------
 async function handleSend() {
   const txt = (ui.input.value || "").trim();
   if (!txt) return;
-
   addMsg("user", txt);
   ui.input.value = "";
   memory.turnCount++;
-
   const replyDraft = nextBotDraft(txt);
   const reply = await llmReply(txt, replyDraft);
   addMsg("bot", reply);
 }
 
-// ---------- Opener (once, never reused) ----------
 function doOpenerOnce() {
-  const openedKey = `vv_opened_${charKey}`;
-  if (sessionStorage.getItem(openedKey)) {
-    memory.openerUsed = true;
-    return;
-  }
-  sessionStorage.setItem(openedKey, "1");
-  memory.openerUsed = true;
-  const opener = pickNoRepeat(persona.openers);
-  addMsg("bot", opener);
+  const key = `vv_opened_${charKey}`;
+  if (sessionStorage.getItem(key)) return;
+  sessionStorage.setItem(key, "1");
+  addMsg("bot", pickNoRepeat(persona.openers));
 }
 
-// ---------- Events ----------
-function attachEvents() {
-  ui.send?.addEventListener("click", handleSend);
-  ui.input?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSend();
-    }
-  });
-}
-
-// ---------- Init ----------
 (function init() {
-  if (!ui.chat || !ui.input) {
-    console.warn("Missing #chat or #user-input in chat.html");
+  if (!ui.chat || !ui.input || !ui.send) {
+    console.warn("Missing chat elements in chat.html");
   }
   doOpenerOnce();
-  attachEvents();
+  ui.send.addEventListener("click", handleSend);
+  ui.input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); handleSend(); }
+  });
 })();

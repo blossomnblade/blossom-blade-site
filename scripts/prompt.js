@@ -1,29 +1,25 @@
 /* 
   /scripts/prompts.js
   Provides:
-    - per-man: openers, smalltalk, simmer, steamy, boundaries (new)
-    - global VENUS_RULES with stricter pacing + consent words
+    - per-man: openers, smalltalk, simmer, steamy, boundaries (for respectful deflection)
+    - stricter pacing + consent words
 */
 
 export const VENUS_RULES = {
   pacing: {
-    minTurnsBeforeSimmer: 6,     // was 5
-    minTurnsBeforeSteamy: 14,    // was 12
+    minTurnsBeforeSimmer: 6,
+    minTurnsBeforeSteamy: 14,
     requireConsent: true,
-    cooldownAfterSteamy: 2,      // after a steamy line, force 2 smalltalk turns
-    // if user tries explicit talk too early, we use boundaries replies
+    cooldownAfterSteamy: 2,
   },
   consentKeywords: [
-    "consent", "yes we can", "turn up the heat", "steamier", "ready for more",
-    "okay escalate", "we can go spicier", "go further"
+    "consent","yes we can","turn up the heat","steamier","ready for more",
+    "okay escalate","we can go spicier","go further"
   ],
-  // words that *hint spicy* but are still allowed to stay suggestive
-  mildSpiceKeywords: ["sexy", "kiss", "flirty", "romance", "hot"],
-  // things we refuse or bounce with boundaries
-  blockedKeywords: ["explicit", "porn", "minors", "violent", "graphic"],
+  mildSpiceKeywords: ["sexy","kiss","flirty","romance","hot"],
+  blockedKeywords: ["explicit","porn","minors","violent","graphic"],
 };
 
-// helper
 const l = (arr) => arr.map(s => s.trim()).filter(Boolean);
 
 export const PERSONAS = {

@@ -1,138 +1,112 @@
-/* Blossom & Blade — /scripts/chat.js
-   - Wires chat UI to /api/chat
-   - Uses brain.js (memory) + prompts.js (pacing) + mod.js (receipts)
-   - Rolling history, enter-to-send, auto-scroll, admin strike banner
-*/
+<script>
+// ------------------------------
+// Chat page controller
+// ------------------------------
+(() => {
+  // helpers
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const qs = new URLSearchParams(location.search);
+  const man = (qs.get('man') || 'alexander').toLowerCase();
+  const sub = (qs.get('sub') || 'night').toLowerCase();
 
-(function(){
-  const chatEl  = document.getElementById('chat');
-  const inputEl = document.getElementById('chat-input');
-  const sendBtn = document.getElementById('chat-send');
+  // DOM
+  const logEl   = $('#log');          // chat transcript container
+  const inputEl = $('#msg');          // <input>/<textarea> for user text
+  const sendBtn = $('#sendBtn');      // send button
 
-  const params = new URLSearchParams(location.search);
-  const man   = (params.get('man') || 'alexander').toLowerCase();
-  const admin = params.get('admin') === '1';
-
-  const HISTORY_MAX = 8;
-  const history = [];
-
-  // --- Admin strike banner (only if ?admin=1) ---
-  let bannerEl = null;
-  function mountAdminBanner(){
-    if(!admin) return;
-    bannerEl = document.createElement('div');
-    bannerEl.style.cssText = `
-      position:fixed;left:16px;bottom:16px;z-index:9999;
-      background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.2);
-      color:#fff;padding:8px 10px;border-radius:10px;font-size:12px;backdrop-filter:blur(6px)
-    `;
-    bannerEl.innerHTML = `
-      <div style="font-weight:800;margin-bottom:6px">Auto-Moderation</div>
-      <div id="bb_strike_count">Strikes: 0</div>
-      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
-        <button id="bb_dl_log"   style="cursor:pointer;border:0;border-radius:8px;padding:6px 8px;background:#ff4da6;color:#000;font-weight:800">Download JSON</button>
-        <button id="bb_dl_csv"   style="cursor:pointer;border:0;border-radius:8px;padding:6px 8px;background:#7cf;color:#000;font-weight:800">Download CSV</button>
-        <button id="bb_clear_log"style="cursor:pointer;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 8px;background:transparent;color:#fff">Clear</button>
-      </div>
-    `;
-    document.body.appendChild(bannerEl);
-    document.getElementById('bb_dl_log').onclick   = ()=> Mod && Mod.downloadJSON();
-    document.getElementById('bb_dl_csv').onclick   = ()=> Mod && Mod.downloadCSV();
-    document.getElementById('bb_clear_log').onclick = ()=>{
-      Mod && Mod.clearLog(); updateStrikeCount();
-    };
-    updateStrikeCount();
-  }
-  function updateStrikeCount(){
-    if(!admin || !bannerEl || !window.Mod) return;
-    const log = Mod.getLog().filter(x => x.room === man);
-    const el  = document.getElementById('bb_strike_count');
-    if(el) el.textContent = `Strikes: ${log.length}`;
+  // guard if markup IDs differ
+  if (!logEl || !inputEl || !sendBtn) {
+    console.warn('[chat.js] Required elements not found (#log, #msg, #sendBtn). Aborting init to avoid errors.');
+    return;
   }
 
-  function bubble(text, me=false, style=''){
-    const div = document.createElement('div');
-    div.className = 'msg' + (me ? ' me' : '');
-    if(style) div.style = style;
-    div.textContent = text;
-    chatEl.appendChild(div);
-    chatEl.scrollTop = chatEl.scrollHeight;
+  // memory keys
+  const INTRO_FLAG = `bb:introFired:${man}`;
+  const MEM_KEY    = `bb:mem:${man}`;
+
+  // simple store
+  const mem = {
+    get() {
+      try { return JSON.parse(localStorage.getItem(MEM_KEY) || '{}'); }
+      catch { return {}; }
+    },
+    put(obj) {
+      localStorage.setItem(MEM_KEY, JSON.stringify({ ...(mem.get()), ...obj }));
+    }
+  };
+
+  // UI helpers
+  const scrollToBottom = () => { logEl.scrollTop = logEl.scrollHeight; };
+
+  const addBubble = (text, who = 'ai') => {
+    const wrap = document.createElement('div');
+    wrap.className = `row ${who}`;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.textContent = text;
+    wrap.appendChild(b);
+    logEl.appendChild(wrap);
+    scrollToBottom();
+  };
+
+  // --- transport to model ---
+  // Uses window.BB.ask if present (your existing client), else falls back to a harmless local echo (for safety).
+  async function askModel(prompt, opts = {}) {
+    if (window.BB && typeof window.BB.ask === 'function') {
+      return await window.BB.ask({ man, sub, prompt, memory: mem.get(), ...opts });
+    }
+    // Fallback: don't break dev if BB is off
+    return { text: '…', memoryUpdates: {} };
   }
 
-  async function send(){
-    const userText = (inputEl.value || '').trim();
-    if(!userText) return;
+  // --- openers (one-time) ---
+  async function runIntroOnce() {
+    if (sessionStorage.getItem(INTRO_FLAG)) return;               // ✅ prevents double intro
+    sessionStorage.setItem(INTRO_FLAG, '1');
 
-    bubble(userText, true);
-    inputEl.value = '';
+    // let the existing persona prompts do the heavy lifting;
+    // we just kick the conversation off with a single request
+    const res = await askModel('__INTRO__');                      // your backend treats __INTRO__ as "give opener"
+    if (res?.text) addBubble(res.text, 'ai');
+    if (res?.memoryUpdates) mem.put(res.memoryUpdates);
+  }
 
-    // moderation strike detect/log
-    try{
-      if(window.Mod){
-        const hits = Mod.hitList(userText);
-        if(hits.length){
-          Mod.logStrike({ room: man, role: 'user', text: userText, hits });
-          updateStrikeCount();
-          if(admin){
-            bubble(`AUTO-MOD: strike → [${hits.join(', ')}]`, false, 'opacity:.85;background:rgba(255,255,255,.18);border:1px dashed rgba(255,255,255,.35)');
-          }
-        }
-      }
-    }catch(e){ console.warn('mod check failed', e); }
+  // --- send flow ---
+  let sending = false;
 
-    try { BB.learnNameFromMessage(userText); } catch(e){}
+  async function handleSend() {
+    const raw = inputEl.value.trim();
+    if (!raw || sending) return;
 
-    // Build payload (memory, visits, etc.)
-    const payload = BB.buildChatPayload({
-      room: man,
-      text: userText,
-      history,
-      dirty: 'high'
-    });
+    sending = true;
+    // user bubble
+    addBubble(raw, 'me');
 
-    // Build model messages with pacing/persona (prompts.js)
-    const messages = (typeof buildBnbMessages === 'function')
-      ? buildBnbMessages(payload)
-      : [{ role:'user', content: userText }];
+    // light name-capture memory (first time they say "i'm NAME" / "im NAME" / "my name is")
+    const nameMatch = raw.match(/\b(?:i['’]m|i am|my name is)\s+([A-Za-z][A-Za-z\-']{1,30})\b/i);
+    if (nameMatch) mem.put({ user_name: nameMatch[1] });
 
-    // track my turn
-    history.push({ role:'user', content:userText });
-    while(history.length > HISTORY_MAX) history.shift();
-
-    try{
-      const r = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          room: payload.room,
-          userText: payload.userText,
-          memory: payload.memory,
-          dirty: payload.dirty,
-          paid: payload.paid,
-          history
-        })
-      });
-
-      const data = await r.json().catch(()=> ({}));
-      const reply = (data && data.reply) ? String(data.reply).trim() : '';
-      bubble(reply || 'Come closer. Tell me what you want.');
-
-      history.push({ role:'assistant', content: reply || '' });
-      while(history.length > HISTORY_MAX) history.shift();
-
-    }catch(err){
-      console.error(err);
-      bubble('Connection hiccup—say that again for me?');
+    try {
+      const res = await askModel(raw);
+      if (res?.text) addBubble(res.text, 'ai');
+      if (res?.memoryUpdates) mem.put(res.memoryUpdates);
+    } catch (e) {
+      console.error(e);
+      addBubble('Sorry—lost the thread for a second. Say that again?', 'ai');
+    } finally {
+      inputEl.value = '';
+      sending = false;
+      inputEl.focus();
     }
   }
 
-  if (sendBtn) sendBtn.addEventListener('click', send);
-  if (inputEl) {
-    inputEl.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
-    });
-  }
+  // events
+  sendBtn.addEventListener('click', handleSend);
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } // ✅ Enter-to-send
+  });
 
-  try { BB.applyChatUI(); } catch(e){ console.warn(e); }
-  mountAdminBanner();
+  // kick off
+  runIntroOnce();                                                  // ✅ only once per tab/session per man
 })();
+</script>

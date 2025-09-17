@@ -2,64 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Blossom & Blade — Paywall</title>
+  <title>Blossom & Blade — Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Gothic-ish background and clean card */
-    :root { --bg:#0b0b0f; --fg:#f7f7fb; --muted:#b6b6c2; }
-    html,body { margin:0; padding:0; background:var(--bg) url('/images/gothic-bg.jpg') center/cover fixed no-repeat; color:var(--fg); font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; }
-    .wrap { min-height:100dvh; display:grid; place-items:center; padding:24px; }
-    .card { width:min(720px, 92vw); backdrop-filter: blur(6px); background:rgba(15,15,22,0.65); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
-    h1 { margin:0 0 8px; font-weight:700; letter-spacing:0.3px; }
-    p { margin:0 0 12px; color:var(--muted); }
-    .tiers { display:grid; gap:12px; grid-template-columns: 1fr; }
-    .tier { border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:16px; }
-    .tier h3 { margin:0 0 6px; }
-    .price { font-size:18px; font-weight:700; margin:6px 0 10px; }
-    button { width:100%; padding:12px 14px; border-radius:10px; border:0; background:#fff; color:#111; font-weight:700; cursor:pointer; }
-    .fine { font-size:12px; color:var(--muted); margin-top:10px; }
-    @media (min-width: 720px) { .tiers { grid-template-columns: 1fr 1fr; } }
+    :root { --bg:#0b0b0f; --fg:#f6f6fb; --muted:#b8b8c7; --accent:#ff2f86; }
+    html,body{margin:0;padding:0;background:var(--bg) url('/images/gothic-bg.jpg') center/cover fixed no-repeat;color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+    .card{width:min(820px,94vw);backdrop-filter:blur(6px);background:rgba(14,14,20,.68);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px 22px 10px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    h1{margin:0 0 6px}
+    p{margin:0 0 12px;color:var(--muted)}
+    .tiers{display:grid;gap:12px;grid-template-columns:1fr}
+    .tier{border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:16px}
+    .tier h3{margin:0 0 6px}
+    .price{font-weight:800;margin:6px 0 10px}
+    .btn{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#fff;color:#111;font-weight:800;cursor:pointer}
+    .fine{font-size:12px;color:var(--muted);margin-top:10px}
+    .badge{font-size:12px;background:#111;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;float:right;margin-top:-6px}
+    @media(min-width:760px){.tiers{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
+      <div class="badge">Adults 18+ only</div>
       <h1>Unlock Rooms</h1>
       <p>Safe, flirty, and on your terms. $1 from every purchase goes to a DV charity.</p>
 
       <div class="tiers">
         <div class="tier">
-          <h3>Single Room — 1 Month</h3>
-          <div class="price">$5.99</div>
-          <button data-plan="single">Continue</button>
-          <div class="fine">Pick your favorite and stay as long as you like.</div>
+          <h3>Day Pass — one man</h3>
+          <div class="price">$7.99</div>
+          <button class="btn" data-plan="day_single">Continue</button>
+          <div class="fine">Pick your favorite and stay the day.</div>
         </div>
         <div class="tier">
-          <h3>All Rooms — 1 Month</h3>
-          <div class="price">$12.99</div>
-          <button data-plan="all">Continue</button>
-          <div class="fine">Access to Blade, Dylan, Jesse, Alexander, Silas, Grayson.</div>
+          <h3>Monthly — all six rooms</h3>
+          <div class="price">$14.99</div>
+          <button class="btn" data-plan="monthly_all">Continue</button>
+          <div class="fine">Unlimited access to Blade, Dylan, Jesse, Alexander, Silas, Grayson.</div>
         </div>
       </div>
 
-      <p class="fine">Voice add-on (optional): +$5.99 — coming soon.</p>
-
-      <!-- Stripe wiring (placeholder). Replace with your publishable key + server webhook later. -->
-      <script>
-        document.addEventListener("click", (e) => {
-          const btn = e.target.closest("button[data-plan]");
-          if (!btn) return;
-          const plan = btn.getAttribute("data-plan");
-
-          // TODO: replace this with a fetch to your server to create a Checkout Session
-          alert(`Mock: would start Stripe Checkout for plan: ${plan}`);
-
-          // Example (later):
-          // fetch('/api/create-checkout-session', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ plan }) })
-          //   .then(r => r.json()).then(({ url }) => location.href = url);
-        });
-      </script>
+      <p class="fine">Voice add-on: coming soon.</p>
     </div>
   </div>
+
+  <script>
+    // simple client → server handoff. replace with your processor later.
+    addEventListener("click", async (e) => {
+      const btn = e.target.closest(".btn[data-plan]");
+      if (!btn) return;
+      btn.disabled = true; btn.textContent = "Preparing…";
+      try {
+        const r = await fetch("/api/checkout", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ plan: btn.dataset.plan })
+        });
+        const data = await r.json();
+        location.href = data.redirectUrl || "/thank-you.html?plan="+btn.dataset.plan;
+      } catch (err) {
+        alert("Sorry, that didn’t go through. Try again in a moment.");
+        btn.disabled = false; btn.textContent = "Continue";
+      }
+    });
+  </script>
 </body>
 </html>

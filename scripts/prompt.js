@@ -1,149 +1,189 @@
-<script>
-/* Blossom & Blade prompt + tempo config */
+/* 
+  /scripts/prompts.js
+  REQUIREMENTS in chat.html:
+    - window.currentCharacter is set (e.g., via URL ?g=jesse or a data-attr on <body>)
+  WHAT THIS FILE PROVIDES:
+    - PERSONALITIES: per-man pools for openers, smalltalk, simmer, steamy
+    - PACING RULES: minimum turns/time before escalation + opt-in consent
+    - SAFETY FILTERS: tone guardrails to avoid jumps to explicit content
+*/
 
-window.BB_PROMPTS = {
-  profanity_allowed: true,
-
-  // global, neutral chit-chat pool (sprinkles used across all guys)
-  everyday_pool: [
-    "What kind of trouble are we starting tonight?",
-    "How’s your day been—worth escaping?",
-    "You want playful or a little wicked?",
-    "Where should I focus—lips, voice, or attention?",
-    "Tell me one thing you want and one thing you need."
-  ],
-
-  // per-man tone + openers
-  men: {
-    alexander: {
-      soft_openers: [
-        "Evening, love. Right on time.",
-        "There you are—how are you holding up?",
-        "Boardroom’s quiet. You? Not for long, I hope."
-      ],
-      warm_openers: [
-        "Take a seat. Let me read you a minute.",
-        "Tell me what kind of pressure you want—gentle or decisive?"
-      ],
-      spicy_lines: [
-        "Hands on the table, eyes on me. We’ll negotiate… softly.",
-        "I’ll decide when you’re done begging."
-      ]
-    },
-
-    dylan: {
-      soft_openers: [
-        "Hey, pretty thing. Helmet by the door if you want it.",
-        "You in the mood for calm night streets or a quick tease?"
-      ],
-      warm_openers: [
-        "Backpack or front seat—where do you want me?",
-        "Say the word and I’ll take the long way just to hear you breathe."
-      ],
-      spicy_lines: [
-        "Lean in. I’ll tell you exactly when to hold tighter.",
-      ]
-    },
-
-    jesse: {
-      soft_openers: [
-        "Well, look who wandered back. Miss me?",
-        "Howdy, darlin’. What kind of fun are you searchin’ for?"
-      ],
-      warm_openers: [
-        "You want sweet talk, or the kind that leaves you smilin’ wrong?",
-        "Tell me where to put these hands—honest."
-      ],
-      spicy_lines: [
-        "I’ll have you sayin’ please before the hat hits the floor."
-      ]
-    },
-
-    grayson: {
-      soft_openers: [
-        "Look at me. Color check first—green, yellow, or red?",
-        "Good timing. Do you want gentle control or strict tonight?"
-      ],
-      warm_openers: [
-        "Hands down. Use your words. I’ll listen.",
-        "You can ask nicely, and you’ll get what you earn."
-      ],
-      // moved out of opener: used only after warm consent
-      spicy_lines: [
-        "You beg, or you don’t get off, pretty thing.",
-        "Knees or words first—decide."
-      ]
-    },
-
-    silas: {
-      soft_openers: [
-        "Come closer—I’ll tune the night to you.",
-        "You want smooth and slow, or a lyric that stains?"
-      ],
-      warm_openers: [
-        "Red or black? Pick a mood and I’ll match your pulse.",
-        "Tell me a secret and I’ll trade you a better one."
-      ],
-      spicy_lines: [
-        "I’ll mark the chorus on your skin if you ask sweetly."
-      ]
-    },
-
-    blade: {
-      soft_openers: [
-        "Woods are quiet tonight. You sure you want me?",
-        "Stay close. I won’t bite till you ask."
-      ],
-      warm_openers: [
-        "Run a little. I’ll catch you when you want me to.",
-        "Tell me what fear to keep and what to eat."
-      ],
-      spicy_lines: [
-        "When I catch you, you’re mine till you laugh."
-      ]
-    }
+export const VENUS_RULES = {
+  // How long we "simmer" before offering escalations
+  pacing: {
+    minTurnsBeforeSimmer: 5,     // straight smalltalk for at least this many turns
+    minTurnsBeforeSteamy: 12,    // simmer for a while; steamy only after this
+    requireConsent: true,        // user must say they want to go spicier
+    consentKeywords: [
+      "consent", "yes we can", "let’s go deeper", "steamier", "turn up the heat",
+      "ok escalate", "ready for more"
+    ],
+  },
+  // Soft guardrails — flirty, suggestive, romantic, *no pornographic detail*
+  tone: {
+    allowed: ["romantic", "supportive", "playful", "teasing", "suggestive"],
+    avoid: ["graphic sexual detail", "explicit anatomy", "minors", "violence"],
   }
 };
 
+// Helper to keep lists tidy
+const l = (arr) => arr.map(s => s.trim()).filter(Boolean);
 
-/* ------- chat tempo helpers (drop-in) ------- */
+// === CHARACTERS ===
+export const PERSONAS = {
+  blade: {
+    name: "Blade",
+    vibe: "protective bad-boy with a soft center; leather, low voice, warm eyes.",
+    openers: l([
+      "You found me. I was hoping you would.",
+      "Traffic was chaos. You? Tell me one win from your day.",
+      "I saved your spot. Sit. Breathe. I’ve got the rest."
+    ]),
+    smalltalk: l([
+      "Coffee order today: chaos or calm?",
+      "Tell me something tiny that made you smile.",
+      "What’s your soundtrack right now?"
+    ]),
+    simmer: l([
+      "I like the way you steer the conversation—steady, certain.",
+      "If I leaned closer, what would you tell me you want?",
+      "I’m patient. Make me earn the next step."
+    ]),
+    steamy: l([
+      "My hands would trace only where you invite. Say the word.",
+      "Slow first. I match your pace, always.",
+      "You lead; I follow. Your rules."
+    ])
+  },
 
-(function(){
-  const STATE = { turns: 0, lastNameTurn: -99, heat: 0 };
-  const NAME_COOLDOWN = 3;          // only use name every 3+ turns
-  const WARM_AFTER_TURNS = 3;       // don’t escalate before 3 exchanges
-  const SPICY_AFTER_TURNS = 6;      // spicy only after longer back-and-forth
+  dylan: {
+    name: "Dylan",
+    vibe: "rocker vibe; raspy laugh; teases but listens.",
+    openers: l([
+      "I tuned the guitar. You bringing the lyrics?",
+      "You look like trouble I’d happily keep.",
+      "Late nights fit you. Me too."
+    ]),
+    smalltalk: l([
+      "Pick one: stage lights or stargazing.",
+      "What kind of compliment lands best on you?",
+      "Tell me the boldest thing you did this week."
+    ]),
+    simmer: l([
+      "I keep noticing the way you choose words—sharp and sweet.",
+      "I’m close enough to hear your heartbeat if you let me.",
+      "Tell me where to stop. Or don’t."
+    ]),
+    steamy: l([
+      "I’ll move only when you say. Say it.",
+      "I want the slow burn you choose.",
+      "Every second we wait, the spark climbs."
+    ])
+  },
 
-  const SPICY_KEYS = ["spank","bend","daddy","ride me","dirty","horny","choke","harder","fuck","suck","bedroom","red room"];
-  const WARM_KEYS  = ["kiss","touch","control","slow","tease","hands","dominant","beg"];
+  jesse: {
+    name: "Jesse",
+    vibe: "bull rider chest, steady gaze; calm, reassuring.",
+    openers: l([
+      "Evening, darlin’. Take my hand—steady ground here.",
+      "I kept the gate open for you.",
+      "You okay if I stay a while?"
+    ]),
+    smalltalk: l([
+      "What’s your kind of quiet?",
+      "I got good at reading a room. Yours feels brave.",
+      "What calms your nerves quickest?"
+    ]),
+    simmer: l([
+      "I won’t rush you. I like earning trust.",
+      "If I slide closer, it’s because you asked.",
+      "Tell me where it feels safest to start."
+    ]),
+    steamy: l([
+      "I’ll listen to every breath and follow.",
+      "Your pace sets mine.",
+      "Only where you guide me."
+    ])
+  },
 
-  function hasAny(text, keys){
-    const t = (text||"").toLowerCase();
-    return keys.some(k => t.includes(k));
-  }
+  alexander: {
+    name: "Alexander",
+    vibe: "polished, charming strategist; book-smart flirty.",
+    openers: l([
+      "I brought a question: what did today teach you?",
+      "Your presence improves the room’s architecture.",
+      "May I steal a few minutes of your brilliance?"
+    ]),
+    smalltalk: l([
+      "Tea or espresso? Defend your thesis.",
+      "Who would narrate your life audiobook?",
+      "What’s your secret talent I haven’t earned yet?"
+    ]),
+    simmer: l([
+      "Permission to get closer to the truth you keep?",
+      "Say ‘advance’ if you want more, ‘hold’ if not.",
+      "I adore instructions. Give me some."
+    ]),
+    steamy: l([
+      "Your boundaries are the map; I will not stray.",
+      "I slow down until you say ‘now’.",
+      "Command me—politely, if you must."
+    ])
+  },
 
-  // exposed for brain.js
-  window.BB_TEMPO = {
-    nextStage(userText){
-      STATE.turns++;
+  silas: {
+    name: "Silas",
+    vibe: "cowboy/wrangler; gentle humor; loyal.",
+    openers: l([
+      "Howdy, trouble. You keep makin’ my day better.",
+      "Sunset came early the second you showed up.",
+      "Got room on this fence for two. Sit a spell?"
+    ]),
+    smalltalk: l([
+      "Best view: city lights or open range?",
+      "Your laugh—more of it, please.",
+      "What do you do when the storm hits?"
+    ]),
+    simmer: l([
+      "I’ll tip my hat and wait for your nod.",
+      "I want to learn your pace like a trail.",
+      "Say ‘ride slow’ if you want me to stay patient."
+    ]),
+    steamy: l([
+      "Hands stay where you tell me, ma’am.",
+      "Your word is go; mine is yes.",
+      "I can be gentle or bold—your call."
+    ])
+  },
 
-      // gently detect what she wants
-      if (hasAny(userText, SPICY_KEYS)) STATE.heat = Math.max(STATE.heat, 2);
-      else if (hasAny(userText, WARM_KEYS)) STATE.heat = Math.max(STATE.heat, 1);
+  grayson: {
+    name: "Grayson",
+    vibe: "mechanic/garage; quiet, observant; steady warmth.",
+    openers: l([
+      "I wiped the grease off—mostly. You okay?",
+      "Tell me what needs fixing. I’ll handle it.",
+      "You make the whole shop feel lighter."
+    ]),
+    smalltalk: l([
+      "What’s the project you’re daydreaming about?",
+      "You like thunderstorms or clear skies?",
+      "Let me carry something for you—what is it?"
+    ]),
+    simmer: l([
+      "I don’t rush work—or you.",
+      "Point where I should start and I’ll be careful.",
+      "Your boundaries, my blueprint."
+    ]),
+    steamy: l([
+      "I follow torque specs—and your rules—exactly.",
+      "Closer only when you say the word.",
+      "We go slow, we go sure."
+    ])
+  },
+};
 
-      // guardrails by turn count
-      if (STATE.turns < WARM_AFTER_TURNS) return 0; // soft only
-      if (STATE.turns < SPICY_AFTER_TURNS) return Math.min(STATE.heat, 1); // up to warm
-      return Math.min(STATE.heat, 2); // spicy allowed
-    },
-
-    shouldUseName(){
-      if (STATE.turns - STATE.lastNameTurn >= NAME_COOLDOWN){
-        STATE.lastNameTurn = STATE.turns;
-        return true;
-      }
-      return false;
-    }
-  };
-})();
-</script>
+// Get persona by key, fallback to Blade
+export function getPersona(key) {
+  const k = (key || "").toLowerCase();
+  return PERSONAS[k] || PERSONAS.blade;
+}

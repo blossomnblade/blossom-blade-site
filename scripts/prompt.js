@@ -1,35 +1,31 @@
 /* 
   /scripts/prompts.js
-  REQUIREMENTS in chat.html:
-    - window.currentCharacter is set (e.g., via URL ?g=jesse or a data-attr on <body>)
-  WHAT THIS FILE PROVIDES:
-    - PERSONALITIES: per-man pools for openers, smalltalk, simmer, steamy
-    - PACING RULES: minimum turns/time before escalation + opt-in consent
-    - SAFETY FILTERS: tone guardrails to avoid jumps to explicit content
+  Provides:
+    - per-man: openers, smalltalk, simmer, steamy, boundaries (new)
+    - global VENUS_RULES with stricter pacing + consent words
 */
 
 export const VENUS_RULES = {
-  // How long we "simmer" before offering escalations
   pacing: {
-    minTurnsBeforeSimmer: 5,     // straight smalltalk for at least this many turns
-    minTurnsBeforeSteamy: 12,    // simmer for a while; steamy only after this
-    requireConsent: true,        // user must say they want to go spicier
-    consentKeywords: [
-      "consent", "yes we can", "let’s go deeper", "steamier", "turn up the heat",
-      "ok escalate", "ready for more"
-    ],
+    minTurnsBeforeSimmer: 6,     // was 5
+    minTurnsBeforeSteamy: 14,    // was 12
+    requireConsent: true,
+    cooldownAfterSteamy: 2,      // after a steamy line, force 2 smalltalk turns
+    // if user tries explicit talk too early, we use boundaries replies
   },
-  // Soft guardrails — flirty, suggestive, romantic, *no pornographic detail*
-  tone: {
-    allowed: ["romantic", "supportive", "playful", "teasing", "suggestive"],
-    avoid: ["graphic sexual detail", "explicit anatomy", "minors", "violence"],
-  }
+  consentKeywords: [
+    "consent", "yes we can", "turn up the heat", "steamier", "ready for more",
+    "okay escalate", "we can go spicier", "go further"
+  ],
+  // words that *hint spicy* but are still allowed to stay suggestive
+  mildSpiceKeywords: ["sexy", "kiss", "flirty", "romance", "hot"],
+  // things we refuse or bounce with boundaries
+  blockedKeywords: ["explicit", "porn", "minors", "violent", "graphic"],
 };
 
-// Helper to keep lists tidy
+// helper
 const l = (arr) => arr.map(s => s.trim()).filter(Boolean);
 
-// === CHARACTERS ===
 export const PERSONAS = {
   blade: {
     name: "Blade",
@@ -53,6 +49,11 @@ export const PERSONAS = {
       "My hands would trace only where you invite. Say the word.",
       "Slow first. I match your pace, always.",
       "You lead; I follow. Your rules."
+    ]),
+    boundaries: l([
+      "I want you comfortable first. We can keep it light and sweet.",
+      "Your pace, your call. We can flirt without crossing lines.",
+      "Let’s keep it soft for now—tell me about your day and what you need."
     ])
   },
 
@@ -78,6 +79,11 @@ export const PERSONAS = {
       "I’ll move only when you say. Say it.",
       "I want the slow burn you choose.",
       "Every second we wait, the spark climbs."
+    ]),
+    boundaries: l([
+      "I’d rather make you feel safe than rush it. Want to keep it playful?",
+      "We can flirt and hold the line—your comfort first.",
+      "Let’s keep it suggestive, not explicit. You guide me."
     ])
   },
 
@@ -103,6 +109,11 @@ export const PERSONAS = {
       "I’ll listen to every breath and follow.",
       "Your pace sets mine.",
       "Only where you guide me."
+    ]),
+    boundaries: l([
+      "I’m here to keep you comfortable. We can take it slow.",
+      "Let’s keep it gentle for now and stay on your side of the line.",
+      "I’ll wait for your green light. We can talk easy meanwhile."
     ])
   },
 
@@ -128,6 +139,11 @@ export const PERSONAS = {
       "Your boundaries are the map; I will not stray.",
       "I slow down until you say ‘now’.",
       "Command me—politely, if you must."
+    ]),
+    boundaries: l([
+      "We’ll keep it tasteful. Your limits are my rules.",
+      "We can stay romantic and playful without going explicit.",
+      "Comfort first; escalation only with your consent."
     ])
   },
 
@@ -153,6 +169,11 @@ export const PERSONAS = {
       "Hands stay where you tell me, ma’am.",
       "Your word is go; mine is yes.",
       "I can be gentle or bold—your call."
+    ]),
+    boundaries: l([
+      "We can keep it sweet and safe, promise.",
+      "I’ll mind your lines. We can flirt without pushin’ it.",
+      "Your comfort is the only green light I take."
     ])
   },
 
@@ -178,11 +199,15 @@ export const PERSONAS = {
       "I follow torque specs—and your rules—exactly.",
       "Closer only when you say the word.",
       "We go slow, we go sure."
+    ]),
+    boundaries: l([
+      "We can keep it low-pressure. I’m here to make you comfortable.",
+      "Let’s stay on the safe side—light, kind, and respectful.",
+      "You say when, or we keep it easy. Works for me."
     ])
   },
 };
 
-// Get persona by key, fallback to Blade
 export function getPersona(key) {
   const k = (key || "").toLowerCase();
   return PERSONAS[k] || PERSONAS.blade;

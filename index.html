@@ -1,171 +1,175 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Blossom &amp; Blade</title>
-  <link rel="icon" href="/images/logo.jpg"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Blossom & Blade</title>
+<link rel="icon" href="/images/logo.jpg" />
+<style>
+  :root{
+    --bg:#070707;
+    --panel:#0f0f0f;
+    --ink:#ffffff;
+    --muted:#b8c0cc;
+    --accent:#ff4fa0;
+    --chip:#11161f;
+    --shadow:0 18px 46px rgba(0,0,0,.55);
+    --ring:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:#000;
+    color:var(--ink);
+    font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    background-image:url('/images/bg_dark_romance.jpg');
+    background-size:cover; background-attachment:fixed; background-position:center;
+  }
 
-  <style>
-    :root{
-      --ink:#fff;
-      --muted:#d6dbea;
-      --pill:#ff2d83;
-      --panel:rgba(0,0,0,.55);
-      --edge:rgba(255,255,255,.14);
-      --glow:0 0 6px #fff, 0 0 16px #d7f3ff, 0 0 28px #a5e2ff;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;background:#000;color:var(--ink);
-      font:600 16px/1.5 system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial;
-      background-image:url('/images/bg_book.jpg'); /* landing wallpaper */
-      background-size:cover;background-position:center;background-attachment:fixed;
-    }
+  .wrap{max-width:1200px; margin:0 auto; padding:28px 16px 80px}
 
-    .wrap{max-width:1180px;margin:0 auto;padding:24px 14px 100px;position:relative}
-    .veil{position:fixed;inset:0;background:radial-gradient(ellipse at center, rgba(0,0,0,.20), rgba(0,0,0,.70) 60%, rgba(0,0,0,.90));pointer-events:none}
+  /* header */
+  h1{
+    margin:0 0 6px;
+    font-size:42px; letter-spacing:.5px; font-weight:800;
+    text-shadow:0 0 18px rgba(255,255,255,.45), 0 0 2px #fff;
+    color:#fff;                         /* ✅ neon white */
+  }
+  .sub{
+    margin:0 0 18px;
+    color:#e8ecf5;                      /* ✅ bright white */
+    font-weight:600;
+    text-shadow:0 0 10px rgba(255,255,255,.25);
+  }
 
-    /* Top badges / CTA row */
-    .badge{
-      position:fixed;right:16px;top:14px;z-index:50;
-      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
-      color:#fff;background:rgba(0,0,0,.6);border:1px solid var(--edge);backdrop-filter:blur(6px)
-    }
-    header{margin:8px 0 16px}
-    h1{
-      margin:8px 0 2px;font-size:46px;line-height:1.05;letter-spacing:-.5px;
-      color:#fff;text-shadow:var(--glow);
-    }
-    .strap{
-      font-weight:600;color:#fff; /* bright */
-      text-shadow:0 0 3px #fff, 0 0 10px #bfe9ff;
-      margin-bottom:16px;
-    }
-    .ctas{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 24px}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--edge);
-      background:var(--panel);backdrop-filter:blur(6px);color:#fff;text-decoration:none;font-weight:900
-    }
-    .btn.primary{background:var(--pill);color:#000;border:0;box-shadow:0 10px 28px rgba(255,45,131,.35)}
-    .btn:hover{filter:brightness(1.05)}
-    .btn:active{transform:translateY(1px)}
+  /* top buttons */
+  .actions{display:flex; gap:12px; margin:10px 0 22px; flex-wrap:wrap}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:12px 18px; border-radius:14px; text-decoration:none;
+    font-weight:800; letter-spacing:.3px; box-shadow:var(--shadow);
+    background:var(--accent); color:#111; border:2px solid transparent;
+  }
+  .btn:focus-visible{outline:none; box-shadow:0 0 0 4px var(--ring)}
 
-    /* Card grid */
-    .grid{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:22px
-    }
-    @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+  /* grid */
+  .grid{display:grid; gap:22px; grid-template-columns:repeat(3,1fr)}
+  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
-    .card{
-      position:relative;overflow:hidden;border-radius:18px;
-      background:#0a0a0a;border:1px solid var(--edge);
-      box-shadow:0 10px 40px rgba(0,0,0,.55);
-      min-height:250px
-    }
-    .card .img{
-      position:absolute;inset:0;background:#000 center/cover no-repeat;
-      filter:contrast(1.05) brightness(.92);
-      transition:transform .35s ease, filter .35s ease;
-    }
-    .card:hover .img{transform:scale(1.02);filter:contrast(1.05) brightness(1.0)}
-    .chip{
-      position:absolute;left:14px;top:14px;z-index:2;font-size:12px;
-      padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--edge)
-    }
-    .label{position:absolute;left:16px;bottom:12px;font-size:22px;font-weight:900;letter-spacing:.2px;text-shadow:var(--glow)}
-    .sub{position:absolute;right:16px;bottom:12px;font-weight:900;color:#fff;text-shadow:0 0 3px #fff}
+  .card{
+    position:relative; overflow:hidden; border-radius:18px; min-height:260px;
+    background:#000;
+    box-shadow:var(--shadow);
+  }
+  .card a.room{ position:absolute; inset:0; display:block; color:inherit; text-decoration:none; }
+  .card::before{
+    content:""; position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    filter:brightness(.78) contrast(1.08) saturate(1.2);
+    transition:transform .35s ease;
+  }
+  .card:hover::before{ transform:scale(1.02); }
+  .ttl{
+    position:absolute; left:16px; bottom:16px;
+    font-size:26px; font-weight:900; letter-spacing:.3px;
+    text-shadow:0 2px 10px rgba(0,0,0,.6);
+  }
+  .badge{
+    position:absolute; left:14px; top:14px;
+    font-size:12px; padding:6px 10px; border-radius:999px;
+    background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.14);
+    box-shadow:var(--shadow)
+  }
+  .night{ position:absolute; right:16px; bottom:18px; opacity:.95; font-weight:800; }
 
-    .card a{
-      position:absolute;inset:0; /* whole card clickable */
-      text-indent:-9999px;outline:0;
-    }
+  /* per-card backgrounds (✅ Jesse fixed) */
+  .alex::before{ background-image:url('/images/bg_alexander_boardroom.jpg'); }
+  .dylan::before{ background-image:url('/images/dylan-garage.jpg'); }
+  .silas::before{ background-image:url('/images/bg_silas_stage.jpg'); }
+  .blade::before{ background-image:url('/images/blade-woods.jpg'); }
+  .grayson::before{ background-image:url('/images/grayson-bg.jpg'); }
+  .jesse::before{ background-image:url('/images/jesse-bull-night.jpg'); } /* <-- ✅ matches repo */
 
-    /* Per-room background previews (for index only) */
-    .alex .img{ background-image:url('/images/bg_alexander_boardroom.jpg'); }
-    .dylan .img{ background-image:url('/images/dylan-garage.jpg'); }
-    .jesse .img{ background-image:url('/images/jesse_bg.jpg'); }   /* underscore */
-    .grayson .img{ background-image:url('/images/grayson-bg.jpg'); }
-    .silas .img{ background-image:url('/images/bg_silas_stage.jpg'); }
-    .blade .img{ background-image:url('/images/blade-woods.jpg'); }
-  </style>
+  /* 18+ chip */
+  .chip18{
+    position:fixed; right:16px; top:16px; z-index:10;
+    background:#000; color:#fff; border:1px solid rgba(255,255,255,.18);
+    border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800;
+    box-shadow:var(--shadow)
+  }
+</style>
 </head>
 <body>
-  <div class="veil"></div>
-  <div class="badge">Adults 18+ only</div>
+<div class="chip18">Adults 18+ only</div>
+<div class="wrap">
+  <h1>Blossom &amp; Blade</h1>
+  <p class="sub">Choose your man · Safe, consensual fantasy · Adults 18+ only</p>
 
-  <div class="wrap">
-    <header>
-      <h1>Blossom &amp; Blade</h1>
-      <div class="strap">Choose your man · Safe, consensual fantasy · Adults 18+ only</div>
-
-      <div class="ctas">
-        <a class="btn primary" href="/pay.html">Unlock access</a>
-        <a class="btn" href="/age.html">Age check</a>
-        <a class="btn" href="/assets-check.html">Assets check</a>
-      </div>
-    </header>
-
-    <section class="grid">
-
-      <!-- Alexander -->
-      <article class="card alex">
-        <div class="img"></div>
-        <div class="chip">Boardroom</div>
-        <div class="label">Alexander</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=alexander&sub=night" aria-label="Chat with Alexander">Chat</a>
-      </article>
-
-      <!-- Dylan -->
-      <article class="card dylan">
-        <div class="img"></div>
-        <div class="chip">Garage</div>
-        <div class="label">Dylan</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=dylan&sub=night" aria-label="Chat with Dylan">Chat</a>
-      </article>
-
-      <!-- Jesse (uses jesse_bg.jpg to avoid blank tile) -->
-      <article class="card jesse">
-        <div class="img"></div>
-        <div class="chip">Cowboy</div>
-        <div class="label">Jesse</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=jesse&sub=night" aria-label="Chat with Jesse">Chat</a>
-      </article>
-
-      <!-- Grayson -->
-      <article class="card grayson">
-        <div class="img"></div>
-        <div class="chip">Ops</div>
-        <div class="label">Grayson</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=grayson&sub=night" aria-label="Chat with Grayson">Chat</a>
-      </article>
-
-      <!-- Silas -->
-      <article class="card silas">
-        <div class="img"></div>
-        <div class="chip">Stage</div>
-        <div class="label">Silas</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=silas&sub=night" aria-label="Chat with Silas">Chat</a>
-      </article>
-
-      <!-- Blade -->
-      <article class="card blade">
-        <div class="img"></div>
-        <div class="chip">Woods</div>
-        <div class="label">Blade</div>
-        <div class="sub">Night</div>
-        <a href="/chat.html?man=blade&sub=night" aria-label="Chat with Blade">Chat</a>
-      </article>
-
-    </section>
+  <div class="actions">
+    <a class="btn" href="/pay.html">Unlock access</a>
+    <a class="btn" style="background:#111;color:#fff;border-color:#333" href="/age.html">Age check</a>
+    <a class="btn" style="background:#111;color:#fff;border-color:#333" href="/assets-check.html">Assets check</a>
   </div>
+
+  <div class="grid">
+
+    <!-- Alexander -->
+    <div class="card alex">
+      <span class="badge">Boardroom</span>
+      <a class="room" href="/chat.html?man=alexander&sub=night">
+        <div class="ttl">Alexander</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+    <!-- Dylan -->
+    <div class="card dylan">
+      <span class="badge">Garage</span>
+      <a class="room" href="/chat.html?man=dylan&sub=night">
+        <div class="ttl">Dylan</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+    <!-- Jesse (✅ fixed image) -->
+    <div class="card jesse">
+      <span class="badge">Cowboy</span>
+      <a class="room" href="/chat.html?man=jesse&sub=night">
+        <div class="ttl">Jesse</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+    <!-- Grayson -->
+    <div class="card grayson">
+      <span class="badge">Ops</span>
+      <a class="room" href="/chat.html?man=grayson&sub=night">
+        <div class="ttl">Grayson</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+    <!-- Silas -->
+    <div class="card silas">
+      <span class="badge">Stage</span>
+      <a class="room" href="/chat.html?man=silas&sub=night">
+        <div class="ttl">Silas</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+    <!-- Blade -->
+    <div class="card blade">
+      <span class="badge">Woods</span>
+      <a class="room" href="/chat.html?man=blade&sub=night">
+        <div class="ttl">Blade</div>
+        <div class="night">Night</div>
+      </a>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>

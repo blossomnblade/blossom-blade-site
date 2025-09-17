@@ -1,41 +1,45 @@
 /*
   /scripts/chat.js
-  REQUIREMENTS in chat.html:
-    - <div id="chat"></div> : message list container
-    - <input id="user-input" /> : text box
-    - <button id="send-btn">Send</button> : send button (Enter also works)
-    - set window.currentCharacter (e.g., from ?g=jesse)
-  WHAT THIS FILE PROVIDES:
-    - Single opener (no double bug)
-    - Enter-to-send
-    - Lightweight memory (remembers user's name if they share it)
-    - Pacing/escalation rules from VENUS_RULES
-    - Strike/ban logging to localStorage with export
-    - (Stub) hook where OpenAI API call would go
+  Fixes:
+    - Supports ?man= OR ?g= in URL (your links use ?man=)
+    - Opener shown once, never reused
+    - No-repeat picker across turns (prevents duplicate lines)
+    - Respectful governor: blocks pushiness before consent/turn thresholds
+    - Cooldown after steamy (forces smalltalk to avoid barrage)
+    - Strike/ban log kept
 */
 
 import { VENUS_RULES, getPersona } from "./prompts.js";
 
-// --- State ---
+// --- UI ---
 const ui = {
   chat: document.getElementById("chat"),
   input: document.getElementById("user-input"),
   send: document.getElementById("send-btn"),
 };
 
-const urlParams = new URLSearchParams(location.search);
-const charKey = (window.currentCharacter || urlParams.get("g") || "blade").toLowerCase();
+// --- Character selection (now supports ?man= or ?g=) ---
+const url = new URL(location.href);
+const charKey = (window.currentCharacter
+  || url.searchParams.get("man")
+  || url.searchParams.get("g")
+  || "blade").toLowerCase();
 const persona = getPersona(charKey);
 
+// --- Memory ---
 const memory = {
   userName: null,
   turnCount: 0,
   consentGiven: false,
+  openerUsed: false,
+  recentBotLines: [],        // last 6 lines to avoid repeats
+  steamyCooldownLeft: 0,     // after we send steamy, force smalltalk for a bit
 };
 
 const LOG_KEY = "vv_mod_log";
+const RECENT_LIMIT = 6;
 
-// --- Logging (strike/ban receipts) ---
+// ---------- Logging ----------
 function logEvent(type, data = {}) {
   const now = new Date().toISOString();
   const entry = { ts: now, type, charKey, ...data };
@@ -55,17 +59,16 @@ export function exportLog() {
   a.remove();
 }
 
-// --- UI helpers ---
+// ---------- UI helpers ----------
 function addMsg(who, text) {
   const row = document.createElement("div");
-  row.className = `msg msg-${who}`; // style in CSS as needed
+  row.className = `msg msg-${who}`;
   row.textContent = text;
   ui.chat.appendChild(row);
   ui.chat.scrollTop = ui.chat.scrollHeight;
 }
 
 function getNameFromText(t) {
-  // naive: “I’m Kasey”, “I am Kasey”, “My name is Kasey”
   const patterns = [
     /i['’]m\s+([A-Za-z]+)\b/i,
     /\bi am\s+([A-Za-z]+)\b/i,
@@ -78,82 +81,114 @@ function getNameFromText(t) {
   return null;
 }
 
-function detectConsent(t) {
-  const low = t.toLowerCase();
-  return VENUS_RULES.pacing.consentKeywords.some(k => low.includes(k.toLowerCase()));
+function hasAny(text, words) {
+  const low = text.toLowerCase();
+  return words.some(w => low.includes(w.toLowerCase()));
 }
 
-// --- Content selection based on pacing ---
-function pickLine(pool) {
-  return pool[Math.floor(Math.random() * pool.length)];
+// ---------- Picker with no-repeat ----------
+function pickNoRepeat(pool) {
+  // Filter out recently used lines
+  const candidates = pool.filter(line => !memory.recentBotLines.includes(line));
+  const choicePool = candidates.length ? candidates : pool; // if exhausted, reset
+  const line = choicePool[Math.floor(Math.random() * choicePool.length)];
+  // track recent lines
+  memory.recentBotLines.push(line);
+  if (memory.recentBotLines.length > RECENT_LIMIT) {
+    memory.recentBotLines.shift();
+  }
+  return line;
 }
 
-function nextBotLine(userText) {
-  // update simple memory
+// ---------- Pacing / reply selection ----------
+function boundariesReply() {
+  return pickNoRepeat(persona.boundaries || [
+    "Let’s keep it soft and respectful. Your comfort comes first.",
+  ]);
+}
+
+function nextBotDraft(userText) {
+  const { minTurnsBeforeSimmer, minTurnsBeforeSteamy, cooldownAfterSteamy } = VENUS_RULES.pacing;
+
+  // name memory
   if (!memory.userName) {
-    const maybeName = getNameFromText(userText);
-    if (maybeName) memory.userName = maybeName;
+    const nm = getNameFromText(userText);
+    if (nm) memory.userName = nm;
   }
 
-  // consent?
-  if (VENUS_RULES.pacing.requireConsent && detectConsent(userText)) {
+  // consent detection
+  if (VENUS_RULES.consentKeywords && hasAny(userText, VENUS_RULES.consentKeywords)) {
     memory.consentGiven = true;
   }
 
-  const t = memory.turnCount;
-  const { minTurnsBeforeSimmer, minTurnsBeforeSteamy } = VENUS_RULES.pacing;
-
-  if (t < minTurnsBeforeSimmer) {
-    return pickLine(persona.smalltalk);
+  // explicit/blocked guard
+  if (VENUS_RULES.blockedKeywords && hasAny(userText, VENUS_RULES.blockedKeywords)) {
+    logEvent("strike", { reason: "blocked-term", text: userText });
+    return "I’m here to keep things kind and safe—we can’t go into explicit detail.";
   }
-  if (t < minTurnsBeforeSteamy) {
-    return pickLine(persona.simmer);
+
+  // If steamy cooldown active, force smalltalk to de-pressurize
+  if (memory.steamyCooldownLeft > 0) {
+    memory.steamyCooldownLeft--;
+    return pickNoRepeat(persona.smalltalk);
+  }
+
+  // Early pushiness: if user tries to go spicy before turns/consent → boundaries
+  const tryingSpice = hasAny(userText, VENUS_RULES.mildSpiceKeywords || []);
+  if ((memory.turnCount < minTurnsBeforeSimmer && tryingSpice) ||
+      (memory.turnCount < minTurnsBeforeSteamy && tryingSpice && !memory.consentGiven)) {
+    return boundariesReply();
+  }
+
+  // Regular pacing
+  if (memory.turnCount < minTurnsBeforeSimmer) {
+    return pickNoRepeat(persona.smalltalk);
+  }
+  if (memory.turnCount < minTurnsBeforeSteamy) {
+    return pickNoRepeat(persona.simmer);
   }
   if (memory.consentGiven) {
-    return pickLine(persona.steamy);
+    // enter steamy once we’re allowed, then set cooldown
+    memory.steamyCooldownLeft = cooldownAfterSteamy;
+    return pickNoRepeat(persona.steamy);
   }
-  // no consent yet → stay at simmer
-  return pickLine(persona.simmer);
+  // No consent yet → stay simmer
+  return pickNoRepeat(persona.simmer);
 }
 
-// --- Fake LLM call (stub) ---
+// ---------- LLM stub ----------
 async function llmReply(userText, draftText) {
-  // If you want to wire OpenAI later, use draftText as the "assistant_suggested"
-  // and send persona.vibe, VENUS_RULES.tone, memory.userName as system/context.
-  // For now we return the draft as final.
   return draftText.replaceAll("{name}", memory.userName || "you");
 }
 
-// --- Send handler ---
+// ---------- Send handler ----------
 async function handleSend() {
   const txt = (ui.input.value || "").trim();
   if (!txt) return;
+
   addMsg("user", txt);
   ui.input.value = "";
   memory.turnCount++;
 
-  // moderation example: simple strike on banned words (expand list later)
-  const banned = ["violent act", "minor", "explicit"];
-  if (banned.some(w => txt.toLowerCase().includes(w))) {
-    logEvent("strike", { reason: "banned-term", text: txt });
-    addMsg("bot", "Hey—let’s keep this safe and respectful. I can’t go there.");
-    return;
-  }
-
-  const draft = nextBotLine(txt);
-  const reply = await llmReply(txt, draft);
+  const replyDraft = nextBotDraft(txt);
+  const reply = await llmReply(txt, replyDraft);
   addMsg("bot", reply);
 }
 
-// --- Single opener once ---
+// ---------- Opener (once, never reused) ----------
 function doOpenerOnce() {
   const openedKey = `vv_opened_${charKey}`;
-  if (sessionStorage.getItem(openedKey)) return;
+  if (sessionStorage.getItem(openedKey)) {
+    memory.openerUsed = true;
+    return;
+  }
   sessionStorage.setItem(openedKey, "1");
-  const opener = pickLine(persona.openers);
+  memory.openerUsed = true;
+  const opener = pickNoRepeat(persona.openers);
   addMsg("bot", opener);
 }
 
+// ---------- Events ----------
 function attachEvents() {
   ui.send?.addEventListener("click", handleSend);
   ui.input?.addEventListener("keydown", (e) => {
@@ -164,7 +199,7 @@ function attachEvents() {
   });
 }
 
-// --- Init ---
+// ---------- Init ----------
 (function init() {
   if (!ui.chat || !ui.input) {
     console.warn("Missing #chat or #user-input in chat.html");

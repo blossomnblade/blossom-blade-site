@@ -40,34 +40,26 @@
   </footer>
 </div>
 
-<!-- Prompts + Client engine -->
-<script src="/scripts/prompts.js"></script>
-<script src="/scripts/chat.js"></script>
-
-<!-- Background loader that matches YOUR filenames exactly -->
 <script>
+/* ---------------- BACKGROUND (matches YOUR filenames) ---------------- */
 (function(){
   function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
   var man=(qs('man')||qs('g')||'blade').toLowerCase();
-  var sub=(qs('sub')||'night').toLowerCase(); // default to night for vibe
-  var override=qs('bg');
+  var sub=(qs('sub')||'night').toLowerCase();
   var stage=document.getElementById('stage');
 
-  // 🔥 These match your repo (/images):
   var MAP={
-    blade:     { day:'/images/blade-woods.jpg',        night:'/images/blade-woods.jpg' },
-    dylan:     { day:'/images/dylan-garage.jpg',       night:'/images/dylan-garage.jpg' },
-    jesse:     { day:'/images/jesse-books-day.jpg',    night:'/images/jesse-bull-night.jpg' },
+    blade:     { day:'/images/blade-woods.jpg',            night:'/images/blade-woods.jpg' },
+    dylan:     { day:'/images/dylan-garage.jpg',           night:'/images/dylan-garage.jpg' },
+    jesse:     { day:'/images/jesse-books-day.jpg',        night:'/images/jesse-bull-night.jpg' },
     alexander: { day:'/images/bg_alexander_boardroom.jpg', night:'/images/bg_alexander_boardroom.jpg' },
-    silas:     { day:'/images/bg_silas_stage.jpg',     night:'/images/bg_silas_stage.jpg' },
-    grayson:   { day:'/images/grayson-bg.jpg',         night:'/images/grayson-bg.jpg' }
+    silas:     { day:'/images/bg_silas_stage.jpg',         night:'/images/bg_silas_stage.jpg' },
+    grayson:   { day:'/images/grayson-bg.jpg',             night:'/images/grayson-bg.jpg' }
   };
-  // Site-wide fallbacks you already have:
   var SUBF   ={ day:'/images/bg_dark_romance.jpg', night:'/images/gothic-bg.jpg' };
   var GLOBAL ='/images/gothic-bg.jpg';
 
   var guesses=[];
-  if(override) guesses.push(override);
   if(MAP[man] && MAP[man][sub]) guesses.push(MAP[man][sub]);
   guesses.push('/images/'+man+'-'+sub+'.jpg','/images/'+man+'.jpg');
   if(SUBF[sub]) guesses.push(SUBF[sub]);
@@ -81,6 +73,101 @@
     img.onerror=function(){ next(i+1); };
     img.src=src;
   })(0);
+})();
+
+/* ---------------- CHAT (self-contained; Enter + Button work) ---------------- */
+(function(){
+  var chat  = document.getElementById('chat');
+  var input = document.getElementById('user-input');
+  var send  = document.getElementById('send-btn');
+
+  function addMsg(who, text, cls){
+    var row=document.createElement('div');
+    row.className='msg msg-'+who+(cls?(' '+cls):'');
+    row.textContent=text;
+    chat.appendChild(row);
+    chat.scrollTop=chat.scrollHeight;
+    return row;
+  }
+  function typing(){ return addMsg('bot','typing…','typing'); }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
+  var man=(qs('man')||qs('g')||'blade').toLowerCase();
+
+  // Warm opener (no external files)
+  var OPENERS=[
+    "You found me. I was hoping you would.",
+    "I kept a seat warm for you. Come closer.",
+    "Late nights suit you. Tell me one tiny win from today."
+  ];
+  try{
+    var key='vv_opened_'+man;
+    if(!sessionStorage.getItem(key)){ sessionStorage.setItem(key,'1'); addMsg('bot', pick(OPENERS)); }
+  }catch(e){ addMsg('bot', pick(OPENERS)); }
+
+  // Minimal memory + consent
+  var state={turns:0, consent:false, name:null, facts:[], history:[]};
+  var CONSENT_ON=[/i consent/i,/turn up the heat/i,/go further/i,/steamier/i,/spicier/i,/ok escalate/i];
+
+  function push(role,content){ state.history.push({role:role,content:content}); if(state.history.length>40) state.history.shift(); }
+  function mineFacts(t){
+    var m=t.match(/\b(i['’]?m|i am|my name is)\s+([A-Za-z]{2,20})/i); if(m) state.name=m[2];
+    var like=t.match(/\b(i like|i love)\s+([^\.!]{2,40})/i); if(like){ state.facts.push(like[2].trim()); if(state.facts.length>5) state.facts.shift(); }
+  }
+
+  function localFallback(userText){
+    var a=["I hear you: "+userText,"That hits all the right buttons.","Say more—I’m listening."];
+    var b=["Sweet or wicked tonight?","Do you like gentle praise or playful command?","Where should I start—words in your ear, or fingers laced with yours?"];
+    return pick(a)+" "+pick(b);
+  }
+
+  async function planAndReply(userText){
+    state.turns++; mineFacts(userText);
+    if (CONSENT_ON.some(function(r){ return r.test(userText);} )) state.consent=true;
+
+    var useAdult = false; // flip via API/adult later if you want
+
+    var t=typing();
+    try{
+      var payload={
+        man: man,
+        persona: {name: man},
+        guardrails:{},
+        memory:{name:state.name,facts:state.facts,consent:state.consent},
+        history: state.history.slice(-12),
+        user: userText,
+        mode: useAdult?"adult":"sfw"
+      };
+      var res=await fetch(useAdult?"/api/adult-chat":"/api/chat",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      var data=await res.json();
+      if(t && t.parentNode) t.parentNode.removeChild(t);
+      var reply=(data && data.reply)?data.reply:localFallback(userText);
+      addMsg('bot',reply); push('assistant',reply);
+    }catch(e){
+      if(t && t.parentNode) t.parentNode.removeChild(t);
+      var soft=localFallback(userText);
+      addMsg('bot',soft); push('assistant',soft);
+    }
+  }
+
+  function doSend(){
+    var txt=(input.value||"").trim();
+    if(!txt) return;
+    addMsg('user',txt); push('user',txt);
+    input.value="";
+    planAndReply(txt);
+  }
+
+  // 🔧 This is the bit that was broken before — now it’s inline and guaranteed to bind.
+  send.onclick = doSend;
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doSend(); } });
+
+  // seed system
+  push('system',"Warm, human, flirty, consent-first. Keep it PG-13 here. Short replies with one follow-up question.");
 })();
 </script>
 </body>

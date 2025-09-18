@@ -1,175 +1,114 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Blossom & Blade</title>
-<link rel="icon" href="/images/logo.jpg" />
-<style>
-  :root{
-    --bg:#070707;
-    --panel:#0f0f0f;
-    --ink:#ffffff;
-    --muted:#b8c0cc;
-    --accent:#ff4fa0;
-    --chip:#11161f;
-    --shadow:0 18px 46px rgba(0,0,0,.55);
-    --ring:rgba(255,255,255,.12);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    background:#000;
-    color:var(--ink);
-    font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    background-image:url('/images/bg_dark_romance.jpg');
-    background-size:cover; background-attachment:fixed; background-position:center;
-  }
-
-  .wrap{max-width:1200px; margin:0 auto; padding:28px 16px 80px}
-
-  /* header */
-  h1{
-    margin:0 0 6px;
-    font-size:42px; letter-spacing:.5px; font-weight:800;
-    text-shadow:0 0 18px rgba(255,255,255,.45), 0 0 2px #fff;
-    color:#fff;                         /* ✅ neon white */
-  }
-  .sub{
-    margin:0 0 18px;
-    color:#e8ecf5;                      /* ✅ bright white */
-    font-weight:600;
-    text-shadow:0 0 10px rgba(255,255,255,.25);
-  }
-
-  /* top buttons */
-  .actions{display:flex; gap:12px; margin:10px 0 22px; flex-wrap:wrap}
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    padding:12px 18px; border-radius:14px; text-decoration:none;
-    font-weight:800; letter-spacing:.3px; box-shadow:var(--shadow);
-    background:var(--accent); color:#111; border:2px solid transparent;
-  }
-  .btn:focus-visible{outline:none; box-shadow:0 0 0 4px var(--ring)}
-
-  /* grid */
-  .grid{display:grid; gap:22px; grid-template-columns:repeat(3,1fr)}
-  @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
-
-  .card{
-    position:relative; overflow:hidden; border-radius:18px; min-height:260px;
-    background:#000;
-    box-shadow:var(--shadow);
-  }
-  .card a.room{ position:absolute; inset:0; display:block; color:inherit; text-decoration:none; }
-  .card::before{
-    content:""; position:absolute; inset:0;
-    background-size:cover; background-position:center;
-    filter:brightness(.78) contrast(1.08) saturate(1.2);
-    transition:transform .35s ease;
-  }
-  .card:hover::before{ transform:scale(1.02); }
-  .ttl{
-    position:absolute; left:16px; bottom:16px;
-    font-size:26px; font-weight:900; letter-spacing:.3px;
-    text-shadow:0 2px 10px rgba(0,0,0,.6);
-  }
-  .badge{
-    position:absolute; left:14px; top:14px;
-    font-size:12px; padding:6px 10px; border-radius:999px;
-    background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.14);
-    box-shadow:var(--shadow)
-  }
-  .night{ position:absolute; right:16px; bottom:18px; opacity:.95; font-weight:800; }
-
-  /* per-card backgrounds (✅ Jesse fixed) */
-  .alex::before{ background-image:url('/images/bg_alexander_boardroom.jpg'); }
-  .dylan::before{ background-image:url('/images/dylan-garage.jpg'); }
-  .silas::before{ background-image:url('/images/bg_silas_stage.jpg'); }
-  .blade::before{ background-image:url('/images/blade-woods.jpg'); }
-  .grayson::before{ background-image:url('/images/grayson-bg.jpg'); }
-  .jesse::before{ background-image:url('/images/jesse-bull-night.jpg'); } /* <-- ✅ matches repo */
-
-  /* 18+ chip */
-  .chip18{
-    position:fixed; right:16px; top:16px; z-index:10;
-    background:#000; color:#fff; border:1px solid rgba(255,255,255,.18);
-    border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800;
-    box-shadow:var(--shadow)
-  }
-</style>
+  <meta charset="utf-8" />
+  <title>Blossom & Blade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{--bg:#0b0b0f;--fg:#f6f7fb;--panel:#11131a;--accent:#ff2f86;--border:#ffffff22}
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    header{padding:22px 16px;text-align:center;font-weight:900;font-size:clamp(20px,3.4vw,38px)}
+    .grid{width:min(1200px,94vw);margin:0 auto 40px;display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+    .card{display:block;position:relative;background:#0e1118;border:1px solid var(--border);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .card img{display:block;width:100%;height:360px;object-fit:cover;background:#0e0f14}
+    .meta{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+    .name{font-weight:800;letter-spacing:.3px}
+    .btn{background:var(--accent);color:#111;font-weight:800;border-radius:999px;padding:8px 12px}
+    footer{padding:18px;text-align:center;opacity:.7}
+    @media (max-width:520px){ .card img{height:300px} }
+  </style>
 </head>
 <body>
-<div class="chip18">Adults 18+ only</div>
-<div class="wrap">
-  <h1>Blossom &amp; Blade</h1>
-  <p class="sub">Choose your man · Safe, consensual fantasy · Adults 18+ only</p>
+  <header>Blossom & Blade</header>
 
-  <div class="actions">
-    <a class="btn" href="/pay.html">Unlock access</a>
-    <a class="btn" style="background:#111;color:#fff;border-color:#333" href="/age.html">Age check</a>
-    <a class="btn" style="background:#111;color:#fff;border-color:#333" href="/assets-check.html">Assets check</a>
-  </div>
-
-  <div class="grid">
-
-    <!-- Alexander -->
-    <div class="card alex">
-      <span class="badge">Boardroom</span>
-      <a class="room" href="/chat.html?man=alexander&sub=night">
-        <div class="ttl">Alexander</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+  <main class="grid">
+    <!-- Blade -->
+    <a class="card" href="chat.html?man=blade&sub=night">
+      <img alt="Blade — night woods"
+           data-off="/images/characters/blade/blade-card-off.webp"
+           data-on ="/images/characters/blade/blade-card-on.webp"
+           data-f1 ="/images/characters/blade/blade_card.jpg"
+           data-f2 ="/images/images/characters/blade/blade_card.jpg"
+           src="/images/characters/blade/blade-card-off.webp">
+      <div class="meta"><span class="name">Blade</span><span class="btn">Enter</span></div>
+    </a>
 
     <!-- Dylan -->
-    <div class="card dylan">
-      <span class="badge">Garage</span>
-      <a class="room" href="/chat.html?man=dylan&sub=night">
-        <div class="ttl">Dylan</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+    <a class="card" href="chat.html?man=dylan&sub=night">
+      <img alt="Dylan — helmet, black tank"
+           data-off="/images/characters/dylan/dylan-card-off.webp"
+           data-on ="/images/characters/dylan/dylan-card-on.webp"
+           data-f1 ="/images/characters/dylan/dylan_card.jpg"
+           data-f2 ="/images/images/characters/dylan/dylan_card.jpg"
+           src="/images/characters/dylan/dylan-card-off.webp">
+      <div class="meta"><span class="name">Dylan</span><span class="btn">Enter</span></div>
+    </a>
 
-    <!-- Jesse (✅ fixed image) -->
-    <div class="card jesse">
-      <span class="badge">Cowboy</span>
-      <a class="room" href="/chat.html?man=jesse&sub=night">
-        <div class="ttl">Jesse</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+    <!-- Jesse -->
+    <a class="card" href="chat.html?man=jesse&sub=night">
+      <img alt="Jesse — rough charm"
+           data-off="/images/characters/jesse/jesse-card-off.webp"
+           data-on ="/images/characters/jesse/jesse-card-on.webp"
+           data-f1 ="/images/characters/jesse/jesse_card.jpg"
+           data-f2 ="/images/images/characters/jesse/jesse_card.jpg"
+           src="/images/characters/jesse/jesse-card-off.webp">
+      <div class="meta"><span class="name">Jesse</span><span class="btn">Enter</span></div>
+    </a>
 
-    <!-- Grayson -->
-    <div class="card grayson">
-      <span class="badge">Ops</span>
-      <a class="room" href="/chat.html?man=grayson&sub=night">
-        <div class="ttl">Grayson</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+    <!-- Alexander -->
+    <a class="card" href="chat.html?man=alexander&sub=night">
+      <img alt="Alexander — boardroom"
+           data-off="/images/characters/alexander/alexander-card-off.webp"
+           data-on ="/images/characters/alexander/alexander-card-on.webp"
+           data-f1 ="/images/characters/alexander/alexander_card.jpg"
+           data-f2 ="/images/images/characters/alexander/alexander_card.jpg"
+           src="/images/characters/alexander/alexander-card-off.webp">
+      <div class="meta"><span class="name">Alexander</span><span class="btn">Enter</span></div>
+    </a>
 
     <!-- Silas -->
-    <div class="card silas">
-      <span class="badge">Stage</span>
-      <a class="room" href="/chat.html?man=silas&sub=night">
-        <div class="ttl">Silas</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+    <a class="card" href="chat.html?man=silas&sub=night">
+      <img alt="Silas — stage lighting"
+           data-off="/images/characters/silas/silas-card-off.webp"
+           data-on ="/images/characters/silas/silas-card-on.webp"
+           data-f1 ="/images/characters/silas/silas_card.jpg"
+           data-f2 ="/images/images/characters/silas/silas_card.jpg"
+           src="/images/characters/silas/silas-card-off.webp">
+      <div class="meta"><span class="name">Silas</span><span class="btn">Enter</span></div>
+    </a>
 
-    <!-- Blade -->
-    <div class="card blade">
-      <span class="badge">Woods</span>
-      <a class="room" href="/chat.html?man=blade&sub=night">
-        <div class="ttl">Blade</div>
-        <div class="night">Night</div>
-      </a>
-    </div>
+    <!-- Grayson -->
+    <a class="card" href="chat.html?man=grayson&sub=night">
+      <img alt="Grayson — red-room glow"
+           data-off="/images/characters/grayson/grayson-card-off.webp"
+           data-on ="/images/characters/grayson/grayson-card-on.webp"
+           data-f1 ="/images/characters/grayson/grayson_card.jpg"
+           data-f2 ="/images/images/characters/grayson/grayson_card.jpg"
+           src="/images/characters/grayson/grayson-card-off.webp">
+      <div class="meta"><span class="name">Grayson</span><span class="btn">Enter</span></div>
+    </a>
+  </main>
 
-  </div>
-</div>
+  <footer>© Venus Venue LLC — Blossom & Blade</footer>
+
+  <script>
+    // Swap on hover/tap; cascade fallbacks if an asset is missing
+    document.querySelectorAll('.card img').forEach(function(img){
+      const off = img.dataset.off, on = img.dataset.on;
+      function setOff(){ img.src = off; }
+      function setOn(){ if(on) img.src = on; }
+      img.closest('.card').addEventListener('mouseenter', setOn);
+      img.closest('.card').addEventListener('mouseleave', setOff);
+      img.closest('.card').addEventListener('touchstart', function(){
+        setOn(); setTimeout(setOff, 700);
+      }, {passive:true});
+      // Fallback chain: try f1 then f2 if primary missing
+      img.addEventListener('error', function(){
+        if(img.dataset._step==="f1"){ img.src = img.dataset.f2; img.dataset._step="f2"; return; }
+        if(!img.dataset._step){ img.src = img.dataset.f1; img.dataset._step="f1"; return; }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,224 +1,78 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <title>Blossom & Blade — Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles/chat.css" />
   <style>
-    :root { --bg:#0b0b0f; --panel:rgba(15,15,22,.72); --border:#ffffff1a; --fg:#f7f7fb; --accent:#ff2f86; }
-    html,body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
-    header{position:relative;padding:18px 20px;display:flex;align-items:center;justify-content:center}
-    header h1{margin:0;font-weight:800}
-    .badge{position:absolute;right:16px;top:12px;font-size:12px;background:#111;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
-    .stage{display:grid;place-items:center;padding:14px;background:linear-gradient(160deg,#11131a 0%,#0b0b0f 100%)}
-    .chat-panel{width:min(1024px,94vw);height:min(70vh,74dvh);background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:18px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-    .msg{max-width:76%;margin:14px 0;padding:12px 16px;border-radius:12px;line-height:1.45}
-    .msg-bot{background:#151520;border:1px solid var(--border)}
-    .msg-user{margin-left:auto;background:var(--accent);color:#111;font-weight:700}
-    .typing{opacity:.7;font-style:italic}
-    .composer{display:flex;gap:12px;padding:14px;position:sticky;bottom:0;background:linear-gradient(180deg,rgba(11,11,15,0) 0%,rgba(11,11,15,.75) 30%,rgba(11,11,15,1) 100%)}
-    #user-input{flex:1;padding:14px 16px;border-radius:999px;border:1px solid #fff2;background:#0e0e14;color:#f7f7fb;outline:none}
-    #send-btn{padding:12px 18px;border-radius:16px;border:0;background:var(--accent);color:#111;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(255,47,134,.25)}
-    @media (max-width:480px){.msg{max-width:88%}.chat-panel{height:60dvh}}
+    /* Minimal hardening so this file works even if chat.css is older */
+    body{margin:0;background:#0b0b0f;color:#f6f7fb;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    header{padding:22px 16px;text-align:center;font-weight:900;font-size:clamp(20px,3.4vw,38px)}
+    .adult-badge{position:fixed;right:18px;top:12px;background:#222;border:1px solid #ffffff22;border-radius:999px;padding:8px 12px;font-weight:800;opacity:.9}
+    .chat-shell{width:min(1100px,94vw);margin:0 auto 22px}
+    .chat-panel{position:relative;background:rgba(0,0,0,.35);border:1px solid #ffffff22;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:18px}
+    #chat-log{min-height:380px;max-height:62vh;overflow:auto;padding:6px}
+    .input-row{display:flex;gap:12px;margin:16px 0 4px}
+    #chat-input{flex:1;border-radius:14px;border:1px solid #ffffff22;background:#0e1118;color:#fff;padding:16px;font-size:16px}
+    #send-btn{background:#ff2f86;border:none;color:#111;font-weight:900;border-radius:14px;padding:0 22px;font-size:16px;min-width:96px}
+    /* Portrait box */
+    #bb-portrait{
+      position:absolute; right:22px; top:22px; z-index:30;
+      width:150px; height:200px; border-radius:16px; overflow:hidden;
+      border:1px solid #ffffff22; box-shadow:0 10px 30px rgba(0,0,0,.45);
+      background:#0e1118aa; backdrop-filter: blur(6px);
+    }
+    #bb-portrait img{width:100%;height:100%;object-fit:cover;display:block}
+    @media (max-width: 640px){ #bb-portrait{ width:120px;height:160px; right:12px; top:12px; } }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Blossom & Blade — Chat</h1>
-    <div class="badge">Adults 18+ only</div>
-  </header>
+  <div class="adult-badge">Adults 18+ only</div>
+  <header>Blossom & Blade — Chat</header>
 
-  <main class="stage" id="stage">
-    <div id="chat" class="chat-panel" aria-live="polite"></div>
+  <main class="chat-shell">
+    <section class="chat-panel">
+      <!-- Mini portrait (new) -->
+      <div id="bb-portrait" aria-hidden="true">
+        <img id="bb-portrait-img" alt="Character portrait" draggable="false">
+      </div>
+
+      <!-- Chat log (your existing chat.js should target this) -->
+      <div id="chat-log" aria-live="polite" aria-relevant="additions"></div>
+
+      <!-- Input row (ids match common wiring in your chat.js) -->
+      <div class="input-row">
+        <input id="chat-input" type="text" placeholder="Say hi…" autocomplete="off" />
+        <button id="send-btn" type="button">Send</button>
+      </div>
+    </section>
   </main>
 
-  <footer class="composer">
-    <input id="user-input" type="text" placeholder="Say hi…" autocomplete="off"/>
-    <button id="send-btn">Send</button>
-  </footer>
-</div>
+  <!-- Your existing logic -->
+  <script src="/scripts/chat.js"></script>
 
-<script>
-/* ---------------- BACKGROUND (matches your filenames) ---------------- */
-(function(){
-  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
-  var man=(qs('man')||qs('g')||'blade').toLowerCase();
-  var sub=(qs('sub')||'night').toLowerCase();
-  var stage=document.getElementById('stage');
+  <!-- Portrait loader (safe, standalone) -->
+  <script>
+  (function(){
+    // Leave your backgrounds alone; just figure out which guy to show here
+    const q = new URLSearchParams(location.search);
+    const man = (q.get('man') || 'dylan').toLowerCase();
 
-  var MAP={
-    blade:     { day:'/images/blade-woods.jpg',            night:'/images/blade-woods.jpg' },
-    dylan:     { day:'/images/dylan-garage.jpg',           night:'/images/dylan-garage.jpg' },
-    jesse:     { day:'/images/jesse-books-day.jpg',        night:'/images/jesse-bull-night.jpg' },
-    alexander: { day:'/images/bg_alexander_boardroom.jpg', night:'/images/bg_alexander_boardroom.jpg' },
-    silas:     { day:'/images/bg_silas_stage.jpg',         night:'/images/bg_silas_stage.jpg' },
-    grayson:   { day:'/images/grayson-bg.jpg',             night:'/images/grayson-bg.jpg' }
-  };
-  var SUBF   ={ day:'/images/bg_dark_romance.jpg', night:'/images/gothic-bg.jpg' };
-  var GLOBAL ='/images/gothic-bg.jpg';
-
-  var guesses=[];
-  if(MAP[man] && MAP[man][sub]) guesses.push(MAP[man][sub]);
-  guesses.push('/images/'+man+'-'+sub+'.jpg','/images/'+man+'.jpg');
-  if(SUBF[sub]) guesses.push(SUBF[sub]);
-  guesses.push(GLOBAL);
-
-  function setBG(src){ stage.style.background="url('"+src+"') center/cover fixed no-repeat"; }
-  (function next(i){
-    if(i>=guesses.length) return;
-    var src=guesses[i], img=new Image();
-    img.onload=function(){ setBG(src); };
-    img.onerror=function(){ next(i+1); };
-    img.src=src;
-  })(0);
-})();
-
-/* ---------------- CHAT (book-boyfriend vibe + consent-first) ---------------- */
-(function(){
-  var chat  = document.getElementById('chat');
-  var input = document.getElementById('user-input');
-  var send  = document.getElementById('send-btn');
-
-  // session memory
-  var state={turns:0, consent:false, name:null, likes:[], men:[], history:[], lastLines:[], nickUse:0, pinged:false};
-
-  // nicknames used sparingly
-  var NICKS=["girlie","trouble","pretty thing","beautiful"];
-  function maybeNick(){
-    if(state.nickUse%4===0){ // at most 1 in 4 lines
-      state.nickUse++; 
-      return " " + NICKS[Math.floor(Math.random()*NICKS.length)];
-    }
-    state.nickUse++;
-    return "";
-  }
-
-  // openers & rejoiners (booktok vibe)
-  var OPENERS=[
-    "Hey you"+maybeNick()+".",
-    "Look who’s here"+maybeNick()+".",
-    "Oh, look at you"+maybeNick()+".",
-    "You found me. I was hoping you would.",
-    "I kept a seat warm for you. Come closer."
-  ];
-  var REJOINERS=[
-    "Well, where have you been"+maybeNick()+"?",
-    "Missed me? Be honest.",
-    "There you are. I was about to come find you."
-  ];
-
-  function addMsg(who,text,cls){
-    var row=document.createElement('div');
-    row.className='msg msg-'+who+(cls?(' '+cls):'');
-    row.textContent=text;
-    chat.appendChild(row);
-    chat.scrollTop=chat.scrollHeight;
-    return row;
-  }
-  function typing(){ return addMsg('bot','typing…','typing'); }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
-  var man=(qs('man')||qs('g')||'blade').toLowerCase();
-
-  // return/first-visit logic
-  try{
-    var openKey='vv_opened_'+man, lastKey='vv_last_'+man, now=Date.now();
-    var opened = sessionStorage.getItem(openKey);
-    var last   = localStorage.getItem(lastKey);
-    if(!opened){
-      sessionStorage.setItem(openKey,'1');
-      addMsg('bot', pick(OPENERS));
-    }else if(last && (now-parseInt(last,10))>1000*60*60*2){ // >2h
-      addMsg('bot', pick(REJOINERS));
-    }
-    window.addEventListener('beforeunload',function(){ localStorage.setItem(lastKey, String(Date.now())); });
-  }catch(e){
-    addMsg('bot', pick(OPENERS));
-  }
-
-  // memories from her text
-  function mineFacts(t){
-    var m = t.match(/\b(i['’]?m|i am|my name is)\s+([A-Za-z]{2,20})/i);
-    if(m) state.name = m[2];
-    var like = t.match(/\b(i like|i love)\s+([^\.!]{2,40})/i);
-    if(like){ state.likes.push(like[2].trim()); if(state.likes.length>5) state.likes.shift(); }
-    // catch another-man mention for playful jealousy
-    var guy = t.match(/\b([A-Z][a-z]{2,20})\b/);
-    if(guy && !["I","You","He","She","We","They","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].includes(guy[1])){
-      state.men.push(guy[1]); if(state.men.length>5) state.men.shift();
-    }
-  }
-
-  var CONSENT_ON=[/i consent/i,/turn up the heat/i,/go further/i,/steamier/i,/spicier/i,/ok escalate/i];
-  function push(role,content){ state.history.push({role:role,content:content}); if(state.history.length>40) state.history.shift(); }
-
-  function localFallback(userText){
-    // human, flirty, PG-13 fallback
-    var jealous = (state.men.length ? `…and who is ${state.men.slice(-1)[0]}—should I be jealous? ` : "");
-    var a=[
-      "Say that again, slower.",
-      "You’re not getting away that easy"+maybeNick()+".",
-      "I like that answer."
+    // Prefer the “on” card, then “off” card, then old jpgs
+    const srcs = [
+      `/images/characters/${man}/${man}-card-on.webp`,
+      `/images/characters/${man}/${man}-card-off.webp`,
+      `/images/characters/${man}/${man}_card.jpg`,
+      `/images/images/characters/${man}/${man}_card.jpg`
     ];
-    var b=[
-      "Want sweet or wicked tonight?",
-      jealous + "Tell me what you want from me.",
-      "Do you prefer praise or a playful command?"
-    ];
-    return pick(a)+" "+pick(b);
-  }
 
-  async function planAndReply(userText){
-    state.turns++; mineFacts(userText);
-    if(CONSENT_ON.some(r=>r.test(userText))) state.consent=true;
-
-    var t=typing();
-    try{
-      var sys =
-`Be a warm, flirty, *book-boyfriend* who sounds human. Keep it PG-13 here.
-Use short, natural lines. Mirror her language. If she shares a name, use it sometimes (${state.name||"—"}).
-Nicknames allowed but sparingly (at most 1 in 4 lines): girlie, trouble, pretty thing, beautiful.
-If she mentions another man by name, react with playful, protective jealousy and a question (e.g., "and who is {name}—should I be jealous?").
-Always consent-first. If she asks to "turn up the heat", acknowledge and confirm her pace before escalating.
-Avoid repetition, scripts, or lecturing. Keep replies to 1–2 sentences with one brief follow-up question.`;
-
-      var payload={
-        man,
-        persona:{name:man},
-        memory:{ name:state.name, likes:state.likes, otherMen:state.men, consent:state.consent },
-        history: state.history.slice(-12),
-        user: userText,
-        system: sys
-      };
-      // We’ll use your existing /api/chat (PG-13 brain). It builds the final system prompt.
-      var res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      var data=await res.json();
-      if(t && t.parentNode) t.parentNode.removeChild(t);
-      var reply=(data && data.reply)?data.reply:localFallback(userText);
-      addMsg('bot', reply); push('assistant', reply);
-    }catch(e){
-      if(t && t.parentNode) t.parentNode.removeChild(t);
-      var soft=localFallback(userText);
-      addMsg('bot', soft); push('assistant', soft);
-    }
-  }
-
-  function doSend(){
-    var txt=(input.value||"").trim();
-    if(!txt) return;
-    addMsg('user',txt); push('user',txt);
-    input.value="";
-    planAndReply(txt);
-  }
-  // send wiring
-  send.onclick = doSend;
-  input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doSend(); } });
-
-  // seed system (first turn)
-  push('system',"Warm, human, book-boyfriend vibe. PG-13 here. Short replies, one follow-up, consent-first.");
-})();
-</script>
+    const img = document.getElementById('bb-portrait-img');
+    let i = 0;
+    function tryNext(){ if (i < srcs.length) img.src = srcs[i++]; }
+    img.addEventListener('error', tryNext);
+    tryNext();
+  })();
+  </script>
 </body>
 </html>

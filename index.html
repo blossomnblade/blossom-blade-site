@@ -23,68 +23,38 @@
   <header>Blossom & Blade</header>
 
   <main class="grid">
-    <!-- Blade -->
     <a class="card" href="chat.html?man=blade&sub=night">
-      <img alt="Blade — night woods"
-           data-off="/images/characters/blade/blade-card-off.webp"
-           data-on ="/images/characters/blade/blade-card-on.webp"
-           data-f1 ="/images/characters/blade/blade_card.jpg"
-           data-f2 ="/images/images/characters/blade/blade_card.jpg"
+      <img alt="Blade — card" data-f1="/images/characters/blade/blade_card.jpg" data-f2="/images/images/characters/blade/blade_card.jpg"
            src="/images/characters/blade/blade-card-off.webp">
       <div class="meta"><span class="name">Blade</span><span class="btn">Enter</span></div>
     </a>
 
-    <!-- Dylan -->
     <a class="card" href="chat.html?man=dylan&sub=night">
-      <img alt="Dylan — helmet, black tank"
-           data-off="/images/characters/dylan/dylan-card-off.webp"
-           data-on ="/images/characters/dylan/dylan-card-on.webp"
-           data-f1 ="/images/characters/dylan/dylan_card.jpg"
-           data-f2 ="/images/images/characters/dylan/dylan_card.jpg"
+      <img alt="Dylan — card" data-f1="/images/characters/dylan/dylan_card.jpg" data-f2="/images/images/characters/dylan/dylan_card.jpg"
            src="/images/characters/dylan/dylan-card-off.webp">
       <div class="meta"><span class="name">Dylan</span><span class="btn">Enter</span></div>
     </a>
 
-    <!-- Jesse -->
     <a class="card" href="chat.html?man=jesse&sub=night">
-      <img alt="Jesse — rough charm"
-           data-off="/images/characters/jesse/jesse-card-off.webp"
-           data-on ="/images/characters/jesse/jesse-card-on.webp"
-           data-f1 ="/images/characters/jesse/jesse_card.jpg"
-           data-f2 ="/images/images/characters/jesse/jesse_card.jpg"
+      <img alt="Jesse — card" data-f1="/images/characters/jesse/jesse_card.jpg" data-f2="/images/images/characters/jesse/jesse_card.jpg"
            src="/images/characters/jesse/jesse-card-off.webp">
       <div class="meta"><span class="name">Jesse</span><span class="btn">Enter</span></div>
     </a>
 
-    <!-- Alexander -->
     <a class="card" href="chat.html?man=alexander&sub=night">
-      <img alt="Alexander — boardroom"
-           data-off="/images/characters/alexander/alexander-card-off.webp"
-           data-on ="/images/characters/alexander/alexander-card-on.webp"
-           data-f1 ="/images/characters/alexander/alexander_card.jpg"
-           data-f2 ="/images/images/characters/alexander/alexander_card.jpg"
+      <img alt="Alexander — card" data-f1="/images/characters/alexander/alexander_card.jpg" data-f2="/images/images/characters/alexander/alexander_card.jpg"
            src="/images/characters/alexander/alexander-card-off.webp">
       <div class="meta"><span class="name">Alexander</span><span class="btn">Enter</span></div>
     </a>
 
-    <!-- Silas -->
     <a class="card" href="chat.html?man=silas&sub=night">
-      <img alt="Silas — stage lighting"
-           data-off="/images/characters/silas/silas-card-off.webp"
-           data-on ="/images/characters/silas/silas-card-on.webp"
-           data-f1 ="/images/characters/silas/silas_card.jpg"
-           data-f2 ="/images/images/characters/silas/silas_card.jpg"
+      <img alt="Silas — card" data-f1="/images/characters/silas/silas_card.jpg" data-f2="/images/images/characters/silas/silas_card.jpg"
            src="/images/characters/silas/silas-card-off.webp">
       <div class="meta"><span class="name">Silas</span><span class="btn">Enter</span></div>
     </a>
 
-    <!-- Grayson -->
     <a class="card" href="chat.html?man=grayson&sub=night">
-      <img alt="Grayson — red-room glow"
-           data-off="/images/characters/grayson/grayson-card-off.webp"
-           data-on ="/images/characters/grayson/grayson-card-on.webp"
-           data-f1 ="/images/characters/grayson/grayson_card.jpg"
-           data-f2 ="/images/images/characters/grayson/grayson_card.jpg"
+      <img alt="Grayson — card" data-f1="/images/characters/grayson/grayson_card.jpg" data-f2="/images/images/characters/grayson/grayson_card.jpg"
            src="/images/characters/grayson/grayson-card-off.webp">
       <div class="meta"><span class="name">Grayson</span><span class="btn">Enter</span></div>
     </a>
@@ -93,20 +63,11 @@
   <footer>© Venus Venue LLC — Blossom & Blade</footer>
 
   <script>
-    // Swap on hover/tap; cascade fallbacks if an asset is missing
-    document.querySelectorAll('.card img').forEach(function(img){
-      const off = img.dataset.off, on = img.dataset.on;
-      function setOff(){ img.src = off; }
-      function setOn(){ if(on) img.src = on; }
-      img.closest('.card').addEventListener('mouseenter', setOn);
-      img.closest('.card').addEventListener('mouseleave', setOff);
-      img.closest('.card').addEventListener('touchstart', function(){
-        setOn(); setTimeout(setOff, 700);
-      }, {passive:true});
-      // Fallback chain: try f1 then f2 if primary missing
-      img.addEventListener('error', function(){
+    // simple image fallback if a webp is missing
+    document.querySelectorAll('.card img').forEach(img=>{
+      img.addEventListener('error', ()=>{
         if(img.dataset._step==="f1"){ img.src = img.dataset.f2; img.dataset._step="f2"; return; }
-        if(!img.dataset._step){ img.src = img.dataset.f1; img.dataset._step="f1"; return; }
+        if(!img.dataset._step){ img.src = img.dataset.f1; img.dataset._step="f1"; }
       });
     });
   </script>

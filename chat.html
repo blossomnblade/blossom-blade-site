@@ -1,25 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <title>Blossom & Blade — Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
-    :root { --bg:#0b0b0f; --panel:rgba(15,15,22,.68); --border:#ffffff14; --fg:#f7f7fb; --accent:#ff2f86; }
-    html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    :root { --bg:#0b0b0f; --panel:rgba(15,15,22,.72); --border:#ffffff1a; --fg:#f7f7fb; --accent:#ff2f86; }
+    html,body{margin:0;padding:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
     .wrap{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
     header{position:relative;padding:18px 20px;display:flex;align-items:center;justify-content:center}
-    header h1{margin:0;font-weight:800;letter-spacing:.3px}
-    .badge{position:absolute;right:16px;top:12px;font-size:12px;background:#111;color:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
+    header h1{margin:0;font-weight:800}
+    .badge{position:absolute;right:16px;top:12px;font-size:12px;background:#111;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
     .stage{display:grid;place-items:center;padding:14px;background:linear-gradient(160deg,#11131a 0%,#0b0b0f 100%)}
-    .chat-panel{
-      width:min(1024px,94vw);height:min(70vh,74dvh);
-      background:var(--panel);border:1px solid var(--border);border-radius:20px;
-      padding:18px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)
-    }
-    .msg{max-width:76%;margin:14px 0;padding:12px 16px;border-radius:12px;line-height:1.4}
+    .chat-panel{width:min(1024px,94vw);height:min(70vh,74dvh);background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:18px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    .msg{max-width:76%;margin:14px 0;padding:12px 16px;border-radius:12px;line-height:1.45}
     .msg-bot{background:#151520;border:1px solid var(--border)}
     .msg-user{margin-left:auto;background:var(--accent);color:#111;font-weight:700}
+    .typing{opacity:.7;font-style:italic}
     .composer{display:flex;gap:12px;padding:14px;position:sticky;bottom:0;background:linear-gradient(180deg,rgba(11,11,15,0) 0%,rgba(11,11,15,.75) 30%,rgba(11,11,15,1) 100%)}
     #user-input{flex:1;padding:14px 16px;border-radius:999px;border:1px solid #fff2;background:#0e0e14;color:var(--fg);outline:none}
     #send-btn{padding:12px 18px;border-radius:16px;border:0;background:var(--accent);color:#111;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(255,47,134,.25)}
@@ -27,196 +24,173 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Blossom & Blade — Chat</h1>
-      <div class="badge">Adults 18+ only</div>
-    </header>
+<div class="wrap">
+  <header>
+    <h1>Blossom & Blade — Chat</h1>
+    <div class="badge">Adults 18+ only</div>
+  </header>
 
-    <main class="stage" id="stage">
-      <div id="chat" class="chat-panel" aria-live="polite"></div>
-    </main>
+  <main class="stage" id="stage">
+    <div id="chat" class="chat-panel" aria-live="polite"></div>
+  </main>
 
-    <footer class="composer">
-      <input id="user-input" type="text" placeholder="Say hi…" autocomplete="off" />
-      <button id="send-btn">Send</button>
-    </footer>
-  </div>
+  <footer class="composer">
+    <input id="user-input" type="text" placeholder="Say hi…" autocomplete="off"/>
+    <button id="send-btn">Send</button>
+  </footer>
+</div>
 
-  <script>
-  // --------------------------- BACKGROUND (no-blank, old-browser safe) ---------------------------
-  (function(){
-    function qs(name){ try{ return (new URLSearchParams(window.location.search)).get(name); }catch(e){ return null; } }
-    var man = (qs('man') || qs('g') || 'blade').toLowerCase();
-    var sub = (qs('sub') || 'day').toLowerCase();  // day|night
-    var override = qs('bg');
-    var stage = document.getElementById('stage');
+<!-- Global prompts (no ES modules) -->
+<script src="/scripts/prompts.js"></script>
 
-    var MAP = {
-      blade:     { day: '/images/blade-day.jpg',     night: '/images/blade-night.jpg' },
-      dylan:     { day: '/images/dylan-day.jpg',     night: '/images/dylan-night.jpg' },
-      jesse:     { day: '/images/jesse-day.jpg',     night: '/images/jesse-bull-night.jpg' },
-      alexander: { day: '/images/alexander-day.jpg', night: '/images/alexander-night.jpg' },
-      silas:     { day: '/images/silas-day.jpg',     night: '/images/silas-night.jpg' },
-      grayson:   { day: '/images/grayson-day.jpg',   night: '/images/grayson-night.jpg' }
-    };
-    var SUB_FALL = { day: '/images/bg-day.jpg', night: '/images/bg-night.jpg' };
-    var GLOBAL_FALL = '/images/chat-bg-default.jpg';
+<script>
+/* ---------- BACKGROUND (never blank) ---------- */
+(function(){
+  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
+  var man = (qs('man')||qs('g')||'blade').toLowerCase();
+  var sub = (qs('sub')||'day').toLowerCase();
+  var override = qs('bg');
+  var stage = document.getElementById('stage');
 
-    var guesses = [];
-    if (override) guesses.push(override);
-    if (MAP[man] && MAP[man][sub]) guesses.push(MAP[man][sub]);
-    guesses.push('/images/' + man + '-' + sub + '.jpg');
-    guesses.push('/images/' + man + '.jpg');
-    if (SUB_FALL[sub]) guesses.push(SUB_FALL[sub]);
-    guesses.push(GLOBAL_FALL);
+  var MAP = {
+    blade:{day:'/images/blade-day.jpg',night:'/images/blade-night.jpg'},
+    dylan:{day:'/images/dylan-day.jpg',night:'/images/dylan-night.jpg'},
+    jesse:{day:'/images/jesse-day.jpg',night:'/images/jesse-bull-night.jpg'},
+    alexander:{day:'/images/alexander-day.jpg',night:'/images/alexander-night.jpg'},
+    silas:{day:'/images/silas-day.jpg',night:'/images/silas-night.jpg'},
+    grayson:{day:'/images/grayson-day.jpg',night:'/images/grayson-night.jpg'}
+  };
+  var SUBF = {day:'/images/bg-day.jpg',night:'/images/bg-night.jpg'};
+  var FALL = '/images/chat-bg-default.jpg';
 
-    function setBG(src){
-      stage.style.background = "url('" + src + "') center/cover fixed no-repeat";
+  var guesses=[];
+  if(override)guesses.push(override);
+  if(MAP[man] && MAP[man][sub])guesses.push(MAP[man][sub]);
+  guesses.push('/images/'+man+'-'+sub+'.jpg','/images/'+man+'.jpg');
+  if(SUBF[sub])guesses.push(SUBF[sub]);
+  guesses.push(FALL);
+
+  function setBG(src){ stage.style.background="url('"+src+"') center/cover fixed no-repeat"; }
+  (function next(i){
+    if(i>=guesses.length) return;
+    var src=guesses[i], img=new Image();
+    img.onload=function(){ setBG(src); };
+    img.onerror=function(){ next(i+1); };
+    img.src=src;
+  })(0);
+})();
+
+/* ---------- CHAT ENGINE (PG-13 brain + consent router) ---------- */
+(function(){
+  var chat = document.getElementById('chat');
+  var input = document.getElementById('user-input');
+  var sendBtn = document.getElementById('send-btn');
+
+  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
+  var man = (qs('man')||qs('g')||'blade').toLowerCase();
+  var persona = (window.VV_PROMPTS && window.VV_PROMPTS[man]) ? window.VV_PROMPTS[man] : window.VV_PROMPTS.blade;
+
+  // session state
+  var state = {
+    turns:0, consent:false, name:null, spice:0, // 0=vanilla, 1=simmer, 2=steamy, 3=adult
+    lastUser:"", facts:[], // short memory
+  };
+
+  function addMsg(who, text, cls){
+    var row=document.createElement('div');
+    row.className='msg msg-'+who+(cls?(' '+cls):'');
+    row.textContent=text;
+    chat.appendChild(row);
+    chat.scrollTop=chat.scrollHeight;
+    return row;
+  }
+  function typing(on){
+    if(on){ return addMsg('bot','typing…','typing'); }
+  }
+
+  // opener once per man
+  try{
+    var key='vv_opened_'+man;
+    if(!sessionStorage.getItem(key)){
+      sessionStorage.setItem(key,'1');
+      addMsg('bot', persona.openers[Math.floor(Math.random()*persona.openers.length)]);
     }
-    function tryNext(i){
-      if (i >= guesses.length) return; // gradient from CSS already visible
-      var src = guesses[i];
-      var img = new Image();
-      img.onload = function(){ setBG(src); };
-      img.onerror = function(){ tryNext(i+1); };
-      img.src = src;
+  }catch(e){ addMsg('bot', persona.openers[Math.floor(Math.random()*persona.openers.length)]); }
+
+  // extract light facts (name, likes)
+  function mineFacts(t){
+    var m = t.match(/\b(i['’]?m|i am|my name is)\s+([A-Za-z]{2,20})/i);
+    if(m){ state.name = m[2]; }
+    var like = t.match(/\b(i like|i love)\s+([^\.!]{2,40})/i);
+    if(like){ state.facts.push('likes: '+like[2].trim()); if(state.facts.length>5)state.facts.shift(); }
+  }
+
+  // consent ladder
+  var CONSENT_ON = [/i consent/i,/yes we can/i,/turn up the heat/i,/go further/i,/steamier/i];
+  function detectConsent(t){ for(var i=0;i<CONSENT_ON.length;i++){ if(CONSENT_ON[i].test(t)) return true; } return false; }
+
+  async function planAndReply(userText){
+    state.turns++; state.lastUser=userText;
+    mineFacts(userText);
+    if(detectConsent(userText)) state.consent=true;
+
+    // decide spice target
+    if(state.turns<4) state.spice=0;
+    else if(state.turns<10) state.spice=1;
+    else if(state.turns>=10 && state.consent) state.spice=2;
+
+    // route: adult after explicit consent & long enough chat
+    var useAdult = (state.consent && state.turns>=12 && window.ADULT_ROUTE_ENABLED);
+
+    var t = typing(true);
+
+    try{
+      var payload = {
+        man,
+        persona: persona.core,
+        guardrails: persona.guardrails,
+        memory: {
+          name: state.name, facts: state.facts.slice(-5),
+          consent: state.consent, spice: state.spice
+        },
+        history: takeHistory(10),
+        user: userText,
+        mode: useAdult ? "adult" : "sfw"
+      };
+      var res = await fetch(useAdult?"/api/adult-chat":"/api/chat",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+      t.remove();
+      addMsg('bot', data.reply || "Let’s keep it kind and on your terms. Tell me what you want to talk about.");
+    }catch(e){
+      try{ t.remove(); }catch(_){}
+      addMsg('bot',"I’m here. Tell me something small from your day while I gather my thoughts.");
     }
-    tryNext(0);
-  })();
+  }
 
-  // --------------------------- CHAT (tiny, no modern APIs) ---------------------------
-  (function(){
-    var chat = document.getElementById('chat');
-    var input = document.getElementById('user-input');
-    var sendBtn = document.getElementById('send-btn');
+  // minimal history capture (text only, short)
+  var trail=[];
+  function pushTrail(role,content){
+    trail.push({role,content});
+    if(trail.length>40) trail.shift();
+  }
+  function takeHistory(n){ return trail.slice(-n); }
 
-    function addMsg(who, text){
-      var row = document.createElement('div');
-      row.className = 'msg msg-' + who;
-      row.appendChild(document.createTextNode(text));
-      chat.appendChild(row);
-      chat.scrollTop = chat.scrollHeight;
-    }
+  // wire UI
+  function send(){
+    var txt=(input.value||"").trim();
+    if(!txt) return;
+    addMsg('user',txt); pushTrail('user',txt); input.value="";
+    planAndReply(txt).then(()=>{}); // fire and forget
+  }
+  sendBtn.onclick = send;
+  input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } });
 
-    function pick(arr){
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    function hasAny(text, list){
-      var t = text.toLowerCase();
-      for (var i=0;i<list.length;i++){ if (t.indexOf(list[i].toLowerCase()) !== -1) return true; }
-      return false;
-    }
-
-    // personas (trimmed but safe)
-    var PERSONAS = {
-      blade: {
-        openers: ["You found me. I was hoping you would.","Traffic was chaos. You? Tell me one win from your day.","I saved your spot. Sit. Breathe. I’ve got the rest."],
-        smalltalk: ["Coffee order today: chaos or calm?","Tell me something tiny that made you smile.","What’s your soundtrack right now?"],
-        simmer: ["I like the way you steer the conversation—steady, certain.","If I leaned closer, what would you tell me you want?","I’m patient. Make me earn the next step."],
-        steamy: ["My hands would trace only where you invite. Say the word.","Slow first. I match your pace, always.","You lead; I follow. Your rules."],
-        boundaries: ["Your comfort first—we can keep this soft and sweet.","Your pace, your call. Happy to flirt without crossing lines.","Let’s keep it gentle for now—tell me what you need."]
-      },
-      dylan: {
-        openers: ["I tuned the guitar. You bringing the lyrics?","You look like trouble I’d happily keep.","Late nights fit you. Me too."],
-        smalltalk: ["Stage lights or stargazing?","What kind of compliment lands best on you?","Tell me the boldest thing you did this week."],
-        simmer: ["I keep noticing the way you choose words—sharp and sweet.","I’m close enough to hear your heartbeat if you let me.","Tell me where to stop. Or don’t."],
-        steamy: ["I’ll move only when you say. Say it.","I want the slow burn you choose.","Every second we wait, the spark climbs."],
-        boundaries: ["I’d rather make you feel safe than rush it.","We can flirt and hold the line—your comfort first.","Let’s keep it suggestive, not explicit. You guide me."]
-      },
-      jesse: {
-        openers: ["Evening, darlin’. Take my hand—steady ground here.","I kept the gate open for you.","You okay if I stay a while?"],
-        smalltalk: ["What’s your kind of quiet?","I got good at reading a room. Yours feels brave.","What calms your nerves quickest?"],
-        simmer: ["I won’t rush you. I like earning trust.","If I slide closer, it’s because you asked.","Tell me where it feels safest to start."],
-        steamy: ["I’ll listen to every breath and follow.","Your pace sets mine.","Only where you guide me."],
-        boundaries: ["I’m here to keep you comfortable. We can take it slow.","We can keep it gentle and stay on your side of the line.","I’ll wait for your green light. Meanwhile we can talk easy."]
-      },
-      alexander: {
-        openers: ["I brought a question: what did today teach you?","Your presence improves the room’s architecture.","May I steal a few minutes of your brilliance?"],
-        smalltalk: ["Tea or espresso? Defend your thesis.","Who would narrate your life audiobook?","What’s your secret talent I haven’t earned yet?"],
-        simmer: ["Permission to get closer to the truth you keep?","Say ‘advance’ for more, ‘hold’ if not.","I adore instructions. Give me some."],
-        steamy: ["Your boundaries are the map; I won’t stray.","I slow down until you say ‘now’.","Command me—politely, if you must."],
-        boundaries: ["We’ll keep it tasteful—your limits are my rules.","We can stay romantic and playful without going explicit.","Comfort first; escalation only with consent."]
-      },
-      silas: {
-        openers: ["Howdy, trouble. You keep makin’ my day better.","Sunset came early the second you showed up.","Got room on this fence for two. Sit a spell?"],
-        smalltalk: ["Best view: city lights or open range?","Your laugh—more of it, please.","What do you do when the storm hits?"],
-        simmer: ["I’ll tip my hat and wait for your nod.","I want to learn your pace like a trail.","Say ‘ride slow’ if you want me patient."],
-        steamy: ["Hands stay where you tell me, ma’am.","Your word is go; mine is yes.","Gentle or bold—your call."],
-        boundaries: ["We can keep it sweet and safe, promise.","I’ll mind your lines. We can flirt without pushin’ it.","Your comfort is the only green light I take."]
-      },
-      grayson: {
-        openers: ["I wiped the grease off—mostly. You okay?","Tell me what needs fixing. I’ll handle it.","You make the whole shop feel lighter."],
-        smalltalk: ["What’s the project you’re daydreaming about?","Thunderstorms or clear skies?","Let me carry something for you—what is it?"],
-        simmer: ["I don’t rush work—or you.","Point where I should start and I’ll be careful.","Your boundaries, my blueprint."],
-        steamy: ["I follow torque specs—and your rules—exactly.","Closer only when you say the word.","We go slow, we go sure."],
-        boundaries: ["We can keep it low-pressure.","Let’s stay on the safe side—light, kind, respectful.","You say when, or we keep it easy. Works for me."]
-      }
-    };
-
-    var RULES = {
-      minTurnsBeforeSimmer: 6,
-      minTurnsBeforeSteamy: 14,
-      requireConsent: true,
-      cooldownAfterSteamy: 2,
-      consentKeywords: ["consent","yes we can","turn up the heat","steamier","ready for more","okay escalate","we can go spicier","go further"],
-      mildSpiceKeywords: ["sexy","kiss","flirty","romance","hot"],
-      blockedKeywords: ["explicit","porn","minors","violent","graphic"]
-    };
-
-    function qs(name){ try{ return (new URLSearchParams(window.location.search)).get(name); }catch(e){ return null; } }
-    var man = (qs('man') || qs('g') || 'blade').toLowerCase();
-    var persona = PERSONAS[man] || PERSONAS.blade;
-
-    var turn = 0, consent = false, cooldown = 0;
-
-    function boundaries(){ return pick(persona.boundaries || ["Let’s keep it respectful. Your comfort first."]); }
-
-    function has(list, text){ return hasAny(text, list); }
-
-    function reply(userText){
-      if (has(RULES.blockedKeywords, userText)) return "We keep it kind and safe—can’t go explicit here.";
-      if (has(RULES.consentKeywords, userText)) consent = true;
-      if (cooldown > 0){ cooldown--; return pick(persona.smalltalk); }
-
-      var spicyHint = has(RULES.mildSpiceKeywords, userText);
-      if ((turn < RULES.minTurnsBeforeSimmer && spicyHint) ||
-          (turn < RULES.minTurnsBeforeSteamy && spicyHint && !consent)) {
-        return boundaries();
-      }
-      if (turn < RULES.minTurnsBeforeSimmer) return pick(persona.smalltalk);
-      if (turn < RULES.minTurnsBeforeSteamy) return pick(persona.simmer);
-      if (consent){ cooldown = RULES.cooldownAfterSteamy; return pick(persona.steamy); }
-      return pick(persona.simmer);
-    }
-
-    // Opener once per session/persona (old-browser safe)
-    try {
-      var key = 'vv_opened_' + man;
-      if (!window.sessionStorage || !sessionStorage.getItem(key)) {
-        addMsg('bot', pick(persona.openers));
-        try{ sessionStorage.setItem(key,'1'); }catch(e2){}
-      }
-    } catch(e){ addMsg('bot', pick(persona.openers)); }
-
-    function send(){
-      var txt = (input.value || '').trim();
-      if (!txt) return;
-      addMsg('user', txt);
-      input.value = '';
-      turn++;
-      try {
-        var r = reply(txt);
-        addMsg('bot', r);
-      } catch(e){
-        addMsg('bot', "Let’s keep it simple for a second—tell me something small from your day.");
-      }
-    }
-
-    sendBtn.onclick = send;
-    input.onkeydown = function(e){ if (e.key === 'Enter'){ e.preventDefault(); send(); } };
-  })();
-  </script>
+  // seed trail with opener
+  pushTrail('system', persona.systemSeed);
+})();
+</script>
 </body>
 </html>

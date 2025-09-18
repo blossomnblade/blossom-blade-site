@@ -5,44 +5,25 @@
   <title>Blossom & Blade — Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg: #0b0b0f;
-      --panel: rgba(15,15,22,0.65);
-      --border: rgba(255,255,255,0.08);
-      --fg: #f7f7fb;
-      --muted:#b6b6c2;
-      --accent:#ff2f86;
+    :root { --bg:#0b0b0f; --panel:rgba(15,15,22,.65); --border:#ffffff14; --fg:#f7f7fb; --accent:#ff2f86; }
+    html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
+    header{position:relative;padding:18px 20px;display:flex;align-items:center;justify-content:center}
+    header h1{margin:0;font-weight:800}
+    .badge{position:absolute;right:16px;top:12px;font-size:12px;background:#111;color:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
+    .stage{display:grid;place-items:center;padding:14px;background:#0b0b0f}
+    .chat-panel{
+      width:min(1024px,94vw);height:min(70vh,74dvh);
+      background:var(--panel);border:1px solid var(--border);border-radius:20px;
+      padding:18px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)
     }
-    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial; }
-    .wrap { min-height:100dvh; display:grid; grid-template-rows:auto 1fr auto; }
-    header { position:relative; padding:18px 20px; display:flex; align-items:center; justify-content:center; }
-    header h1 { margin:0; font-weight:800; letter-spacing:.3px; }
-    .badge { position:absolute; right:16px; top:12px; font-size:12px; background:#111; color:#fff; border:1px solid var(--border); border-radius:999px; padding:6px 10px; }
-    .stage {
-      display:grid; place-items:center; padding:14px;
-      background: url('/images/chat-bg-default.jpg') center/cover fixed no-repeat;
-    }
-    .chat-panel {
-      width:min(1024px, 94vw); height:min(70vh, 74dvh);
-      background:var(--panel); border:1px solid var(--border); border-radius:20px;
-      padding:18px; overflow:auto; box-shadow:0 10px 30px rgba(0,0,0,.45);
-    }
-    .msg { max-width:76%; margin:14px 0; padding:12px 16px; border-radius:12px; line-height:1.4; }
-    .msg-bot { background:#151520; border:1px solid var(--border); }
-    .msg-user { margin-left:auto; background:var(--accent); color:#111; font-weight:700; }
-    .composer { display:flex; gap:12px; padding:14px; position:sticky; bottom:0; background:linear-gradient(180deg, rgba(11,11,15,0) 0%, rgba(11,11,15,0.75) 30%, rgba(11,11,15,1) 100%); }
-    #user-input {
-      flex:1; padding:14px 16px; border-radius:999px; border:1px solid #fff2;
-      background:#0e0e14; color:var(--fg); outline:none;
-    }
-    #send-btn {
-      padding:12px 18px; border-radius:16px; border:0; background:var(--accent); color:#111; font-weight:800; cursor:pointer;
-      box-shadow: 0 6px 20px rgba(255,47,134,.25);
-    }
-    @media (max-width: 480px) {
-      .msg { max-width:88%; }
-      .chat-panel { height:60dvh; }
-    }
+    .msg{max-width:76%;margin:14px 0;padding:12px 16px;border-radius:12px;line-height:1.4}
+    .msg-bot{background:#151520;border:1px solid var(--border)}
+    .msg-user{margin-left:auto;background:var(--accent);color:#111;font-weight:700}
+    .composer{display:flex;gap:12px;padding:14px;position:sticky;bottom:0;background:linear-gradient(180deg,rgba(11,11,15,0) 0%,rgba(11,11,15,.75) 30%,rgba(11,11,15,1) 100%)}
+    #user-input{flex:1;padding:14px 16px;border-radius:999px;border:1px solid #fff2;background:#0e0e14;color:var(--fg);outline:none}
+    #send-btn{padding:12px 18px;border-radius:16px;border:0;background:var(--accent);color:#111;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(255,47,134,.25)}
+    @media (max-width:480px){.msg{max-width:88%}.chat-panel{height:60dvh}}
   </style>
 </head>
 <body>
@@ -52,8 +33,7 @@
       <div class="badge">Adults 18+ only</div>
     </header>
 
-    <!-- Backdrop area (your page can swap this bg per man/sub if you want) -->
-    <main class="stage">
+    <main class="stage" id="stage">
       <div id="chat" class="chat-panel" aria-live="polite"></div>
     </main>
 
@@ -63,12 +43,50 @@
     </footer>
   </div>
 
-  <!-- Ensure we pick the right guy from URL (?man= or ?g=) -->
   <script>
-    const q = new URLSearchParams(location.search);
-    window.currentCharacter = q.get('man') || q.get('g') || 'blade';
+    // --- Background loader with fallbacks ---
+    (function(){
+      const q = new URLSearchParams(location.search);
+      const man = (q.get('man') || q.get('g') || 'blade').toLowerCase();
+      const sub = (q.get('sub') || 'day').toLowerCase(); // 'day' or 'night'
+      const override = q.get('bg'); // optional ?bg=/images/custom.jpg
+      const stage = document.getElementById('stage');
+
+      // Map known files (edit names to match what you actually have)
+      const MAP = {
+        blade:     { day: '/images/blade-day.jpg',     night: '/images/blade-night.jpg' },
+        dylan:     { day: '/images/dylan-day.jpg',     night: '/images/dylan-night.jpg' },
+        jesse:     { day: '/images/jesse-day.jpg',     night: '/images/jesse-bull-night.jpg' },
+        alexander: { day: '/images/alexander-day.jpg', night: '/images/alexander-night.jpg' },
+        silas:     { day: '/images/silas-day.jpg',     night: '/images/silas-night.jpg' },
+        grayson:   { day: '/images/grayson-day.jpg',   night: '/images/grayson-night.jpg' },
+      };
+      const SUB_FALLBACK = { day: '/images/bg-day.jpg', night: '/images/bg-night.jpg' };
+      const GLOBAL_FALLBACK = '/images/chat-bg-default.jpg';
+
+      const guesses = [];
+      if (override) guesses.push(override);
+      if (MAP[man]?.[sub]) guesses.push(MAP[man][sub]);
+      guesses.push(`/images/${man}-${sub}.jpg`, `/images/${man}.jpg`);
+      if (SUB_FALLBACK[sub]) guesses.push(SUB_FALLBACK[sub]);
+      guesses.push(GLOBAL_FALLBACK);
+
+      function setBG(src){
+        stage.style.background = `url('${src}') center/cover fixed no-repeat`;
+      }
+
+      (function tryNext(i){
+        if (i >= guesses.length) return; // nothing else to try
+        const src = guesses[i];
+        const img = new Image();
+        img.onload = () => setBG(src);
+        img.onerror = () => tryNext(i+1);
+        img.src = src;
+      })(0);
+    })();
   </script>
-  <!-- Modules (order matters) -->
+
+  <!-- keep your existing chat scripts here -->
   <script type="module" src="/scripts/prompts.js"></script>
   <script type="module" src="/scripts/chat.js"></script>
 </body>

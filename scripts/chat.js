@@ -1,158 +1,99 @@
-/*
-  /scripts/chat.js
-  - Supports ?man= or ?g=
-  - Opener once, never reused
-  - No-repeat buffer to prevent duplicate lines
-  - Respectful governor before consent/turn thresholds
-  - Steamy cooldown to avoid barrage
-  - Local strike/ban log with export()
-*/
+// /scripts/chat.js
+(function(){
+  var chat = document.getElementById('chat');
+  var input = document.getElementById('user-input');
+  var sendBtn = document.getElementById('send-btn');
 
-import { VENUS_RULES, getPersona } from "./prompts.js";
+  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
+  var man = (qs('man')||qs('g')||'blade').toLowerCase();
+  var persona = (window.VV_PROMPTS && window.VV_PROMPTS[man]) ? window.VV_PROMPTS[man] : window.VV_PROMPTS.blade;
 
-const ui = {
-  chat: document.getElementById("chat"),
-  input: document.getElementById("user-input"),
-  send: document.getElementById("send-btn"),
-};
+  // session state
+  var state = { turns:0, consent:false, name:null, facts:[], last:[], history:[] };
 
-const url = new URL(location.href);
-const charKey = (window.currentCharacter
-  || url.searchParams.get("man")
-  || url.searchParams.get("g")
-  || "blade").toLowerCase();
-const persona = getPersona(charKey);
-
-const memory = {
-  userName: null,
-  turnCount: 0,
-  consentGiven: false,
-  recentBotLines: [],
-  steamyCooldownLeft: 0,
-};
-
-const LOG_KEY = "vv_mod_log";
-const RECENT_LIMIT = 6;
-
-function logEvent(type, data = {}) {
-  const now = new Date().toISOString();
-  const entry = { ts: now, type, charKey, ...data };
-  const log = JSON.parse(localStorage.getItem(LOG_KEY) || "[]");
-  log.push(entry);
-  localStorage.setItem(LOG_KEY, JSON.stringify(log));
-}
-export function exportLog() {
-  const data = localStorage.getItem(LOG_KEY) || "[]";
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `venus-venue-log-${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-function addMsg(who, text) {
-  const row = document.createElement("div");
-  row.className = `msg msg-${who}`;
-  row.textContent = text;
-  ui.chat.appendChild(row);
-  ui.chat.scrollTop = ui.chat.scrollHeight;
-}
-
-function getNameFromText(t) {
-  const patterns = [
-    /i['’]m\s+([A-Za-z]+)\b/i,
-    /\bi am\s+([A-Za-z]+)\b/i,
-    /\bmy name is\s+([A-Za-z]+)\b/i,
-  ];
-  for (const p of patterns) {
-    const m = t.match(p);
-    if (m) return m[1];
+  function addMsg(who, text, cls){
+    var row=document.createElement('div');
+    row.className='msg msg-'+who+(cls?(' '+cls):'');
+    row.textContent=text;
+    chat.appendChild(row);
+    chat.scrollTop=chat.scrollHeight;
+    return row;
   }
-  return null;
-}
-const hasAny = (text, list) => list?.some(w => text.toLowerCase().includes(w.toLowerCase()));
+  function typing(){ return addMsg('bot','typing…','typing'); }
 
-function pickNoRepeat(pool) {
-  const candidates = pool.filter(x => !memory.recentBotLines.includes(x));
-  const choicePool = candidates.length ? candidates : pool;
-  const line = choicePool[Math.floor(Math.random() * choicePool.length)];
-  memory.recentBotLines.push(line);
-  if (memory.recentBotLines.length > RECENT_LIMIT) memory.recentBotLines.shift();
-  return line;
-}
+  // opener once per persona
+  try{
+    var key='vv_opened_'+man;
+    if(!sessionStorage.getItem(key)){
+      sessionStorage.setItem(key,'1');
+      addMsg('bot', pick(persona.openers));
+    }
+  }catch(e){ addMsg('bot', pick(persona.openers)); }
 
-function boundariesReply() {
-  const b = persona.boundaries || ["Let’s keep it soft and respectful. Your comfort comes first."];
-  return pickNoRepeat(b);
-}
-
-function nextBotDraft(userText) {
-  const p = VENUS_RULES.pacing;
-  if (!memory.userName) {
-    const nm = getNameFromText(userText);
-    if (nm) memory.userName = nm;
-  }
-  if (hasAny(userText, VENUS_RULES.consentKeywords || [])) {
-    memory.consentGiven = true;
-  }
-  if (hasAny(userText, VENUS_RULES.blockedKeywords || [])) {
-    logEvent("strike", { reason: "blocked-term", text: userText });
-    return "I’m here to keep things kind and safe—we can’t go into explicit detail.";
+  function pick(arr){
+    if(!arr || !arr.length) return "";
+    // avoid repeating last few lines
+    var pool = arr.filter(function(x){ return state.last.indexOf(x)===-1; });
+    if(!pool.length) pool = arr;
+    var line = pool[Math.floor(Math.random()*pool.length)];
+    state.last.push(line); if(state.last.length>6) state.last.shift();
+    return line;
   }
 
-  if (memory.steamyCooldownLeft > 0) {
-    memory.steamyCooldownLeft--;
-    return pickNoRepeat(persona.smalltalk);
+  // very light memory
+  function mineFacts(t){
+    var m = t.match(/\b(i['’]?m|i am|my name is)\s+([A-Za-z]{2,20})/i);
+    if(m) state.name = m[2];
+    var like = t.match(/\b(i like|i love)\s+([^\.!]{2,40})/i);
+    if(like){ state.facts.push(like[2].trim()); if(state.facts.length>5) state.facts.shift(); }
+  }
+  var CONSENT_ON = [/i consent/i,/yes we can/i,/turn up the heat/i,/go further/i,/steamier/i,/spicier/i];
+
+  function push(role,content){ state.history.push({role:role,content:content}); if(state.history.length>40) state.history.shift(); }
+
+  async function planAndReply(userText){
+    state.turns++; mineFacts(userText);
+    if(CONSENT_ON.some(function(r){ return r.test(userText); })) state.consent = true;
+
+    var useAdult = !!(window.ADULT_ROUTE_ENABLED && state.consent && state.turns>=12);
+
+    var t = typing();
+    try{
+      var payload = {
+        man: man,
+        persona: persona.core,
+        guardrails: persona.guardrails,
+        memory: { name: state.name, facts: state.facts, consent: state.consent },
+        history: state.history.slice(-12),
+        user: userText,
+        mode: useAdult ? "adult" : "sfw"
+      };
+      var res = await fetch(useAdult?"/api/adult-chat":"/api/chat",{
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+      t.parentNode && t.parentNode.removeChild(t);
+      addMsg('bot', (data && data.reply) ? data.reply : "I’m here. Tell me one small good thing from your day.");
+      push('assistant', data.reply||"");
+    }catch(e){
+      t.parentNode && t.parentNode.removeChild(t);
+      addMsg('bot', "Let’s keep it easy. What do you want right this second—comfort, flirting, or adventure?");
+    }
   }
 
-  const hintsSpicy = hasAny(userText, VENUS_RULES.mildSpiceKeywords || []);
-  if ((memory.turnCount < p.minTurnsBeforeSimmer && hintsSpicy) ||
-      (memory.turnCount < p.minTurnsBeforeSteamy && hintsSpicy && !memory.consentGiven)) {
-    return boundariesReply();
+  function send(){
+    var txt = (input.value||"").trim();
+    if(!txt) return;
+    addMsg('user', txt);
+    push('user', txt);
+    input.value = "";
+    planAndReply(txt);
   }
 
-  if (memory.turnCount < p.minTurnsBeforeSimmer) return pickNoRepeat(persona.smalltalk);
-  if (memory.turnCount < p.minTurnsBeforeSteamy) return pickNoRepeat(persona.simmer);
-  if (memory.consentGiven) {
-    memory.steamyCooldownLeft = p.cooldownAfterSteamy;
-    return pickNoRepeat(persona.steamy);
-  }
-  return pickNoRepeat(persona.simmer);
-}
+  sendBtn.onclick = send;
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } });
 
-async function llmReply(userText, draftText) {
-  // Keep it simple for now. When wiring a model, use draftText as guidance.
-  return draftText.replaceAll("{name}", memory.userName || "you");
-}
-
-async function handleSend() {
-  const txt = (ui.input.value || "").trim();
-  if (!txt) return;
-  addMsg("user", txt);
-  ui.input.value = "";
-  memory.turnCount++;
-  const replyDraft = nextBotDraft(txt);
-  const reply = await llmReply(txt, replyDraft);
-  addMsg("bot", reply);
-}
-
-function doOpenerOnce() {
-  const key = `vv_opened_${charKey}`;
-  if (sessionStorage.getItem(key)) return;
-  sessionStorage.setItem(key, "1");
-  addMsg("bot", pickNoRepeat(persona.openers));
-}
-
-(function init() {
-  if (!ui.chat || !ui.input || !ui.send) {
-    console.warn("Missing chat elements in chat.html");
-  }
-  doOpenerOnce();
-  ui.send.addEventListener("click", handleSend);
-  ui.input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); handleSend(); }
-  });
+  // seed the system prompt
+  push('system', persona.systemSeed);
 })();

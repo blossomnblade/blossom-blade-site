@@ -1,38 +1,95 @@
-// scripts/cards.js
-(() => {
-  // Find every <img> inside a .card
-  const imgs = document.querySelectorAll('.card img');
+/* Blossom & Blade – card builder
+   - Renders 6 cards in a 3x2 grid
+   - Loads {name}-card-on.webp by default
+   - If {name}-card-on.webp is missing, falls back to {name}-card-off.webp
+   - On hover, swaps to {name}-card-off.webp when available
+*/
 
-  imgs.forEach((img) => {
-    // Accept several ways to declare sources
-    const on  = img.dataset.on  || img.dataset.f1 || img.getAttribute('src');
-    let   off = img.dataset.off || img.dataset.f2;
+const PEOPLE = [
+  { id: "blade",     name: "Blade"     },
+  { id: "dylan",     name: "Dylan"     },
+  { id: "jesse",     name: "Jesse"     },
+  { id: "alexander", name: "Alexander" },
+  { id: "silas",     name: "Silas"     },
+  { id: "grayson",   name: "Grayson"   },
+];
 
-    // If not explicitly provided, try -on -> -off swap
-    if (!off && on) off = on.replace(/-on(\.\w+)$/, '-off$1');
+// paths follow: images/characters/<id>/<id>-card-on.webp (and -card-off.webp)
+function cardSrc(id, on = true) {
+  return `images/characters/${id}/${id}-card-${on ? "on" : "off"}.webp`;
+}
 
-    // Store back so we’re consistent
-    if (on)  img.dataset.on  = on;
-    if (off) img.dataset.off = off;
+function chatHref(id) {
+  return `chat.html?man=${id}&sub=night`;
+}
 
-    // Ensure we start on the "on" image
-    if (on) img.src = on;
-    img.loading  = 'lazy';
-    img.decoding = 'async';
+function buildCard({ id, name }) {
+  const article = document.createElement("article");
+  article.className = "card";
 
-    // Helpers
-    const showOn  = () => on  && (img.src = on);
-    const showOff = () => off && (img.src = off);
+  const link = document.createElement("a");
+  link.className = "pic";
+  link.href = chatHref(id);
+  link.setAttribute("aria-label", `Open chat with ${name}`);
 
-    // Desktop hover
-    img.addEventListener('mouseenter', showOff);
-    img.addEventListener('mouseleave', showOn);
+  // primary (card-on)
+  const imgOn = document.createElement("img");
+  imgOn.className = "primary";
+  imgOn.alt = `${name} — card`;
+  imgOn.decoding = "async";
+  imgOn.loading = "lazy";
+  imgOn.src = cardSrc(id, true);
 
-    // Mobile: tap to toggle
-    img.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      img._toggled = !img._toggled;
-      img._toggled ? showOff() : showOn();
-    }, { passive: false });
+  // secondary (card-off) used on hover
+  const imgOff = document.createElement("img");
+  imgOff.className = "secondary";
+  imgOff.alt = "";
+  imgOff.decoding = "async";
+  imgOff.loading = "lazy";
+  imgOff.src = cardSrc(id, false);
+
+  // if ON fails, try OFF instead; if that fails, mark as broken
+  imgOn.addEventListener("error", () => {
+    // try to swap in the OFF image if it loads
+    const tester = new Image();
+    tester.onload = () => {
+      imgOn.src = tester.src;        // show OFF as the base
+      imgOff.classList.add("hidden"); // hide secondary hover if same
+    };
+    tester.onerror = () => {
+      link.classList.add("broken");
+      imgOn.classList.add("hidden");
+      imgOff.classList.add("hidden");
+    };
+    tester.src = cardSrc(id, false);
   });
+
+  // if OFF fails, just hide the hover image
+  imgOff.addEventListener("error", () => {
+    imgOff.classList.add("hidden");
+  });
+
+  link.append(imgOn, imgOff);
+
+  const meta = document.createElement("div");
+  meta.className = "meta";
+
+  const title = document.createElement("div");
+  title.className = "name";
+  title.textContent = name;
+
+  const btn = document.createElement("a");
+  btn.className = "btn";
+  btn.href = chatHref(id);
+  btn.textContent = "Enter";
+
+  meta.append(title, btn);
+  article.append(link, meta);
+  return article;
+}
+
+(function renderCards(){
+  const root = document.getElementById("cards");
+  root.innerHTML = "";
+  PEOPLE.forEach(p => root.appendChild(buildCard(p)));
 })();

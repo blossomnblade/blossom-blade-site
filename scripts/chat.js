@@ -1,203 +1,177 @@
-// scripts/chat.js  —  robust chat boot + error handling
-
 (() => {
-  const qs = new URLSearchParams(location.search);
-  const man = (qs.get("man") || "").trim().toLowerCase();   // e.g., blade, dylan, jesse, alexander, grayson, silas
-  const sub = (qs.get("sub") || "night").trim().toLowerCase();
+  // ---------- small helpers ----------
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-  // Character registry (names and image paths must match your repo)
-  const CHARACTERS = {
-    blade:     { label: "Blade",     card: "/images/characters/blade/blade-card-on.webp" },
-    dylan:     { label: "Dylan",     card: "/images/characters/dylan/dylan-card-on.webp" },
-    jesse:     { label: "Jesse",     card: "/images/characters/jesse/jesse-card-on.webp" },
-    alexander: { label: "Alexander", card: "/images/characters/alexander/alexander-card-on.webp" },
-    grayson:   { label: "Grayson",   card: "/images/characters/grayson/grayson-card-on.webp" },
-    silas:     { label: "Silas",     card: "/images/characters/silas/silas-card-on.webp" },
-  };
+  // Elements
+  let form, input, sendBtn, messages, portraitImg, chatNameEl;
 
-  // Flirty/cute openers (kept short)
-  const OPENERS = [
-    "hey there, look who wandered in 👀",
-    "aww, you came to see me?",
-    "there you are—was just thinking about you.",
-    "hi trouble. miss me?",
-    "well, well… fancy seeing you here."
-  ];
+  // Params
+  const params = new URLSearchParams(location.search);
+  const man  = (params.get('man')  || 'alexander').toLowerCase();
+  const mode = (params.get('sub')  || 'night').toLowerCase(); // 'day' | 'night'
+  const memKey = (k) => `bnb.${man}.${k}`;
 
-  // DOM
-  const titleEl   = document.querySelector("header h1, .title, .brand, .hdr") || document.body; // fallback
-  const msgsWrap  = document.querySelector(".msgs") || document.querySelector(".chat") || document;
-  const inputEl   = document.querySelector("input[type='text'], textarea, .inputbar input, .inputbar textarea");
-  const sendBtn   = document.querySelector("button[type='submit'], .send, .send-btn, .inputbar button");
-  const portrait  = document.querySelector(".portrait") || document.querySelector(".side") || document;
+  // ---------- UI boot ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    form        = $('#chat-form');
+    input       = $('#chat-input');
+    sendBtn     = $('#send-btn');
+    messages    = $('#messages');
+    portraitImg = $('#portraitImg');
+    chatNameEl  = $('#chatName');
 
-  // Basic guards
-  const char = CHARACTERS[man];
-  const safeLabel = char?.label ?? "…";
+    chatNameEl.textContent = cap(man);
 
-  // Paint header nicely even if something’s missing
-  try {
-    const hdr = document.querySelector(".hdr-title") || document.querySelector("h1");
-    if (hdr) hdr.textContent = `BnB — Chat — ${safeLabel}`;
-  } catch { /* ignore */ }
+    bindForm();
+    setPortrait();
+    restoreHistoryOrGreet();
+  });
 
-  // Fill portrait (if element exists and we have an image)
-  (function mountPortrait() {
-    if (!char) return; // unknown man; leave blank
-    if (!portrait) return;
-    // If this element is the right-hand card wrapper (like your chat layout), we inject a simple figure
-    if (!portrait.querySelector("img")) {
-      const fig = document.createElement("figure");
-      fig.className = "portrait";
-      fig.innerHTML = `<img alt="${char.label}" src="${char.card}" loading="eager" decoding="async" style="display:block;width:100%;height:auto;border-radius:14px;">`;
-      portrait.appendChild(fig);
-    } else {
-      // or just swap the src if an <img> exists
-      const img = portrait.querySelector("img");
-      if (img && char.card) img.src = char.card;
-    }
-  })();
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
-  // Utilities
-  const el = {
-    bubble(text, who = "bot") {
-      const wrap = document.createElement("div");
-      wrap.className = `msg ${who}`;
-      wrap.innerHTML = `<div class="b">${escapeHtml(text)}</div>`;
-      msgsWrap.appendChild(wrap);
-      msgsWrap.scrollTop = msgsWrap.scrollHeight;
-      return wrap;
-    },
-    typing() {
-      const wrap = document.createElement("div");
-      wrap.className = "msg bot typing";
-      wrap.innerHTML = `<div class="b">…</div>`;
-      msgsWrap.appendChild(wrap);
-      msgsWrap.scrollTop = msgsWrap.scrollHeight;
-      return wrap;
-    },
-    replaceTyping(typingEl, text) {
-      if (!typingEl) return el.bubble(text, "bot");
-      typingEl.classList.remove("typing");
-      typingEl.querySelector(".b").textContent = text;
-      return typingEl;
-    }
-  };
+  // ---------- Portrait (uses -chat.webp, falls back to -card-on.webp) ----------
+  function setPortrait() {
+    const base = `images/characters/${man}/${man}`;
+    const primary = `${base}-chat.webp`;
+    const fallback = `${base}-card-on.webp`;
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;");
-  }
+    portraitImg.src = primary;
+    portraitImg.alt = `${cap(man)} portrait`;
 
-  // Front-end state (kept tiny)
-  const state = {
-    history: [],  // {role:'user'|'assistant', content:string}[]
-    booted: false
-  };
-
-  // Talk to your API, but never go silent—always show *something* within 10s
-  async function askLLM(userText) {
-    const payload = {
-      man: char?.label || man || "Unknown",
-      sub,
-      history: state.history,
-      text: userText
-    };
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10s hard timeout
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-
-      if (!res.ok) {
-        // Surface backend error text, if any
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Server error (${res.status})`);
+    portraitImg.addEventListener('error', () => {
+      // fall back to card-on if chat.webp missing
+      if (!portraitImg.dataset.fellback) {
+        portraitImg.dataset.fellback = '1';
+        portraitImg.src = fallback;
       }
-
-      const data = await res.json();
-      if (!data || !data.reply) throw new Error("Empty reply");
-      return data.reply;
-    } catch (err) {
-      // Friendly fallback:
-      return "ugh—my signal glitched for a sec. say that again? I’m listening now.";
-    }
+    });
   }
 
-  async function handleSend(text) {
-    const msg = text.trim();
-    if (!msg) return;
-
-    // show user bubble
-    el.bubble(msg, "me");
-    state.history.push({ role: "user", content: msg });
-    inputEl.value = "";
-    inputEl.focus();
-
-    // show typing…
-    const typingEl = el.typing();
-    sendBtn.disabled = true;
-
-    // ask LLM
-    const reply = await askLLM(msg);
-    state.history.push({ role: "assistant", content: reply });
-    el.replaceTyping(typingEl, reply);
-
-    sendBtn.disabled = false;
+  // ---------- History ----------
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(memKey('history')) || '[]'); }
+    catch { return []; }
+  }
+  function saveHistory(list) {
+    localStorage.setItem(memKey('history'), JSON.stringify(list.slice(-40)));
+  }
+  function renderHistory(list) {
+    messages.innerHTML = '';
+    list.forEach(r => addBubble(r.role, r.content));
+    scrollToBottom();
   }
 
-  function boot() {
-    // If unknown character (bad/missing ?man=), we’ll guide the user instead of going blank
-    if (!char) {
-      el.bubble("Pick a guy from the home page, then come back. I’ll be waiting. 💬");
-      inputEl?.setAttribute("placeholder", "Go back and choose a card…");
-      sendBtn?.setAttribute("disabled", "true");
+  // ---------- Greeting (only if no history) ----------
+  function restoreHistoryOrGreet() {
+    const hist = loadHistory();
+    if (hist.length) {
+      renderHistory(hist);
       return;
     }
 
-    // First opener
-    const opener = OPENERS[Math.floor(Math.random() * OPENERS.length)];
-    state.history.push({ role: "assistant", content: opener });
-    el.bubble(opener, "bot");
-    state.booted = true;
-
-    // Make sure input is ready
-    if (inputEl) inputEl.placeholder = "Say hi…";
+    const greetings = [
+      "hey there, look who wandered in.",
+      "well, if it isn’t my favorite distraction.",
+      "you came to see me? i won’t pretend i’m not pleased.",
+      "mm. you again. good."
+    ];
+    const line = pick(greetings);
+    push('assistant', line);
   }
 
-  // Wire up UI
-  function onReady() {
-    // Send on button
-    if (sendBtn) {
-      sendBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        handleSend(inputEl?.value || "");
+  // ---------- Chat mechanics ----------
+  function bindForm() {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSend();
+    });
+  }
+
+  function handleSend() {
+    const text = (input.value || '').trim();
+    if (!text) return;
+
+    input.value = '';
+    push('user', text);
+    setSending(true);
+
+    talkToServer(text)
+      .then(reply => {
+        push('assistant', reply || safeFallback(text));
+      })
+      .catch(() => {
+        push('assistant', safeFallback(text));
+      })
+      .finally(() => setSending(false));
+  }
+
+  function setSending(b) {
+    input.disabled = b;
+    sendBtn.disabled = b;
+    sendBtn.textContent = b ? '…' : 'Send';
+  }
+
+  async function talkToServer(text) {
+    // Call your API (keep it simple and resilient)
+    try {
+      const res = await fetch(`/api/chat?man=${encodeURIComponent(man)}&mode=${encodeURIComponent(mode)}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: text, memoryKey: memKey('history') })
       });
+      if (!res.ok) throw new Error('network');
+      const data = await res.json();
+      // Expect { reply: "..." }
+      return (data && data.reply) || '';
+    } catch {
+      throw new Error('offline');
     }
-    // Enter to send
-    if (inputEl) {
-      inputEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSend(inputEl.value || "");
-        }
-      });
-    }
-    boot();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", onReady);
-  } else {
-    onReady();
+  // Friendly fallback if API is offline / rate-limited
+  function safeFallback(userText) {
+    const openers = [
+      "tell me one small good thing from your day.",
+      "start with this—what’s the vibe right now?",
+      "i’m listening. want me closer, or should i behave?",
+      "hm. i have thoughts about you already—share first."
+    ];
+
+    // Add a touch of character per guy
+    const persona = {
+      alexander: "low voice, alpha businessman, magnetic but controlled.",
+      blade:     "dark teasing edge, protective, a little dangerous.",
+      silas:     "rocker energy, candid, playful charm.",
+      grayson:   "stoic operator, attentive, steady heat.",
+      dylan:     "cool rider, minimal words, a smirk you can hear."
+    }[man] || "confident, flirty, on her side.";
+
+    return `${pick(openers)} (${persona})`;
   }
+
+  // ---------- bubbles + memory ----------
+  function push(role, content) {
+    const hist = loadHistory();
+    hist.push({ role, content });
+    saveHistory(hist);
+    addBubble(role, content);
+    scrollToBottom();
+  }
+
+  function addBubble(role, content) {
+    const li = document.createElement('li');
+    li.className = `msg ${role}`;
+    const div = document.createElement('div');
+    div.className = 'bubble';
+    div.textContent = content;
+    li.appendChild(div);
+    messages.appendChild(li);
+  }
+
+  function scrollToBottom() {
+    messages.parentElement.scrollTop = messages.parentElement.scrollHeight;
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 })();

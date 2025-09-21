@@ -146,5 +146,31 @@
     });
   });
 </script>
+<script>
+  // Hide any filename-ish label (e.g., *.webp, *.jpg) in the portrait panel
+  document.addEventListener('DOMContentLoaded', () => {
+    // likely containers on the right panel
+    const candidates = document.querySelectorAll('#portrait, .portrait, aside, .right, .card, .meta');
+    const roots = candidates.length ? candidates : [document.body];
+
+    const isFileLabel = (txt) => /\.(webp|jpe?g|png|gif)$/i.test((txt || '').trim());
+
+    roots.forEach(root => {
+      // Hide common tiny elements that contain a filename
+      root.querySelectorAll('small, figcaption, a, span, div').forEach(el => {
+        if (isFileLabel(el.textContent)) el.style.display = 'none';
+      });
+
+      // If a bare text node is sitting right after the image, remove it
+      root.querySelectorAll('img').forEach(img => {
+        let n = img.nextSibling;
+        while (n && n.nodeType === 3) { // text node(s)
+          if (isFileLabel(n.textContent)) n.remove();
+          n = n.nextSibling;
+        }
+      });
+    });
+  });
+</script>
 </body>
 </html>

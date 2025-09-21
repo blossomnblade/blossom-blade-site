@@ -1,131 +1,169 @@
-// Tiny client engine: human tone (PG-13), consent gate, adult routing hook.
-// If API fails, we still produce a soft, flirty fallback so the UI never feels dead.
+// Blossom & Blade — Chat (front-end only; safe fallback if backend is offline)
+(function () {
+  const $ = (s) => document.querySelector(s);
 
-(function(){
-  var chat  = document.getElementById('chat');
-  var input = document.getElementById('user-input');
-  var send  = document.getElementById('send-btn');
+  // --- DOM ----
+  const form = $("#chat-form");
+  const input = $("#chat-input");
+  const sendBtn = $("#send-btn");
+  const list = $("#messages");
+  const portraitImg = $("#portraitImg");
+  const chatName = $("#chatName");
 
-  function qs(n){ try{ return (new URLSearchParams(location.search)).get(n); }catch(e){ return null; } }
-  var man = (qs('man') || qs('g') || 'blade').toLowerCase();
+  // --- URL params ---
+  const params = new URLSearchParams(location.search);
+  const man = (params.get("man") || "alexander").toLowerCase();
+  const sub = (params.get("sub") || "night").toLowerCase();
 
-  // Safe default if prompts.js didn’t load
-  var DEFAULT_PERSONA = {
-    systemSeed:
-      "You are Blade, a respectful, confident flirt. Keep it PG-13 by default. " +
-      "Short, human lines. Consent first. If she asks to turn up the heat, acknowledge and confirm pace.",
-    core: { name:"Blade" },
-    guardrails:{ taboo:["minors","non-consent","violence","graphic anatomy","slurs","hate"], escalatePhrases:["I consent","turn up the heat","go further","steamier","we can get spicier"] },
-    openers:[
-      "You found me. I was hoping you would.",
-      "I kept a seat warm for you. Come closer."
+  // --- UI header name ---
+  chatName.textContent = man.charAt(0).toUpperCase() + man.slice(1);
+
+  // --- Portrait: try -chat.webp then fall back to -card-on.webp ---
+  const portraitTry = [
+    `images/characters/${man}/${man}-chat.webp`,
+    `images/characters/${man}/${man}-card-on.webp`,
+  ];
+  (function setPortrait(i = 0) {
+    if (!portraitImg) return;
+    portraitImg.src = portraitTry[i] || "";
+    portraitImg.onerror = () => {
+      if (i + 1 < portraitTry.length) setPortrait(i + 1);
+    };
+  })();
+
+  // --- Storage key (per man/sub) ---
+  const STORE_KEY = `bb_chat_${man}_${sub}`;
+
+  // --- Render / Save / Restore ---
+  function render(role, text) {
+    const li = document.createElement("li");
+    li.className = `msg ${role}`;
+    li.dataset.role = role;
+    li.innerHTML = `<div class="bubble">${text}</div>`;
+    list.appendChild(li);
+    list.parentElement.scrollTop = list.parentElement.scrollHeight;
+  }
+
+  function save() {
+    const payload = [...list.querySelectorAll(".msg")].map((m) => ({
+      role: m.dataset.role,
+      text: m.querySelector(".bubble").textContent
+    }));
+    localStorage.setItem(STORE_KEY, JSON.stringify(payload));
+  }
+
+  function restore() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+      saved.forEach((m) => render(m.role, m.text));
+    } catch {}
+  }
+
+  restore();
+  window.addEventListener("beforeunload", save);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") save();
+  });
+
+  function disable(on) {
+    if (sendBtn) sendBtn.disabled = on;
+    if (input) input.disabled = on;
+  }
+
+  // --- Local fallback reply (works even with no backend) ---
+  const OPENERS = {
+    blade: [
+      "You again? Good. I was about to come find you.",
+      "Thought you'd ghost me. Brave to show up, pretty thing."
+    ],
+    dylan: [
+      "Helmet’s off. You caught me between rides.",
+      "Sit tight—tell me what kind of trouble you want."
+    ],
+    jesse: [
+      "Sunset’s good, but you look better walking in.",
+      "You took your time, cowgirl."
+    ],
+    alexander: [
+      "Right on time. I like that.",
+      "You look like you want to be spoiled. I can arrange it."
+    ],
+    silas: [
+      "Tuned up and waiting. Play me something—your move.",
+      "Pull up. Let’s make the neighbors curious."
+    ],
+    grayson: [
+      "Rules are simple: be good… or I make you good.",
+      "Kincade hours. Come closer."
     ]
   };
 
-  var PROMPTS = (window.VV_PROMPTS || {});
-  var persona  = PROMPTS[man] || PROMPTS.blade || DEFAULT_PERSONA;
-
-  // Session state (very light memory)
-  var state = { turns:0, consent:false, name:null, facts:[], history:[], lastLines:[] };
-
-  function addMsg(who, text, cls){
-    var row = document.createElement('div');
-    row.className = 'msg msg-' + who + (cls?(' '+cls):'');
-    row.textContent = text;
-    chat.appendChild(row);
-    chat.scrollTop = chat.scrollHeight;
-    return row;
-  }
-  function typing(){ return addMsg('bot','typing…','typing'); }
-
-  function pick(arr){
-    if(!arr || !arr.length) return "";
-    var pool = arr.filter(function(x){ return state.lastLines.indexOf(x)===-1; });
-    if(!pool.length) pool = arr;
-    var line = pool[Math.floor(Math.random()*pool.length)];
-    state.lastLines.push(line); if(state.lastLines.length>6) state.lastLines.shift();
-    return line;
+  function personaReply(userText) {
+    const pool = OPENERS[man] || OPENERS.alexander;
+    // light, flirty, short; avoids pushy/explicit; nod to what she said
+    const hint = (userText || "").slice(0, 80);
+    const line = pool[Math.floor(Math.random() * pool.length)];
+    const tease = hint ? ` ${/^[.?!]/.test(hint) ? "" : "—"} ${hint.replace(/\s+/g," ").trim()}` : "";
+    return `${line}${tease}`;
   }
 
-  // Opener once per persona
-  try{
-    var key = 'vv_opened_'+man;
-    if(!sessionStorage.getItem(key)){ sessionStorage.setItem(key,'1'); addMsg('bot', pick(persona.openers)); }
-  }catch(e){ addMsg('bot', pick(persona.openers)); }
-
-  function mineFacts(t){
-    var m = t.match(/\b(i['’]?m|i am|my name is)\s+([A-Za-z]{2,20})/i);
-    if(m) state.name = m[2];
-    var like = t.match(/\b(i like|i love)\s+([^\.!]{2,40})/i);
-    if(like){ state.facts.push(like[2].trim()); if(state.facts.length>5) state.facts.shift(); }
-  }
-  var CONSENT_ON = [/i consent/i,/turn up the heat/i,/go further/i,/steamier/i,/we can get spicier/i,/ok escalate/i];
-
-  function push(role,content){ state.history.push({role:role,content:content}); if(state.history.length>40) state.history.shift(); }
-
-  function localFallback(userText){
-    // Friendly PG-13 fallback if API is down
-    var mirrors = [
-      "I hear you: " + userText,
-      "That hit me just right.",
-      "Say more—I’m listening."
-    ];
-    var questions = [
-      "Want sweet or wicked tonight?",
-      "Do you like gentle praise or playful command?",
-      "Where should I start—words in your ear, or fingers laced with yours?"
-    ];
-    var line = pick(mirrors) + " " + pick(questions);
-    return line.replace(/\s+/g," ").trim();
-  }
-
-  async function planAndReply(userText){
-    state.turns++; mineFacts(userText);
-    if (CONSENT_ON.some(function(r){ return r.test(userText); })) state.consent = true;
-
-    var useAdult = !!(window.ADULT_ROUTE_ENABLED && state.consent && state.turns >= 12);
-
-    var t = typing();
-    try{
-      var payload = {
-        man: man,
-        persona: persona.core,
-        guardrails: persona.guardrails,
-        memory: { name: state.name, facts: state.facts, consent: state.consent },
-        history: state.history.slice(-12),
-        user: userText,
-        mode: useAdult ? "adult" : "sfw"
-      };
-      var res = await fetch(useAdult?"/api/adult-chat":"/api/chat",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
+  // --- Try backend; if it fails, fall back to local personaReply() ---
+  async function getReply(messages) {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ man, sub, messages }),
       });
-      var data = await res.json();
-      if(t && t.parentNode) t.parentNode.removeChild(t);
-      var reply = (data && data.reply) ? data.reply : localFallback(userText);
-      addMsg('bot', reply);
-      push('assistant', reply);
-    }catch(e){
-      if(t && t.parentNode) t.parentNode.removeChild(t);
-      var soft = localFallback(userText);
-      addMsg('bot', soft);
-      push('assistant', soft);
+      if (!res.ok) throw new Error("bad status");
+      const data = await res.json();
+      const text = (data && (data.reply || data.text)) || "";
+      if (!text.trim()) throw new Error("empty");
+      return text.trim();
+    } catch {
+      // local fallback
+      const lastUser = messages.slice().reverse().find(m => m.role === "user");
+      return personaReply(lastUser?.content || lastUser?.text || "");
     }
   }
 
-  function send(){
-    var txt = (input.value||"").trim();
-    if(!txt) return;
-    addMsg('user', txt);
-    push('user', txt);
+  // --- Submit handler (prevents page reload!) ---
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();                 // <<<<< stops the page from reloading
+    const prompt = (input?.value || "").trim();
+    if (!prompt) return;
+
+    render("user", prompt);
+    save();
     input.value = "";
-    planAndReply(txt);
-  }
+    disable(true);
 
-  send.onclick = send;
-  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); } });
+    // Build message history for backend; also works for local fallback
+    const history = JSON.parse(localStorage.getItem(STORE_KEY) || "[]")
+      .map(m => ({ role: m.role, content: m.text }));
+    const messages = [
+      { role: "system", content: `You are ${man} from Blossom & Blade. Keep replies short, flirty, warm; follow the user's lead; never be pushy.` },
+      ...history,
+      { role: "user", content: prompt }
+    ];
 
-  // Seed system
-  push('system', persona.systemSeed);
+    let reply = "";
+    try {
+      reply = await getReply(messages);
+    } catch {
+      reply = "…";
+    }
+
+    render("assistant", reply);
+    save();
+    disable(false);
+    input?.focus();
+  });
+
+  // allow Enter to send (default in forms), Shift+Enter for newline if needed
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.shiftKey) {
+      e.stopPropagation(); // let it insert a newline if it's a textarea later
+    }
+  });
 })();

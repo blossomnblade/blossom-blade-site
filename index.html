@@ -2,23 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/home.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blossom &amp; Blade</title>
+
+  <!-- Your existing global stylesheet is fine to keep -->
+  <link rel="stylesheet" href="styles/chat.css">
+
+  <!-- Minimal page styles (grid + cards). -->
+  <style>
+    :root { --gap: 24px; --card-bg:#0f1216; --card-br:18px; }
+    * { box-sizing:border-box; }
+    body  { margin:0; background:#0b0e12; color:#f3f6fb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
+    h1    { font-weight:900; text-align:center; letter-spacing:.5px; margin:28px 0 22px; text-shadow:0 6px 18px rgba(0,0,0,.35); }
+
+    .grid {
+      width:min(1200px, 92vw);
+      margin:0 auto 48px;
+      display:grid;
+      gap:var(--gap);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items:stretch;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: repeat(2, 1fr);} }
+    @media (max-width: 640px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card {
+      display:flex; flex-direction:column; justify-content:space-between;
+      background:var(--card-bg); border-radius:var(--card-br);
+      box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden;
+      border:1px solid rgba(255,255,255,.06);
+      transition:transform .18s ease;
+      will-change:transform;
+    }
+    .card:hover { transform:translateY(-3px); }
+
+    .card .media { aspect-ratio: 3 / 4; background:#0b0e12; position:relative; }
+    .card img{
+      width:100%; height:100%; object-fit:cover; display:block;
+      transform:translateZ(0);
+    }
+
+    .card .meta {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 16px 14px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .name { font-weight:800; letter-spacing:.3px; }
+    .btn {
+      background:#ff2d67; color:#fff; border:none; font-weight:800; cursor:pointer;
+      padding:10px 16px; border-radius:999px; transition:opacity .15s ease; text-decoration:none;
+    }
+    .btn:hover { opacity:.9; }
+
+    /* If an image 404s, don’t show the alt text as an ugly label inside the box */
+    .card .media:has(img[alt])::after { content:""; }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <h1><span>Blossom & Blade</span></h1>
-  </header>
+  <h1>Blossom &amp; Blade</h1>
 
-  <main class="wrap">
-    <section id="cards" class="grid" aria-label="Character cards">
-      <!-- cards are injected by scripts/cards.js -->
-    </section>
+  <main class="grid" id="cards">
+    <!-- Blade -->
+    <figure class="card" data-card
+            data-on="images/characters/blade/blade-card-on.webp"
+            data-off="images/characters/blade/blade-card-on.webp">
+      <div class="media">
+        <img alt="Blade — card"
+             loading="eager" decoding="async"
+             src="images/characters/blade/blade-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Blade</span>
+        <a class="btn" href="chat.html?man=blade&sub=night">Enter</a>
+      </figcaption>
+    </figure>
+
+    <!-- Dylan -->
+    <figure class="card" data-card
+            data-on="images/characters/dylan/dylan-card-on.webp"
+            data-off="images/characters/dylan/dylan-card-off.webp">
+      <div class="media">
+        <img alt="Dylan — card"
+             loading="eager" decoding="async"
+             src="images/characters/dylan/dylan-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Dylan</span>
+        <a class="btn" href="chat.html?man=dylan&sub=night">Enter</a>
+      </figcaption>
+    </figure>
+
+    <!-- Jesse (you can replace image later if needed) -->
+    <figure class="card" data-card
+            data-on="images/characters/jesse/jesse-card-on.webp"
+            data-off="images/characters/jesse/jesse-card-on.webp">
+      <div class="media">
+        <img alt="Jesse — card"
+             loading="eager" decoding="async"
+             src="images/characters/jesse/jesse-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Jesse</span>
+        <a class="btn" href="chat.html?man=jesse&sub=night">Enter</a>
+      </figcaption>
+    </figure>
+
+    <!-- Alexander -->
+    <figure class="card" data-card
+            data-on="images/characters/alexander/alexander-card-on.webp"
+            data-off="images/characters/alexander/alexander-card-on.webp">
+      <div class="media">
+        <img alt="Alexander — card"
+             loading="eager" decoding="async"
+             src="images/characters/alexander/alexander-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Alexander</span>
+        <a class="btn" href="chat.html?man=alexander&sub=night">Enter</a>
+      </figcaption>
+    </figure>
+
+    <!-- Silas -->
+    <figure class="card" data-card
+            data-on="images/characters/silas/silas-card-on.webp"
+            data-off="images/characters/silas/silas-card-on.webp">
+      <div class="media">
+        <img alt="Silas — card"
+             loading="eager" decoding="async"
+             src="images/characters/silas/silas-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Silas</span>
+        <a class="btn" href="chat.html?man=silas&sub=night">Enter</a>
+      </figcaption>
+    </figure>
+
+    <!-- Grayson -->
+    <figure class="card" data-card
+            data-on="images/characters/grayson/grayson-card-on.webp"
+            data-off="images/characters/grayson/grayson-card-on.webp">
+      <div class="media">
+        <img alt="Grayson — card"
+             loading="eager" decoding="async"
+             src="images/characters/grayson/grayson-card-on.webp">
+      </div>
+      <figcaption class="meta">
+        <span class="name">Grayson</span>
+        <a class="btn" href="chat.html?man=grayson&sub=night">Enter</a>
+      </figcaption>
+    </figure>
   </main>
 
-  <script src="scripts/cards.js"></script>
+  <script src="scripts/cards.js" defer></script>
 </body>
 </html>

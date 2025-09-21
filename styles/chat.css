@@ -142,3 +142,27 @@ a[href$=".png"] {
   max-width: 100%;
   height: auto;
 }
+/* --- Portrait cleanup: hide any label/link under the image --- */
+#portrait, .portrait { position: relative; line-height: 0; }
+
+#portrait img,
+.portrait img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  line-height: 0;
+}
+
+/* Hide common filename/links/labels beneath the portrait */
+#portrait figcaption,
+#portrait .filename,
+#portrait small,
+#portrait a,
+#portrait img + a,
+.portrait figcaption,
+.portrait .filename,
+.portrait small,
+.portrait a,
+.portrait img + a {
+  display: none !important;
+}

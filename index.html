@@ -2,75 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Blossom & Blade</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{--bg:#0b0b0f;--fg:#f6f7fb;--panel:#11131a;--accent:#ff2f86;--border:#ffffff22}
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    header{padding:22px 16px;text-align:center;font-weight:900;font-size:clamp(20px,3.4vw,38px)}
-    .grid{width:min(1200px,94vw);margin:0 auto 40px;display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-    .card{display:block;position:relative;background:#0e1118;border:1px solid var(--border);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .card img{display:block;width:100%;height:360px;object-fit:cover;background:#0e0f14}
-    .meta{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
-    .name{font-weight:800;letter-spacing:.3px}
-    .btn{background:var(--accent);color:#111;font-weight:800;border-radius:999px;padding:8px 12px}
-    footer{padding:18px;text-align:center;opacity:.7}
-    @media (max-width:520px){ .card img{height:300px} }
-  </style>
+  <title>Blossom & Blade</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/home.css">
 </head>
-<script src="/scripts/cards.js" defer></script>
 <body>
-  <header>Blossom & Blade</header>
+  <header class="site-header">
+    <h1><span>Blossom & Blade</span></h1>
+  </header>
 
-  <main class="grid">
-    <a class="card" href="chat.html?man=blade&sub=night">
-      <img alt="Blade — card" data-f1="/images/characters/blade/blade_card.jpg" data-f2="/images/images/characters/blade/blade_card.jpg"
-           src="/images/characters/blade/blade-card-on.webp">
-      <div class="meta"><span class="name">Blade</span><span class="btn">Enter</span></div>
-    </a>
-
-    <a class="card" href="chat.html?man=dylan&sub=night">
-      <img alt="Dylan — card" data-f1="/images/characters/dylan/dylan_card.jpg" data-f2="/images/images/characters/dylan/dylan_card.jpg"
-           src="/images/characters/dylan/dylan-card-on.webp">
-      <div class="meta"><span class="name">Dylan</span><span class="btn">Enter</span></div>
-    </a>
-
-    <a class="card" href="chat.html?man=jesse&sub=night">
-      <img alt="Jesse — card" data-f1="/images/characters/jesse/jesse_card.jpg" data-f2="/images/images/characters/jesse/jesse_card.jpg"
-           src="/images/characters/jesse/jesse-card-on.webp">
-      <div class="meta"><span class="name">Jesse</span><span class="btn">Enter</span></div>
-    </a>
-
-    <a class="card" href="chat.html?man=alexander&sub=night">
-      <img alt="Alexander — card" data-f1="/images/characters/alexander/alexander_card.jpg" data-f2="/images/images/characters/alexander/alexander_card.jpg"
-           src="/images/characters/alexander/alexander-card-on.webp">
-      <div class="meta"><span class="name">Alexander</span><span class="btn">Enter</span></div>
-    </a>
-
-    <a class="card" href="chat.html?man=silas&sub=night">
-      <img alt="Silas — card" data-f1="/images/characters/silas/silas_card.jpg" data-f2="/images/images/characters/silas/silas_card.jpg"
-           src="/images/characters/silas/silas-card-on.webp">
-      <div class="meta"><span class="name">Silas</span><span class="btn">Enter</span></div>
-    </a>
-
-    <a class="card" href="chat.html?man=grayson&sub=night">
-      <img alt="Grayson — card" data-f1="/images/characters/grayson/grayson_card.jpg" data-f2="/images/images/characters/grayson/grayson_card.jpg"
-           src="/images/characters/grayson/grayson-card-on.webp">
-      <div class="meta"><span class="name">Grayson</span><span class="btn">Enter</span></div>
-    </a>
+  <main class="wrap">
+    <section id="cards" class="grid" aria-label="Character cards">
+      <!-- cards are injected by scripts/cards.js -->
+    </section>
   </main>
 
-  <footer>© Venus Venue LLC — Blossom & Blade</footer>
-
-  <script>
-    // simple image fallback if a webp is missing
-    document.querySelectorAll('.card img').forEach(img=>{
-      img.addEventListener('error', ()=>{
-        if(img.dataset._step==="f1"){ img.src = img.dataset.f2; img.dataset._step="f2"; return; }
-        if(!img.dataset._step){ img.src = img.dataset.f1; img.dataset._step="f1"; }
-      });
-    });
-  </script>
+  <script src="scripts/cards.js"></script>
 </body>
 </html>

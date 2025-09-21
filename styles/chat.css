@@ -127,3 +127,18 @@ a[href$=".jpeg"],
 a[href$=".png"] {
   display: none !important;
 }
+/* Hide tiny image-filename links/labels under the chat portrait */
+.portrait a[href$=".webp"],
+.portrait a[href$=".jpg"],
+.portrait a[href$=".jpeg"],
+.portrait a[href$=".png"],
+.portrait figcaption {
+  display: none !important;
+}
+
+/* Keep the portrait image clean and responsive */
+.portrait img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

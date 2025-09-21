@@ -1,0 +1,101 @@
+:root{
+  --bg:#0e0f12;
+  --panel:#14161b;
+  --ink:#e9eef6;
+  --mute:#b7c0cf;
+  --brand:#ff2d72;
+  --ring:rgba(255,255,255,.14);
+  --cardH: 520px;            /* card height */
+  --radius: 18px;
+}
+
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0;
+  font:16px/1.5 "Outfit", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+}
+
+.site-header{ padding:32px 20px 8px }
+.site-header h1{
+  margin:0 auto; max-width:1200px;
+  font-weight:800; font-size:48px; letter-spacing:.5px; text-align:center;
+}
+.site-header h1 span{ text-shadow:0 6px 26px rgba(255,255,255,.08) }
+
+.wrap{ margin:0 auto; max-width:1200px; padding:20px; }
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap:28px;
+}
+
+/* Cards */
+.card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  box-shadow: 0 0 0 1px var(--ring), 0 16px 40px rgba(0,0,0,.45);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  height:var(--cardH);
+}
+
+.pic{
+  position:relative; isolation:isolate;
+  height: calc(var(--cardH) - 78px);
+  background:linear-gradient(180deg,#191b22,#101217);
+  overflow:hidden;
+}
+.pic img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  display:block;
+  transform:translateZ(0);
+  transition:opacity .3s ease;
+}
+.pic .secondary{ opacity:0 }
+.card:hover .pic .secondary{ opacity:1 }
+.card:hover .pic .primary{ opacity:0 }
+
+/* graceful broken/fallback visuals */
+.pic.broken::after{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(1200px 420px at 60% -200px, rgba(255,45,114,.12), transparent 60%),
+    linear-gradient(180deg, #1a1c22, #121418);
+}
+.pic img.hidden{ opacity:0 }
+
+.meta{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px 18px;
+  gap:12px;
+}
+.name{ font-weight:700; letter-spacing:.2px; }
+
+.btn{
+  appearance:none; border:0; cursor:pointer;
+  background:var(--brand); color:white; font-weight:700;
+  padding:10px 18px; border-radius:999px; text-decoration:none;
+  box-shadow:0 6px 20px rgba(255,45,114,.35);
+  transition:transform .05s ease;
+}
+.btn:active{ transform:translateY(1px) }
+
+/* Responsive: 2 columns on medium, 1 on small */
+@media (max-width: 1040px){
+  .grid{ grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+}
+@media (max-width: 640px){
+  :root{ --cardH: 480px; }
+  .grid{ grid-template-columns: 1fr; }
+  .site-header h1{ font-size:36px }
+}
+
+/* Optional: in case a browser tried to render alt text on a broken img */
+.pic img{ font-size:0; color:transparent; }

@@ -1,25 +1,90 @@
-// scripts/cards.js
-(() => {
-  const supportsHover = matchMedia('(hover: hover)').matches;
+/* Blossom & Blade — card renderer
+   Drop this file at scripts/cards.js and keep your images under:
+   images/characters/<slug>/<slug>-card-on.webp
+   images/characters/<slug>/<slug>-card-off.webp  (optional; falls back to -on)
+*/
 
-  document.querySelectorAll('[data-card]').forEach(card => {
-    const img  = card.querySelector('img');
-    const on   = card.dataset.on;
-    const off  = card.dataset.off || on;           // if no "off", reuse "on"
-    let broken = false;
+const CARDS = [
+  {
+    slug: "blade",
+    name: "Blade",
+    href: "chat.html?man=blade&sub=night",
+    on:  "images/characters/blade/blade-card-on.webp",
+    off: "images/characters/blade/blade-card-on.webp"
+  },
+  {
+    slug: "dylan",
+    name: "Dylan",
+    href: "chat.html?man=dylan&sub=night",
+    on:  "images/characters/dylan/dylan-card-on.webp",
+    off: "images/characters/dylan/dylan-card-off.webp"
+  },
+  {
+    slug: "jesse",
+    name: "Jesse",
+    href: "chat.html?man=jesse&sub=night",
+    on:  "images/characters/jesse/jesse-card-on.webp",
+    off: "images/characters/jesse/jesse-card-on.webp" // use same until we add an OFF
+  },
+  {
+    slug: "alexander",
+    name: "Alexander",
+    href: "chat.html?man=alexander&sub=night",
+    on:  "images/characters/alexander/alexander-card-on.webp",
+    off: "images/characters/alexander/alexander-card-on.webp"
+  },
+  {
+    slug: "silas",
+    name: "Silas",
+    href: "chat.html?man=silas&sub=night",
+    on:  "images/characters/silas/silas-card-on.webp",
+    off: "images/characters/silas/silas-card-on.webp"
+  },
+  {
+    slug: "grayson",
+    name: "Grayson",
+    href: "chat.html?man=grayson&sub=night",
+    on:  "images/characters/grayson/grayson-card-on.webp",
+    off: "images/characters/grayson/grayson-card-on.webp"
+  }
+];
 
-    // Preload both sources so swapping is instant
-    [on, off].forEach(src => { const i = new Image(); i.src = src; });
+/* Utility: render one card */
+function cardHTML({ name, href, on, off }) {
+  const offSrc = off || on;
+  return `
+    <article class="card">
+      <a class="art" href="${href}" aria-label="Enter ${name}">
+        <img class="on"  src="${on}"  alt="${name} — card on"  loading="lazy" decoding="async">
+        <img class="off" src="${offSrc}" alt="${name} — card off" loading="lazy" decoding="async">
+        <!-- If an image fails to load, the ::before wouldn't help; we inject a graceful fallback below in JS -->
+      </a>
+      <div class="meta">
+        <div class="name">${name}</div>
+        <a class="btn" href="${href}">Enter</a>
+      </div>
+    </article>
+  `;
+}
 
-    // If any img errors, stop swapping (prevents flashing + alt text spam)
-    img.addEventListener('error', () => { broken = true; });
-
-    // Always start with the ON image
-    img.src = on;
-
-    if (!supportsHover) return;                    // no hover on touch devices
-
-    card.addEventListener('mouseenter', () => { if (!broken) img.src = off; });
-    card.addEventListener('mouseleave', () => { if (!broken) img.src = on;  });
+/* Graceful fallback: if either image errors, show a soft placeholder */
+function attachFallbacks(root) {
+  root.querySelectorAll('.card .art img').forEach(img => {
+    img.addEventListener('error', () => {
+      const art = img.closest('.art');
+      if (art && !art.querySelector('.placeholder')) {
+        const ph = document.createElement('div');
+        ph.className = 'placeholder';
+        ph.textContent = 'Coming soon';
+        art.appendChild(ph);
+      }
+    }, { once:true });
   });
-})();
+}
+
+/* Render all cards */
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = CARDS.map(cardHTML).join('');
+  attachFallbacks(grid);
+});

@@ -136,5 +136,15 @@
     }
     tryNext();
   </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const p = document.querySelector('#portrait, .portrait');
+    if (!p) return;
+    // Remove any non-image children (links, captions, etc.)
+    [...p.children].forEach(el => {
+      if (el.tagName.toLowerCase() !== 'img') el.remove();
+    });
+  });
+</script>
 </body>
 </html>

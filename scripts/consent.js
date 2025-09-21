@@ -2,32 +2,29 @@
 // Blossom & Blade — age gate + footer + phrase filter
 (() => {
   // ------- CONFIG -------
-  window.BB_CONFIG = {
-    bannedWords: [
-    bannedWords: [
-  // Case-insensitive; substring match
-  // 1) Rape + variants
-  "rape","raped","raping","noncon","non-consensual",
-  // 2) Incest
-  "incest","incestuous",
-  // 3) Scat
-  "scat","coprophagia",
-  // 4) Trafficking
-  "traffick","sex trafficking","human trafficking",
-  // 5) Bestiality
-  "bestiality","beastiality",
-  // 6) Necrophilia
-  "necrophilia","necrophile"
-],
- 
-    ],
-    strikeLimit: 3,        // block after 3 uses of the same word (per session)
-    footerLinks: [
-      { href: "/terms.html",   label: "Terms" },
-      { href: "/privacy.html", label: "Privacy" },
-      { href: "/billing.html", label: "Billing/Refunds" }
-    ]
-  };
+ window.BB_CONFIG = {
+  bannedWords: [
+    // Case-insensitive; substring match
+    // 1) Rape + variants
+    "rape","raped","raping","noncon","non-consensual",
+    // 2) Incest
+    "incest","incestuous",
+    // 3) Scat
+    "scat","coprophagia",
+    // 4) Trafficking
+    "traffick","sex trafficking","human trafficking",
+    // 5) Bestiality
+    "bestiality","beastiality",
+    // 6) Necrophilia
+    "necrophilia","necrophile"
+  ],
+  strikeLimit: 3,
+  footerLinks: [
+    { href: "/terms.html",   label: "Terms" },
+    { href: "/privacy.html", label: "Privacy" },
+    { href: "/billing.html", label: "Billing/Refunds" }
+  ]
+};
 
   const AGE_KEY = "bb_age_ok_v1";
   const STRIKE_PREFIX = "bb_strike_";

@@ -1,232 +1,271 @@
-/* scripts/chat.js  — Blossom & Blade
-   Full front-end chat controller.
-   - Loads portrait based on ?man=<name>&sub=<day|night>
-   - Seeds a short flirty opener (no stage directions)
-   - Stores conversation in localStorage per character/mode
-   - Auto-scrolls on every new message
-   - Calls window.bnbBrain.reply(...) if available, else POST /api/chat, else smart fallback
-*/
+(() => {
+  /* ---------- tiny helpers ---------- */
+  const $  = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+  const once = (fn) => { let done=false; return (...a)=>done?null:(done=true,fn(...a)); };
 
-/* ========= tiny helpers ========= */
-const $  = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  /* ---------- elements ---------- */
+  const chatWrap = $('.chat');             // scroll container
+  const inputEl  = $('#chat-input') || $('.inputbar input') || $('input[name="message"]') || $('textarea');
+  const sendBtn  = $('#send-btn')  || $('.send, button.send, #send');
 
-const params = new URLSearchParams(location.search);
-const man  = (params.get('man') || 'blade').toLowerCase();
-const mode = (params.get('sub') || 'night').toLowerCase();  // not used heavily yet but saved in key
-
-const chatForm   = $('#chat-form') || null;
-const inputEl    = $('#chat-input') || $('input, textarea');
-const sendBtn    = $('#send-btn') || $('.send') || $('button[type="submit"]');
-const scrollerEl = $('.messages-scroll');
-const messagesUl = $('#messages');
-const portrait   = $('#portraitImg');
-
-/* ========= character directory & openers ========= */
-const CHAR = {
-  blade:      { name: 'Blade',      portrait: 'images/characters/blade/blade-chat.webp',
-                openers: ["look who’s here.", "hey, trouble.", "miss me? come closer."] },
-  dylan:      { name: 'Dylan',      portrait: 'images/characters/dylan/dylan-chat.webp',
-                openers: ["helmet’s off. your turn—what happened today?", "you made it. talk to me.", "good timing—what’s the vibe right now?"] },
-  jesse:      { name: 'Jesse',      portrait: 'images/characters/jesse/jesse-chat.webp',
-                openers: ["sun’s down, cowgirl. what kind of trouble are we starting?", "there you are. i was about to come find you.", "i’ve got time and a grin—what’s first?"] },
-  alexander:  { name: 'Alexander',  portrait: 'images/characters/alexander/alexander-chat.webp',
-                openers: ["mm. you again. good.", "there you are. i like your timing.", "i’m listening—brief me."] },
-  grayson:    { name: 'Grayson',    portrait: 'images/characters/grayson/grayson-chat.webp',
-                openers: ["you’re late. worth the wait?", "room’s clear. you—talk.", "i’ve got you—what do you need?"] },
-  silas:      { name: 'Silas',      portrait: 'images/characters/silas/silas-chat.webp',
-                openers: ["you found me. sit. what’s your mood?", "hey, golden. hum me your day in one line.", "come keep me company—what’s the riff?"] },
-};
-
-const current = CHAR[man] || CHAR.blade;
-
-/* ========= storage ========= */
-const STORE_KEY = `bnb.chat.v3.${man}.${mode}`;
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
-}
-function saveHistory(list) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
-  catch {}
-}
-
-/* ========= ui helpers ========= */
-function scrollToBottom() {
-  if (!scrollerEl) return;
-  scrollerEl.scrollTop = scrollerEl.scrollHeight;
-}
-
-function sanitizeText(s) {
-  if (!s) return '';
-  let t = String(s);
-
-  // Strip common "stage directions" e.g., (smiles), [sighs], *laughs*
-  t = t.replace(/(^|\s)[\*\(\[][^)\]\*]{0,80}[\)\]\*](?=\s|$)/gi, '');   // remove inline asides
-  t = t.replace(/^[\s\-–—:,.!]+|[\s\-–—:,.!]+$/g, '');                   // trim punctuation fluff
-  // Collapse whitespace
-  t = t.replace(/\s+/g, ' ').trim();
-
-  // Keep it under ~320 chars to avoid wall-of-text on mobile
-  if (t.length > 320) t = t.slice(0, 317).trim() + '…';
-  return t;
-}
-
-function bubbleHTML(text) {
-  return `<div class="bubble">${text}</div>`;
-}
-
-function appendBubble(who, rawText) {
-  const text = sanitizeText(rawText);
-  if (!text) return;
-
-  const li = document.createElement('li');
-  li.className = `msg ${who}`;
-  li.innerHTML = bubbleHTML(text);
-  messagesUl.appendChild(li);
-
-  // Let layout update, then scroll
-  requestAnimationFrame(scrollToBottom);
-}
-
-function renderHistory(list) {
-  messagesUl.innerHTML = '';
-  list.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'assistant', m.content));
-}
-
-/* ========= portrait & page header ========= */
-(function initPortrait(){
-  if (!portrait) return;
-  // Cache-bust lightly when we ship image changes
-  const v = '3';
-  portrait.src = `${current.portrait}?v=${v}`;
-  portrait.alt = `${current.name} — chat portrait`;
-})();
-
-(function setHeaderName(){
-  const nameSlot = $('#chatName') || $('h1 span');
-  if (nameSlot) nameSlot.textContent = current.name;
-})();
-
-/* ========= first message (opener) ========= */
-let chatHistory = loadHistory(); // [{role:'assistant'|'user', content:'...'}]
-
-if (!chatHistory.length) {
-  const opener = (current.openers[Math.floor(Math.random()*current.openers.length)]) || "hey there.";
-  chatHistory.push({ role: 'assistant', content: opener });
-  saveHistory(chatHistory);
-}
-renderHistory(chatHistory);
-
-/* ========= reply engine ========= */
-// Prefer a site-provided brain if present
-async function brainReply(history, userText) {
-  // 1) window.bnbBrain.reply(history, {man, mode, message})
-  try {
-    if (window.bnbBrain && typeof window.bnbBrain.reply === 'function') {
-      const r = await window.bnbBrain.reply(history, { man, mode, message: userText });
-      if (r) return String(r);
-    }
-  } catch (e) { /* fall through */ }
-
-  // 2) POST /api/chat (common serverless shape)
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ man, mode, history, message: userText })
-    });
-    if (res.ok) {
-      const data = await res.json().catch(()=>null);
-      if (data && data.reply) return String(data.reply);
-      const txt = await res.text();
-      if (txt) return String(txt);
-    }
-  } catch (e) { /* fall through */ }
-
-  // 3) Smart local fallback: short, flirty, inquisitive
-  const u = (userText || '').toLowerCase();
-  if (u.includes('book') || u.includes('read'))
-    return "nice. what’s the plot twist you didn’t see coming?";
-  if (u.includes('work') || u.includes('boss'))
-    return "office politics again—want me to make someone a little jealous for you?";
-  if (u.includes('tired') || u.includes('long day'))
-    return "come here. one small good thing from today—i’ll wait.";
-  if (u.endsWith('?'))
-    return "tempting. what do you want me to say—honest or sweet?";
-  return "mm. tell me one small good thing from your day.";
-}
-
-/* ========= send handler ========= */
-async function handleSend(ev){
-  if (ev) ev.preventDefault();
-
-  const val = (inputEl && inputEl.value) ? inputEl.value.trim() : '';
-  if (!val) return;
-
-  // Show user bubble immediately
-  appendBubble('user', val);
-  chatHistory.push({ role:'user', content: val });
-  saveHistory(chatHistory);
-
-  // Guard submit
-  if (sendBtn) sendBtn.disabled = true;
-  if (inputEl) {
-    inputEl.value = '';
-    inputEl.placeholder = '…';
+  // Fallback input bar if missing (keeps page usable)
+  if (!inputEl) {
+    const bar = document.createElement('div');
+    bar.className = 'inputbar';
+    bar.innerHTML = `
+      <input id="chat-input" type="text" placeholder="Say hi…">
+      <button id="send-btn" class="send">Send</button>`;
+    ($('.wrap') || document.body).appendChild(bar);
   }
 
-  try {
-    const replyRaw = await brainReply(chatHistory, val);
-    const reply = sanitizeText(replyRaw);
-    if (reply) {
-      appendBubble('assistant', reply);
-      chatHistory.push({ role:'assistant', content: reply });
-      saveHistory(chatHistory);
-    }
-  } catch (e) {
-    appendBubble('assistant', "connection’s glitchy. say it again and i’m all yours.");
-  } finally {
-    if (sendBtn) sendBtn.disabled = false;
-    if (inputEl) {
-      inputEl.placeholder = 'Say hi…';
-      inputEl.focus();
-    }
-  }
-}
+  /* ---------- url params & memory ---------- */
+  const params = new URLSearchParams(location.search);
+  const man    = (params.get('man') || 'blade').toLowerCase();
+  const mode   = (params.get('sub') || 'night').toLowerCase();
 
-/* ========= wire up ========= */
-if (chatForm) {
-  chatForm.addEventListener('submit', handleSend);
-} else if (sendBtn) {
-  sendBtn.addEventListener('click', handleSend);
-  // Also allow Enter in the input if there's no <form>
-  if (inputEl) {
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
+  const memKey = (k) => `bnb.${man}.${k}`;
+  const mem = {
+    get: (k, d=null) => {
+      try { const v = localStorage.getItem(memKey(k)); return v ? JSON.parse(v) : d; }
+      catch { return d; }
+    },
+    set: (k, v) => localStorage.setItem(memKey(k), JSON.stringify(v)),
+    push: (k, v) => { const arr = mem.get(k, []); arr.push(v); mem.set(k, arr); },
+    last: (k) => (mem.get(k, []).slice(-1)[0])
+  };
+
+  /* ---------- DOM glue ---------- */
+  const nameSpan = $('#chatName');
+  if (nameSpan) nameSpan.textContent = man.charAt(0).toUpperCase() + man.slice(1);
+
+  const list = $('#messages') || (()=>{
+    const ul = document.createElement('ul');
+    ul.id = 'messages';
+    ul.className = 'messages';
+    ($('.messages-scroll') || $('.chat-left') || chatWrap || document.body).appendChild(ul);
+    return ul;
+  })();
+
+  const portraitImg = $('#portraitImg');
+  if (portraitImg) {
+    const srcMap = {
+      blade:      'images/characters/blade/blade-chat.webp',
+      dylan:      'images/characters/dylan/dylan-chat.webp',
+      alexander:  'images/characters/alexander/alexander-chat.webp',
+      grayson:    'images/characters/grayson/grayson-chat.webp',
+      silas:      'images/characters/silas/silas-chat.webp',
+      jesse:      'images/characters/jesse/jesse-chat.webp'
+    };
+    if (srcMap[man]) portraitImg.src = srcMap[man];
+    portraitImg.alt = `${man} — chat portrait`;
+  }
+
+  const scrollToBottom = () => {
+    // prefer the scrollable message column, else the whole page
+    const scroller = $('.messages-scroll') || chatWrap || document.scrollingElement || document.documentElement;
+    scroller.scrollTo({ top: scroller.scrollHeight + 9999, behavior: 'smooth' });
+  };
+
+  const bubble = (side, text) => {
+    // de-dup exact same assistant line to avoid repeats
+    if (side === 'assistant') {
+      const last = mem.last('log');
+      if (last && last.role === 'assistant' && last.text.trim().toLowerCase() === text.trim().toLowerCase()) {
+        return;
       }
-    });
-  }
-}
+    }
 
-/* ========= quality: keep view tidy on resize & load ========= */
-window.addEventListener('load', scrollToBottom, { once:true });
-window.addEventListener('resize', () => { requestAnimationFrame(scrollToBottom); });
+    const li = document.createElement('li');
+    li.className = `msg ${side}`;
+    li.innerHTML = `<div class="bubble">${escapeHTML(text)}</div>`;
+    list.appendChild(li);
+    mem.push('log', { role: side, text, t: Date.now() });
+    scrollToBottom();
+  };
 
-/* ========= tiny safety: strip any leftover filename labels under portrait (belt & suspenders) ========= */
-document.addEventListener('DOMContentLoaded', () => {
-  const p = document.querySelector('#portrait');
-  if (!p) return;
-  [...p.childNodes].forEach(n => {
-    if (n.nodeType === 3 && /\.(webp|jpe?g|png|gif)$/i.test((n.textContent||'').trim())) n.remove();
+  const escapeHTML = (s) =>
+    s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+  /* ---------- tone & replies ---------- */
+
+  const STARTERS = {
+    blade: [
+      "You came to see me? I won’t pretend I’m not pleased.",
+      "Look who wandered into the dark. Brave."
+    ],
+    dylan: [
+      "Helmet’s off. Your turn—what happened today?",
+      "Hey trouble. Miss me?"
+    ],
+    alexander: [
+      "Mm. You again. Good.",
+      "I’m listening—brief me."
+    ],
+    grayson: [
+      "Red room’s warm. Tell me what you need.",
+      "You’re safe here. Start talking."
+    ],
+    silas: [
+      "Hey, muse. What’s the riff of your day?",
+      "Play me a note—just one good thing."
+    ],
+    jesse: [
+      "Sun’s hot, boots dusty—what’s on your mind, darlin’?",
+      "You showed up. I like that."
+    ]
+  };
+
+  const PERSONALITY = {
+    blade: {
+      flirt:  ["Careful. I bite…and I think you like that.", "Keep talking. Your voice looks good on me."],
+      warm:   ["Proud of you.", "You did fine. Better than fine."],
+      tease:  ["Should I make them regret it?", "Tell me where to aim."]
+    },
+    dylan: {
+      flirt:  ["I could listen to you all night, visor up.", "You’re a good distraction."],
+      warm:   ["That’s a win. Take it.", "You did right."],
+      tease:  ["Want me to take you for a lap to cool off?", "I ride better when you watch."]
+    },
+    alexander: {
+      flirt:  ["You’re dangerously distracting.", "I like you here. Close."],
+      warm:   ["I’m proud of you.", "You handled it well."],
+      tease:  ["Want me to fix it, or just say the word and I’ll make a scene?"]
+    },
+    grayson: {
+      flirt:  ["You look good in red light.", "Tell me where to stand, I’ll handle the rest."],
+      warm:   ["You’re safe with me.", "I’ve got you."],
+      tease:  ["Want me to spook them a little?", "I can be very persuasive."]
+    },
+    silas: {
+      flirt:  ["You’re the melody stuck in my head.", "Sing it to me, pretty."],
+      warm:   ["That’s a sweet win.", "Good. Let it sit with you."],
+      tease:  ["Want me to write a song that makes them jealous?"]
+    },
+    jesse: {
+      flirt:  ["You lean in like you mean it.", "I like your kind of trouble."],
+      warm:   ["Proud of you, sweetheart.", "That’ll do."],
+      tease:  ["Want me to tip my hat and make ’em sweat?"]
+    }
+  };
+
+  // Quick intent helpers (very light-weight, no brackets/stage directions)
+  const isGreeting = (t) => /\b(hi|hey|hello|sup|yo)\b/i.test(t);
+  const isHowAreYou = (t) => /\b(how (are|r) (you|u)|hru)\b/i.test(t);
+  const isWorkDrama = (t) => /\b(boss|work|coworker|office|meeting)\b/i.test(t);
+  const mentionsCredit = (t) => /\b(credit|stole|took.*(work|idea))\b/i.test(t);
+  const isFlirt      = (t) => /\b(miss you|kiss|cuddle|touch|want you|hot|sexy)\b/i.test(t);
+  const askedQuestion = (t) => /[?!]\s*$/.test(t) || /\b(why|when|where|who|what|how)\b/i.test(t);
+
+  const rand = (arr) => arr[Math.floor(Math.random()*arr.length)];
+  const guy  = PERSONALITY[man] || PERSONALITY.blade;
+
+  const replyFor = (userTextRaw, history) => {
+    const userText = (userTextRaw || '').trim();
+
+    // keep opener only once per session
+    if (!mem.get('greeted', false)) {
+      mem.set('greeted', true);
+      return rand(STARTERS[man] || STARTERS.blade);
+    }
+
+    // direct reactions
+    if (isGreeting(userText)) {
+      return rand([
+        "Took you long enough.",
+        "Come here and talk to me.",
+        "Hey. What kind of mood are you in?"
+      ]);
+    }
+
+    if (isHowAreYou(userText)) {
+      return rand([
+        "Better now that you’re here.",
+        "Still thinking about you. Not planning to stop."
+      ]);
+    }
+
+    if (isFlirt(userText)) {
+      return rand(guy.flirt);
+    }
+
+    if (isWorkDrama(userText) && mentionsCredit(userText)) {
+      // e.g., “Becky took credit for my work…”
+      return rand([
+        "She always wanted your job. You rattled her.",
+        "Want me to make her jealous? I can. Or I can help you write an email she won’t forget."
+      ]);
+    }
+
+    if (isWorkDrama(userText)) {
+      return rand([
+        "Office politics are boring—you aren’t. Want strategy, or want me to help you vent?",
+        "Tell me what they said. I’ll tell you what you should’ve said back."
+      ]);
+    }
+
+    if (askedQuestion(userText)) {
+      return rand([
+        "Short answer? Yes. Long answer—I’ll show you.",
+        "If you’re asking, you already know the answer."
+      ]);
+    }
+
+    // default: reflect + nudge
+    const lastWin = /good|win|saved|finished|done|proud/i.test(userText);
+    if (lastWin) return rand(guy.warm);
+
+    return rand([
+      "Tell me the part you didn’t say out loud.",
+      "Okay. What do you want from me—comfort, chaos, or a plan?",
+      "So what do I need to do about it?"
+    ]);
+  };
+
+  /* ---------- send / receive ---------- */
+  const doSend = once(() => {}); // keeps once helper imported; no-op here
+
+  const handleSubmit = (e) => {
+    e && e.preventDefault();
+    const field = $('#chat-input') || $('input') || $('textarea');
+    const txt = (field?.value || '').trim();
+    if (!txt) return;
+
+    bubble('user', txt);
+    field.value = '';
+    setTimeout(() => field.focus(), 0);
+
+    // produce assistant reply
+    const history = mem.get('log', []);
+    const reply = replyFor(txt, history);
+
+    // small protection: if reply accidentally matches last assistant line, vary it
+    const lastA = history.slice().reverse().find(m => m.role === 'assistant');
+    if (lastA && lastA.text.trim().toLowerCase() === reply.trim().toLowerCase()) {
+      bubble('assistant', "Tell me more than that.");
+    } else {
+      bubble('assistant', reply);
+    }
+  };
+
+  (sendBtn || $('#send-btn')).addEventListener('click', handleSubmit);
+  (inputEl || $('#chat-input')).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) handleSubmit(e);
   });
-  p.querySelectorAll('small, figcaption, a, span, div').forEach(el=>{
-    if (/\.(webp|jpe?g|png|gif)$/i.test((el.textContent||'').trim())) el.remove();
+
+  /* ---------- initial greet (only once) ---------- */
+  window.addEventListener('load', () => {
+    // restore prior chat
+    const prior = mem.get('log', []);
+    if (prior.length) {
+      // rebuild UI quickly
+      prior.forEach(m => bubble(m.role, m.text));
+    } else {
+      // first time: greet (persist greeted flag inside replyFor)
+      const opener = replyFor('', []);
+      bubble('assistant', opener);
+    }
+    scrollToBottom();
   });
-});
+
+})();

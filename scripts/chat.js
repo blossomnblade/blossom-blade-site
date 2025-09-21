@@ -1,169 +1,239 @@
-// Blossom & Blade — Chat (front-end only; safe fallback if backend is offline)
-(function () {
-  const $ = (s) => document.querySelector(s);
+<!-- /scripts/chat.js -->
+<script>
+(() => {
+  // ====== Helpers ======
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-  // --- DOM ----
-  const form = $("#chat-form");
-  const input = $("#chat-input");
-  const sendBtn = $("#send-btn");
-  const list = $("#messages");
-  const portraitImg = $("#portraitImg");
-  const chatName = $("#chatName");
+  // UI bits
+  const chatWrap = $('.chat');          // big scroll area
+  const input = $('.inputbar input, .inputbar textarea, #input, .inputbar'); // be liberal
+  const sendBtn = $('.send, button.send, #send');
 
-  // --- URL params ---
+  // defensive: normalize input element
+  let inputEl = null;
+  if (!input) {
+    // build a basic input if page had a different markup
+    const bar = document.createElement('div');
+    bar.className = 'inputbar';
+    bar.innerHTML = `<input type="text" placeholder="Say hi…"><button class="send">Send</button>`;
+    $('.wrap')?.appendChild(bar);
+    inputEl = $('input', bar);
+  } else {
+    inputEl = input.tagName ? input : $('input', input) || $('textarea', input);
+  }
+
+  // read character + mode from URL
   const params = new URLSearchParams(location.search);
-  const man = (params.get("man") || "alexander").toLowerCase();
-  const sub = (params.get("sub") || "night").toLowerCase();
+  const man = (params.get('man') || 'blade').toLowerCase();
+  const mode = (params.get('sub') || 'night').toLowerCase(); // future use
 
-  // --- UI header name ---
-  chatName.textContent = man.charAt(0).toUpperCase() + man.slice(1);
+  // light memory (kept per character)
+  const memKey = (k) => `bnb.${man}.${k}`;
+  const getMem = (k, d=null) => {
+    try { return JSON.parse(localStorage.getItem(memKey(k))) ?? d; } catch { return d; }
+  };
+  const setMem = (k, v) => localStorage.setItem(memKey(k), JSON.stringify(v));
 
-  // --- Portrait: try -chat.webp then fall back to -card-on.webp ---
-  const portraitTry = [
-    `images/characters/${man}/${man}-chat.webp`,
-    `images/characters/${man}/${man}-card-on.webp`,
-  ];
-  (function setPortrait(i = 0) {
-    if (!portraitImg) return;
-    portraitImg.src = portraitTry[i] || "";
-    portraitImg.onerror = () => {
-      if (i + 1 < portraitTry.length) setPortrait(i + 1);
-    };
-  })();
+  // message history we send to the API
+  const history = [];
 
-  // --- Storage key (per man/sub) ---
-  const STORE_KEY = `bb_chat_${man}_${sub}`;
-
-  // --- Render / Save / Restore ---
-  function render(role, text) {
-    const li = document.createElement("li");
-    li.className = `msg ${role}`;
-    li.dataset.role = role;
-    li.innerHTML = `<div class="bubble">${text}</div>`;
-    list.appendChild(li);
-    list.parentElement.scrollTop = list.parentElement.scrollHeight;
+  // UI message bubble
+  function addMsg(text, who='you') { // who: 'you' (the guy) | 'me'
+    const row = document.createElement('div');
+    row.className = 'row';
+    const b = document.createElement('div');
+    b.className = `msg ${who === 'me' ? 'me' : 'you'}`;
+    b.textContent = text;
+    row.appendChild(b);
+    chatWrap.appendChild(row);
+    chatWrap.scrollTop = chatWrap.scrollHeight;
   }
 
-  function save() {
-    const payload = [...list.querySelectorAll(".msg")].map((m) => ({
-      role: m.dataset.role,
-      text: m.querySelector(".bubble").textContent
-    }));
-    localStorage.setItem(STORE_KEY, JSON.stringify(payload));
+  // typing indicator
+  let typingRow = null;
+  function showTyping(show=true) {
+    if (show) {
+      if (typingRow) return;
+      typingRow = document.createElement('div');
+      typingRow.className = 'row';
+      const b = document.createElement('div');
+      b.className = 'msg you typing';
+      b.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+      typingRow.appendChild(b);
+      chatWrap.appendChild(typingRow);
+      chatWrap.scrollTop = chatWrap.scrollHeight;
+    } else {
+      typingRow?.remove();
+      typingRow = null;
+    }
   }
 
-  function restore() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-      saved.forEach((m) => render(m.role, m.text));
-    } catch {}
+  // grab her name from what she says (“I’m Sam” / “It’s Sam” / “I am Sam”)
+  function maybeLearnName(text) {
+    const m = text.match(/\b(?:i'm|i am|it’s|its)\s+([A-Za-z][A-Za-z\-']{1,20})\b/i);
+    if (m) setMem('herName', m[1]);
   }
 
-  restore();
-  window.addEventListener("beforeunload", save);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") save();
-  });
-
-  function disable(on) {
-    if (sendBtn) sendBtn.disabled = on;
-    if (input) input.disabled = on;
-  }
-
-  // --- Local fallback reply (works even with no backend) ---
+  // openers per guy (short, flirty, PG-13)
   const OPENERS = {
     blade: [
-      "You again? Good. I was about to come find you.",
-      "Thought you'd ghost me. Brave to show up, pretty thing."
+      "Look who wandered in. Miss me?",
+      "Hey there, trouble. You found me.",
+      "Aww—you came to see me. Good choice."
     ],
     dylan: [
-      "Helmet’s off. You caught me between rides.",
-      "Sit tight—tell me what kind of trouble you want."
+      "Well, hey there. Helmet off, guard down—talk to me.",
+      "There you are. I was about to come find you.",
+      "You again? Lucky me."
     ],
     jesse: [
-      "Sunset’s good, but you look better walking in.",
-      "You took your time, cowgirl."
+      "Afternoon, darlin’. You look like good news.",
+      "Well hey, sunshine. You made it.",
+      "Look who’s walking in like a song I know."
     ],
     alexander: [
-      "Right on time. I like that.",
-      "You look like you want to be spoiled. I can arrange it."
-    ],
-    silas: [
-      "Tuned up and waiting. Play me something—your move.",
-      "Pull up. Let’s make the neighbors curious."
+      "You’re right on time. I like that.",
+      "There she is. I was hoping you’d appear.",
+      "Come in. I’ve been saving a moment for you."
     ],
     grayson: [
-      "Rules are simple: be good… or I make you good.",
-      "Kincade hours. Come closer."
+      "You’re back. I was just thinking about you.",
+      "Hey, pretty trouble. What’s the plan tonight?",
+      "Good—that’s the face I wanted to see."
+    ],
+    silas: [
+      "Oh—hi. You feel like a melody today.",
+      "Look who slipped in. Sit with me a second.",
+      "Hey there. Ready to make something sound good?"
     ]
   };
 
-  function personaReply(userText) {
-    const pool = OPENERS[man] || OPENERS.alexander;
-    // light, flirty, short; avoids pushy/explicit; nod to what she said
-    const hint = (userText || "").slice(0, 80);
-    const line = pool[Math.floor(Math.random() * pool.length)];
-    const tease = hint ? ` ${/^[.?!]/.test(hint) ? "" : "—"} ${hint.replace(/\s+/g," ").trim()}` : "";
-    return `${line}${tease}`;
-  }
+  // small follow-up prompts to keep it conversational
+  const FOLLOW_UPS = [
+    "Tell me one tiny good thing from your day.",
+    "What kind of mood are you in right now?",
+    "Want to start sweet or spicy—PG version, for now.",
+    "What do you need from me tonight?"
+  ];
 
-  // --- Try backend; if it fails, fall back to local personaReply() ---
-  async function getReply(messages) {
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ man, sub, messages }),
-      });
-      if (!res.ok) throw new Error("bad status");
-      const data = await res.json();
-      const text = (data && (data.reply || data.text)) || "";
-      if (!text.trim()) throw new Error("empty");
-      return text.trim();
-    } catch {
-      // local fallback
-      const lastUser = messages.slice().reverse().find(m => m.role === "user");
-      return personaReply(lastUser?.content || lastUser?.text || "");
-    }
-  }
+  // build system style card we send to the API
+  function systemCard() {
+    const herName = getMem('herName');
+    const banList = ["rape","incest","bestiality","scat","minors","trafficking"];
+    const persona = {
+      blade: "Masked, dark humor, protective, speaks in short confident lines, a hint of menace but safe. Flirty, teasing, never cruel.",
+      dylan: "Motorcycle ninja, calm, observant, warm teasing. Direct, confident, attentive.",
+      jesse: "Cowboy charm, playful, protective, sun-warm; gentleman.",
+      alexander: "Alpha businessman; elegant, composed, a little possessive but respectful; crisp vocabulary; discreet.",
+      grayson: "Soldier/operative energy; dry quips; soft center; watchful and loyal.",
+      silas: "Rock guitarist; artsy, intense, romantic; playful edge."
+    }[man] || "Confident, flirty, protective.";
 
-  // --- Submit handler (prevents page reload!) ---
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();                 // <<<<< stops the page from reloading
-    const prompt = (input?.value || "").trim();
-    if (!prompt) return;
-
-    render("user", prompt);
-    save();
-    input.value = "";
-    disable(true);
-
-    // Build message history for backend; also works for local fallback
-    const history = JSON.parse(localStorage.getItem(STORE_KEY) || "[]")
-      .map(m => ({ role: m.role, content: m.text }));
-    const messages = [
-      { role: "system", content: `You are ${man} from Blossom & Blade. Keep replies short, flirty, warm; follow the user's lead; never be pushy.` },
-      ...history,
-      { role: "user", content: prompt }
+    return [
+      {
+        role: "system",
+        content:
+`You are role-playing as ${man} in a romantic, PG-13 chat.
+Style: ${persona}
+Ground rules:
+- Be playful, flirty, and curious; 1–2 short lines max per message.
+- Ask exactly ONE question at a time.
+- Be on her side, supportive, let her lead pace; no explicit sexual content yet.
+- Avoid repetitive phrasing; vary openers and reactions.
+- If she gives a name, use it. Current name: ${herName || "unknown"}.
+- Hard stops (never discuss or allude): rape, incest, bestiality, scat, minors, trafficking.
+- If she pushes boundaries, pivot gently and keep it coy.
+- Keep continuity from previous messages.`
+      }
     ];
+  }
 
-    let reply = "";
+  // call our API
+  async function askLLM() {
+    const body = {
+      man,
+      mode,
+      messages: [...systemCard(), ...history]
+    };
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error('Network');
+    const data = await res.json();
+    if (!data || typeof data.text !== 'string') throw new Error('Bad response');
+    return data.text.trim();
+  }
+
+  // send flow
+  async function send(text) {
+    const clean = (text || '').trim();
+    if (!clean) return;
+    maybeLearnName(clean);
+    addMsg(clean, 'me');
+    history.push({ role:'user', content: clean });
+
+    sendBtn?.setAttribute('disabled','');
+    showTyping(true);
     try {
-      reply = await getReply(messages);
-    } catch {
-      reply = "…";
+      const reply = await askLLM();
+      history.push({ role:'assistant', content: reply });
+      showTyping(false);
+      addMsg(reply, 'you');
+    } catch (e) {
+      showTyping(false);
+      addMsg("Connection hiccup. Say that again for me?", 'you');
+    } finally {
+      sendBtn?.removeAttribute('disabled');
+      inputEl?.focus();
+      chatWrap.scrollTop = chatWrap.scrollHeight;
     }
+  }
 
-    render("assistant", reply);
-    save();
-    disable(false);
-    input?.focus();
+  // wire up UI
+  sendBtn?.addEventListener('click', () => send(inputEl.value).then(() => inputEl.value=''));
+  inputEl?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send(inputEl.value).then(() => inputEl.value='');
+    }
   });
 
-  // allow Enter to send (default in forms), Shift+Enter for newline if needed
-  input?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.shiftKey) {
-      e.stopPropagation(); // let it insert a newline if it's a textarea later
-    }
+  // first message from the guy
+  function firstTouch() {
+    const greeted = getMem('greeted', false);
+    if (greeted) return;
+    setMem('greeted', true);
+
+    const picks = OPENERS[man] || OPENERS.blade;
+    const opener = picks[Math.floor(Math.random() * picks.length)];
+    const follow = FOLLOW_UPS[Math.floor(Math.random() * FOLLOW_UPS.length)];
+    const text = `${opener}\n${follow}`;
+
+    // show as assistant message and seed history
+    addMsg(text, 'you');
+    history.push({ role:'assistant', content: text });
+  }
+
+  // minimal typing CSS if not present
+  const style = document.createElement('style');
+  style.textContent = `
+    .msg.typing { display:inline-flex; gap:6px; align-items:center; }
+    .msg.typing .dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.7); display:inline-block; animation: bnb-dot 1s infinite ease-in-out; }
+    .msg.typing .dot:nth-child(2){ animation-delay:.15s }
+    .msg.typing .dot:nth-child(3){ animation-delay:.3s }
+    @keyframes bnb-dot { 0%{opacity:.2; transform:translateY(0)} 50%{opacity:1; transform:translateY(-3px)} 100%{opacity:.2; transform:translateY(0)} }
+  `;
+  document.head.appendChild(style);
+
+  // Go
+  window.addEventListener('load', () => {
+    setTimeout(firstTouch, 600);
+    inputEl?.focus();
   });
 })();
+</script>

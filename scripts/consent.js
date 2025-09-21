@@ -4,8 +4,22 @@
   // ------- CONFIG -------
   window.BB_CONFIG = {
     bannedWords: [
-      // <<< put your 6 trigger words here (lowercase) >>>
-      // "word1","word2","word3","word4","word5","word6"
+    bannedWords: [
+  // Case-insensitive; substring match
+  // 1) Rape + variants
+  "rape","raped","raping","noncon","non-consensual",
+  // 2) Incest
+  "incest","incestuous",
+  // 3) Scat
+  "scat","coprophagia",
+  // 4) Trafficking
+  "traffick","sex trafficking","human trafficking",
+  // 5) Bestiality
+  "bestiality","beastiality",
+  // 6) Necrophilia
+  "necrophilia","necrophile"
+],
+ 
     ],
     strikeLimit: 3,        // block after 3 uses of the same word (per session)
     footerLinks: [

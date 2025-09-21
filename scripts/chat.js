@@ -1,181 +1,232 @@
-// scripts/chat.js
-// Clean openers, flirty/witty style, no bracketed “stage directions”.
+/* scripts/chat.js  — Blossom & Blade
+   Full front-end chat controller.
+   - Loads portrait based on ?man=<name>&sub=<day|night>
+   - Seeds a short flirty opener (no stage directions)
+   - Stores conversation in localStorage per character/mode
+   - Auto-scrolls on every new message
+   - Calls window.bnbBrain.reply(...) if available, else POST /api/chat, else smart fallback
+*/
 
-import { getOpener, buildSystem, personaLabel } from './prompt.js';
+/* ========= tiny helpers ========= */
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-(() => {
-  // ------- tiny helpers -------
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const on = (el, ev, fn) => el.addEventListener(ev, fn);
+const params = new URLSearchParams(location.search);
+const man  = (params.get('man') || 'blade').toLowerCase();
+const mode = (params.get('sub') || 'night').toLowerCase();  // not used heavily yet but saved in key
 
-  const chatWrap = $('.chat') || $('.chat-wrap'); // scroll container
-  let inputEl = $('#chat-input') || $('.inputbar input') || $('.inputbar textarea');
-  const sendBtn = $('#send-btn') || $('.send, button.send, #send');
+const chatForm   = $('#chat-form') || null;
+const inputEl    = $('#chat-input') || $('input, textarea');
+const sendBtn    = $('#send-btn') || $('.send') || $('button[type="submit"]');
+const scrollerEl = $('.messages-scroll');
+const messagesUl = $('#messages');
+const portrait   = $('#portraitImg');
 
-  // Build input UI if missing (fallback)
-  if (!inputEl) {
-    const bar = document.createElement('div');
-    bar.className = 'inputbar';
-    bar.innerHTML = `<input id="chat-input" type="text" placeholder="Say hi…"><button id="send-btn" class="send">Send</button>`;
-    ($('.wrap') || document.body).appendChild(bar);
-    inputEl = $('#chat-input');
-  }
+/* ========= character directory & openers ========= */
+const CHAR = {
+  blade:      { name: 'Blade',      portrait: 'images/characters/blade/blade-chat.webp',
+                openers: ["look who’s here.", "hey, trouble.", "miss me? come closer."] },
+  dylan:      { name: 'Dylan',      portrait: 'images/characters/dylan/dylan-chat.webp',
+                openers: ["helmet’s off. your turn—what happened today?", "you made it. talk to me.", "good timing—what’s the vibe right now?"] },
+  jesse:      { name: 'Jesse',      portrait: 'images/characters/jesse/jesse-chat.webp',
+                openers: ["sun’s down, cowgirl. what kind of trouble are we starting?", "there you are. i was about to come find you.", "i’ve got time and a grin—what’s first?"] },
+  alexander:  { name: 'Alexander',  portrait: 'images/characters/alexander/alexander-chat.webp',
+                openers: ["mm. you again. good.", "there you are. i like your timing.", "i’m listening—brief me."] },
+  grayson:    { name: 'Grayson',    portrait: 'images/characters/grayson/grayson-chat.webp',
+                openers: ["you’re late. worth the wait?", "room’s clear. you—talk.", "i’ve got you—what do you need?"] },
+  silas:      { name: 'Silas',      portrait: 'images/characters/silas/silas-chat.webp',
+                openers: ["you found me. sit. what’s your mood?", "hey, golden. hum me your day in one line.", "come keep me company—what’s the riff?"] },
+};
 
-  // Params
-  const params = new URLSearchParams(location.search);
-  const man  = (params.get('man') || 'blade').toLowerCase();
-  const mode = (params.get('sub') || 'night').toLowerCase();
+const current = CHAR[man] || CHAR.blade;
 
-  const memKey = (k) => `bnb.${man}.${k}`;
+/* ========= storage ========= */
+const STORE_KEY = `bnb.chat.v3.${man}.${mode}`;
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveHistory(list) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+  catch {}
+}
 
-  // UI labels & portrait
-  const chatNameEl = $('#chatName') || $('#chatname') || $('header h1 span');
-  if (chatNameEl) chatNameEl.textContent = personaLabel(man);
+/* ========= ui helpers ========= */
+function scrollToBottom() {
+  if (!scrollerEl) return;
+  scrollerEl.scrollTop = scrollerEl.scrollHeight;
+}
 
-  const portraitImg = $('#portraitImg') || $('#portrait img') || $('#portrait');
-  if (portraitImg && !portraitImg.src) {
-    // default to the “chat” portrait if present
-    // (your folders are images/characters/<man>/<man>-chat.webp)
-    try {
-      const base = `/images/characters/${man}/${man}-chat.webp`;
-      portraitImg.src = base;
-      portraitImg.alt = `${personaLabel(man)} portrait`;
-      portraitImg.loading = 'lazy';
-      portraitImg.decoding = 'async';
-    } catch {}
-  }
+function sanitizeText(s) {
+  if (!s) return '';
+  let t = String(s);
 
-  // Message rendering
-  const msgList = $('#messages') || (() => {
-    const ul = document.createElement('ul');
-    ul.id = 'messages';
-    ul.className = 'messages';
-    const scroll = $('.messages-scroll') || document.createElement('div');
-    if (!scroll.classList.contains('messages-scroll')) {
-      scroll.className = 'messages-scroll';
-      (chatWrap || document.body).prepend(scroll);
+  // Strip common "stage directions" e.g., (smiles), [sighs], *laughs*
+  t = t.replace(/(^|\s)[\*\(\[][^)\]\*]{0,80}[\)\]\*](?=\s|$)/gi, '');   // remove inline asides
+  t = t.replace(/^[\s\-–—:,.!]+|[\s\-–—:,.!]+$/g, '');                   // trim punctuation fluff
+  // Collapse whitespace
+  t = t.replace(/\s+/g, ' ').trim();
+
+  // Keep it under ~320 chars to avoid wall-of-text on mobile
+  if (t.length > 320) t = t.slice(0, 317).trim() + '…';
+  return t;
+}
+
+function bubbleHTML(text) {
+  return `<div class="bubble">${text}</div>`;
+}
+
+function appendBubble(who, rawText) {
+  const text = sanitizeText(rawText);
+  if (!text) return;
+
+  const li = document.createElement('li');
+  li.className = `msg ${who}`;
+  li.innerHTML = bubbleHTML(text);
+  messagesUl.appendChild(li);
+
+  // Let layout update, then scroll
+  requestAnimationFrame(scrollToBottom);
+}
+
+function renderHistory(list) {
+  messagesUl.innerHTML = '';
+  list.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'assistant', m.content));
+}
+
+/* ========= portrait & page header ========= */
+(function initPortrait(){
+  if (!portrait) return;
+  // Cache-bust lightly when we ship image changes
+  const v = '3';
+  portrait.src = `${current.portrait}?v=${v}`;
+  portrait.alt = `${current.name} — chat portrait`;
+})();
+
+(function setHeaderName(){
+  const nameSlot = $('#chatName') || $('h1 span');
+  if (nameSlot) nameSlot.textContent = current.name;
+})();
+
+/* ========= first message (opener) ========= */
+let chatHistory = loadHistory(); // [{role:'assistant'|'user', content:'...'}]
+
+if (!chatHistory.length) {
+  const opener = (current.openers[Math.floor(Math.random()*current.openers.length)]) || "hey there.";
+  chatHistory.push({ role: 'assistant', content: opener });
+  saveHistory(chatHistory);
+}
+renderHistory(chatHistory);
+
+/* ========= reply engine ========= */
+// Prefer a site-provided brain if present
+async function brainReply(history, userText) {
+  // 1) window.bnbBrain.reply(history, {man, mode, message})
+  try {
+    if (window.bnbBrain && typeof window.bnbBrain.reply === 'function') {
+      const r = await window.bnbBrain.reply(history, { man, mode, message: userText });
+      if (r) return String(r);
     }
-    scroll.appendChild(ul);
-    return ul;
-  })();
+  } catch (e) { /* fall through */ }
 
-  const addBubble = (role, text) => {
-    if (!text) return;
-    const li = document.createElement('li');
-    li.className = `msg ${role}`;
-    li.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
-    msgList.appendChild(li);
-    msgList.parentElement.scrollTop = msgList.parentElement.scrollHeight + 9999;
-  };
-
-  const escapeHtml = (s='') => s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-
-  // History
-  const loadHistory = () => {
-    try { return JSON.parse(localStorage.getItem(memKey('thread')) || '[]'); }
-    catch { return []; }
-  };
-  const saveHistory = (arr) => localStorage.setItem(memKey('thread'), JSON.stringify(arr));
-
-  let thread = loadHistory(); // [{role:'user'|'assistant', content:'...'}]
-
-  // First-time opener
-  if (!thread.length) {
-    addBubble('assistant', getOpener(man, mode));
-    thread.push({ role: 'assistant', content: getOpener(man, mode) });
-    saveHistory(thread);
-  } else {
-    // Render existing
-    thread.forEach(m => addBubble(m.role, m.content));
-  }
-
-  // Strip any parenthetical stage directions the model might emit
-  function stripMeta(s) {
-    if (!s) return s;
-    // remove short parentheticals that look like stage directions
-    // e.g. (low voice), (smirks), (alpha tone), (leans in)
-    return s.replace(/\(([^)]{0,80})\)/g, (m, inner) => {
-      const hint = inner.toLowerCase();
-      const triggers = [
-        'voice','tone','smirk','smirks','grin','leans','stage','alpha',
-        'instruction','aside','whisper','growl','moan','beat','pause'
-      ];
-      return triggers.some(t => hint.includes(t)) ? '' : m;
-    }).replace(/\s{2,}/g,' ').trim();
-  }
-
-  // Turn thread into OpenAI messages
-  const buildMessages = (userText) => {
-    const sys = buildSystem(man, mode);
-    const base = [{ role: 'system', content: sys }];
-    const clipped = thread.slice(-12); // keep it lean
-    const msgs = base.concat(clipped);
-    if (userText) msgs.push({ role: 'user', content: userText });
-    return msgs;
-  };
-
-  // Call your API (robust to a couple of common shapes)
-  async function askLLM(userText) {
-    const body = { messages: buildMessages(userText), man, mode };
+  // 2) POST /api/chat (common serverless shape)
+  try {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body)
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ man, mode, history, message: userText })
     });
-    if (!res.ok) throw new Error('Network error');
-    const data = await res.json().catch(() => ({}));
-
-    // common shapes: {text}, {reply}, OpenAI proxy {choices:[{message:{content}}]}
-    let text =
-      data.text ||
-      data.reply ||
-      (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
-      '';
-
-    text = stripMeta(text);
-
-    // keep it tight; occasionally models ramble
-    if (text.split(/\s+/).length > 45) {
-      text = text.split(/\.(\s|$)/).slice(0,2).join('.').trim();
+    if (res.ok) {
+      const data = await res.json().catch(()=>null);
+      if (data && data.reply) return String(data.reply);
+      const txt = await res.text();
+      if (txt) return String(txt);
     }
-    return text || "Say that again, but slower—I got distracted by you.";
-  }
+  } catch (e) { /* fall through */ }
 
-  // Send flow
-  async function handleSend() {
-    const val = (inputEl.value || '').trim();
-    if (!val) return;
+  // 3) Smart local fallback: short, flirty, inquisitive
+  const u = (userText || '').toLowerCase();
+  if (u.includes('book') || u.includes('read'))
+    return "nice. what’s the plot twist you didn’t see coming?";
+  if (u.includes('work') || u.includes('boss'))
+    return "office politics again—want me to make someone a little jealous for you?";
+  if (u.includes('tired') || u.includes('long day'))
+    return "come here. one small good thing from today—i’ll wait.";
+  if (u.endsWith('?'))
+    return "tempting. what do you want me to say—honest or sweet?";
+  return "mm. tell me one small good thing from your day.";
+}
 
-    addBubble('user', val);
-    thread.push({ role: 'user', content: val });
-    saveHistory(thread);
+/* ========= send handler ========= */
+async function handleSend(ev){
+  if (ev) ev.preventDefault();
+
+  const val = (inputEl && inputEl.value) ? inputEl.value.trim() : '';
+  if (!val) return;
+
+  // Show user bubble immediately
+  appendBubble('user', val);
+  chatHistory.push({ role:'user', content: val });
+  saveHistory(chatHistory);
+
+  // Guard submit
+  if (sendBtn) sendBtn.disabled = true;
+  if (inputEl) {
     inputEl.value = '';
-
-    try {
-      const reply = await askLLM(val);
-      addBubble('assistant', reply);
-      thread.push({ role: 'assistant', content: reply });
-      saveHistory(thread);
-    } catch (e) {
-      addBubble('assistant', "My signal glitched. Say that again for me?");
-    }
+    inputEl.placeholder = '…';
   }
 
-  if (sendBtn) on(sendBtn, 'click', handleSend);
-  if (inputEl) on(inputEl, 'keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  try {
+    const replyRaw = await brainReply(chatHistory, val);
+    const reply = sanitizeText(replyRaw);
+    if (reply) {
+      appendBubble('assistant', reply);
+      chatHistory.push({ role:'assistant', content: reply });
+      saveHistory(chatHistory);
     }
+  } catch (e) {
+    appendBubble('assistant', "connection’s glitchy. say it again and i’m all yours.");
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (inputEl) {
+      inputEl.placeholder = 'Say hi…';
+      inputEl.focus();
+    }
+  }
+}
+
+/* ========= wire up ========= */
+if (chatForm) {
+  chatForm.addEventListener('submit', handleSend);
+} else if (sendBtn) {
+  sendBtn.addEventListener('click', handleSend);
+  // Also allow Enter in the input if there's no <form>
+  if (inputEl) {
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+}
+
+/* ========= quality: keep view tidy on resize & load ========= */
+window.addEventListener('load', scrollToBottom, { once:true });
+window.addEventListener('resize', () => { requestAnimationFrame(scrollToBottom); });
+
+/* ========= tiny safety: strip any leftover filename labels under portrait (belt & suspenders) ========= */
+document.addEventListener('DOMContentLoaded', () => {
+  const p = document.querySelector('#portrait');
+  if (!p) return;
+  [...p.childNodes].forEach(n => {
+    if (n.nodeType === 3 && /\.(webp|jpe?g|png|gif)$/i.test((n.textContent||'').trim())) n.remove();
   });
-
-  // Small polish for mobile keyboard safe-area
-  const inputbar = $('.inputbar') || $('form.chat-form') || document.body;
-  if (window.CSS && CSS.supports('padding:max(0px)')) {
-    inputbar.style.paddingBottom = 'max(10px, env(safe-area-inset-bottom))';
-  }
-})();
+  p.querySelectorAll('small, figcaption, a, span, div').forEach(el=>{
+    if (/\.(webp|jpe?g|png|gif)$/i.test((el.textContent||'').trim())) el.remove();
+  });
+});

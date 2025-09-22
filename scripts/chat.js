@@ -1,8 +1,9 @@
-/* Blossom & Blade — chat runtime
+/* Blossom & Blade — chat runtime (long-memory edition)
    - Reads ?man=&sub=
-   - Restores local history (bnb.<man>.m)
-   - Seeds first line if empty
-   - Sends to /api/chat { man, history, mode }
+   - Stable userId (per browser) so we can attribute memories
+   - Local long memory: profile + rolling summary + last turns
+   - Periodic autosummary via /api/brain
+   - Sends to /api/chat { man, history, mode, memory, userId }
    - Strict portrait mapping with fallback
 */
 
@@ -23,68 +24,77 @@
     tplAi: document.getElementById("tpl-assistant"),
   };
 
-  // Basic guard: valid names only
+  // Valid roster
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
-  const namePretty = {
-    blade:"Blade", dylan:"Dylan", jesse:"Jesse",
-    alexander:"Alexander", silas:"Silas", grayson:"Grayson"
-  };
-  const firstLines = [
-    "hey you.", "look who’s here.", "aww, you came to see me."
-  ];
+  const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
 
-  // Persona one-liners used by the backend, but handy if we need a local seed
-  const personaTone = {
-    blade: ["Come here and talk to me.","You’re safe. Try again—tighter."],
-    dylan: ["You made it. Talk to me.","Helmet’s off. Your turn—what happened today?"],
-    jesse: ["Be good for me.","How close do you want me?"],
-    alexander: ["Mm. You again. Good.","I’m listening—brief me."],
-    silas: ["Hey, muse.","What color was your mood today?"],
-    grayson: ["Took you long enough.","What do you need from me tonight?"],
-  };
+  // First lines
+  const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
   // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Title / guard
+  // Storage helpers
+  const uidKey = "bnb.userId";
+  const userId = getOrCreateUserId();
+  const hKey = (m) => `bnb.${m}.m`;           // raw turns
+  const sKey = (m) => `bnb.${m}.summary`;     // rolling summary text
+  const pKey = (m) => `bnb.${m}.profile`;     // structured profile (prefs, facts)
+  const MAX_TURNS = 400;                      // keep a long trail
+  const WINDOW_FOR_PROMPT = 28;               // last N sent to model; rest summarized
+  const AUTOSUMMARY_EVERY = 25;               // summarize cadence
+
+  function getOrCreateUserId(){
+    let id = localStorage.getItem(uidKey);
+    if (!id){
+      id = crypto?.randomUUID?.() || "u_" + Math.random().toString(36).slice(2) + Date.now();
+      try{ localStorage.setItem(uidKey, id); }catch{}
+    }
+    return id;
+  }
+
+  // UI chrome
   if (!VALID.includes(man)) {
     document.title = "Blossom & Blade — Chat";
     el.title.textContent = "— pick a character";
   } else {
-    document.title = `Blossom & Blade — ${namePretty[man]}`;
-    el.title.textContent = `— ${namePretty[man]}`;
+    document.title = `Blossom & Blade — ${pretty[man]}`;
+    el.title.textContent = `— ${pretty[man]}`;
   }
 
-  // Portrait mapping: /images/characters/<man>/<man>-chat.webp
+  // Portrait mapping
   const placeholder = "/images/placeholder.webp";
-  function resolvePortrait(m, s) {
-    // for now day|night both use <man>-chat.webp; keep hook for future themed subs
-    return `/images/characters/${m}/${m}-chat.webp`;
-  }
-  function setPortrait() {
-    const src = VALID.includes(man) ? resolvePortrait(man, sub) : placeholder;
-    el.portrait.alt = VALID.includes(man) ? `${namePretty[man]} portrait` : "portrait";
-    el.portraitLabel.textContent = VALID.includes(man) ? `${namePretty[man]} portrait` : "";
+  function resolvePortrait(m){ return `/images/characters/${m}/${m}-chat.webp`; }
+  function setPortrait(){
+    const src = VALID.includes(man) ? resolvePortrait(man) : placeholder;
+    el.portrait.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
+    el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
     el.portrait.src = src;
     el.portrait.onerror = () => { el.portrait.src = placeholder; };
   }
   setPortrait();
 
-  // Local storage
-  const key = `bnb.${man}.m`;
-  const history = loadHistory();
+  // Load memory + history
+  const history = loadJson(hKey(man), []);
+  const summary = loadJson(sKey(man), ""); // may be string or object; normalize to string
+  const profile = loadJson(pKey(man), {});
 
-  function loadHistory() {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
+  function loadJson(k, fallback){
+    try{
+      const raw = localStorage.getItem(k);
+      if (raw == null) return fallback;
+      const val = JSON.parse(raw);
+      return val;
+    }catch{ return fallback; }
   }
-  function saveHistory() {
-    try { localStorage.setItem(key, JSON.stringify(history.slice(-40))); } catch {}
+  function saveJson(k, v){
+    try{ localStorage.setItem(k, JSON.stringify(v)); }catch{}
+  }
+  function trimHistory(){
+    if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
   }
 
-  // UI helpers
+  // Render
   function addBubble(role, text){
     const tpl = role === "user" ? el.tplUser : el.tplAi;
     const node = tpl.content.firstElementChild.cloneNode(true);
@@ -92,111 +102,138 @@
     el.list.appendChild(node);
     el.list.scrollTop = el.list.scrollHeight;
   }
-
-  // Seed first line if no history
-  if (VALID.includes(man) && history.length === 0) {
-    const first = firstLines[Math.floor(Math.random()*firstLines.length)];
-    history.push({ role:"assistant", content:first });
-    addBubble("assistant", first);
-    saveHistory();
-  } else {
-    // restore
-    for (const msg of history) addBubble(msg.role, msg.content);
+  function renderAll(){
+    el.list.innerHTML = "";
+    for (const m of history) addBubble(m.role, m.content);
   }
 
-  // Send handling
-  el.form.addEventListener("submit", async (e) => {
+  // Seed if empty
+  if (VALID.includes(man) && history.length === 0){
+    const first = firstLines[Math.floor(Math.random()*firstLines.length)];
+    history.push({role:"assistant", content:first, t:Date.now()});
+    saveJson(hKey(man), history);
+    addBubble("assistant", first);
+  } else {
+    renderAll();
+  }
+
+  // Composer
+  el.form.addEventListener("submit", onSend);
+
+  async function onSend(e){
     e.preventDefault();
     const text = (el.input.value || "").trim();
     if (!text) return;
 
-    // banned-word gate
-    if (banned.test(text)) {
+    if (banned.test(text)){
       const safe = "I won’t roleplay non-consensual or taboo themes. Let’s keep it adult, safe, and mutual—what vibe do you want instead?";
-      addBubble("assistant", safe);
-      history.push({role:"user", content:text});
-      history.push({role:"assistant", content:safe});
-      saveHistory();
+      pushAndRender("user", text);
+      pushAndRender("assistant", safe);
       el.input.value = "";
       return;
     }
 
-    addBubble("user", text);
-    history.push({ role:"user", content:text });
-    saveHistory();
+    pushAndRender("user", text);
     el.input.value = "";
 
-    // Call API
-    try {
+    try{
+      // Decide whether to autosummarize before calling the model
+      if (history.length % AUTOSUMMARY_EVERY === 0 && history.length >= WINDOW_FOR_PROMPT + 8){
+        await doAutosummary();
+      }
+
+      // Prepare window for the model: summary + profile + last N turns
+      const recent = history.slice(-WINDOW_FOR_PROMPT);
+      const memory = {
+        summary: typeof summary === "string" ? summary : (summary?.text || ""),
+        profile,
+      };
+
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ man, history, mode: "soft" })
+        body: JSON.stringify({
+          man, userId,
+          mode: (qs.get("mode") || "soft"),
+          history: recent,
+          memory
+        })
       });
 
-      // Stream if possible, else fall back
       const ct = res.headers.get("content-type") || "";
-      if (ct.includes("text/event-stream")) {
-        await streamInto(res);
+      if (ct.includes("text/event-stream")){
+        await streamInto(res, memory);
       } else {
         const data = await res.json();
         const reply = sanitizeReply(data.reply || "");
-        addBubble("assistant", reply);
-        history.push({ role:"assistant", content: reply });
-        saveHistory();
+        pushAndRender("assistant", reply);
       }
-    } catch (err) {
-      const msg = "Network hiccup. Say that again and I’ll catch it.";
-      addBubble("assistant", msg);
-      history.push({role:"assistant", content:msg});
-      saveHistory();
+    }catch(err){
       console.error(err);
+      pushAndRender("assistant", "Network hiccup. Say that again and I’ll catch it.");
     }
-  });
+  }
 
-  function sanitizeReply(t){
-    // Strip visible bracketed stage directions and asterisks
-    t = t.replace(/\[(?:[^\[\]]{0,80})\]/g, "").replace(/\*([^*]{0,80})\*/g, "$1");
-    // Keep it tight: max ~2 lines
-    return t.split("\n").slice(0,3).join("\n").trim();
+  function pushAndRender(role, content){
+    history.push({role, content, t:Date.now()});
+    trimHistory();
+    saveJson(hKey(man), history);
+    addBubble(role, content);
   }
 
   async function streamInto(res){
     const reader = res.body?.getReader();
-    if (!reader){ throw new Error("No reader"); }
-    let buf = "";
-    // create a live bubble
-    const live = el.tplAi.content.firstElementChild.cloneNode(true);
+    if (!reader) throw new Error("No reader");
+    let buf = "", live = el.tplAi.content.firstElementChild.cloneNode(true);
     el.list.appendChild(live);
-    el.list.scrollTop = el.list.scrollHeight;
-
     while (true){
       const {value, done} = await reader.read();
       if (done) break;
       buf += new TextDecoder().decode(value, {stream:true});
-      // naive SSE parse: lines starting with "data:"
-      const parts = buf.split("\n\n");
-      for (let i=0;i<parts.length-1;i++){
-        const chunk = parts[i].replace(/^data:\s?/, "");
-        if (chunk === "[DONE]") continue;
-        const payload = safeParse(chunk);
-        const token = (payload && payload.delta) || "";
-        live.textContent += token;
+      const chunks = buf.split("\n\n");
+      for (let i = 0; i < chunks.length - 1; i++){
+        const line = chunks[i].replace(/^data:\s?/, "");
+        if (line === "[DONE]") continue;
+        const payload = tryJson(line);
+        live.textContent += sanitizeReply((payload && payload.delta) || "");
         el.list.scrollTop = el.list.scrollHeight;
       }
-      buf = parts[parts.length-1];
+      buf = chunks[chunks.length - 1];
     }
-    const finalText = live.textContent.trim();
-    if (finalText){
-      history.push({role:"assistant", content: sanitizeReply(finalText)});
-      saveHistory();
-    } else {
-      live.textContent = "…";
+    const final = live.textContent.trim();
+    if (final){
+      history.push({role:"assistant", content:final, t:Date.now()});
+      trimHistory();
+      saveJson(hKey(man), history);
     }
   }
 
-  function safeParse(s){ try{return JSON.parse(s);}catch{return null;} }
+  async function doAutosummary(){
+    try{
+      const resp = await fetch("/api/brain", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          man, userId,
+          recent: history.slice(-(WINDOW_FOR_PROMPT + 40)), // give brain more to summarize
+          previousSummary: (typeof summary === "string" ? summary : summary?.text || ""),
+          previousProfile: profile
+        })
+      });
+      const data = await resp.json();
+      if (data?.summary) saveJson(sKey(man), data.summary);
+      if (data?.profile) saveJson(pKey(man), data.profile);
+    }catch(e){ console.warn("Autosummary failed", e); }
+  }
 
-  // Accessibility nicety: focus input on load
-  setTimeout(() => { el.input?.focus?.(); }, 50);
+  function sanitizeReply(t){
+    t = (t || "").replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
+    // keep it punchy
+    const lines = t.split("\n").filter(Boolean).slice(0,3);
+    return lines.join("\n").trim();
+  }
+  function tryJson(s){ try{return JSON.parse(s);}catch{return null;} }
+
+  // QoL
+  setTimeout(() => { el.input?.focus?.(); }, 60);
 })();

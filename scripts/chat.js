@@ -1,312 +1,269 @@
 (() => {
-  /* ================= helpers ================= */
+  /* ====== tiny helpers ====== */
   const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const on = (el, ev, fn) => el && el.addEventListener(ev, fn);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+  const on = (el, ev, fn) => el.addEventListener(ev, fn, {passive:true});
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
 
-  // Scroll container + pieces
-  const wrap   = $('.chat-wrap') || document.body;
-  const scroll = $('.messages-scroll') || wrap;
-  const list   = $('#messages') || (() => {
-    const ul = document.createElement('ul');
-    ul.id = 'messages';
-    ul.className = 'messages';
-    (scroll || wrap).appendChild(ul);
-    return ul;
-  })();
+  /* ====== DOM wires ====== */
+  const chatWrap = $('.chat');                 // scroll container (chat-left section)
+  let inputEl = $('#chat-input') || $('.inputbar input') || $('.inputbar textarea') || $('#input');
+  let sendBtn  = $('#send-btn')  || $('.send, button.send, #send');
 
-  // Input + button (fallback builds if not present)
-  let input = $('#chat-input');
-  let sendBtn = $('#send-btn');
-  if (!input || !sendBtn){
-    const form = document.createElement('form');
-    form.id = 'chat-form';
-    form.className = 'chat-form';
-    form.innerHTML = `
-      <input id="chat-input" type="text" placeholder="Say hi…" />
-      <button id="send-btn" type="submit" class="send">Send</button>
-    `;
-    wrap.appendChild(form);
-    input   = $('#chat-input');
-    sendBtn = $('#send-btn');
+  /* If there wasn’t an input (fallback builds one) */
+  if (!inputEl) {
+    const bar = document.createElement('div');
+    bar.className = 'inputbar';
+    bar.innerHTML = `<input type="text" id="chat-input" placeholder="Say hi…"><button id="send-btn" class="send">Send</button>`;
+    $('.wrap')?.appendChild(bar);
+    inputEl = $('#chat-input', bar);
+    sendBtn = $('#send-btn', bar);
   }
 
+  /* ====== URL params ====== */
   const params = new URLSearchParams(location.search);
-  const man  = (params.get('man') || 'blade').toLowerCase();
-  const mode = (params.get('sub') || 'night').toLowerCase();
+  const man   = (params.get('man') || 'blade').toLowerCase();
+  const mode  = (params.get('sub') || 'night').toLowerCase();
 
-  // Key for localStorage
-  const memKey = (k) => `bnb.${man}.${mode}.${k||'history'}`;
+  /* ====== storage key & simple store ====== */
+  const memKey = (k) => `bnb.${man}.${k}`;
+  const store = {
+    get(k, dflt) { try { return JSON.parse(localStorage.getItem(memKey(k))) ?? dflt; } catch { return dflt; } },
+    set(k, v)   { localStorage.setItem(memKey(k), JSON.stringify(v)); },
+    del(k)      { localStorage.removeItem(memKey(k)); }
+  };
 
-  // Mild cache-buster for images so CDN refreshes when we swap files
-  const cacheV = '3';
+  /* ====== portraits per guy ====== */
+  const PORTRAITS = {
+    blade:   { chat: 'images/characters/blade/blade-chat.webp',
+               card: 'images/characters/blade/blade-card-on.webp',
+               name: 'Blade' },
+    dylan:   { chat: 'images/characters/dylan/dylan-chat.webp',
+               card: 'images/characters/dylan/dylan-card-on.webp',
+               name: 'Dylan' },
+    alexander:{ chat:'images/characters/alexander/alexander-chat.webp',
+               card:'images/characters/alexander/alexander-card-on.webp',
+               name:'Alexander' },
+    grayson: { chat: 'images/characters/grayson/grayson-chat.webp',
+               card: 'images/characters/grayson/grayson-card-on.webp',
+               name: 'Grayson' },
+    silas:   { chat: 'images/characters/silas/silas-chat.webp',
+               card: 'images/characters/silas/silas-card-on.webp',
+               name: 'Silas' },
+  };
+  const guy = PORTRAITS[man] || PORTRAITS.blade;
+  $('#portraitImg')?.setAttribute('src', guy.chat);
+  $('#chatName')?.textContent = guy.name || '…';
 
-  /* ================= portrait loader (with fallbacks) ================= */
-  function injectPortraitCSS(){
-    // Do this here so you don't have to touch chat.css at all
-    const css = `
-      #portrait{ line-height:0; }
-      #portraitImg{ width:100%; aspect-ratio:3/4; height:auto; object-fit:cover; display:block; border-radius:12px; }
-    `;
-    const tag = document.createElement('style');
-    tag.textContent = css;
-    document.head.appendChild(tag);
-  }
-  injectPortraitCSS();
+  /* ====== “Never rude” — global tone & rules ====== */
+  const CORE_RULES = `
+You are a flirty, confident man talking 1-on-1 with an adult woman who chose you.
+- Never rude, never insulting, never demeaning. Be protective, warm, a little smug.
+- Assume she is a good girl here for attention and fun. Make her feel safe, wanted, admired.
+- Be concise: 1–2 short lines. No brackets like [laughs] or (smirks). No stage directions.
+- Flirty is welcome; explicit content is off for now. Suggestive is okay; keep it tasteful.
+- Mirror her wording, answer what she actually said, then ask one playful follow-up.
+- If she vents, validate first, take her side, then tease/lighten the mood.
+- Consent & respect always; never shame her interests; steer away from illegal/abusive topics.
+`;
 
-  function setPortrait(name, _mode){
-    const n = (name || '').toLowerCase().trim();
-    const img = $('#portraitImg');
-    if (!img) return;
-
-    const order = ['chat', 'card-on', 'card-off'];
-    let i = 0;
-    const next = () => {
-      if (i >= order.length){
-        img.onerror = null;
-        // ultimate fallback (exists)
-        img.src = 'images/characters/blade/blade-card-on.webp';
-        return;
-      }
-      const src = `images/characters/${n}/${n}-${order[i]}.webp?v=${cacheV}`;
-      i += 1;
-      img.onerror = next;
-      img.src = src;
-    };
-    next();
-  }
-  setPortrait(man, mode);
-
-  /* ================= personas ================= */
-  const personas = {
-    blade:{
-      name:'Blade',
-      openers:[
-        'Come here and talk to me.',
-        'Better now that you’re here.',
-        'You took your time. Worth the wait?'
-      ],
-      style:'direct, teasing, protective'
+  const PERSONA = {
+    blade: {
+      style: `Low voice, dangerous but sweet. Protective, playful hunter energy.`,
+      openers: [
+        "Come here and talk to me.",
+        "Look who wandered in. Miss me?",
+        "You again. Good. Tell me what you want."
+      ]
     },
-    dylan:{
-      name:'Dylan',
-      openers:[
-        'You made it. Talk to me.',
-        'Helmet’s off. Your turn—what happened today?',
-        'Took you long enough.'
-      ],
-      style:'cool rider, minimal words, dry humor'
+    dylan: {
+      style: `Cool rider. Minimal words, audible smirk, gentleman under leather.`,
+      openers: [
+        "You made it. Talk to me.",
+        "Helmet’s off. Your turn—what happened today?",
+        "Took you long enough. Come closer."
+      ]
     },
-    alexander:{
-      name:'Alexander',
-      openers:[
-        'I’m listening—brief me.',
-        'You again. Good.',
-        'Walk me through your day—headlines only.'
-      ],
-      style:'low voice, alpha businessman, magnetic but controlled'
+    alexander: {
+      style: `Alpha businessman. Magnetic, controlled, indulgent when she earns it.`,
+      openers: [
+        "I’m listening—brief me.",
+        "Walk me through your day—headlines only.",
+        "Good. Now tell me what you want from me."
+      ]
     },
-    silas:{
-      name:'Silas',
-      openers:[
-        'Look who showed up. Missed me?',
-        'Come sit. What kind of trouble are we starting?',
-        'Tell me the thing you almost didn’t say.'
-      ],
-      style:'runway rocker, playful, flirty'
+    grayson: {
+      style: `Dark bedroom glow, calm and confident. Dry humor, protective heat.`,
+      openers: [
+        "Door’s locked. Use your words.",
+        "You’re late. I was thinking about you.",
+        "Sit. Tell me one good thing from your day."
+      ]
     },
-    grayson:{
-      name:'Grayson',
-      openers:[
-        'You’re safe here. Talk.',
-        'What’s on your mind? Keep it real.',
-        'I’ve got time. Start anywhere.'
-      ],
-      style:'stoic protector, warm underneath'
+    silas: {
+      style: `Edgy rock-romantic. Soft eyes, sharp jaw. Gentle tease, tender streak.`,
+      openers: [
+        "Hey trouble. What did I miss?",
+        "C’mon, gorgeous—what’s the vibe right now?",
+        "You found me. Tell me something sweet or wicked."
+      ]
     }
   };
 
-  const P = personas[man] || personas.blade;
+  /* Phrase softener if anything ever lands too sharp (belt-and-suspenders) */
+  const SOFTEN_MAP = new Map([
+    [/shut up/gi, "hush, come here"],
+    [/calm down/gi, "breathe with me"],
+    [/stop whining/gi, "tell me what you need"],
+    [/you’re overreacting/gi, "you’re allowed to feel that"]
+  ]);
+  const softenTone = (txt) => {
+    let out = txt;
+    for (const [rx, rep] of SOFTEN_MAP) out = out.replace(rx, rep);
+    return out;
+  };
 
-  /* ================= content boundaries ================= */
-  const bannedWords = [
-    'rape','incest','scat','trafficking','bestiality','minor','underage'
+  /* Remove bracketed stage directions */
+  const stripBrackets = (txt) => txt.replace(/[\(\[][^)\]]*[\)\]]/g, '').replace(/\s{2,}/g, ' ').trim();
+
+  /* Minimal “banned” auto-strike we added earlier */
+  const BANNED = [
+    "rape","incest","bestiality","scat","trafficking","snuff"
   ];
-  const badRx = new RegExp(`\\b(${bannedWords.join('|')})\\b`, 'i');
+  const strikeBad = (txt) => {
+    const lower = txt.toLowerCase();
+    if (BANNED.some(w => lower.includes(w))) {
+      return "Let’s keep it safe and fun. Tell me something you *do* want, pretty girl.";
+    }
+    return txt;
+  };
 
-  function boundaryText(){
-    return "Not that. I’m here for you, but we keep this safe and consensual. Give me something else.";
-  }
+  /* Build the system prompt we send to the model */
+  const systemPrompt = () => {
+    const p = PERSONA[man] || PERSONA.blade;
+    return `${CORE_RULES}\nPersona style: ${p.style}\nSpeak as ${guy.name}.`;
+  };
 
-  /* ================= storage ================= */
-  function loadHistory(){
-    try{
-      const raw = localStorage.getItem(memKey());
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
-  }
-  function saveHistory(listArr){
-    try{ localStorage.setItem(memKey(), JSON.stringify(listArr)); }catch(e){}
-  }
+  /* ====== message pipe ====== */
+  const messages = store.get('log', []);
+  const addMsg = (role, content) => {
+    messages.push({ role, content });
+    store.set('log', messages);
+    paint();
+  };
 
-  /* ================= render ================= */
-  function addMsg(role, text){
-    const li = document.createElement('li');
-    li.className = `msg ${role}`;
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = text;
-    li.appendChild(bubble);
-    list.appendChild(li);
-    scrollToEnd();
-  }
+  const opener = () => {
+    const p = PERSONA[man] || PERSONA.blade;
+    const list = p.openers;
+    return list[Math.floor(Math.random()*list.length)];
+  };
 
-  function scrollToEnd(){
-    const c = scroll || document.scrollingElement || document.documentElement;
-    (c === document.documentElement)
-      ? window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})
-      : (c.scrollTop = c.scrollHeight);
-  }
+  /* Render all bubbles */
+  const paint = () => {
+    const ul = $('#messages');
+    if (!ul) return;
+    ul.innerHTML = '';
+    messages.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'msg ' + (m.role === 'user' ? 'user' : 'assistant');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = m.content;
+      li.appendChild(bubble);
+      ul.appendChild(li);
+    });
+    // scroll to bottom
+    chatWrap?.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' });
+  };
 
-  /* ================= tiny reply engine ================= */
-  // Lightweight, flirty, and responsive without brackets or stage directions.
-  function craftReply(userText){
-    const t = (userText || '').trim();
-    if (!t) return 'Say it. I’m listening.';
+  /* ====== reply engine ======
+     Uses your backend if present (/api/reply). If it fails, we fall back locally. */
+  const replyFromModel = async (history) => {
+    try {
+      const res = await fetch('/api/reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system: systemPrompt(),
+          man, mode,
+          messages: history
+        })
+      });
+      if (!res.ok) throw new Error('bad status');
+      const data = await res.json();
+      return data.reply;
+    } catch (err) {
+      // Local lightweight fallback
+      const last = history.slice().reverse().find(m => m.role === 'user')?.content || '';
+      const p = PERSONA[man] || PERSONA.blade;
+      const quick = [
+        `Mm. ${last ? "I hear you." : "Come closer."} ${man==='alexander' ? "Be precise." : "Tell me more."}`,
+        `Noted. ${man==='dylan' ? "Smirk." : ""} What do you want from me—comfort, chaos, or a plan?`.trim(),
+        `Good girl. I’m on your side. Now give me one detail I can use.`
+      ];
+      return quick[Math.floor(Math.random()*quick.length)];
+    }
+  };
 
-    if (badRx.test(t)) return boundaryText();
+  const clean = (txt) => strikeBad(softenTone(stripBrackets(txt)));
 
-    const low = t.toLowerCase();
+  /* ====== send flow ====== */
+  const send = async () => {
+    const raw = (inputEl.value || '').trim();
+    if (!raw) return;
+    addMsg('user', raw);
+    inputEl.value = '';
+    paint();
 
-    // quick-hooks
-    if (/how (are|r) (you|u)/i.test(low)){
-      if (man==='alexander') return "Focused. Now tell me something real from your day.";
-      if (man==='dylan')     return "Better with you here.";
-      if (man==='silas')     return "I’m good—curious about you.";
-      if (man==='grayson')   return "Solid. What do you need from me?";
-      return "Good. What do you need from me?";
+    // Build trimmed history for the model (keep it short)
+    const history = messages.slice(-12); // recent context
+
+    // Get reply and clean it (never rude / no brackets / banned)
+    let reply = await replyFromModel(history);
+    reply = clean(reply);
+
+    // Enforce brevity + a friendly follow-up if model forgot
+    if (reply.length > 220) reply = reply.slice(0, 220).trim();
+    if (!/[?.!]$/.test(reply)) reply += '.';
+    // If no question present, add a light question to keep chat going
+    if (!/[?]/.test(reply)) {
+      const nudges = [
+        " What do you want from me—comfort, chaos, or a plan?",
+        " What should I do about it—tease you, spoil you, or both?",
+        " Tell me one more detail so I can make it better."
+      ];
+      reply += nudges[Math.floor(Math.random()*nudges.length)];
     }
 
-    if (/kitten|puppy|dog|cat/i.test(low)){
-      return "Look at you being the hero. Want me to brag about you for a minute or make it a reward situation?";
-    }
+    addMsg('assistant', reply);
+  };
 
-    if (/book|reading|chapter|novel/i.test(low)){
-      return "Nice. What’s the line that stuck to you? Quote it and I’ll tell you what it does to me.";
-    }
-
-    if (/work|boss|office|meeting|coworker|credit/i.test(low)){
-      if (man==='alexander') return "Office politics. Predictable. You want advice, alibi, or a little targeted praise you can replay later?";
-      if (man==='dylan')     return "Mm. Want comfort, chaos, or a plan?";
-      if (man==='silas')     return "She’s been eyeing your spotlight anyway. Want me to make her jealous for you?";
-      return "Tell me what you want: comfort, chaos, or a plan.";
-    }
-
-    if (/tired|long day|exhausted|burned/i.test(low)){
-      if (man==='grayson') return "Lie back. Breathe with me. Give me one good thing and I’ll carry the rest.";
-      return "Come closer. Tell me one small good thing from your day—just one.";
-    }
-
-    if (/miss(ed)? you|miss u/i.test(low)){
-      if (man==='silas') return "Prove it—what part of me did you miss first?";
-      return "I noticed. What did you miss most?";
-    }
-
-    // fallback personality flavors
-    const generic = [
-      "Tell me the part you didn’t say out loud.",
-      "Alright. Do you want sweet, wicked, or honest?",
-      "Pick a lane—comfort, chaos, or a plan?",
-      "I’m here. Aim me."
-    ];
-    const bladeLines = [
-      "Good. Now tell me what you want from me.",
-      "Say it plain. I don’t scare easy.",
-      "You’re safe. Try again—tighter."
-    ];
-    const dylanLines = [
-      "Minimal words. Maximum meaning. Try me.",
-      "Alright. What’s the vibe right now?",
-      "You’re here. That helps."
-    ];
-    const alexLines = [
-      "Headlines. Then we choose the strategy.",
-      "Be precise. I’ll be generous.",
-      "You talk. I’ll make sense of it."
-    ];
-    const silasLines = [
-      "Give me the dangerous version.",
-      "Tease me with the detail I’m not supposed to hear.",
-      "I like you bold. Go on."
-    ];
-    const grayLines = [
-      "I got you. What do you need—backup or heat?",
-      "Talk to me. I’m not going anywhere.",
-      "You’re not a lot to handle. You’re worth handling."
-    ];
-
-    const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
-    if (man==='blade')      return pick(bladeLines);
-    if (man==='dylan')      return pick(dylanLines);
-    if (man==='alexander')  return pick(alexLines);
-    if (man==='silas')      return pick(silasLines);
-    if (man==='grayson')    return pick(grayLines);
-    return pick(generic);
+  /* ====== bootstrap ====== */
+  // First-time opener: keep it short/flirty/cute
+  if (!store.get('booted', false)) {
+    addMsg('assistant', (PERSONA[man] || PERSONA.blade).openers[0]);
+    store.set('booted', true);
+  } else {
+    paint();
   }
 
-  /* ================= boot / history ================= */
-  let history = loadHistory();
-  function renderHistory(){
-    list.innerHTML = '';
-    history.forEach(m => addMsg(m.role, m.text));
-  }
-  function push(role, text){
-    history.push({role, text, ts: Date.now()});
-    addMsg(role, text);
-    saveHistory(history);
-  }
-
-  renderHistory();
-  if (history.length === 0){
-    // seed one flirty opener
-    const opener = (P.openers[Math.floor(Math.random()*P.openers.length)]);
-    push('assistant', opener);
-  }
-
-  // Reflect the name up top if #chatName exists
-  const chatNameEl = $('#chatName');
-  if (chatNameEl) chatNameEl.textContent = P.name || man;
-
-  /* ================= input handling ================= */
-  function handleSend(ev){
-    ev && ev.preventDefault();
-    const text = (input.value || '').trim();
-    if (!text) return;
-    input.value = '';
-    push('user', text);
-
-    // boundaries
-    if (badRx.test(text)){
-      push('assistant', boundaryText());
-      return;
-    }
-
-    // craft + respond
-    const reply = craftReply(text);
-    // slight natural pause
-    setTimeout(() => push('assistant', reply), 320);
-  }
-
-  on(sendBtn, 'click', handleSend);
-  on(input.closest('form') || input, 'submit', handleSend);
-  on(input, 'keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey){
+  on(sendBtn, 'click', send);
+  on(inputEl, 'keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend(e);
+      send();
     }
   });
 
-  // Keep the scroll pinned to bottom on resize
-  on(window, 'resize', scrollToEnd);
-
+  /* ====== tiny cleanup for any stray filename text under the portrait ====== */
+  document.addEventListener('DOMContentLoaded', () => {
+    const p = document.querySelector('#portrait');
+    if (!p) return;
+    [...p.childNodes].forEach(n => {
+      if (n.nodeType === 3 && /\.(webp|jpe?g|png|gif)$/i.test((n.textContent||'').trim())) n.remove();
+    });
+    p.querySelectorAll('small, figcaption, a, span, div').forEach(el=>{
+      if (/\.(webp|jpe?g|png|gif)$/i.test((el.textContent||'').trim())) el.remove();
+    });
+  });
 })();

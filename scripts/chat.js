@@ -1,6 +1,8 @@
-/* Blossom & Blade — chat runtime (consent-aware)
-   - Reads one-time consent flag; auto-sets mode to "rx" when present.
-   - Keeps long-memory + persona stock-line blend.
+/* Blossom & Blade — chat runtime (consent-aware + lead nudges)
+   - Persists consent flag to pick mode (soft|rx).
+   - Long-memory window + autosummary.
+   - Persona stock-line blend (~18% chance).
+   - NEW: Detects “lead me” signals and nudges the model to take control.
 */
 
 (() => {
@@ -8,7 +10,7 @@
   const man = (qs.get("man") || "").toLowerCase();
   const sub = (qs.get("sub") || "day").toLowerCase();
 
-  // Consent: URL can force soft (e.g., ?mode=soft). Otherwise pick by flag.
+  // Consent: URL can force soft (?mode=soft). Otherwise choose by flag.
   const urlMode = (qs.get("mode") || "").toLowerCase();
   const consent = (localStorage.getItem("bnb.consent") === "1");
   const mode = urlMode === "soft" ? "soft" : (consent ? "rx" : "soft");
@@ -29,9 +31,10 @@
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
   const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
+  // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Title
+  // Title/portrait
   if (!VALID.includes(man)) {
     document.title = "Blossom & Blade — Chat";
     el.title.textContent = "— pick a character";
@@ -39,8 +42,6 @@
     document.title = `Blossom & Blade — ${pretty[man]}`;
     el.title.textContent = `— ${pretty[man]}`;
   }
-
-  // Portrait
   const placeholder = "/images/placeholder.webp";
   function resolvePortrait(m){ return `/images/characters/${m}/${m}-chat.webp`; }
   function setPortrait(){
@@ -71,7 +72,7 @@
     return id;
   }
 
-  // Load memory/history
+  // Memory/history
   const history = loadJson(hKey(man), []);
   let summary = loadJson(sKey(man), "");
   let profile = loadJson(pKey(man), {});
@@ -82,7 +83,7 @@
   function saveJson(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
   function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
-  // Render helpers
+  // Render
   function addBubble(role, text){
     const tpl = role === "user" ? el.tplUser : el.tplAi;
     const node = tpl.content.firstElementChild.cloneNode(true);
@@ -105,13 +106,11 @@
     renderAll();
   }
 
-  // Composer
-  el.form.addEventListener("submit", onSend);
+  // Lead-detection heuristics (simple + safe)
+  const LEAD_REGEX = /\b(take|lead|command|control|dominat|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir)\b/i;
 
-  // Also react if consent flips while page is open
-  window.addEventListener("bnb:consent", () => {
-    // no UI change needed; next reply will use rx automatically (mode recalc below)
-  });
+  el.form.addEventListener("submit", onSend);
+  window.addEventListener("bnb:consent", () => { /* next turn will pick rx automatically */ });
 
   async function onSend(e){
     e.preventDefault();
@@ -136,23 +135,27 @@
         profile = loadJson(pKey(man), {});
       }
 
-      // re-check consent in case it flipped
+      // Re-check consent in case it flipped while chatting
       const rx = (localStorage.getItem("bnb.consent") === "1");
       const activeMode = urlMode === "soft" ? "soft" : (rx ? "rx" : "soft");
 
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
+      // Nudge: if she signals desire to be led, tell the model
+      const lead = LEAD_REGEX.test(text);
+      const topic = (text.match(/\b(cuffs?|mask|rope|kneel)\b/i) || [])[0] || "";
+
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ man, userId, mode: activeMode, history: recent, memory })
+        body: JSON.stringify({ man, userId, mode: activeMode, history: recent, memory, nudge:{ lead, topic } })
       });
 
       const data = await res.json();
       let reply = sanitizeReply(data.reply || "");
 
-      // Blend persona stock lines occasionally
+      // Persona stock line blend (~18%)
       if (window.BnBBrain && Math.random() < 0.18){
         const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
         const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
@@ -166,7 +169,7 @@
       pushAndRender("assistant", reply);
     }catch(err){
       console.error(err);
-      let fallback = "Network hiccup. Say that again and I’ll catch it.";
+      let fallback = "Network hiccup. One line—then I’ll lead.";
       if (window.BnBBrain){
         fallback = window.BnBBrain.getStockLine(man, { mode }) || fallback;
       }
@@ -202,7 +205,9 @@
   function sanitizeReply(t){
     t = String(t || "");
     t = t.replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
-    const lines = t.split("\n").map(s => s.trim()).filter(Boolean).slice(0,3);
+    // Keep it tight: 1–3 lines, and favor statements > questions
+    let lines = t.split("\n").map(s => s.trim()).filter(Boolean);
+    if (lines.length > 3) lines = lines.slice(0,3);
     return lines.join("\n").trim();
   }
 

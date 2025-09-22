@@ -1,19 +1,14 @@
-/* Blossom & Blade — chat runtime (consent-aware + lead nudge + POV switch + robust portrait fallback)
-   - Consent flag -> mode (soft|rx)
-   - Lead detection nudges model to take control
-   - POV: when she agrees to roleplay, switch to first-person "I"
-   - Portrait fallback chain: chat.webp -> card-on.webp -> /images/logo.jpg
-*/
+/* Blossom & Blade — chat runtime (consent-aware + RED safeword + assert nudge + POV switch + robust portrait fallback) */
 
 (() => {
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
-  const sub = (qs.get("sub") || "day").toLowerCase();
 
-  // Consent: URL can force soft (?mode=soft)
   const urlMode = (qs.get("mode") || "").toLowerCase();
   const consent = (localStorage.getItem("bnb.consent") === "1");
-  const mode = urlMode === "soft" ? "soft" : (consent ? "rx" : "soft");
+
+  const slowKey = (m) => `bnb.${m}.slow`;
+  let slow = loadJson(slowKey(man), "off"); // "red"|"off"
 
   const el = {
     title: document.getElementById("roomTitle"),
@@ -25,65 +20,48 @@
     portraitLabel: document.getElementById("portraitLabel"),
     tplUser: document.getElementById("tpl-user"),
     tplAi: document.getElementById("tpl-assistant"),
+    slowBadge: document.getElementById("slowBadge"),
   };
 
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
   const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
-  // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Title
-  if (!VALID.includes(man)) {
-    document.title = "Blossom & Blade — Chat";
-    el.title.textContent = "— pick a character";
-  } else {
+  // Title + portrait
+  if (VALID.includes(man)){
     document.title = `Blossom & Blade — ${pretty[man]}`;
     el.title.textContent = `— ${pretty[man]}`;
+  } else {
+    document.title = "Blossom & Blade — Chat";
+    el.title.textContent = "— pick a character";
   }
-
-  // Portrait with robust fallbacks
-  const FALLBACK_LOGO = "/images/logo.jpg"; // exists in repo
+  const FALLBACK_LOGO = "/images/logo.jpg";
   function imgPathChat(m){ return `/images/characters/${m}/${m}-chat.webp`; }
   function imgPathCard(m){ return `/images/characters/${m}/${m}-card-on.webp`; }
-  function setPortrait(){
+  (function setPortrait(){
     const img = el.portrait;
     if (!img) return;
-    img.dataset.stage = "chat"; // track fallback stage
+    img.dataset.stage = "chat";
     img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
     el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
     img.src = VALID.includes(man) ? imgPathChat(man) : FALLBACK_LOGO;
     img.onerror = () => {
-      // move through stages: chat -> card -> logo
       switch (img.dataset.stage) {
-        case "chat":
-          img.dataset.stage = "card";
-          img.src = imgPathCard(man);
-          break;
-        case "card":
-          img.dataset.stage = "logo";
-          img.src = FALLBACK_LOGO;
-          break;
-        default:
-          // stop looping
-          img.onerror = null;
+        case "chat": img.dataset.stage = "card"; img.src = imgPathCard(man); break;
+        case "card": img.dataset.stage = "logo"; img.src = FALLBACK_LOGO; break;
+        default: img.onerror = null;
       }
     };
-  }
-  setPortrait();
+  })();
 
   // Storage keys
   const uidKey = "bnb.userId";
-  const userId = getOrCreateUserId();
   const hKey = (m) => `bnb.${m}.m`;
   const sKey = (m) => `bnb.${m}.summary`;
   const pKey = (m) => `bnb.${m}.profile`;
-  const povKey = (m) => `bnb.${m}.pov`; // 'first' if roleplay accepted
-  const MAX_TURNS = 400;
-  const WINDOW_FOR_PROMPT = 28;
-  const AUTOSUMMARY_EVERY = 25;
-
+  const povKey = (m) => `bnb.${m}.pov`; // 'first'
   function getOrCreateUserId(){
     let id = localStorage.getItem(uidKey);
     if (!id){
@@ -92,12 +70,17 @@
     }
     return id;
   }
+  const userId = getOrCreateUserId();
+
+  const MAX_TURNS = 400;
+  const WINDOW_FOR_PROMPT = 28;
+  const AUTOSUMMARY_EVERY = 25;
 
   // Memory/history
   const history = loadJson(hKey(man), []);
   let summary = loadJson(sKey(man), "");
   let profile = loadJson(pKey(man), {});
-  let pov = loadJson(povKey(man), ""); // '' | 'first'
+  let pov = loadJson(povKey(man), "");
 
   function loadJson(k, fallback){
     try{ const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : fallback; }catch{ return fallback; }
@@ -105,7 +88,7 @@
   function saveJson(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
   function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
-  // Render helpers
+  // Render
   function addBubble(role, text){
     const tpl = role === "user" ? el.tplUser : el.tplAi;
     const node = tpl.content.firstElementChild.cloneNode(true);
@@ -118,7 +101,6 @@
     for (const m of history) addBubble(m.role, m.content);
   }
 
-  // Seed first line
   if (VALID.includes(man) && history.length === 0){
     const first = firstLines[Math.floor(Math.random()*firstLines.length)];
     history.push({role:"assistant", content:first, t:Date.now()});
@@ -129,29 +111,43 @@
   }
 
   // Heuristics
-  const LEAD_REGEX = /\b(take|lead|command|control|dominat|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir)\b/i;
-  const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)? (then|yes)?|yes(,? please)?|i want that|do it)\b/i;
+  const LEAD_REGEX = /\b(take|lead|command|control|dominat|own me|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir|spank)\b/i;
+  const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)?( then)?|yes(,? please)?|i want that|do it)\b/i;
+  const RED_ONLY = /^\s*red[.!?]*\s*$/i;
+
+  if (el.slowBadge) el.slowBadge.hidden = (slow !== "red");
 
   el.form.addEventListener("submit", onSend);
-  window.addEventListener("bnb:consent", () => { /* next turn picks rx automatically */ });
 
   async function onSend(e){
     e.preventDefault();
     const text = (el.input.value || "").trim();
     if (!text) return;
 
-    if (banned.test(text)){
-      const safe = "I won’t roleplay non-consensual or taboo themes. Let’s keep it adult, safe, and mutual—what vibe do you want instead?";
+    // Safeword
+    if (RED_ONLY.test(text)) {
       pushAndRender("user", text);
-      pushAndRender("assistant", safe);
-      el.input.value = "";
-      return;
+      slow = "red"; saveJson(slowKey(man), slow);
+      if (el.slowBadge) el.slowBadge.hidden = false;
+      pushAndRender("assistant", "Got you. Slowing it down—safe with me.");
+      el.input.value = ""; return;
     }
 
-    // If she accepts storytelling/roleplay, lock first-person POV
-    if (ROLEPLAY_ACCEPT.test(text)) {
-      pov = "first";
-      saveJson(povKey(man), pov);
+    // Taboo block
+    if (banned.test(text)){
+      pushAndRender("user", text);
+      pushAndRender("assistant", "I won’t roleplay taboo or non-consensual themes. Let’s keep it adult and mutual—what vibe do you want instead?");
+      el.input.value = ""; return;
+    }
+
+    // POV lock-in
+    if (ROLEPLAY_ACCEPT.test(text)) { pov = "first"; saveJson(povKey(man), pov); }
+
+    // Auto-resume if she escalates while RED was active
+    let assert = false;
+    if (LEAD_REGEX.test(text)){
+      assert = true;
+      if (slow === "red"){ slow = "off"; saveJson(slowKey(man), slow); if (el.slowBadge) el.slowBadge.hidden = true; }
     }
 
     pushAndRender("user", text);
@@ -164,29 +160,28 @@
         profile = loadJson(pKey(man), {});
       }
 
-      // re-check consent
       const rx = (localStorage.getItem("bnb.consent") === "1");
-      const activeMode = urlMode === "soft" ? "soft" : (rx ? "rx" : "soft");
+      const activeMode = urlMode === "soft" ? "soft" : (slow === "red" ? "soft" : (rx ? "rx" : "soft"));
 
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
-      const lead = LEAD_REGEX.test(text);
-      const topic = (text.match(/\b(cuffs?|mask|rope|kneel)\b/i) || [])[0] || "";
+      const topic = (text.match(/\b(cuffs?|mask|rope|kneel|spank)\b/i) || [])[0] || "";
 
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          man, userId, mode: activeMode, history: recent, memory,
-          nudge:{ lead, topic, pov: pov === "first" ? "first" : undefined }
+          man, userId: localStorage.getItem(uidKey), mode: activeMode,
+          history: recent, memory,
+          nudge:{ lead: assert, assert, topic, pov: (pov === "first" ? "first" : undefined) }
         })
       });
 
       const data = await res.json();
       let reply = sanitizeReply(data.reply || "");
 
-      // Blend persona stock line (~18%)
+      // Optional persona stock blend (~18%)
       if (window.BnBBrain && Math.random() < 0.18){
         const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
         const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
@@ -200,11 +195,7 @@
       pushAndRender("assistant", reply);
     }catch(err){
       console.error(err);
-      let fallback = "Network hiccup. One line—then I’ll lead.";
-      if (window.BnBBrain){
-        fallback = window.BnBBrain.getStockLine(man, { mode }) || fallback;
-      }
-      pushAndRender("assistant", fallback);
+      pushAndRender("assistant", "Network hiccup. One line—then I’ll lead.");
     }
   }
 
@@ -221,15 +212,15 @@
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          man, userId,
+          man, userId: localStorage.getItem("bnb.userId"),
           recent: history.slice(-(WINDOW_FOR_PROMPT + 40)),
           previousSummary: (typeof summary === "string" ? summary : summary?.text || ""),
           previousProfile: profile
         })
       });
       const data = await resp.json();
-      if (data?.summary) saveJson(sKey(man), data.summary);
-      if (data?.profile) saveJson(pKey(man), data.profile);
+      if (data?.summary) localStorage.setItem(sKey(man), JSON.stringify(data.summary));
+      if (data?.profile) localStorage.setItem(pKey(man), JSON.stringify(data.profile));
     }catch(e){ console.warn("Autosummary failed", e); }
   }
 
@@ -239,6 +230,4 @@
     const lines = t.split("\n").map(s => s.trim()).filter(Boolean).slice(0,3);
     return lines.join("\n").trim();
   }
-
-  setTimeout(() => { el.input?.focus?.(); }, 60);
 })();

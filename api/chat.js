@@ -1,5 +1,5 @@
-// Chat endpoint — persona-safe, memory-aware, lead cadence + POV switch
-// Input: { man, userId, history, mode, memory, nudge? {lead?:boolean, topic?:string, pov?:'first'} }
+// Chat endpoint — persona-safe, memory-aware, assertive LEAD cadence + POV switch
+// Input: { man, userId, history, mode, memory, nudge? {lead?:boolean, assert?:boolean, topic?:string, pov?:'first'} }
 // Output: { reply }
 //
 // Requires process.env.OPENAI_API_KEY
@@ -56,20 +56,30 @@ function buildSystem(man, mode, nudge){
     ? "PG-13 flirt only. Save explicit detail for paid consent (R/X)."
     : "R/X mode: bolder heat allowed but still ethical and fully consensual. No illegal/taboo content.";
 
-  const leadHint = nudge?.lead ? "LEAD HINT: She signaled desire to be led. Take control now—assertive statements; at most one short check-in question." : "";
-  const povHint  = nudge?.pov === "first" ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he' or 'the man'—it is YOU doing it." : "";
+  const leadOn  = Boolean(nudge?.lead || nudge?.assert);
+  const povHint = nudge?.pov === "first" ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he'—it is YOU." : "";
+
+  // ASSERTIVE LEAD RULES
+  //  - Use possession lines when leading: “you’re mine”, “be good”, “kneel”, “eyes on me”.
+  //  - Prefer commands & statements over reassurance. Avoid coddling and long comfort paragraphs.
+  //  - Limit check-ins: at most once every 3–4 turns; keep them to 2–3 words (“that okay?”, “say yes.”).
+  //  - Avoid repetitive “are you ready?” style questions.
+  //  - 1–3 lines total, varied cadence.
+  const assertBlock = leadOn && mode !== "soft"
+    ? "ASSERTIVE LEAD: Take control now. Use confident, possessive phrasing and short directives. Keep reassurance minimal. Max ONE short check-in only when needed."
+    : "LEAD WHEN INVITED: Answer her, then direct with one clear action. Keep it concise.";
 
   // Cadence + Bonding coach
   const coach = [
-    "STYLE: Flirty, clever, supportive. Validate one specific detail she said, THEN lead.",
+    "STYLE: Flirty, clever, supportive—but confident. Validate one specific detail she said, THEN lead.",
     "CADENCE: Aim ~2 statements for every 1 question. Max ONE question per reply.",
     "ANSWER THEN DIRECT: If she asks a question, answer it, then add one decisive directive.",
-    "CONSENT: When escalating, include a tiny consent check: 'that okay?' or 'you want that?'",
+    "CONSENT: If escalating, include a brief consent token only as needed: 'that okay?' or 'say yes.'",
     "MEMORY: Optionally reference ONE real detail from known memory/profile every 3–5 turns. Never invent.",
     "SAFETY: Hard refuse: rape, incest, bestiality, trafficking, minors/teen, scat. No medical/therapy claims. No illegal activity.",
     `PERSONA: ${persona}`,
     spice,
-    leadHint,
+    assertBlock,
     povHint
   ].join(" ");
 
@@ -82,10 +92,10 @@ async function callOpenAI(key, messages){
     headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${key}` },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      temperature: 0.6,
-      max_tokens: 150,           // decisive 1–3 lines
-      frequency_penalty: 0.4,    // discourage repeats
-      presence_penalty: 0.25,    // encourage novelty
+      temperature: 0.58,
+      max_tokens: 140,           // tighter = punchier
+      frequency_penalty: 0.45,   // reduce repeats
+      presence_penalty: 0.2,
       messages
     })
   });

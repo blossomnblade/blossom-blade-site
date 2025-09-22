@@ -2,25 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blossom & Blade</title>
-  <link rel="preload" href="styles/home.css" as="style">
-  <link rel="stylesheet" href="styles/home.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom &amp; Blade</title>
+
+  <!-- Home page styles for the card grid -->
+  <link rel="stylesheet" href="styles/home.css" />
+
+  <!-- Safe fallback so the page still looks OK if CSS fails to load -->
+  <style>
+    body{background:#0b0d11;color:#eef; margin:0}
+    header{padding:24px 16px; text-align:center}
+    header h1{margin:0; font: 700 36px/1.1 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif; letter-spacing:.5px}
+    .grid{max-width:1200px; margin:0 auto 36px; padding:0 16px; display:grid; gap:20px}
+    .card{background:#121418; border:1px solid rgba(255,255,255,.08); border-radius:16px; overflow:hidden}
+    .media{aspect-ratio:3/4; background:#0f1115}
+    .media img{width:100%; height:100%; object-fit:cover; display:block}
+    .meta{display:flex; align-items:center; justify-content:space-between; padding:12px 14px}
+    .name{font-weight:700}
+    .enter{background:#ff2f7d; color:#fff; border:0; border-radius:999px; font-weight:800; padding:10px 16px; cursor:pointer}
+    @media(min-width:980px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:640px) and (max-width:979px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:639px){.grid{grid-template-columns:1fr}}
+    footer{color:#9aa3ad; text-align:center; padding:26px 16px; font: 500 13px/1.2 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    a.card-link{display:block; color:inherit; text-decoration:none}
+  </style>
 </head>
 <body>
-  <header class="site-head">
-    <h1>Blossom & Blade</h1>
-  </header>
 
-  <main class="wrap">
-    <section id="grid" class="grid" aria-label="Character cards"></section>
-  </main>
+<header>
+  <h1>Blossom &amp; Blade</h1>
+</header>
 
-  <footer class="site-foot">
-    <small>© Blossom & Blade — Adults 18+ only</small>
-  </footer>
+<main>
+  <section class="grid" aria-label="Character cards">
+    <!-- Blade -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=blade&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Blade — midnight mask"
+               src="images/characters/blade/blade-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Blade</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
 
-  <script src="scripts/cards.js" defer></script>
-<script src="/scripts/consent.js" defer></script>
+    <!-- Dylan -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=dylan&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Dylan — rider in neon garage"
+               src="images/characters/dylan/dylan-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Dylan</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
+
+    <!-- Jesse -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=jesse&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Jesse — cowboy"
+               src="images/characters/jesse/jesse-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Jesse</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
+
+    <!-- Alexander -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=alexander&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Alexander — black tie"
+               src="images/characters/alexander/alexander-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Alexander</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
+
+    <!-- Silas -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=silas&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Silas — rocker"
+               src="images/characters/silas/silas-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Silas</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
+
+    <!-- Grayson -->
+    <article class="card">
+      <a class="card-link" href="chat.html?man=grayson&sub=night">
+        <figure class="media">
+          <img loading="lazy" alt="Grayson — red room"
+               src="images/characters/grayson/grayson-card-on.webp" />
+        </figure>
+        <div class="meta">
+          <div class="name">Grayson</div>
+          <button class="enter" type="button">Enter</button>
+        </div>
+      </a>
+    </article>
+  </section>
+</main>
+
+<footer>© Blossom &amp; Blade — Adults 18+ only</footer>
+
 </body>
 </html>

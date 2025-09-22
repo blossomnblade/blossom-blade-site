@@ -36,7 +36,7 @@ body.bnb-chat{
 /* Layout: messages left, portrait right, composer sticks to bottom */
 .layout{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 360px;
+  grid-template-columns:minmax(0,1fr) 340px; /* slimmer portrait column */
   grid-template-rows:1fr auto;
   gap:1rem;
   height:calc(100dvh - 56px);
@@ -59,11 +59,18 @@ body.bnb-chat{
   border-radius:var(--radius);
   box-shadow:var(--shadow);
   padding:.5rem;
+  /* keep the whole portrait block within the viewport without pushing composer */
+  max-height:calc(100dvh - 120px);
+  overflow:hidden;
 }
 .portrait-frame img{
-  width:100%; height:auto; display:block;
+  width:100%;
+  height:auto;
+  display:block;
   border-radius:calc(var(--radius) - 4px);
   object-fit:cover;
+  /* hard cap so it never dominates; adjust as needed */
+  max-height:min(68vh, 720px);
 }
 
 /* Bubbles */
@@ -115,10 +122,8 @@ body.bnb-chat{
     grid-template-columns:1fr;
     grid-template-rows:1fr auto auto;
   }
-  .portrait-panel{
-    order:2;
-    grid-row:auto;
-  }
-  .portrait-frame{ top:auto; position:relative; }
+  .portrait-panel{ order:2; grid-row:auto; }
+  .portrait-frame{ top:auto; position:relative; max-height:48vh; }
+  .portrait-frame img{ max-height:46vh; }
 }
 .sr-only{position:absolute!important; width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

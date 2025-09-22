@@ -10,13 +10,14 @@
   --radius:16px;
 }
 
+/* Reset & base */
 *{box-sizing:border-box}
 html,body{height:100%}
 body.bnb-chat{
   margin:0;
   background:var(--bg);
   color:var(--ink);
-  font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+  font:16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
 }
 
 /* Header */
@@ -25,59 +26,79 @@ body.bnb-chat{
   display:grid; grid-template-columns:1fr auto 1fr;
   align-items:center; gap:.75rem;
   padding:.75rem 1rem;
-  background:linear-gradient(to bottom, rgba(0,0,0,.7), rgba(0,0,0,.25));
+  background:linear-gradient(to bottom, rgba(0,0,0,.72), rgba(0,0,0,.28));
   backdrop-filter:saturate(140%) blur(6px);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
 .brand .home-link{color:var(--ink); text-decoration:none; font-weight:700}
-.room-title{opacity:.9; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.room-title{opacity:.95; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .age-gate .badge{font-size:.85rem; color:#fff; text-decoration:none; background:#2a2a3a; padding:.35rem .6rem; border-radius:999px; border:1px solid rgba(255,255,255,.08)}
 
-/* Layout: messages left, portrait right, composer sticks to bottom */
+/* Layout: messages left, portrait right, composer sticky bottom */
 .layout{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 340px; /* slimmer portrait column */
+  grid-template-columns:minmax(0,1fr) 340px; /* keeps portrait narrow but usable */
   grid-template-rows:1fr auto;
   gap:1rem;
   height:calc(100dvh - 56px);
   padding:1rem;
 }
+
+/* Messages column */
 .messages{
   overflow:auto;
-  padding-bottom:5.25rem; /* space for composer */
+  padding-bottom:5.75rem; /* space for composer */
   display:flex;
   flex-direction:column;
   gap:.75rem;
 }
+
+/* Portrait column */
 .portrait-panel{
   grid-row:1 / span 2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
+
+/* Portrait frame — center content, hide overflow */
 .portrait-frame{
   position:sticky;
   top:76px;
+  width:100%;
+  max-width:100%;
   background:var(--panel);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
-  padding:.5rem;
-  /* keep the whole portrait block within the viewport without pushing composer */
-  max-height:calc(100dvh - 120px);
+  padding:.6rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  /* ensure frame never grows beyond viewport */
+  max-height:calc(85vh - 120px);
   overflow:hidden;
+  border: 6px solid rgba(18,18,26,0.6); /* dark bezel for nice framing */
 }
+
+/* Portrait image: contain and center so head never gets chopped */
 .portrait-frame img{
+  display:block;
   width:100%;
   height:auto;
-  display:block;
-  border-radius:calc(var(--radius) - 4px);
-  object-fit:cover;
-  /* hard cap so it never dominates; adjust as needed */
-  max-height:min(68vh, 720px);
+  max-width:100%;
+  /* keep image inside frame, preserve aspect ratio */
+  object-fit:contain;
+  object-position:center center;
+  /* limit height so it doesn't overflow vertically */
+  max-height:calc(85vh - 180px);
+  border-radius:calc(var(--radius) - 6px);
 }
 
 /* Bubbles */
 .bubble{
   max-width:72ch;
   width:fit-content;
-  padding:.75rem .9rem;
+  padding:.75rem .95rem;
   border-radius:14px;
   box-shadow:var(--shadow);
   word-wrap:break-word;
@@ -95,13 +116,13 @@ body.bnb-chat{
   position:sticky; bottom:0; left:0; right:0;
   display:grid; grid-template-columns:1fr auto; gap:.5rem;
   background:linear-gradient(to top, rgba(11,11,15,1), rgba(11,11,15,.75) 60%, transparent);
-  padding:1rem 0 .75rem 0;
+  padding:1rem 0 .9rem 0;
 }
 .composer input{
   width:100%;
   background:var(--panel);
   color:var(--ink);
-  border:1px solid rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.06);
   border-radius:999px;
   padding:.9rem 1rem;
   outline:none;
@@ -114,16 +135,34 @@ body.bnb-chat{
   border-radius:999px;
   font-weight:700;
   cursor:pointer;
+  box-shadow: 0 6px 18px rgba(255,90,138,0.18);
 }
 
-/* Mobile */
+/* Mobile adjustments */
 @media (max-width: 900px){
   .layout{
     grid-template-columns:1fr;
-    grid-template-rows:1fr auto auto;
+    grid-template-rows:auto 1fr auto;
+    padding:1rem .75rem;
   }
-  .portrait-panel{ order:2; grid-row:auto; }
-  .portrait-frame{ top:auto; position:relative; max-height:48vh; }
-  .portrait-frame img{ max-height:46vh; }
+  .portrait-panel{
+    order:2;
+    align-items:center;
+  }
+  .portrait-frame{
+    position:relative;
+    top:0;
+    max-height:48vh;
+    margin:0 auto 1rem;
+    padding:.4rem;
+  }
+  .portrait-frame img{
+    max-height:46vh;
+    object-fit:cover; /* on narrow phones, cover feels more immersive */
+    object-position:center top; /* bias toward face */
+  }
+  .messages{ padding-bottom:6.25rem; }
 }
+
+/* Accessibility */
 .sr-only{position:absolute!important; width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

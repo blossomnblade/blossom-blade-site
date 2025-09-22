@@ -1,98 +1,96 @@
-/* ---------- Blossom & Blade — Home (cards grid) ---------- */
+/* ====== Home (card grid) ====== */
 
 :root{
-  --bg:#0b0e13;
-  --panel:#10131a;
-  --ink:#e9edf6;
-  --muted:#97a0ad;
-  --accent:#ff4d82;
-  --ring: rgba(255,255,255,.08);
-  --radius:14px;
+  --bg:#0b0d11;
+  --panel:#121418;
+  --ink:#eef1f6;
+  --muted:#9aa3ad;
+  --line:rgba(255,255,255,.08);
+  --accent:#ff2f7d;
+  --accent-ink:#fff;
+  --radius:16px;
+  --gap:20px;
 }
 
-html,body{background:#080a0f;color:var(--ink);margin:0}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  margin:0;
+  font: 500 16px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
-.main-wrap{
+/* Header */
+header{padding:26px 16px 14px}
+header h1{
+  margin:0 auto;
   max-width:1200px;
-  margin:32px auto 96px;
-  padding:0 16px;
-}
-
-h1{
-  font:700 34px/1.1 system-ui, Segoe UI, Inter, Arial, sans-serif;
-  letter-spacing:.3px;
+  font: 800 40px/1.05 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
   text-align:center;
-  margin:8px 0 26px;
-  text-shadow:0 2px 0 rgba(255,255,255,.04);
+  letter-spacing:.6px;
+  text-shadow:0 2px 0 #000;
 }
 
-/* Grid: 3 on wide, 2 on tablet, 1 on phone */
-.cards{
+/* Grid */
+.grid{
+  max-width:1200px;
+  margin:0 auto 40px;
+  padding:0 16px;
   display:grid;
-  grid-template-columns:repeat(3, minmax(260px, 1fr));
-  gap:28px;
+  gap:var(--gap);
 }
-@media (max-width: 980px){
-  .cards{ grid-template-columns:repeat(2, minmax(260px, 1fr)); }
-}
-@media (max-width: 640px){
-  .cards{ grid-template-columns:1fr; }
-}
+@media(min-width:980px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+@media(min-width:640px) and (max-width:979px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:639px){ .grid{ grid-template-columns:1fr; } }
 
-/* Card shell */
+/* Card */
 .card{
   background:var(--panel);
-  border:1px solid var(--ring);
+  border:1px solid var(--line);
   border-radius:var(--radius);
   overflow:hidden;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-  display:flex;
-  flex-direction:column;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
+.card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0,0,0,.5);
+  border-color: rgba(255,255,255,.14);
+}
+a.card-link{ color:inherit; text-decoration:none; display:block; }
 
-/* Image area: lock the size so layout never shifts */
-.card .thumb{
-  position:relative;
-  aspect-ratio: 3 / 4;            /* keeps every card the same shape */
-  background:#0d1016;
-  overflow:hidden;
-}
-.card .thumb img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  transform:translateZ(0);        /* crisp render, prevents jitter */
-}
+/* Image (fixed aspect ratio, no overflow) */
+.media{ aspect-ratio: 3 / 4; background:#0f1115; }
+.media img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-/* Footer row */
-.card footer{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 16px;
-  gap:14px;
+/* Meta row */
+.meta{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px;
 }
-.card .name{
-  font-weight:700;
-  letter-spacing:.2px;
-}
-.card .enter{
-  appearance:none;
-  border:0;
+.name{ font-weight:800; letter-spacing:.2px; }
+
+/* Button */
+.enter{
   background:var(--accent);
-  color:#fff;
-  font-weight:800;
-  padding:10px 18px;
-  border-radius:999px;
+  color:var(--accent-ink);
+  border:0; border-radius:999px;
+  padding:10px 16px;
+  font: 800 14px/1 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
   cursor:pointer;
-  box-shadow:0 6px 18px rgba(255,77,130,.35);
+  box-shadow: 0 6px 20px rgba(255,47,125,.2);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
 }
-.card .enter:active{ transform:translateY(1px); }
+.enter:hover{ transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,47,125,.28); }
+.enter:active{ transform: translateY(0); opacity:.9; }
 
-/* Hide any stray filename/figcaption text under images */
-.card figcaption,
-.card a[href$=".webp"],
-.card a[href$=".jpg"],
-.card a[href$=".jpeg"],
-.card a[href$=".png"]{ display:none !important; }
+/* Footer */
+footer{
+  color:var(--muted);
+  text-align:center;
+  padding:28px 16px 44px;
+  border-top:1px solid rgba(255,255,255,.04);
+}

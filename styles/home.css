@@ -1,83 +1,98 @@
+/* ---------- Blossom & Blade — Home (cards grid) ---------- */
+
 :root{
-  --bg:#0b0d11;
-  --panel:#12151c;
-  --ink:#e9eef9;
-  --ink-dim:#aeb6c8;
-  --accent:#ff2e7b;
-  --round:18px;
-  --shadow:0 6px 24px rgba(0,0,0,.35);
-  --shadow-soft:0 10px 50px rgba(0,0,0,.35);
+  --bg:#0b0e13;
+  --panel:#10131a;
+  --ink:#e9edf6;
+  --muted:#97a0ad;
+  --accent:#ff4d82;
+  --ring: rgba(255,255,255,.08);
+  --radius:14px;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+html,body{background:#080a0f;color:var(--ink);margin:0}
+
+.main-wrap{
+  max-width:1200px;
+  margin:32px auto 96px;
+  padding:0 16px;
 }
 
-/* Header / Footer */
-.site-head, .site-foot{display:flex; align-items:center; justify-content:center}
-.site-head{padding:28px 16px}
-.site-head h1{
-  margin:0; font-weight:800; letter-spacing:.5px; text-align:center;
-  font-size:clamp(28px,3.6vw,42px);
-  text-shadow:0 3px 0 rgba(0,0,0,.35);
+h1{
+  font:700 34px/1.1 system-ui, Segoe UI, Inter, Arial, sans-serif;
+  letter-spacing:.3px;
+  text-align:center;
+  margin:8px 0 26px;
+  text-shadow:0 2px 0 rgba(255,255,255,.04);
 }
-.site-foot{padding:28px 12px 40px; color:var(--ink-dim)}
 
-/* Layout */
-.wrap{max-width:1180px; margin:0 auto; padding:0 16px 24px}
-.grid{
-  display:grid; gap:26px;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+/* Grid: 3 on wide, 2 on tablet, 1 on phone */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(260px, 1fr));
+  gap:28px;
 }
-@media (max-width:980px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-@media (max-width:620px){ .grid{grid-template-columns:1fr;} }
+@media (max-width: 980px){
+  .cards{ grid-template-columns:repeat(2, minmax(260px, 1fr)); }
+}
+@media (max-width: 640px){
+  .cards{ grid-template-columns:1fr; }
+}
 
-/* Card */
+/* Card shell */
 .card{
-  background:var(--panel); border-radius:var(--round);
-  box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column;
-}
-.card .art{
-  position:relative; aspect-ratio: 3/4; background:#0f131b; overflow:hidden;
-}
-.card .art img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-  transition:opacity .25s ease; display:block; will-change:opacity;
-}
-.card .art img.off{opacity:0}
-.card:hover .art img.off{opacity:1}
-.card:hover .art img.on{opacity:0}
-
-.meta{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 16px 16px; gap:12px;
-}
-.name{font-weight:700}
-.btn{
-  appearance:none; border:0; cursor:pointer;
-  background:var(--accent); color:#fff; font-weight:800;
-  padding:10px 18px; border-radius:999px; box-shadow:var(--shadow-soft);
-}
-.btn:focus-visible{outline:3px solid rgba(255,46,123,.5); outline-offset:3px}
-
-/* Placeholder (if an image is missing) */
-.placeholder{
-  position:absolute; inset:0; display:grid; place-items:center;
-  color:var(--ink-dim); font-weight:700; font-size:18px;
-  background:
-    radial-gradient(120% 120% at 100% 0%, rgba(255,46,123,.07), transparent 45%),
-    radial-gradient(120% 120% at 0% 100%, rgba(0,181,255,.08), transparent 40%);
+  background:var(--panel);
+  border:1px solid var(--ring);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  display:flex;
+  flex-direction:column;
 }
 
-/* Hide accidental filename text anywhere inside a card  */
-.card :is(small, figcaption, a, span, div){
-  /* If a platform injects tiny “*.webp” text nodes into these elements,
-     the next rule hides them if they look like a filename. */
+/* Image area: lock the size so layout never shifts */
+.card .thumb{
+  position:relative;
+  aspect-ratio: 3 / 4;            /* <- keeps every card the same shape */
+  background:#0d1016;
+  overflow:hidden;
 }
-.card :is(small, figcaption, a, span, div){}
+.card .thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  transform:translateZ(0);        /* crisp rendering, prevents jitter */
+}
 
-/* Safety: if an alt string shows (broken image), don't let it overflow */
-.card .art{color:transparent}
+/* Footer row */
+.card footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  gap:14px;
+}
+.card .name{
+  font-weight:700;
+  letter-spacing:.2px;
+}
+.card .enter{
+  appearance:none;
+  border:0;
+  background:var(--accent);
+  color:#fff;
+  font-weight:800;
+  padding:10px 18px;
+  border-radius:999px;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(255,77,130,.35);
+}
+.card .enter:active{ transform:translateY(1px); }
+
+/* Hide any stray filename/figcaption text under images */
+.card figcaption,
+.card a[href$=".webp"],
+.card a[href$=".jpg"],
+.card a[href$=".jpeg"],
+.card a[href$=".png"]{ display:none !important; }

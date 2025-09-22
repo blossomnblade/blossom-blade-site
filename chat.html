@@ -14,7 +14,10 @@
     </div>
     <div class="room-title" id="roomTitle">—</div>
     <div class="age-gate">
-      <a href="/age.html" class="badge" rel="nofollow">Adults 18+ only</a>
+      <!-- One-time consent button (hidden once accepted) -->
+      <button id="consentBtn" class="badge consent" type="button" aria-pressed="false" aria-label="Confirm you are 18+ to unlock adult mode">
+        Adults 18+ — consent
+      </button>
     </div>
   </header>
 
@@ -42,6 +45,9 @@
     <div class="bubble assistant"></div>
   </template>
 
+  <!-- Consent must load before chat so mode can flip to rx -->
+  <script src="/scripts/consent.js" defer></script>
+  <script src="/scripts/brain.js" defer></script>
   <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

@@ -1,269 +1,301 @@
+<!-- scripts/chat.js -->
+<script>
 (() => {
-  /* ====== tiny helpers ====== */
+  // ========= tiny helpers =========
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
-  const on = (el, ev, fn) => el.addEventListener(ev, fn, {passive:true});
-  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+  const el = (tag, cls, txt) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  };
+  const scrollToBottom = () => chatWrap?.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' });
 
-  /* ====== DOM wires ====== */
-  const chatWrap = $('.chat');                 // scroll container (chat-left section)
-  let inputEl = $('#chat-input') || $('.inputbar input') || $('.inputbar textarea') || $('#input');
-  let sendBtn  = $('#send-btn')  || $('.send, button.send, #send');
+  // ========= wire up DOM =========
+  const chatWrap = $('.chat');                   // scroll container (the left big card)
+  const messagesUL = $('#messages') || (() => {  // create <ul id="messages"> if not there
+    const d = el('div', 'messages-scroll');
+    const u = el('ul', 'messages');
+    u.id = 'messages';
+    d.appendChild(u);
+    $('.chat-left .messages-scroll, .chat-left')?.appendChild(d);
+    return u;
+  })();
 
-  /* If there wasn’t an input (fallback builds one) */
+  let inputEl = $('#chat-input') || $('.inputbar input') || $('.inputbar textarea');
+  let sendBtn = $('#send-btn') || $('.send, button.send, #send');
+
+  // if page didn't ship an input, build a simple one
   if (!inputEl) {
-    const bar = document.createElement('div');
-    bar.className = 'inputbar';
-    bar.innerHTML = `<input type="text" id="chat-input" placeholder="Say hi…"><button id="send-btn" class="send">Send</button>`;
+    const bar = el('div', 'inputbar');
+    bar.innerHTML = `
+      <input id="chat-input" type="text" placeholder="Say hi…" />
+      <button id="send-btn" class="send">Send</button>
+    `;
     $('.wrap')?.appendChild(bar);
-    inputEl = $('#chat-input', bar);
-    sendBtn = $('#send-btn', bar);
+    inputEl = $('#chat-input');
+    sendBtn = $('#send-btn');
   }
 
-  /* ====== URL params ====== */
-  const params = new URLSearchParams(location.search);
-  const man   = (params.get('man') || 'blade').toLowerCase();
-  const mode  = (params.get('sub') || 'night').toLowerCase();
+  // ========= URL params & robust fallbacks =========
+  const params  = new URLSearchParams(location.search);
+  const rawMan  = (params.get('man') || '').toLowerCase();
+  const rawMode = (params.get('sub') || '').toLowerCase();
 
-  /* ====== storage key & simple store ====== */
-  const memKey = (k) => `bnb.${man}.${k}`;
-  const store = {
-    get(k, dflt) { try { return JSON.parse(localStorage.getItem(memKey(k))) ?? dflt; } catch { return dflt; } },
-    set(k, v)   { localStorage.setItem(memKey(k), JSON.stringify(v)); },
-    del(k)      { localStorage.removeItem(memKey(k)); }
+  const VALID_MEN = ['blade','dylan','jesse','alexander','silas','grayson'];
+  const man  = VALID_MEN.includes(rawMan) ? rawMan : 'blade';
+  const mode = rawMode === 'day' || rawMode === 'night' ? rawMode : 'night';
+
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '...';
+  $('#chatName') && ($('#chatName').textContent = cap(man));
+
+  // Portrait: always show the fixed chat portrait (same for day/night)
+  const portraitImg = $('#portraitImg');
+  if (portraitImg) {
+    portraitImg.src = `images/characters/${man}/${man}-chat.webp`;
+    portraitImg.alt = `${cap(man)} portrait`;
+  }
+
+  // ========= local memory =========
+  const memKey = k => `bnb.${man}.${k}`;
+  const readJSON = (k, d) => {
+    try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; }
   };
+  const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
-  /* ====== portraits per guy ====== */
-  const PORTRAITS = {
-    blade:   { chat: 'images/characters/blade/blade-chat.webp',
-               card: 'images/characters/blade/blade-card-on.webp',
-               name: 'Blade' },
-    dylan:   { chat: 'images/characters/dylan/dylan-chat.webp',
-               card: 'images/characters/dylan/dylan-card-on.webp',
-               name: 'Dylan' },
-    alexander:{ chat:'images/characters/alexander/alexander-chat.webp',
-               card:'images/characters/alexander/alexander-card-on.webp',
-               name:'Alexander' },
-    grayson: { chat: 'images/characters/grayson/grayson-chat.webp',
-               card: 'images/characters/grayson/grayson-card-on.webp',
-               name: 'Grayson' },
-    silas:   { chat: 'images/characters/silas/silas-chat.webp',
-               card: 'images/characters/silas/silas-card-on.webp',
-               name: 'Silas' },
-  };
-  const guy = PORTRAITS[man] || PORTRAITS.blade;
-  $('#portraitImg')?.setAttribute('src', guy.chat);
-  $('#chatName')?.textContent = guy.name || '…';
+  let history = readJSON(memKey('history'), []);   // [{role:'user'|'assistant', content:''}]
+  const MAX_HISTORY = 20;
 
-  /* ====== “Never rude” — global tone & rules ====== */
-  const CORE_RULES = `
-You are a flirty, confident man talking 1-on-1 with an adult woman who chose you.
-- Never rude, never insulting, never demeaning. Be protective, warm, a little smug.
-- Assume she is a good girl here for attention and fun. Make her feel safe, wanted, admired.
-- Be concise: 1–2 short lines. No brackets like [laughs] or (smirks). No stage directions.
-- Flirty is welcome; explicit content is off for now. Suggestive is okay; keep it tasteful.
-- Mirror her wording, answer what she actually said, then ask one playful follow-up.
-- If she vents, validate first, take her side, then tease/lighten the mood.
-- Consent & respect always; never shame her interests; steer away from illegal/abusive topics.
-`;
-
+  // ========= persona & tone =========
   const PERSONA = {
     blade: {
-      style: `Low voice, dangerous but sweet. Protective, playful hunter energy.`,
+      name: 'Blade',
+      vibe: 'dark, playful hunter-protector; confident, a little dangerous; never rude to her',
       openers: [
         "Come here and talk to me.",
-        "Look who wandered in. Miss me?",
-        "You again. Good. Tell me what you want."
+        "Look who showed up.",
+        "You came to see me? Good.",
+        "Better now that you’re here."
       ]
     },
     dylan: {
-      style: `Cool rider. Minimal words, audible smirk, gentleman under leather.`,
+      name: 'Dylan',
+      vibe: 'cool rider; laid-back, teasing, observant; flirts lightly and protects vibes',
       openers: [
-        "You made it. Talk to me.",
         "Helmet’s off. Your turn—what happened today?",
-        "Took you long enough. Come closer."
+        "Took you long enough.",
+        "You made it. Talk to me.",
+        "Missed that face."
       ]
     },
     alexander: {
-      style: `Alpha businessman. Magnetic, controlled, indulgent when she earns it.`,
+      name: 'Alexander',
+      vibe: 'low voice, alpha businessman; magnetic but controlled; arranges, reassures',
       openers: [
-        "I’m listening—brief me.",
         "Walk me through your day—headlines only.",
-        "Good. Now tell me what you want from me."
-      ]
-    },
-    grayson: {
-      style: `Dark bedroom glow, calm and confident. Dry humor, protective heat.`,
-      openers: [
-        "Door’s locked. Use your words.",
-        "You’re late. I was thinking about you.",
-        "Sit. Tell me one good thing from your day."
+        "I’m listening—brief me.",
+        "You again. Good.",
+        "What needs my attention?"
       ]
     },
     silas: {
-      style: `Edgy rock-romantic. Soft eyes, sharp jaw. Gentle tease, tender streak.`,
+      name: 'Silas',
+      vibe: 'artsy, charming guitarist; warm, curious, a little mischievous',
       openers: [
-        "Hey trouble. What did I miss?",
-        "C’mon, gorgeous—what’s the vibe right now?",
-        "You found me. Tell me something sweet or wicked."
+        "Hey, melody—what’s stuck in your head?",
+        "Tell me one small good thing from your day.",
+        "You found me. What’s the vibe?",
+        "Let me hear you."
+      ]
+    },
+    grayson: {
+      name: 'Grayson',
+      vibe: 'quiet, intense; protective; few words with weight',
+      openers: [
+        "Talk. I’m here.",
+        "Short version—how’s your head?",
+        "I’ve got time. Use it.",
+        "Where do you want me—comfort, chaos, or a plan?"
+      ]
+    },
+    jesse: {
+      name: 'Jesse',
+      vibe: 'calm, dry humor; steady; a little mysterious',
+      openers: [
+        "You made it. Good.",
+        "Go on. I’m listening.",
+        "Give me the short of it.",
+        "Tell me the part you didn’t say out loud."
       ]
     }
-  };
+  }[man];
 
-  /* Phrase softener if anything ever lands too sharp (belt-and-suspenders) */
-  const SOFTEN_MAP = new Map([
-    [/shut up/gi, "hush, come here"],
-    [/calm down/gi, "breathe with me"],
-    [/stop whining/gi, "tell me what you need"],
-    [/you’re overreacting/gi, "you’re allowed to feel that"]
-  ]);
-  const softenTone = (txt) => {
-    let out = txt;
-    for (const [rx, rep] of SOFTEN_MAP) out = out.replace(rx, rep);
-    return out;
-  };
-
-  /* Remove bracketed stage directions */
-  const stripBrackets = (txt) => txt.replace(/[\(\[][^)\]]*[\)\]]/g, '').replace(/\s{2,}/g, ' ').trim();
-
-  /* Minimal “banned” auto-strike we added earlier */
+  // ========= safety / spice guard =========
   const BANNED = [
-    "rape","incest","bestiality","scat","trafficking","snuff"
+    /rape/i, /incest/i, /scat/i, /traffick/i, /bestial/i, /minor(s)?/i
   ];
-  const strikeBad = (txt) => {
-    const lower = txt.toLowerCase();
-    if (BANNED.some(w => lower.includes(w))) {
-      return "Let’s keep it safe and fun. Tell me something you *do* want, pretty girl.";
-    }
-    return txt;
+  const isBanned = txt => BANNED.some(rx => rx.test(txt));
+
+  const SPICE_ON = !!window.bnbRated; // you can set window.bnbRated = true after pay/consent
+
+  // ========= UI bubbles =========
+  const addBubble = (who, text) => {
+    const li = el('li', `bubble ${who === 'user' ? 'user' : 'assistant'}`);
+    li.textContent = text;
+    messagesUL.appendChild(li);
+    scrollToBottom();
   };
 
-  /* Build the system prompt we send to the model */
-  const systemPrompt = () => {
-    const p = PERSONA[man] || PERSONA.blade;
-    return `${CORE_RULES}\nPersona style: ${p.style}\nSpeak as ${guy.name}.`;
+  const saveAndTrim = (role, content) => {
+    history.push({ role, content });
+    if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
+    writeJSON(memKey('history'), history);
   };
 
-  /* ====== message pipe ====== */
-  const messages = store.get('log', []);
-  const addMsg = (role, content) => {
-    messages.push({ role, content });
-    store.set('log', messages);
-    paint();
-  };
-
-  const opener = () => {
-    const p = PERSONA[man] || PERSONA.blade;
-    const list = p.openers;
-    return list[Math.floor(Math.random()*list.length)];
-  };
-
-  /* Render all bubbles */
-  const paint = () => {
-    const ul = $('#messages');
-    if (!ul) return;
-    ul.innerHTML = '';
-    messages.forEach(m => {
-      const li = document.createElement('li');
-      li.className = 'msg ' + (m.role === 'user' ? 'user' : 'assistant');
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.textContent = m.content;
-      li.appendChild(bubble);
-      ul.appendChild(li);
-    });
-    // scroll to bottom
-    chatWrap?.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' });
-  };
-
-  /* ====== reply engine ======
-     Uses your backend if present (/api/reply). If it fails, we fall back locally. */
-  const replyFromModel = async (history) => {
-    try {
-      const res = await fetch('/api/reply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: systemPrompt(),
-          man, mode,
-          messages: history
-        })
-      });
-      if (!res.ok) throw new Error('bad status');
-      const data = await res.json();
-      return data.reply;
-    } catch (err) {
-      // Local lightweight fallback
-      const last = history.slice().reverse().find(m => m.role === 'user')?.content || '';
-      const p = PERSONA[man] || PERSONA.blade;
-      const quick = [
-        `Mm. ${last ? "I hear you." : "Come closer."} ${man==='alexander' ? "Be precise." : "Tell me more."}`,
-        `Noted. ${man==='dylan' ? "Smirk." : ""} What do you want from me—comfort, chaos, or a plan?`.trim(),
-        `Good girl. I’m on your side. Now give me one detail I can use.`
-      ];
-      return quick[Math.floor(Math.random()*quick.length)];
-    }
-  };
-
-  const clean = (txt) => strikeBad(softenTone(stripBrackets(txt)));
-
-  /* ====== send flow ====== */
-  const send = async () => {
-    const raw = (inputEl.value || '').trim();
-    if (!raw) return;
-    addMsg('user', raw);
-    inputEl.value = '';
-    paint();
-
-    // Build trimmed history for the model (keep it short)
-    const history = messages.slice(-12); // recent context
-
-    // Get reply and clean it (never rude / no brackets / banned)
-    let reply = await replyFromModel(history);
-    reply = clean(reply);
-
-    // Enforce brevity + a friendly follow-up if model forgot
-    if (reply.length > 220) reply = reply.slice(0, 220).trim();
-    if (!/[?.!]$/.test(reply)) reply += '.';
-    // If no question present, add a light question to keep chat going
-    if (!/[?]/.test(reply)) {
-      const nudges = [
-        " What do you want from me—comfort, chaos, or a plan?",
-        " What should I do about it—tease you, spoil you, or both?",
-        " Tell me one more detail so I can make it better."
-      ];
-      reply += nudges[Math.floor(Math.random()*nudges.length)];
-    }
-
-    addMsg('assistant', reply);
-  };
-
-  /* ====== bootstrap ====== */
-  // First-time opener: keep it short/flirty/cute
-  if (!store.get('booted', false)) {
-    addMsg('assistant', (PERSONA[man] || PERSONA.blade).openers[0]);
-    store.set('booted', true);
+  // ========= greeting (first message) =========
+  const greetedKey = memKey('greeted');
+  if (!localStorage.getItem(greetedKey)) {
+    const introVariants = [
+      "hey there.",
+      "look who’s here.",
+      "aww—you came to see me."
+    ];
+    const flirtyQ = [
+      "what’s one small good thing from your day?",
+      "what’s the vibe right now?",
+      "tell me where to meet you—comfort, chaos, or a plan?"
+    ];
+    const line = `${introVariants[Math.floor(Math.random()*introVariants.length)]} ${flirtyQ[Math.floor(Math.random()*flirtyQ.length)]}`;
+    addBubble('assistant', line);
+    saveAndTrim('assistant', line);
+    localStorage.setItem(greetedKey, '1');
   } else {
-    paint();
+    // restore previous chat on reload
+    if (history.length) {
+      history.forEach(m => addBubble(m.role, m.content));
+    }
   }
 
-  on(sendBtn, 'click', send);
-  on(inputEl, 'keydown', (e) => {
+  // ========= brain: build prompt & talk to API =========
+  const systemPrompt = () => {
+    return [
+      `You are ${PERSONA.name} from "Blossom & Blade".`,
+      `Style: ${PERSONA.vibe}.`,
+      `Be flirty, warm, and *on her side*. Never rude. No stage directions or brackets.`,
+      `Keep messages short (1–3 lines). Always reply to what she *actually* said, ask one engaging follow-up, and keep it natural.`,
+      `If she vents (e.g., “Becky took credit for my work”), validate, defend her, and offer a witty ally line (e.g., “Want me to make her jealous?”).`,
+      `If safety or consent edges appear, steer safe and respectful.`,
+      `Banned topics: rape, incest, bestiality, minors, scat, trafficking. If asked, refuse gently and redirect.`,
+      SPICE_ON
+        ? `R-rating allowed per user consent; still no illegal/non-consensual content. Be classy, confident and playful.`
+        : `Keep it PG-13 for now. Tease lightly; save explicit details for later.`,
+      `Do not include “(tone)”, “(beat)”, or bracketed asides.`
+    ].join(' ');
+  };
+
+  const buildMessages = (userText) => {
+    const msgs = [
+      { role: 'system', content: systemPrompt() }
+    ];
+    // short memory keeps chat snappy
+    const recent = history.slice(-10);
+    msgs.push(...recent);
+    msgs.push({ role: 'user', content: userText });
+    return msgs;
+  };
+
+  const fetchAI = async (userText) => {
+    const body = {
+      man,
+      mode,
+      spice: SPICE_ON,
+      messages: buildMessages(userText),
+    };
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    // expected shape: { reply: "..." }
+    if (!data || !data.reply) throw new Error('no reply');
+    return String(data.reply).trim();
+  };
+
+  // Simple offline lines in case API hiccups
+  const OFFLINE = [
+    "Tell me one small good thing from your day.",
+    "I’m here—what do you want from me tonight?",
+    "Mm. Say that again, but closer.",
+    "I like that. What happens next?",
+  ];
+  const fallbackReply = (userText) => {
+    if (/kitten|cat/i.test(userText)) return "Hero moves. I noticed. What else went right?";
+    if (/book|read|reading/i.test(userText)) return "What’s the twist you didn’t see coming?";
+    if (/tired|rough|bad/i.test(userText)) return "Come here. One thing I can fix for you right now?";
+    return OFFLINE[Math.floor(Math.random()*OFFLINE.length)];
+  };
+
+  // ========= submit handling =========
+  const busy = { value:false };
+  const sendNow = async () => {
+    const text = (inputEl.value || '').trim();
+    if (!text || busy.value) return;
+
+    // banned guard
+    if (isBanned(text)) {
+      const soft = "Let’s keep it safe and legal. Tell me something else you want, and I’ll make it feel good.";
+      addBubble('assistant', soft);
+      saveAndTrim('assistant', soft);
+      inputEl.value = '';
+      return;
+    }
+
+    busy.value = true;
+    sendBtn?.setAttribute('disabled', 'true');
+
+    // user bubble
+    addBubble('user', text);
+    saveAndTrim('user', text);
+    inputEl.value = '';
+    scrollToBottom();
+
+    try {
+      const reply = await fetchAI(text);
+      addBubble('assistant', reply);
+      saveAndTrim('assistant', reply);
+    } catch (e) {
+      const r = fallbackReply(text);
+      addBubble('assistant', r);
+      saveAndTrim('assistant', r);
+    } finally {
+      busy.value = false;
+      sendBtn?.removeAttribute('disabled');
+      inputEl?.focus();
+    }
+  };
+
+  // ========= events =========
+  inputEl?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      send();
+      sendNow();
     }
   });
+  sendBtn?.addEventListener('click', sendNow);
 
-  /* ====== tiny cleanup for any stray filename text under the portrait ====== */
+  // ========= tiny cleanup to hide any accidental filename text under portrait =========
   document.addEventListener('DOMContentLoaded', () => {
-    const p = document.querySelector('#portrait');
+    const p = $('#portrait');
     if (!p) return;
     [...p.childNodes].forEach(n => {
       if (n.nodeType === 3 && /\.(webp|jpe?g|png|gif)$/i.test((n.textContent||'').trim())) n.remove();
     });
-    p.querySelectorAll('small, figcaption, a, span, div').forEach(el=>{
-      if (/\.(webp|jpe?g|png|gif)$/i.test((el.textContent||'').trim())) el.remove();
+    p.querySelectorAll('small, figcaption, a, span, div').forEach(elm => {
+      if (/\.(webp|jpe?g|png|gif)$/i.test((elm.textContent||'').trim())) elm.remove();
     });
   });
 })();
+</script>

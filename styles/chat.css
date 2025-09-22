@@ -8,16 +8,16 @@
   --bubble-ai:#141420;
   --shadow: 0 8px 24px rgba(0,0,0,.45);
   --radius:16px;
+  --consent:#22c55e; /* green */
 }
 
-/* Reset & base */
 *{box-sizing:border-box}
 html,body{height:100%}
 body.bnb-chat{
   margin:0;
   background:var(--bg);
   color:var(--ink);
-  font:16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
 }
 
 /* Header */
@@ -26,90 +26,57 @@ body.bnb-chat{
   display:grid; grid-template-columns:1fr auto 1fr;
   align-items:center; gap:.75rem;
   padding:.75rem 1rem;
-  background:linear-gradient(to bottom, rgba(0,0,0,.72), rgba(0,0,0,.28));
+  background:linear-gradient(to bottom, rgba(0,0,0,.7), rgba(0,0,0,.25));
   backdrop-filter:saturate(140%) blur(6px);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
 .brand .home-link{color:var(--ink); text-decoration:none; font-weight:700}
-.room-title{opacity:.95; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.age-gate .badge{font-size:.85rem; color:#fff; text-decoration:none; background:#2a2a3a; padding:.35rem .6rem; border-radius:999px; border:1px solid rgba(255,255,255,.08)}
+.room-title{opacity:.9; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.age-gate .badge{
+  font-size:.85rem; color:#111; text-decoration:none;
+  padding:.35rem .6rem; border-radius:999px; border:1px solid rgba(255,255,255,.08);
+}
+.age-gate .badge.consent{
+  background:var(--consent);
+  box-shadow: 0 6px 16px rgba(34,197,94,.25);
+  cursor:pointer;
+}
+.age-gate .badge.consent[hidden]{ display:none; }
 
-/* Layout: messages left, portrait right, composer sticky bottom */
+/* Layout: messages left, portrait right, composer sticks to bottom */
 .layout{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 340px; /* keeps portrait narrow but usable */
+  grid-template-columns:minmax(0,1fr) 340px;
   grid-template-rows:1fr auto;
   gap:1rem;
   height:calc(100dvh - 56px);
   padding:1rem;
 }
-
-/* Messages column */
 .messages{
   overflow:auto;
-  padding-bottom:5.75rem; /* space for composer */
+  padding-bottom:5.75rem;
   display:flex;
   flex-direction:column;
   gap:.75rem;
 }
-
-/* Portrait column */
-.portrait-panel{
-  grid-row:1 / span 2;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-}
-
-/* Portrait frame — center content, hide overflow */
+.portrait-panel{ grid-row:1 / span 2; display:flex; align-items:flex-start; justify-content:center; }
 .portrait-frame{
-  position:sticky;
-  top:76px;
-  width:100%;
-  max-width:100%;
-  background:var(--panel);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:.6rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  /* ensure frame never grows beyond viewport */
-  max-height:calc(85vh - 120px);
-  overflow:hidden;
-  border: 6px solid rgba(18,18,26,0.6); /* dark bezel for nice framing */
+  position:sticky; top:76px; width:100%; max-width:100%;
+  background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:.6rem; display:flex; align-items:center; justify-content:center;
+  max-height:calc(85vh - 120px); overflow:hidden; border:6px solid rgba(18,18,26,.6);
 }
-
-/* Portrait image: contain and center so head never gets chopped */
 .portrait-frame img{
-  display:block;
-  width:100%;
-  height:auto;
-  max-width:100%;
-  /* keep image inside frame, preserve aspect ratio */
-  object-fit:contain;
-  object-position:center center;
-  /* limit height so it doesn't overflow vertically */
+  display:block; width:100%; height:auto; max-width:100%;
+  object-fit:contain; object-position:center center;
   max-height:calc(85vh - 180px);
   border-radius:calc(var(--radius) - 6px);
 }
 
 /* Bubbles */
-.bubble{
-  max-width:72ch;
-  width:fit-content;
-  padding:.75rem .95rem;
-  border-radius:14px;
-  box-shadow:var(--shadow);
-  word-wrap:break-word;
-}
-.bubble.user{
-  margin-left:auto;
-  background:var(--bubble-user);
-}
-.bubble.assistant{
-  background:var(--bubble-ai);
-}
+.bubble{ max-width:72ch; width:fit-content; padding:.75rem .95rem; border-radius:14px; box-shadow:var(--shadow); word-wrap:break-word; }
+.bubble.user{ margin-left:auto; background:var(--bubble-user); }
+.bubble.assistant{ background:var(--bubble-ai); }
 
 /* Composer */
 .composer{
@@ -119,48 +86,20 @@ body.bnb-chat{
   padding:1rem 0 .9rem 0;
 }
 .composer input{
-  width:100%;
-  background:var(--panel);
-  color:var(--ink);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:999px;
-  padding:.9rem 1rem;
-  outline:none;
+  width:100%; background:var(--panel); color:var(--ink);
+  border:1px solid rgba(255,255,255,.06); border-radius:999px; padding:.9rem 1rem; outline:none;
 }
 .composer button{
-  background:var(--accent);
-  color:#111;
-  border:0;
-  padding:.9rem 1rem;
-  border-radius:999px;
-  font-weight:700;
-  cursor:pointer;
+  background:var(--accent); color:#111; border:0; padding:.9rem 1rem; border-radius:999px; font-weight:700; cursor:pointer;
   box-shadow: 0 6px 18px rgba(255,90,138,0.18);
 }
 
-/* Mobile adjustments */
+/* Mobile */
 @media (max-width: 900px){
-  .layout{
-    grid-template-columns:1fr;
-    grid-template-rows:auto 1fr auto;
-    padding:1rem .75rem;
-  }
-  .portrait-panel{
-    order:2;
-    align-items:center;
-  }
-  .portrait-frame{
-    position:relative;
-    top:0;
-    max-height:48vh;
-    margin:0 auto 1rem;
-    padding:.4rem;
-  }
-  .portrait-frame img{
-    max-height:46vh;
-    object-fit:cover; /* on narrow phones, cover feels more immersive */
-    object-position:center top; /* bias toward face */
-  }
+  .layout{ grid-template-columns:1fr; grid-template-rows:auto 1fr auto; padding:1rem .75rem; }
+  .portrait-panel{ order:2; align-items:center; }
+  .portrait-frame{ position:relative; top:0; max-height:48vh; margin:0 auto 1rem; padding:.4rem; }
+  .portrait-frame img{ max-height:46vh; object-fit:cover; object-position:center top; }
   .messages{ padding-bottom:6.25rem; }
 }
 

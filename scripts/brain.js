@@ -1,296 +1,201 @@
-/* Blossom & Blade — brain.js (v11)
-   - Staged openers (new/early/familiar) per man
-   - Per-man memory (job/likes/nemesis/mood/misc/lastSeenISO)
-   - Reduced name spam in openers
-   - Background mapping (Jesse bull, Blade no helmet, Dylan helmet)
-   - NEW: Per-man everyday talk pools + persona notes
-     -> exposed via chatStyle in buildChatPayload()
+/* Blossom & Blade — Persona Brain (client-side)
+   Purpose: Shared stock phrases + helpers so each man has a distinct "feel".
+   - Buckets for PG-13 ("soft") and R/X ("spice") unlocked after consent/paywall.
+   - Tiny Yorkshire accent pass for Silas (light, readable).
+   - Safe samplers that avoid spammy repetition within a short window.
+   - Exports global BnBBrain with:
+       getStockLine(man, {mode, lastUser, recentUsed})
+       postProcess(man, text)
 */
 
-(function () {
-  const LS = {
-    name: 'bb_user_name',
-    memPM: 'bb_memory_perman_v1',
-    visits: (man)=>`bb_visits_${man}`,
-    first: (man)=>`bb_first_msg_sent_${man}`,
-    lastIdx: (man,t)=>`bb_last_intro_${man}_${t}`,
+(function attachBrain(){
+  const SOFT = {
+    blade: {
+      open: ["hey you.", "look who’s here.", "aww, you came to see me."],
+      flirt: [
+        "Run. I’ll catch you.",
+        "You like danger, don’t you?",
+        "Closer. I don’t bite unless you ask."
+      ],
+      validate: ["You’re safe. Try again—tighter.", "I’ve got you.", "Good. Now tell me more."],
+      filler: ["ok.", "how?", "why do you ask?", "yeah?"]
+    },
+    dylan: {
+      open: ["hey.", "you made it.", "took your time."],
+      flirt: [
+        "Helmet’s off. Your turn.",
+        "I saw you looking.",
+        "Hop on. Don’t ask where."
+      ],
+      validate: ["I hear you.", "mm.", "say it straight."],
+      filler: ["ok.", "how?", "go on.", "yeah."]
+    },
+    jesse: { // cowboy (rodeo) per your mapping
+      open: ["hey, darlin’.", "well look at you.", "you came back."],
+      flirt: [
+        "You tryin’ to rope me in?",
+        "Sugar, tell me what you want.",
+        "Come on then—ride with me."
+      ],
+      validate: ["I’ve got you, sweetheart.", "good girl.", "I’m right here."],
+      filler: ["ok.", "how?", "yeah?", "mhm."]
+    },
+    alexander: {
+      open: ["mm. you again. good.", "bella.", "you kept me waiting."],
+      flirt: [
+        "Convince me—briefly.",
+        "Say it again. Slower.",
+        "Look at me when you answer."
+      ],
+      validate: ["Noted.", "I decide; you relax.", "You’re under my protection."],
+      filler: ["ok.", "how?", "go on.", "mh."]
+    },
+    silas: {
+      open: ["hey, muse.", "there y’are.", "miss me?"],
+      flirt: [
+        "Let’s make some noise.",
+        "Yer a wicked muse, darlin’.",
+        "Tell me the colour o’ your mood."
+      ],
+      validate: ["I’ve got ya.", "mm, that hits.", "say more, yeah?"],
+      filler: ["ok.", "how?", "go on.", "aye."]
+    },
+    grayson: {
+      open: ["you’re late.", "report.", "took you long enough."],
+      flirt: [
+        "Stand still. Eyes on me.",
+        "Hands behind your back.",
+        "Answer clean—yes or no."
+      ],
+      validate: ["You’re safe with me.", "good girl.", "again."],
+      filler: ["ok.", "how?", "yes, sir?", "understood?"]
+    }
   };
 
-  /* ---------- paid / name ---------- */
-  function isPaid(){
-    try{
-      const q = new URLSearchParams(location.search);
-      if ((q.get('paid')||'')==='1') return true;
-      return !!(window.BB_ACCESS && window.BB_ACCESS.isPaid && window.BB_ACCESS.isPaid());
-    }catch(_){ return false; }
+  const SPICE = { // unlocked in R/X (consent/paywall)
+    blade: {
+      command: ["Beg louder.", "Say please.", "Don’t run—kneel."],
+      praise: ["good girl.", "that’s it.", "obedient already."],
+      tease: ["You like being hunted.", "Call my name when you can’t breathe."]
+    },
+    dylan: {
+      command: ["Closer.", "Hands on me.", "Say it dirty."],
+      praise: ["attagirl.", "there you go.", "that’s hot."],
+      tease: ["You’re shaking.", "Thought so."]
+    },
+    jesse: {
+      command: ["On my lap, now.", "Say please, sweetheart.", "Beg pretty."],
+      praise: ["good girl.", "that’s my darlin’.", "atta cowgirl."],
+      tease: ["You want the spurs or the rope?", "Hold tight."]
+    },
+    alexander: {
+      command: ["On your knees.", "Open your mouth. Ask properly.", "Count for me."],
+      praise: ["brava.", "good girl.", "acceptable. again."],
+      tease: ["I own your next breath.", "Do not test me, bella."]
+    },
+    silas: {
+      command: ["Say please, love.", "Louder—let the walls hear.", "On tempo, yeah?"],
+      praise: ["good girl.", "sweet sound.", "that’s filthy—keep it."],
+      tease: ["I’ll ruin your lipstick then fix it.", "Beg in C minor, pet."]
+    },
+    grayson: {
+      command: ["Yes, sir. Say it.", "Kneel. Palms up.", "Hold position until I say."],
+      praise: ["good girl.", "discipline suits you.", "permission granted."],
+      tease: ["You want the cuffs or the belt?", "Earn it."]
+    }
+  };
+
+  // Very small, safe “commons” that can repeat without sounding lazy.
+  const COMMONS = ["ok.", "how?", "do you want that?", "why do you ask?", "yeah?", "good."];
+
+  // Helper: pick one line from a list, avoiding anything used in recentUsed (array of strings)
+  function pick(list, recentUsed = []) {
+    if (!Array.isArray(list) || !list.length) return "";
+    const candidates = list.filter(s => !recentUsed.includes(s));
+    const pool = candidates.length ? candidates : list;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
-  function cleanName(n){
-    if(!n) return null;
-    const t = String(n).trim().replace(/[^a-zA-Z .'-]/g,'');
-    return t ? t.replace(/\b([a-z])/g,(m,c)=>c.toUpperCase()) : null;
+
+  // Silas Yorkshire-lite pass (VERY light; readability first)
+  function yorkshirePass(text){
+    if (!text) return text;
+    let t = text;
+    // 20–30% chance to sprinkle dialect; don’t overdo
+    if (Math.random() < 0.3) {
+      t = t.replace(/\byou're\b/gi, "yer");
+      t = t.replace(/\byour\b/gi, "yer");
+      t = t.replace(/\byou\b/gi, "ya");
+      t = t.replace(/\bmy\b/gi, "me");
+    }
+    // Clip some -ing endings
+    t = t.replace(/\b(\w+)ing\b/g, (_, w) => (Math.random() < 0.25 ? `${w}in’` : `${w}ing`));
+    return t;
   }
-  function setName(n){ const v=cleanName(n); if(v){ try{localStorage.setItem(LS.name,v);}catch(_){}} }
-  function getStoredName(){ try{ return cleanName(localStorage.getItem(LS.name)); }catch(_){ return null; } }
-  (function seedFromQuery(){
-    try{
-      const qs=new URLSearchParams(location.search);
-      const qn = qs.get('name')||qs.get('user')||qs.get('n');
-      if(qn) setName(qn);
-    }catch(_){}
-  })();
-  function learnNameFromMessage(text){
-    const t=String(text||'').trim();
-    const pats=[
-      /\bmy\s+name\s+is\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bi\s*am\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bi['’]?m\s+([a-z][a-z .'-]{0,30})$/i,
-      /\bim\s+([a-z][a-z .'-]{0,30})$/i
+
+  // Post-process any AI text per man
+  function postProcess(man, text){
+    if (man === "silas") return yorkshirePass(text);
+    return text;
+  }
+
+  // Choose a stock line given context
+  // opts: { mode: "soft"|"rx", lastUser: string, recentUsed: string[] }
+  function getStockLine(man, opts = {}){
+    const mode = (opts.mode || "soft").toLowerCase();
+    const recent = Array.isArray(opts.recentUsed) ? opts.recentUsed : [];
+    const soft = SOFT[man] || SOFT.blade;
+
+    // Weighted buckets (soft)
+    const softBuckets = [
+      ["open", 2],
+      ["flirt", 4],
+      ["validate", 2],
+      ["filler", 1]
     ];
-    for(const rx of pats){ const m=t.match(rx); if(m){ setName(m[1]); return cleanName(m[1]); } }
-    return null;
-  }
 
-  /* ---------- per-man memory ---------- */
-  function loadAll(){ try{return JSON.parse(localStorage.getItem(LS.memPM)||'{}')}catch(_){return{}} }
-  function saveAll(o){ try{localStorage.setItem(LS.memPM,JSON.stringify(o))}catch(_){ } }
-  function getMemFor(man){
-    const all=loadAll();
-    const init={job:null,likes:[],nemesis:[],mood:null,misc:[],lastSeenISO:null};
-    return { ...(all[man]||init) };
-  }
-  function saveMemFor(man,mem){
-    const all=loadAll();
-    all[man]={
-      job: mem.job||null,
-      likes: Array.isArray(mem.likes)?mem.likes.slice(0,12):[],
-      nemesis: Array.isArray(mem.nemesis)?mem.nemesis.slice(0,8):[],
-      mood: mem.mood||null,
-      misc: Array.isArray(mem.misc)?mem.misc.slice(0,12):[],
-      lastSeenISO: new Date().toISOString()
-    };
-    saveAll(all);
-  }
-  function updateMemFor(man,text){
-    const msg=String(text||'');
-    const mem=getMemFor(man);
-    const nem=msg.match(/\b(becky|jessica|karen|manager|ex)\b/i);
-    if(nem){ const who = nem[1][0].toUpperCase()+nem[1].slice(1).toLowerCase(); if(!mem.nemesis.includes(who)) mem.nemesis.unshift(who); }
-    const job=msg.match(/\b(i\swork\s(at|in|for)\s([^.,!?]+)|my\sjob\s(is|:)\s([^.,!?]+))\b/i);
-    if(job){ const j=(job[3]||job[5]||'').trim(); if(j) mem.job=j.slice(0,60); }
-    const like=msg.match(/\b(i\s(like|love|want)\s([^.,!?]+))\b/i);
-    if(like){ const thing=like[3].trim().toLowerCase(); if(thing && !mem.likes.includes(thing)) mem.likes.unshift(thing); }
-    const mood=msg.match(/\b(i\sfeel\s([^.,!?]+)|i['’]?m\s(feeling|so)\s([^.,!?]+))\b/i);
-    if(mood){ mem.mood=(mood[2]||mood[4]||'').trim().toLowerCase().slice(0,40); }
-    if(msg.length<=120 && !/http/i.test(msg)){
-      const clean=msg.replace(/\s+/g,' ').trim();
-      if(clean && !mem.misc.includes(clean)){ mem.misc.unshift(clean); if(mem.misc.length>12) mem.misc.length=12; }
+    function weightedPick(buckets, bank){
+      const items = [];
+      for (const [k, w] of buckets) {
+        const list = bank[k] || [];
+        for (let i=0;i<w;i++) items.push([k, list]);
+      }
+      const [k, list] = items[Math.floor(Math.random()*items.length)];
+      return pick(list, recent);
     }
-    saveMemFor(man,mem);
-    return mem;
-  }
 
-  /* ---------- backgrounds ---------- */
-  const BG_BY_MAN={
-    alexander:'/images/bg_alexander_boardroom.jpg',
-    dylan:'/images/dylan-garage.jpg',
-    grayson:'/images/grayson-bg.jpg',
-    silas:'/images/bg_silas_stage.jpg',
-    blade:'/images/blade-woods.jpg',
-    jesse:'/images/jesse-bull-night.jpg'
-  };
-
-  /* ---------- personas + staged intros ---------- */
-  const PETS=['love','darlin’','pretty thing','trouble','star','beautiful','gorgeous','sweetheart'];
-  const pet=()=>PETS[Math.floor(Math.random()*PETS.length)];
-
-  // staged banks: new (1st), early (2–3), familiar (4+), hot (spice add-on)
-  const BANKS={
-    jesse:{
-      new:['Hey there, sweetie.','Look who’s here.','I knew I’d see you tonight.','Hey, trouble.'],
-      early:['You came back. Miss me?','C’mon in—boots on or off?','You look like you need a good time.'],
-      familiar:['Hey baby, how was your day?','There you are—get over here.','Back for seconds? Thought so.'],
-      hot:['Well, {who2}, you came back to ride me again, huh?','I was just thinking how good you’d look in my lap with that hat on.','Hop on. Let’s see if you can hold on this time.']
-    },
-    alexander:{
-      new:['Good evening.','There you are.','Right on time.'],
-      early:['Sit. Breathe. I’ve got you now.','You’re late. Make it up to me.','Tell me one thing you want tonight.'],
-      familiar:['How was work?','Lock the door behind you.','Drink first or do I bend you first?'],
-      hot:['My boardroom’s too quiet without you.','Careful—walk in here and you’ll end up on my desk again.']
-    },
-    silas:{
-      new:['Hey, pretty thing.','You found me.','My muse is here.'],
-      early:['Come closer. Let me tune the night to you.','You want soft harmony or a hard chorus?'],
-      familiar:['Tell me the lyric of your day.','You want me in your ear or on your skin first?'],
-      hot:['All I need is my guitar, my mic, and you straddling me.']
-    },
-    dylan:{
-      new:['Hey.','You look like trouble.','Helmet on the hook; eyes on me.'],
-      early:['Backpack or front seat for this ride?','You want smooth or wild tonight?'],
-      familiar:['How was your day, babe?','Night ride after we unwind?'],
-      hot:['Hop on, hold tight. I’ll take you places you’ve never been.']
-    },
-    grayson:{
-      new:['Good girl. Say hello.','Hands behind your back.','Ask nicely.'],
-      early:['Follow my lead tonight. Do you understand?','You’ll earn every touch.'],
-      familiar:['Color check.','Protocol or play? Choose.'],
-      hot:["You beg, or you don’t get off."]
-    },
-    blade:{
-      new:['Easy steps.','I like the way you wander into the dark.','Hush. Listen.'],
-      early:['I can wait all night. Makes the catching sweeter.','You feel me behind you yet?'],
-      familiar:['You know I’ll catch you.','Turn around slowly.'],
-      hot:['Every step deeper into the woods… I’m right behind you.']
+    if (mode === "soft") {
+      return weightedPick(softBuckets, soft);
     }
+
+    // R/X mode: mix soft flirt + spice, biased toward spice
+    const spice = SPICE[man] || SPICE.blade;
+    const rxBuckets = [
+      ["flirt", 3], // from soft
+      ["command", 5],
+      ["praise", 3],
+      ["tease", 4]
+    ];
+    const result =
+      Math.random() < 0.2
+        ? pick(COMMONS, recent) // sometimes a tiny common
+        : (function() {
+            const pool = [];
+            // map rx bucket label to actual arrays
+            for (const [k, w] of rxBuckets){
+              const list = (k === "flirt" ? soft.flirt : spice[k]) || [];
+              for (let i=0;i<w;i++) pool.push(list);
+            }
+            return pick(pool[Math.floor(Math.random()*pool.length)] || [], recent);
+          })();
+
+    return result;
+  }
+
+  // Minimal API
+  window.BnBBrain = {
+    getStockLine,
+    postProcess,
+    commons: () => COMMONS.slice(),
+    banks: { SOFT, SPICE } // exposed for quick tuning
   };
-
-  /* ---------- everyday talk pools (per man) ---------- */
-  const SMALL_TALK={
-    jesse:[
-      "What’s got you smiling today?",
-      "You eat yet or am I cooking?",
-      "How’s that little war at work going—any Becky updates?",
-      "You want quiet tonight or a little harmless trouble?",
-      "Tell me something sweet you want me to remember."
-    ],
-    alexander:[
-      "How was your day—wins, losses, gossip?",
-      "Do you need me decisive or indulgent tonight?",
-      "One thing you want handled this week. Say it.",
-      "What are you drinking? I’ll match it.",
-      "Tell me the highlight; I’ll take care of the rest."
-    ],
-    silas:[
-      "What track has you in your feelings today?",
-      "Want me to hum you calm or wind you up?",
-      "Tell me one line from your day I should write down.",
-      "What do you want to hear while I hold you?",
-      "Soft lighting, slow song, you in my lap—sound right?"
-    ],
-    dylan:[
-      "Long day or light day—what’s the vibe?",
-      "We celebrating anything or just escaping?",
-      "Backpack or front—where do you want me?",
-      "Want a burger after or straight to the shower?",
-      "Tell me what had your pulse up today."
-    ],
-    grayson:[
-      "Report: mood, stress, need.",
-      "Do you want comfort or correction?",
-      "Three deep breaths. Now speak.",
-      "What color are you starting at?",
-      "Tell me one boundary and one craving."
-    ],
-    blade:[
-      "Did the day chase you, or did you chase it?",
-      "Quiet woods or a run through the dark?",
-      "What would you leave behind if you could?",
-      "Tell me what you fear and I’ll hold it.",
-      "Do you want me close or do you want me hunting?"
-    ]
-  };
-
-  const PERSONA_NOTES={
-    jesse:"Rodeo cowboy; sweet but naughty. Warm tease, Southern charm. Casual swearing OK.",
-    alexander:"30, alpha businessman. Controlled, confident, indulgent. Dom undertone, polished.",
-    silas:"25, rocker. Smooth, romantic, erotic. Musical metaphors. Velvet, not cheesy.",
-    dylan:"Ninja rider. Flirty adrenaline with safety cues. Helmet canon. Confident 'babe' energy.",
-    grayson:"Red Room dom. Protocol, consent, control. Firm but attentive. Uses 'good girl' sparingly.",
-    blade:"Ghostface woods fantasy. Stalker/consensual chase vibe; suspenseful, not gore. Predatory romance."
-  };
-
-  function getVisits(man){
-    try{ return parseInt(localStorage.getItem(LS.visits(man))||'0',10); }catch(_){ return 0; }
-  }
-  function bumpVisits(man){
-    try{ const v=getVisits(man)+1; localStorage.setItem(LS.visits(man),String(v)); }catch(_){}
-  }
-  function pickNonRepeat(list, man, tier){
-    if(!list?.length) return '';
-    let last=-1;
-    try{ last=parseInt(sessionStorage.getItem(LS.lastIdx(man,tier))||'-1',10);}catch(_){}
-    let idx=Math.floor(Math.random()*list.length);
-    if(list.length>1 && idx===last) idx=(idx+1)%list.length;
-    try{ sessionStorage.setItem(LS.lastIdx(man,tier),String(idx)); }catch(_){}
-    return list[idx];
-  }
-
-  function openerFor(man){
-    const banks=BANKS[man]||BANKS.alexander;
-    const visits=getVisits(man);
-    let tier='new';
-    if(visits>=4) tier='familiar';
-    else if(visits>=2) tier='early';
-
-    let line = pickNonRepeat(banks[tier],man,tier) || pickNonRepeat(banks.new,man,'new');
-    if(tier==='familiar' && Math.random()<0.25){
-      const add = pickNonRepeat(banks.hot,man,'hot');
-      if(add) line = `${line} ${add}`;
-    }
-    const nm = (isPaid() && tier==='familiar') ? (getStoredName()||pet()) : pet();
-    return line.replaceAll('{who}', nm).replaceAll('{who2}', nm);
-  }
-
-  /* ---------- UI apply ---------- */
-  function applyChatUI(){
-    const isChat = /chat\.html$/i.test(location.pathname) || document.querySelector('[data-chat-root]');
-    if(!isChat) return;
-
-    const params=new URLSearchParams(location.search);
-    const man=(params.get('man')||'alexander').toLowerCase();
-
-    const bg=BG_BY_MAN[man]||BG_BY_MAN.alexander;
-    document.documentElement.style.setProperty('--room-bg',`url(${bg})`);
-
-    const openerEl=document.querySelector('[data-chat-opener]');
-    if(openerEl){ openerEl.textContent = openerFor(man); }
-
-    const firstKey=LS.first(man);
-    let isFirst=true;
-    try{ isFirst = !sessionStorage.getItem(firstKey);}catch(_){}
-    if(isFirst){ bumpVisits(man); try{sessionStorage.setItem(firstKey,'1')}catch(_){} }
-
-    const input=document.getElementById('chat-input');
-    const btn=document.getElementById('chat-send');
-    if(input && btn){
-      input.addEventListener('keydown', e=>{
-        if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); btn.click(); }
-      });
-    }
-  }
-
-  /* ---------- exported API ---------- */
-  window.BB = {
-    setName, learnNameFromMessage, isPaid,
-    getMemFor, saveMemFor, updateMemFor,
-    getEverydayPool(man){ return SMALL_TALK[man] || SMALL_TALK.alexander; },
-    getPersonaNotes(man){ return PERSONA_NOTES[man] || PERSONA_NOTES.alexander; },
-    buildChatPayload({ room, text, history, dirty }){
-      const man=(room||'jesse').toLowerCase();
-      learnNameFromMessage(text);
-      const mem=updateMemFor(man,text);
-      const payloadMem={ ...mem, name: getStoredName() || null };
-      const visits=getVisits(man);
-
-      return {
-        room: man,
-        userText: text,
-        history: Array.isArray(history)?history.slice(-6):[],
-        dirty: dirty || 'high',
-        paid: !!isPaid(),
-        memory: payloadMem,
-        chatStyle: {
-          personaNotes: PERSONA_NOTES[man],
-          everydayPool: SMALL_TALK[man],
-          visits
-        }
-      };
-    },
-    applyChatUI
-  };
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', applyChatUI);
-  } else {
-    applyChatUI();
-  }
 })();

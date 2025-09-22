@@ -53,7 +53,7 @@ h1{
 /* Image area: lock the size so layout never shifts */
 .card .thumb{
   position:relative;
-  aspect-ratio: 3 / 4;            /* <- keeps every card the same shape */
+  aspect-ratio: 3 / 4;            /* keeps every card the same shape */
   background:#0d1016;
   overflow:hidden;
 }
@@ -62,7 +62,7 @@ h1{
   height:100%;
   object-fit:cover;
   display:block;
-  transform:translateZ(0);        /* crisp rendering, prevents jitter */
+  transform:translateZ(0);        /* crisp render, prevents jitter */
 }
 
 /* Footer row */

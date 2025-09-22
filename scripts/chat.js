@@ -1,8 +1,8 @@
-/* Blossom & Blade — chat runtime (consent-aware + lead nudges)
-   - Persists consent flag to pick mode (soft|rx).
-   - Long-memory window + autosummary.
-   - Persona stock-line blend (~18% chance).
-   - NEW: Detects “lead me” signals and nudges the model to take control.
+/* Blossom & Blade — chat runtime (consent-aware + lead nudge + POV switch + robust portrait fallback)
+   - Consent flag -> mode (soft|rx)
+   - Lead detection nudges model to take control
+   - POV: when she agrees to roleplay, switch to first-person "I"
+   - Portrait fallback chain: chat.webp -> card-on.webp -> /images/logo.jpg
 */
 
 (() => {
@@ -10,7 +10,7 @@
   const man = (qs.get("man") || "").toLowerCase();
   const sub = (qs.get("sub") || "day").toLowerCase();
 
-  // Consent: URL can force soft (?mode=soft). Otherwise choose by flag.
+  // Consent: URL can force soft (?mode=soft)
   const urlMode = (qs.get("mode") || "").toLowerCase();
   const consent = (localStorage.getItem("bnb.consent") === "1");
   const mode = urlMode === "soft" ? "soft" : (consent ? "rx" : "soft");
@@ -34,7 +34,7 @@
   // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Title/portrait
+  // Title
   if (!VALID.includes(man)) {
     document.title = "Blossom & Blade — Chat";
     el.title.textContent = "— pick a character";
@@ -42,14 +42,34 @@
     document.title = `Blossom & Blade — ${pretty[man]}`;
     el.title.textContent = `— ${pretty[man]}`;
   }
-  const placeholder = "/images/placeholder.webp";
-  function resolvePortrait(m){ return `/images/characters/${m}/${m}-chat.webp`; }
+
+  // Portrait with robust fallbacks
+  const FALLBACK_LOGO = "/images/logo.jpg"; // exists in repo
+  function imgPathChat(m){ return `/images/characters/${m}/${m}-chat.webp`; }
+  function imgPathCard(m){ return `/images/characters/${m}/${m}-card-on.webp`; }
   function setPortrait(){
-    const src = VALID.includes(man) ? resolvePortrait(man) : placeholder;
-    el.portrait.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
+    const img = el.portrait;
+    if (!img) return;
+    img.dataset.stage = "chat"; // track fallback stage
+    img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
     el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
-    el.portrait.src = src;
-    el.portrait.onerror = () => { el.portrait.src = placeholder; };
+    img.src = VALID.includes(man) ? imgPathChat(man) : FALLBACK_LOGO;
+    img.onerror = () => {
+      // move through stages: chat -> card -> logo
+      switch (img.dataset.stage) {
+        case "chat":
+          img.dataset.stage = "card";
+          img.src = imgPathCard(man);
+          break;
+        case "card":
+          img.dataset.stage = "logo";
+          img.src = FALLBACK_LOGO;
+          break;
+        default:
+          // stop looping
+          img.onerror = null;
+      }
+    };
   }
   setPortrait();
 
@@ -59,6 +79,7 @@
   const hKey = (m) => `bnb.${m}.m`;
   const sKey = (m) => `bnb.${m}.summary`;
   const pKey = (m) => `bnb.${m}.profile`;
+  const povKey = (m) => `bnb.${m}.pov`; // 'first' if roleplay accepted
   const MAX_TURNS = 400;
   const WINDOW_FOR_PROMPT = 28;
   const AUTOSUMMARY_EVERY = 25;
@@ -76,6 +97,7 @@
   const history = loadJson(hKey(man), []);
   let summary = loadJson(sKey(man), "");
   let profile = loadJson(pKey(man), {});
+  let pov = loadJson(povKey(man), ""); // '' | 'first'
 
   function loadJson(k, fallback){
     try{ const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : fallback; }catch{ return fallback; }
@@ -83,7 +105,7 @@
   function saveJson(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
   function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
-  // Render
+  // Render helpers
   function addBubble(role, text){
     const tpl = role === "user" ? el.tplUser : el.tplAi;
     const node = tpl.content.firstElementChild.cloneNode(true);
@@ -106,11 +128,12 @@
     renderAll();
   }
 
-  // Lead-detection heuristics (simple + safe)
+  // Heuristics
   const LEAD_REGEX = /\b(take|lead|command|control|dominat|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir)\b/i;
+  const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)? (then|yes)?|yes(,? please)?|i want that|do it)\b/i;
 
   el.form.addEventListener("submit", onSend);
-  window.addEventListener("bnb:consent", () => { /* next turn will pick rx automatically */ });
+  window.addEventListener("bnb:consent", () => { /* next turn picks rx automatically */ });
 
   async function onSend(e){
     e.preventDefault();
@@ -125,6 +148,12 @@
       return;
     }
 
+    // If she accepts storytelling/roleplay, lock first-person POV
+    if (ROLEPLAY_ACCEPT.test(text)) {
+      pov = "first";
+      saveJson(povKey(man), pov);
+    }
+
     pushAndRender("user", text);
     el.input.value = "";
 
@@ -135,27 +164,29 @@
         profile = loadJson(pKey(man), {});
       }
 
-      // Re-check consent in case it flipped while chatting
+      // re-check consent
       const rx = (localStorage.getItem("bnb.consent") === "1");
       const activeMode = urlMode === "soft" ? "soft" : (rx ? "rx" : "soft");
 
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
-      // Nudge: if she signals desire to be led, tell the model
       const lead = LEAD_REGEX.test(text);
       const topic = (text.match(/\b(cuffs?|mask|rope|kneel)\b/i) || [])[0] || "";
 
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ man, userId, mode: activeMode, history: recent, memory, nudge:{ lead, topic } })
+        body: JSON.stringify({
+          man, userId, mode: activeMode, history: recent, memory,
+          nudge:{ lead, topic, pov: pov === "first" ? "first" : undefined }
+        })
       });
 
       const data = await res.json();
       let reply = sanitizeReply(data.reply || "");
 
-      // Persona stock line blend (~18%)
+      // Blend persona stock line (~18%)
       if (window.BnBBrain && Math.random() < 0.18){
         const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
         const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
@@ -205,9 +236,7 @@
   function sanitizeReply(t){
     t = String(t || "");
     t = t.replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
-    // Keep it tight: 1–3 lines, and favor statements > questions
-    let lines = t.split("\n").map(s => s.trim()).filter(Boolean);
-    if (lines.length > 3) lines = lines.slice(0,3);
+    const lines = t.split("\n").map(s => s.trim()).filter(Boolean).slice(0,3);
     return lines.join("\n").trim();
   }
 

@@ -1,16 +1,16 @@
-/* Blossom & Blade — chat runtime (long-memory edition)
-   - Reads ?man=&sub=
-   - Stable userId (per browser) so we can attribute memories
-   - Local long memory: profile + rolling summary + last turns
-   - Periodic autosummary via /api/brain
-   - Sends to /api/chat { man, history, mode, memory, userId }
-   - Strict portrait mapping with fallback
+/* Blossom & Blade — chat runtime (long-memory + persona stock-line blend)
+   - Keeps previous long-memory behavior (userId, rolling summary/profile, banned words).
+   - Reads ?man=&sub=&mode= (mode: "soft" or "rx").
+   - Calls /api/chat with recent turns + memory.
+   - Lightly blends in persona stock lines from BnBBrain (~18% chance).
+   - Silas Yorkshire pass post-processing.
 */
 
 (() => {
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
   const sub = (qs.get("sub") || "day").toLowerCase();
+  const mode = (qs.get("mode") || "soft").toLowerCase(); // future: link to consent.js
 
   const el = {
     title: document.getElementById("roomTitle"),
@@ -24,36 +24,14 @@
     tplAi: document.getElementById("tpl-assistant"),
   };
 
-  // Valid roster
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
-
-  // First lines
   const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
   // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Storage helpers
-  const uidKey = "bnb.userId";
-  const userId = getOrCreateUserId();
-  const hKey = (m) => `bnb.${m}.m`;           // raw turns
-  const sKey = (m) => `bnb.${m}.summary`;     // rolling summary text
-  const pKey = (m) => `bnb.${m}.profile`;     // structured profile (prefs, facts)
-  const MAX_TURNS = 400;                      // keep a long trail
-  const WINDOW_FOR_PROMPT = 28;               // last N sent to model; rest summarized
-  const AUTOSUMMARY_EVERY = 25;               // summarize cadence
-
-  function getOrCreateUserId(){
-    let id = localStorage.getItem(uidKey);
-    if (!id){
-      id = crypto?.randomUUID?.() || "u_" + Math.random().toString(36).slice(2) + Date.now();
-      try{ localStorage.setItem(uidKey, id); }catch{}
-    }
-    return id;
-  }
-
-  // UI chrome
+  // Set title
   if (!VALID.includes(man)) {
     document.title = "Blossom & Blade — Chat";
     el.title.textContent = "— pick a character";
@@ -62,7 +40,7 @@
     el.title.textContent = `— ${pretty[man]}`;
   }
 
-  // Portrait mapping
+  // Portrait handling
   const placeholder = "/images/placeholder.webp";
   function resolvePortrait(m){ return `/images/characters/${m}/${m}-chat.webp`; }
   function setPortrait(){
@@ -74,27 +52,37 @@
   }
   setPortrait();
 
-  // Load memory + history
+  // Storage keys
+  const uidKey = "bnb.userId";
+  const userId = getOrCreateUserId();
+  const hKey = (m) => `bnb.${m}.m`;
+  const sKey = (m) => `bnb.${m}.summary`;
+  const pKey = (m) => `bnb.${m}.profile`;
+  const MAX_TURNS = 400;
+  const WINDOW_FOR_PROMPT = 28;
+  const AUTOSUMMARY_EVERY = 25;
+
+  function getOrCreateUserId(){
+    let id = localStorage.getItem(uidKey);
+    if (!id){
+      id = crypto?.randomUUID?.() || "u_" + Math.random().toString(36).slice(2) + Date.now();
+      try{ localStorage.setItem(uidKey, id); }catch{}
+    }
+    return id;
+  }
+
+  // Load memory/history
   const history = loadJson(hKey(man), []);
-  const summary = loadJson(sKey(man), ""); // may be string or object; normalize to string
-  const profile = loadJson(pKey(man), {});
+  let summary = loadJson(sKey(man), "");
+  let profile = loadJson(pKey(man), {});
 
   function loadJson(k, fallback){
-    try{
-      const raw = localStorage.getItem(k);
-      if (raw == null) return fallback;
-      const val = JSON.parse(raw);
-      return val;
-    }catch{ return fallback; }
+    try{ const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : fallback; }catch{ return fallback; }
   }
-  function saveJson(k, v){
-    try{ localStorage.setItem(k, JSON.stringify(v)); }catch{}
-  }
-  function trimHistory(){
-    if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
-  }
+  function saveJson(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+  function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
-  // Render
+  // Render helpers
   function addBubble(role, text){
     const tpl = role === "user" ? el.tplUser : el.tplAi;
     const node = tpl.content.firstElementChild.cloneNode(true);
@@ -107,7 +95,7 @@
     for (const m of history) addBubble(m.role, m.content);
   }
 
-  // Seed if empty
+  // Seed first line
   if (VALID.includes(man) && history.length === 0){
     const first = firstLines[Math.floor(Math.random()*firstLines.length)];
     history.push({role:"assistant", content:first, t:Date.now()});
@@ -137,40 +125,51 @@
     el.input.value = "";
 
     try{
-      // Decide whether to autosummarize before calling the model
       if (history.length % AUTOSUMMARY_EVERY === 0 && history.length >= WINDOW_FOR_PROMPT + 8){
         await doAutosummary();
+        // refresh memory from storage
+        summary = loadJson(sKey(man), "");
+        profile = loadJson(pKey(man), {});
       }
 
-      // Prepare window for the model: summary + profile + last N turns
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = {
         summary: typeof summary === "string" ? summary : (summary?.text || ""),
-        profile,
+        profile
       };
 
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-          man, userId,
-          mode: (qs.get("mode") || "soft"),
-          history: recent,
-          memory
-        })
+        body: JSON.stringify({ man, userId, mode, history: recent, memory })
       });
 
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("text/event-stream")){
-        await streamInto(res, memory);
-      } else {
-        const data = await res.json();
-        const reply = sanitizeReply(data.reply || "");
-        pushAndRender("assistant", reply);
+      const data = await res.json();
+      let reply = sanitizeReply(data.reply || "");
+
+      // Light blend: ~18% chance to insert a stock persona line.
+      if (window.BnBBrain && Math.random() < 0.18){
+        const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
+        const stock = window.BnBBrain.getStockLine(man, { mode, lastUser: text, recentUsed });
+        if (stock){
+          // 50/50: prepend or append; keep ≤3 lines total
+          const joiner = Math.random() < 0.5 ? `${stock}\n${reply}` : `${reply}\n${stock}`;
+          reply = sanitizeReply(joiner);
+        }
       }
+
+      // Silas accent pass
+      if (window.BnBBrain) reply = window.BnBBrain.postProcess(man, reply);
+
+      pushAndRender("assistant", reply);
     }catch(err){
       console.error(err);
-      pushAndRender("assistant", "Network hiccup. Say that again and I’ll catch it.");
+      // Fallback: persona line so she still gets a response
+      let fallback = "Network hiccup. Say that again and I’ll catch it.";
+      if (window.BnBBrain){
+        fallback = window.BnBBrain.getStockLine(man, { mode }) || fallback;
+      }
+      pushAndRender("assistant", fallback);
     }
   }
 
@@ -181,33 +180,6 @@
     addBubble(role, content);
   }
 
-  async function streamInto(res){
-    const reader = res.body?.getReader();
-    if (!reader) throw new Error("No reader");
-    let buf = "", live = el.tplAi.content.firstElementChild.cloneNode(true);
-    el.list.appendChild(live);
-    while (true){
-      const {value, done} = await reader.read();
-      if (done) break;
-      buf += new TextDecoder().decode(value, {stream:true});
-      const chunks = buf.split("\n\n");
-      for (let i = 0; i < chunks.length - 1; i++){
-        const line = chunks[i].replace(/^data:\s?/, "");
-        if (line === "[DONE]") continue;
-        const payload = tryJson(line);
-        live.textContent += sanitizeReply((payload && payload.delta) || "");
-        el.list.scrollTop = el.list.scrollHeight;
-      }
-      buf = chunks[chunks.length - 1];
-    }
-    const final = live.textContent.trim();
-    if (final){
-      history.push({role:"assistant", content:final, t:Date.now()});
-      trimHistory();
-      saveJson(hKey(man), history);
-    }
-  }
-
   async function doAutosummary(){
     try{
       const resp = await fetch("/api/brain", {
@@ -215,7 +187,7 @@
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
           man, userId,
-          recent: history.slice(-(WINDOW_FOR_PROMPT + 40)), // give brain more to summarize
+          recent: history.slice(-(WINDOW_FOR_PROMPT + 40)),
           previousSummary: (typeof summary === "string" ? summary : summary?.text || ""),
           previousProfile: profile
         })
@@ -227,12 +199,11 @@
   }
 
   function sanitizeReply(t){
-    t = (t || "").replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
-    // keep it punchy
-    const lines = t.split("\n").filter(Boolean).slice(0,3);
+    t = String(t || "");
+    t = t.replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
+    const lines = t.split("\n").map(s => s.trim()).filter(Boolean).slice(0,3);
     return lines.join("\n").trim();
   }
-  function tryJson(s){ try{return JSON.parse(s);}catch{return null;} }
 
   // QoL
   setTimeout(() => { el.input?.focus?.(); }, 60);

@@ -1,16 +1,17 @@
-/* Blossom & Blade — chat runtime (long-memory + persona stock-line blend)
-   - Keeps previous long-memory behavior (userId, rolling summary/profile, banned words).
-   - Reads ?man=&sub=&mode= (mode: "soft" or "rx").
-   - Calls /api/chat with recent turns + memory.
-   - Lightly blends in persona stock lines from BnBBrain (~18% chance).
-   - Silas Yorkshire pass post-processing.
+/* Blossom & Blade — chat runtime (consent-aware)
+   - Reads one-time consent flag; auto-sets mode to "rx" when present.
+   - Keeps long-memory + persona stock-line blend.
 */
 
 (() => {
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
   const sub = (qs.get("sub") || "day").toLowerCase();
-  const mode = (qs.get("mode") || "soft").toLowerCase(); // future: link to consent.js
+
+  // Consent: URL can force soft (e.g., ?mode=soft). Otherwise pick by flag.
+  const urlMode = (qs.get("mode") || "").toLowerCase();
+  const consent = (localStorage.getItem("bnb.consent") === "1");
+  const mode = urlMode === "soft" ? "soft" : (consent ? "rx" : "soft");
 
   const el = {
     title: document.getElementById("roomTitle"),
@@ -28,10 +29,9 @@
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
   const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
-  // Disallowed themes (hard refuse)
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
-  // Set title
+  // Title
   if (!VALID.includes(man)) {
     document.title = "Blossom & Blade — Chat";
     el.title.textContent = "— pick a character";
@@ -40,7 +40,7 @@
     el.title.textContent = `— ${pretty[man]}`;
   }
 
-  // Portrait handling
+  // Portrait
   const placeholder = "/images/placeholder.webp";
   function resolvePortrait(m){ return `/images/characters/${m}/${m}-chat.webp`; }
   function setPortrait(){
@@ -108,6 +108,11 @@
   // Composer
   el.form.addEventListener("submit", onSend);
 
+  // Also react if consent flips while page is open
+  window.addEventListener("bnb:consent", () => {
+    // no UI change needed; next reply will use rx automatically (mode recalc below)
+  });
+
   async function onSend(e){
     e.preventDefault();
     const text = (el.input.value || "").trim();
@@ -127,44 +132,40 @@
     try{
       if (history.length % AUTOSUMMARY_EVERY === 0 && history.length >= WINDOW_FOR_PROMPT + 8){
         await doAutosummary();
-        // refresh memory from storage
         summary = loadJson(sKey(man), "");
         profile = loadJson(pKey(man), {});
       }
 
+      // re-check consent in case it flipped
+      const rx = (localStorage.getItem("bnb.consent") === "1");
+      const activeMode = urlMode === "soft" ? "soft" : (rx ? "rx" : "soft");
+
       const recent = history.slice(-WINDOW_FOR_PROMPT);
-      const memory = {
-        summary: typeof summary === "string" ? summary : (summary?.text || ""),
-        profile
-      };
+      const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
       const res = await fetch("/api/chat", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ man, userId, mode, history: recent, memory })
+        body: JSON.stringify({ man, userId, mode: activeMode, history: recent, memory })
       });
 
       const data = await res.json();
       let reply = sanitizeReply(data.reply || "");
 
-      // Light blend: ~18% chance to insert a stock persona line.
+      // Blend persona stock lines occasionally
       if (window.BnBBrain && Math.random() < 0.18){
         const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
-        const stock = window.BnBBrain.getStockLine(man, { mode, lastUser: text, recentUsed });
+        const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
         if (stock){
-          // 50/50: prepend or append; keep ≤3 lines total
           const joiner = Math.random() < 0.5 ? `${stock}\n${reply}` : `${reply}\n${stock}`;
           reply = sanitizeReply(joiner);
         }
       }
-
-      // Silas accent pass
       if (window.BnBBrain) reply = window.BnBBrain.postProcess(man, reply);
 
       pushAndRender("assistant", reply);
     }catch(err){
       console.error(err);
-      // Fallback: persona line so she still gets a response
       let fallback = "Network hiccup. Say that again and I’ll catch it.";
       if (window.BnBBrain){
         fallback = window.BnBBrain.getStockLine(man, { mode }) || fallback;
@@ -205,6 +206,5 @@
     return lines.join("\n").trim();
   }
 
-  // QoL
   setTimeout(() => { el.input?.focus?.(); }, 60);
 })();

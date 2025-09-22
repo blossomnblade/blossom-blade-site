@@ -1,5 +1,5 @@
-// Chat endpoint — persona-safe, memory-aware, LEAD cadence
-// Input: { man, userId, history, mode, memory, nudge? {lead?:boolean, topic?:string} }
+// Chat endpoint — persona-safe, memory-aware, lead cadence + POV switch
+// Input: { man, userId, history, mode, memory, nudge? {lead?:boolean, topic?:string, pov?:'first'} }
 // Output: { reply }
 //
 // Requires process.env.OPENAI_API_KEY
@@ -15,11 +15,8 @@ const ROSTER = {
 
 const FIRST_LINES = ["hey you.","look who’s here.","aww, you came to see me."];
 
-// Allowed tiny “commons” — the model may reuse sparingly.
-const COMMONS = [
-  "hey", "hey you.", "hey baby.", "hey girl.",
-  "why do you ask?", "oh baby.", "how was your day?"
-];
+// Tiny “commons” the model may reuse sparingly
+const COMMONS = ["hey","hey you.","hey baby.","hey girl.","why do you ask?","oh baby.","how was your day?"];
 
 export default async function handler(req, res){
   if (req.method !== "POST") return res.status(405).end();
@@ -59,24 +56,21 @@ function buildSystem(man, mode, nudge){
     ? "PG-13 flirt only. Save explicit detail for paid consent (R/X)."
     : "R/X mode: bolder heat allowed but still ethical and fully consensual. No illegal/taboo content.";
 
-  const leadHint = nudge?.lead ? "Lead-hint: SHE just signaled desire/consent to be led. Take control now with assertive statements and one short check-in question at most." : "";
+  const leadHint = nudge?.lead ? "LEAD HINT: She signaled desire to be led. Take control now—assertive statements; at most one short check-in question." : "";
+  const povHint  = nudge?.pov === "first" ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he' or 'the man'—it is YOU doing it." : "";
 
-  // Cadence Coach:
-  //  - Mirror one detail she said, then lead with assertive direction.
-  //  - Ratio target: ~2 statements for every 1 short question.
-  //  - If she directly asks a question, answer it, then add one leading line.
-  //  - Every 3–5 turns, optionally surface ONE real callback from memory/profile (don’t invent).
-  //  - Keep 1–3 lines total. No bracketed actions.
+  // Cadence + Bonding coach
   const coach = [
     "STYLE: Flirty, clever, supportive. Validate one specific detail she said, THEN lead.",
-    "CADENCE: Aim ~2:1 statements to questions. Max ONE question per reply.",
-    "LEAD SWITCH: When she expresses desire, fantasizes, or asks to be taken/commanded, escalate: give calm, decisive direction.",
-    "CONSENT: If pushing to lead, include one three-word consent check like 'that okay?' or 'you want that?'",
-    "MEMORY: Optionally reference ONE known detail from memory/profile every 3–5 turns. Never invent.",
+    "CADENCE: Aim ~2 statements for every 1 question. Max ONE question per reply.",
+    "ANSWER THEN DIRECT: If she asks a question, answer it, then add one decisive directive.",
+    "CONSENT: When escalating, include a tiny consent check: 'that okay?' or 'you want that?'",
+    "MEMORY: Optionally reference ONE real detail from known memory/profile every 3–5 turns. Never invent.",
     "SAFETY: Hard refuse: rape, incest, bestiality, trafficking, minors/teen, scat. No medical/therapy claims. No illegal activity.",
     `PERSONA: ${persona}`,
     spice,
-    leadHint
+    leadHint,
+    povHint
   ].join(" ");
 
   return coach;
@@ -89,9 +83,9 @@ async function callOpenAI(key, messages){
     body: JSON.stringify({
       model: "gpt-4o-mini",
       temperature: 0.6,
-      max_tokens: 150,           // room for decisive 1–3 lines
+      max_tokens: 150,           // decisive 1–3 lines
       frequency_penalty: 0.4,    // discourage repeats
-      presence_penalty: 0.25,    // promote freshness
+      presence_penalty: 0.25,    // encourage novelty
       messages
     })
   });

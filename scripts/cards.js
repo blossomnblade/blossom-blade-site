@@ -1,90 +1,267 @@
-/* Blossom & Blade — card renderer
-   Drop this file at scripts/cards.js and keep your images under:
-   images/characters/<slug>/<slug>-card-on.webp
-   images/characters/<slug>/<slug>-card-off.webp  (optional; falls back to -on)
+/* Blossom & Blade — chat runtime
+   - Consent-aware (soft|rx)
+   - Lead nudge (take control when she signals)
+   - POV switch to first-person once she opts into roleplay
+   - RED-only safeword (single word). While RED is active -> soft mode.
+   - Auto-resume: any future escalation trigger clears RED.
+   - Robust portrait fallback: chat.webp -> card-on.webp -> /images/logo.jpg
 */
 
-const CARDS = [
-  {
-    slug: "blade",
-    name: "Blade",
-    href: "chat.html?man=blade&sub=night",
-    on:  "images/characters/blade/blade-card-on.webp",
-    off: "images/characters/blade/blade-card-on.webp"
-  },
-  {
-    slug: "dylan",
-    name: "Dylan",
-    href: "chat.html?man=dylan&sub=night",
-    on:  "images/characters/dylan/dylan-card-on.webp",
-    off: "images/characters/dylan/dylan-card-off.webp"
-  },
-  {
-    slug: "jesse",
-    name: "Jesse",
-    href: "chat.html?man=jesse&sub=night",
-    on:  "images/characters/jesse/jesse-card-on.webp",
-    off: "images/characters/jesse/jesse-card-on.webp" // use same until we add an OFF
-  },
-  {
-    slug: "alexander",
-    name: "Alexander",
-    href: "chat.html?man=alexander&sub=night",
-    on:  "images/characters/alexander/alexander-card-on.webp",
-    off: "images/characters/alexander/alexander-card-on.webp"
-  },
-  {
-    slug: "silas",
-    name: "Silas",
-    href: "chat.html?man=silas&sub=night",
-    on:  "images/characters/silas/silas-card-on.webp",
-    off: "images/characters/silas/silas-card-on.webp"
-  },
-  {
-    slug: "grayson",
-    name: "Grayson",
-    href: "chat.html?man=grayson&sub=night",
-    on:  "images/characters/grayson/grayson-card-on.webp",
-    off: "images/characters/grayson/grayson-card-on.webp"
+(() => {
+  const qs = new URLSearchParams(location.search);
+  const man = (qs.get("man") || "").toLowerCase();
+  const sub = (qs.get("sub") || "day").toLowerCase();
+
+  // Consent: URL can force soft (?mode=soft)
+  const urlMode = (qs.get("mode") || "").toLowerCase();
+  const consent = (localStorage.getItem("bnb.consent") === "1");
+
+  // Slow (RED) state per man
+  const slowKey = (m) => `bnb.${m}.slow`;             // "red" | "off"
+  let slow = loadJson(slowKey(man), "off");
+
+  const el = {
+    title: document.getElementById("roomTitle"),
+    list: document.getElementById("messages"),
+    input: document.getElementById("chatInput"),
+    send: document.getElementById("sendBtn"),
+    form: document.getElementById("composer"),
+    portrait: document.getElementById("portraitImg"),
+    portraitLabel: document.getElementById("portraitLabel"),
+    tplUser: document.getElementById("tpl-user"),
+    tplAi: document.getElementById("tpl-assistant"),
+    slowBadge: document.getElementById("slowBadge"),
+  };
+
+  const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
+  const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
+  const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
+
+  // Disallowed themes (hard refuse)
+  const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
+
+  // Title
+  if (!VALID.includes(man)) {
+    document.title = "Blossom & Blade — Chat";
+    el.title.textContent = "— pick a character";
+  } else {
+    document.title = `Blossom & Blade — ${pretty[man]}`;
+    el.title.textContent = `— ${pretty[man]}`;
   }
-];
 
-/* Utility: render one card */
-function cardHTML({ name, href, on, off }) {
-  const offSrc = off || on;
-  return `
-    <article class="card">
-      <a class="art" href="${href}" aria-label="Enter ${name}">
-        <img class="on"  src="${on}"  alt="${name} — card on"  loading="lazy" decoding="async">
-        <img class="off" src="${offSrc}" alt="${name} — card off" loading="lazy" decoding="async">
-        <!-- If an image fails to load, the ::before wouldn't help; we inject a graceful fallback below in JS -->
-      </a>
-      <div class="meta">
-        <div class="name">${name}</div>
-        <a class="btn" href="${href}">Enter</a>
-      </div>
-    </article>
-  `;
-}
-
-/* Graceful fallback: if either image errors, show a soft placeholder */
-function attachFallbacks(root) {
-  root.querySelectorAll('.card .art img').forEach(img => {
-    img.addEventListener('error', () => {
-      const art = img.closest('.art');
-      if (art && !art.querySelector('.placeholder')) {
-        const ph = document.createElement('div');
-        ph.className = 'placeholder';
-        ph.textContent = 'Coming soon';
-        art.appendChild(ph);
+  // Portrait with robust fallbacks
+  const FALLBACK_LOGO = "/images/logo.jpg"; // present in repo
+  function imgPathChat(m){ return `/images/characters/${m}/${m}-chat.webp`; }
+  function imgPathCard(m){ return `/images/characters/${m}/${m}-card-on.webp`; }
+  function setPortrait(){
+    const img = el.portrait;
+    if (!img) return;
+    img.dataset.stage = "chat";
+    img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
+    el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
+    img.src = VALID.includes(man) ? imgPathChat(man) : FALLBACK_LOGO;
+    img.onerror = () => {
+      switch (img.dataset.stage) {
+        case "chat": img.dataset.stage = "card"; img.src = imgPathCard(man); break;
+        case "card": img.dataset.stage = "logo"; img.src = FALLBACK_LOGO; break;
+        default: img.onerror = null;
       }
-    }, { once:true });
-  });
-}
+    };
+  }
+  setPortrait();
 
-/* Render all cards */
-document.addEventListener('DOMContentLoaded', () => {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = CARDS.map(cardHTML).join('');
-  attachFallbacks(grid);
-});
+  // Storage keys
+  const uidKey = "bnb.userId";
+  const userId = getOrCreateUserId();
+  const hKey = (m) => `bnb.${m}.m`;
+  const sKey = (m) => `bnb.${m}.summary`;
+  const pKey = (m) => `bnb.${m}.profile`;
+  const povKey = (m) => `bnb.${m}.pov`; // 'first' if roleplay accepted
+  const MAX_TURNS = 400;
+  const WINDOW_FOR_PROMPT = 28;
+  const AUTOSUMMARY_EVERY = 25;
+
+  function getOrCreateUserId(){
+    let id = localStorage.getItem(uidKey);
+    if (!id){
+      id = crypto?.randomUUID?.() || "u_" + Math.random().toString(36).slice(2) + Date.now();
+      try{ localStorage.setItem(uidKey, id); }catch{}
+    }
+    return id;
+  }
+
+  // Memory/history
+  const history = loadJson(hKey(man), []);
+  let summary = loadJson(sKey(man), "");
+  let profile = loadJson(pKey(man), {});
+  let pov = loadJson(povKey(man), ""); // '' | 'first'
+
+  function loadJson(k, fallback){
+    try{ const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : fallback; }catch{ return fallback; }
+  }
+  function saveJson(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+  function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
+
+  // Render helpers
+  function addBubble(role, text){
+    const tpl = role === "user" ? el.tplUser : el.tplAi;
+    const node = tpl.content.firstElementChild.cloneNode(true);
+    node.textContent = text;
+    el.list.appendChild(node);
+    el.list.scrollTop = el.list.scrollHeight;
+  }
+  function renderAll(){
+    el.list.innerHTML = "";
+    for (const m of history) addBubble(m.role, m.content);
+  }
+
+  // Seed first line
+  if (VALID.includes(man) && history.length === 0){
+    const first = firstLines[Math.floor(Math.random()*firstLines.length)];
+    history.push({role:"assistant", content:first, t:Date.now()});
+    saveJson(hKey(man), history);
+    addBubble("assistant", first);
+  } else {
+    renderAll();
+  }
+
+  // Heuristics
+  const LEAD_REGEX = /\b(take|lead|command|control|dominat|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir)\b/i;
+  const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)?( then)?|yes(,? please)?|i want that|do it)\b/i;
+  const RED_ONLY = /^\s*red[.!?]*\s*$/i;
+
+  // Show slow badge if returning while RED is active
+  if (el.slowBadge) el.slowBadge.hidden = (slow !== "red");
+
+  el.form.addEventListener("submit", onSend);
+  window.addEventListener("bnb:consent", () => { /* next turn recalculates mode */ });
+
+  async function onSend(e){
+    e.preventDefault();
+    const text = (el.input.value || "").trim();
+    if (!text) return;
+
+    // RED safeword (single word only)
+    if (RED_ONLY.test(text)) {
+      pushAndRender("user", text);
+      slow = "red";
+      saveJson(slowKey(man), slow);
+      if (el.slowBadge) el.slowBadge.hidden = false;
+
+      const calm = "Got you. Slowing it down—safe with me. Tell me what you want, and I’ll keep it gentle.";
+      pushAndRender("assistant", calm);
+      el.input.value = "";
+      return;
+    }
+
+    // If she accepts roleplay/story, lock first-person POV
+    if (ROLEPLAY_ACCEPT.test(text)) {
+      pov = "first";
+      saveJson(povKey(man), pov);
+    }
+
+    // Hard-block taboo
+    if (banned.test(text)){
+      pushAndRender("user", text);
+      const safe = "I won’t roleplay non-consensual or taboo themes. Let’s keep it adult, safe, and mutual—what vibe do you want instead?";
+      pushAndRender("assistant", safe);
+      el.input.value = "";
+      return;
+    }
+
+    // Auto-resume: while RED is active, any escalation trigger clears it
+    if (slow === "red" && LEAD_REGEX.test(text)){
+      slow = "off";
+      saveJson(slowKey(man), slow);
+      if (el.slowBadge) el.slowBadge.hidden = true;
+    }
+
+    pushAndRender("user", text);
+    el.input.value = "";
+
+    try{
+      // periodic autosummary
+      if (history.length % AUTOSUMMARY_EVERY === 0 && history.length >= WINDOW_FOR_PROMPT + 8){
+        await doAutosummary();
+        summary = loadJson(sKey(man), "");
+        profile = loadJson(pKey(man), {});
+      }
+
+      // Mode pick now that RED might be active
+      const rx = (localStorage.getItem("bnb.consent") === "1");
+      const activeMode = urlMode === "soft" ? "soft" : (slow === "red" ? "soft" : (rx ? "rx" : "soft"));
+
+      const recent = history.slice(-WINDOW_FOR_PROMPT);
+      const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
+
+      const lead = LEAD_REGEX.test(text);
+      const topic = (text.match(/\b(cuffs?|mask|rope|kneel)\b/i) || [])[0] || "";
+
+      const res = await fetch("/api/chat", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          man, userId, mode: activeMode, history: recent, memory,
+          nudge:{ lead, topic, pov: pov === "first" ? "first" : undefined }
+        })
+      });
+
+      const data = await res.json();
+      let reply = sanitizeReply(data.reply || "");
+
+      // Optional persona stock blend (~18%)
+      if (window.BnBBrain && Math.random() < 0.18){
+        const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
+        const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
+        if (stock){
+          const joiner = Math.random() < 0.5 ? `${stock}\n${reply}` : `${reply}\n${stock}`;
+          reply = sanitizeReply(joiner);
+        }
+      }
+      if (window.BnBBrain) reply = window.BnBBrain.postProcess(man, reply);
+
+      pushAndRender("assistant", reply);
+    }catch(err){
+      console.error(err);
+      let fallback = "Network hiccup. One line—then I’ll lead.";
+      if (window.BnBBrain){
+        fallback = window.BnBBrain.getStockLine(man, { mode: (slow==="red"?"soft":"rx") }) || fallback;
+      }
+      pushAndRender("assistant", fallback);
+    }
+  }
+
+  function pushAndRender(role, content){
+    history.push({role, content, t:Date.now()});
+    trimHistory();
+    saveJson(hKey(man), history);
+    addBubble(role, content);
+  }
+
+  async function doAutosummary(){
+    try{
+      const resp = await fetch("/api/brain", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          man, userId,
+          recent: history.slice(-(WINDOW_FOR_PROMPT + 40)),
+          previousSummary: (typeof summary === "string" ? summary : summary?.text || ""),
+          previousProfile: profile
+        })
+      });
+      const data = await resp.json();
+      if (data?.summary) saveJson(sKey(man), data.summary);
+      if (data?.profile) saveJson(pKey(man), data.profile);
+    }catch(e){ console.warn("Autosummary failed", e); }
+  }
+
+  function sanitizeReply(t){
+    t = String(t || "");
+    t = t.replace(/\[(?:[^\[\]]{0,120})\]/g, "").replace(/\*([^*]{0,120})\*/g, "$1");
+    const lines = t.split("\n").map(s => s.trim()).filter(Boolean).slice(0,3);
+    return lines.join("\n").trim();
+  }
+
+  setTimeout(() => { el.input?.focus?.(); }, 60);
+})();

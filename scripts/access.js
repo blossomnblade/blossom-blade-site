@@ -1,102 +1,125 @@
-/* Blossom & Blade — access.js (MVP gating)
-   - Admin bypass via ?admin=cherrypie-2025 (persists in localStorage)
-   - Paid access:
-       * Single guy:   type=single, man=<name>, recurring=false
-       * All rooms:    type=all,   recurring=true|false
-   - Helpers:
-       BB_ACCESS.setPaidSingle(man, {recurring:false})
-       BB_ACCESS.setPaidAll({recurring:true})
-       BB_ACCESS.clearPaid()
-       BB_ACCESS.gateCheckFor(man)  // unlocks if admin or paid for that man
+/* Blossom & Blade — Access & Paywall Helpers
+   - 6-minute trial across site (once per browser)
+   - Entitlements: day pass (per-man, 24h), monthly all-6 (30d)
+   - Tiny countdown UI and auto-redirect to /pay.html when trial ends
+   - Safe to call from any page. No external deps.
 */
+(() => {
+  const ENT_KEY = "bnb.entitlements";          // { month:{exp:number}, day:{ [man]:{exp:number} } }
+  const TRIAL_KEY = "bnb.trial";               // { startedAt:number, durMs:number }
+  const CONSENT_KEY = "bnb.consent";           // "1" once the green consent is hit
+  const UID_KEY = "bnb.userId";                // anonymous id per device
 
-(function(){
-  const ADMIN_QS_KEY = 'admin';
-  const ADMIN_TOKEN  = 'cherrypie-2025'; // matches your brief
+  function now(){ return Date.now(); }
+  function read(k, fallback){ try{ const r = localStorage.getItem(k); return r ? JSON.parse(r) : fallback; }catch{ return fallback; } }
+  function write(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
 
-  const LS_KEYS = {
-    admin: 'bb_admin',    // "1"
-    paid:  'bb_paid_v2'   // JSON: {type:'single'|'all', man?:'jesse'|..., recurring?:bool, ts:number}
-  };
-
-  // LocalStorage safe helpers
-  function setLS(k,v){ try{ localStorage.setItem(k, typeof v==='string'? v : JSON.stringify(v)); }catch(_){} }
-  function getLS(k){
-    try{
-      const raw = localStorage.getItem(k);
-      if(!raw) return null;
-      try { return JSON.parse(raw); } catch { return raw; }
-    }catch(_){ return null; }
-  }
-  function delLS(k){ try{ localStorage.removeItem(k); }catch(_){} }
-
-  // Enable admin from query (?admin=cherrypie-2025) and then clean URL
-  (function maybeEnableAdminFromQuery(){
-    const qs = new URLSearchParams(location.search);
-    const tok = qs.get(ADMIN_QS_KEY);
-    if (tok && tok === ADMIN_TOKEN){
-      setLS(LS_KEYS.admin, '1');
-      console.log('[B&B] Admin mode enabled');
-      try {
-        qs.delete(ADMIN_QS_KEY);
-        const clean = location.pathname + (qs.toString() ? ('?' + qs.toString()) : '');
-        history.replaceState({}, '', clean);
-      } catch(_) {}
+  function getUid(){
+    let id = localStorage.getItem(UID_KEY);
+    if (!id){
+      id = crypto?.randomUUID?.() || ("u_" + Math.random().toString(36).slice(2) + Date.now());
+      try{ localStorage.setItem(UID_KEY, id); }catch{}
     }
-  })();
+    return id;
+  }
 
-  // Debug: ?paid=all or ?paid=single:grayson
-  (function maybeDebugPaid(){
-    const qs = new URLSearchParams(location.search);
-    const paid = qs.get('paid'); // "all" or "single:man"
-    if (paid) {
-      if (paid === 'all') setPaidAll({recurring:false});
-      else if (paid.startsWith('single:')) {
-        const man = paid.split(':')[1] || 'grayson';
-        setPaidSingle(man, {recurring:false});
+  function getEnt(){ return read(ENT_KEY, { month:null, day:{} }); }
+  function setEnt(v){ write(ENT_KEY, v); }
+
+  function msLeft(exp){ return Math.max(0, (exp || 0) - now()); }
+  function fmtMMSS(ms){
+    const s = Math.max(0, Math.floor(ms/1000));
+    const m = Math.floor(s/60), ss = String(s%60).padStart(2,"0");
+    return `${m}:${ss}`;
+  }
+
+  function isMonthActive(){
+    const ent = getEnt();
+    return Boolean(ent.month && ent.month.exp > now());
+  }
+  function isDayActive(man){
+    const ent = getEnt();
+    const rec = ent.day?.[man];
+    return Boolean(rec && rec.exp > now());
+  }
+  function isPaidFor(man){ return isMonthActive() || isDayActive(man); }
+
+  function grantDayPass(man, hours=24){
+    const ent = getEnt();
+    ent.day = ent.day || {};
+    ent.day[man] = { exp: now() + hours * 3600_000 };
+    setEnt(ent);
+    try{ localStorage.setItem(CONSENT_KEY, "1"); }catch{}
+    return ent.day[man].exp;
+  }
+  function grantMonthAll(days=30){
+    const ent = getEnt();
+    ent.month = { exp: now() + days * 86_400_000 };
+    setEnt(ent);
+    try{ localStorage.setItem(CONSENT_KEY, "1"); }catch{}
+    return ent.month.exp;
+  }
+
+  // 6-minute site-wide trial (starts on first chat load)
+  function ensureTrialRecord(){
+    const cur = read(TRIAL_KEY, null);
+    if (cur && cur.startedAt && cur.durMs) return cur;
+    const rec = { startedAt: now(), durMs: 6 * 60 * 1000 };
+    write(TRIAL_KEY, rec);
+    return rec;
+  }
+
+  // Attach countdown to a DOM element and redirect when it ends
+  function ensureTrialOrPaid(opts={}){
+    const { man="", timerSel="#trialTimer", redirect=true } = opts;
+    const el = timerSel ? document.querySelector(timerSel) : null;
+
+    // Paid? Hide timer if present.
+    if (isPaidFor(man)) { if (el) el.hidden = true; return { paid:true }; }
+
+    const rec = ensureTrialRecord();
+    const update = () => {
+      const left = (rec.startedAt + rec.durMs) - now();
+      const ms = Math.max(0, left);
+      if (el){
+        el.hidden = false;
+        el.textContent = `Trial ${fmtMMSS(ms)} left`;
       }
+      if (ms <= 0){
+        clearInterval(tid);
+        if (redirect) {
+          const qp = new URLSearchParams();
+          if (man) qp.set("man", man);
+          location.href = `/pay.html?${qp.toString()}`;
+        }
+      }
+    };
+    update();
+    const tid = setInterval(update, 1000);
+    return { paid:false, cancel: ()=>clearInterval(tid) };
+  }
+
+  function remainingCopy(man){
+    if (isMonthActive()){
+      const ms = msLeft(getEnt().month.exp);
+      return `Monthly access active — ${fmtMMSS(ms)} remaining today`;
     }
-  })();
-
-  function isAdmin(){ return getLS(LS_KEYS.admin) === '1'; }
-
-  // Paid state
-  function getPaid(){ return getLS(LS_KEYS.paid); }
-  function setPaidSingle(man, opts={}){
-    const rec = !!opts.recurring;
-    setLS(LS_KEYS.paid, { type:'single', man: String(man).toLowerCase(), recurring: rec, ts: Date.now() });
-  }
-  function setPaidAll(opts={}){
-    const rec = !!opts.recurring;
-    setLS(LS_KEYS.paid, { type:'all', recurring: rec, ts: Date.now() });
-  }
-  function clearPaid(){ delLS(LS_KEYS.paid); }
-
-  function isPaidFor(man){
-    const p = getPaid();
-    if (!p) return false;
-    if (p.type === 'all') return true;
-    if (p.type === 'single') return String(man).toLowerCase() === String(p.man).toLowerCase();
-    return false;
-  }
-
-  // Gate check for a specific man (from chat.html ?man=...)
-  function gateCheckFor(man){
-    if (isAdmin() || isPaidFor(man)) {
-      document.documentElement.classList.add('bb-unlocked');
-      return true;
+    if (isDayActive(man)){
+      const ms = msLeft(getEnt().day[man].exp);
+      return `Day pass for ${titleCase(man)} — ${fmtMMSS(ms)} left`;
     }
-    // Not allowed → send to pay page
-    if (!/pay\.html$/i.test(location.pathname) && !/age\.html$/i.test(location.pathname)){
-      const back = encodeURIComponent(location.pathname + location.search);
-      location.href = '/pay.html?next='+back;
-    }
-    return false;
+    const t = read(TRIAL_KEY, null);
+    if (!t) return "Trial not started";
+    const ms = (t.startedAt + t.durMs) - now();
+    return ms > 0 ? `Trial ${fmtMMSS(ms)} left` : "Trial ended";
   }
 
-  // Expose API
-  window.BB_ACCESS = {
-    isAdmin, getPaid, isPaidFor, gateCheckFor,
-    setPaidSingle, setPaidAll, clearPaid
+  function titleCase(s){ return (s||"").charAt(0).toUpperCase() + (s||"").slice(1); }
+
+  // Expose
+  window.BnBAccess = {
+    getUid, isPaidFor, isMonthActive, isDayActive,
+    grantDayPass, grantMonthAll,
+    ensureTrialOrPaid, remainingCopy
   };
 })();

@@ -59,19 +59,13 @@ function buildSystem(man, mode, nudge){
   const leadOn  = Boolean(nudge?.lead || nudge?.assert);
   const povHint = nudge?.pov === "first" ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he'—it is YOU." : "";
 
-  // ASSERTIVE LEAD RULES
-  //  - Use possession lines when leading: “you’re mine”, “be good”, “kneel”, “eyes on me”.
-  //  - Prefer commands & statements over reassurance. Avoid coddling and long comfort paragraphs.
-  //  - Limit check-ins: at most once every 3–4 turns; keep them to 2–3 words (“that okay?”, “say yes.”).
-  //  - Avoid repetitive “are you ready?” style questions.
-  //  - 1–3 lines total, varied cadence.
   const assertBlock = leadOn && mode !== "soft"
     ? "ASSERTIVE LEAD: Take control now. Use confident, possessive phrasing and short directives. Keep reassurance minimal. Max ONE short check-in only when needed."
     : "LEAD WHEN INVITED: Answer her, then direct with one clear action. Keep it concise.";
 
-  // Silas: light South Yorkshire flavour without hurting readability
+  // Silas: slightly stronger South Yorkshire presence
   const dialectBlock = man === "silas"
-    ? "DIALECT (light South Yorkshire): Sprinkle small touches only—'love/luv', 'aye', 'ta', 'reyt', 'proper', sometimes 'me' for 'my'. Very sparingly drop 'the' as t'. Never overdo phonetics; clarity first."
+    ? "DIALECT (South Yorkshire, light-moderate): In MOST replies, include ONE small token like 'love/luv', 'aye', 'reyt', 'proper', or 'me' for 'my'. Very occasionally use 'nowt/summat' or t' for 'the'. Keep it sexy and readable—no heavy phonetic spelling."
     : "";
 
   const coach = [

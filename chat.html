@@ -1,53 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Chat</title>
-  <link rel="preload" as="image" href="/images/placeholder.webp">
+  <link rel="preload" href="/styles/chat.css" as="style" />
   <link rel="stylesheet" href="/styles/chat.css" />
 </head>
-<body class="bnb-chat">
-  <header class="topbar" role="banner" aria-label="Site header">
-    <div class="brand">
-      <a href="/index.html" class="home-link" aria-label="Back to home">Blossom &amp; Blade</a>
-    </div>
-    <div class="room-title" id="roomTitle">—</div>
-    <div class="age-gate">
-      <!-- One-time consent button (hidden once accepted) -->
-      <button id="consentBtn" class="badge consent" type="button" aria-pressed="false" aria-label="Confirm you are 18+ to unlock adult mode">
-        Adults 18+ — consent
-      </button>
-    </div>
+<body class="chat">
+  <header class="topbar">
+    <div class="brand">Blossom &amp; Blade</div>
+    <div id="roomTitle" class="room">—</div>
+    <div class="age-pill">Adults 18+ only</div>
+    <div id="trialTimer" class="trial-timer" aria-live="polite" hidden>Trial 6:00 left</div>
   </header>
 
-  <main class="layout" role="main">
-    <section class="messages" id="messages" aria-live="polite" aria-label="Conversation"></section>
+  <main class="layout">
+    <section class="messages">
+      <div id="messages" class="stack" aria-live="polite"></div>
 
-    <aside class="portrait-panel" aria-label="Character portrait">
-      <figure class="portrait-frame">
-        <img id="portraitImg" alt="" decoding="async" />
-        <figcaption class="sr-only" id="portraitLabel"></figcaption>
+      <form id="composer" class="composer" autocomplete="off">
+        <label class="sr-only" for="chatInput">Message</label>
+        <input id="chatInput" name="q" type="text" placeholder="Say something..." inputmode="text" />
+        <button id="sendBtn" type="submit" class="send">Send</button>
+      </form>
+    </section>
+
+    <aside class="portrait">
+      <figure class="frame">
+        <img id="portraitImg" alt="" />
+        <figcaption id="portraitLabel" class="sr-only"></figcaption>
       </figure>
     </aside>
-
-    <form id="composer" class="composer" autocomplete="off" novalidate>
-      <label class="sr-only" for="chatInput">Type your message</label>
-      <input id="chatInput" name="message" type="text" inputmode="text" placeholder="Say something..." maxlength="500" />
-      <button id="sendBtn" type="submit" aria-label="Send message">Send</button>
-    </form>
   </main>
 
-  <template id="tpl-user">
-    <div class="bubble user"></div>
-  </template>
-  <template id="tpl-assistant">
-    <div class="bubble assistant"></div>
-  </template>
+  <!-- Templates -->
+  <template id="tpl-user"><div class="bubble user"></div></template>
+  <template id="tpl-assistant"><div class="bubble ai"></div></template>
 
-  <!-- Consent must load before chat so mode can flip to rx -->
-  <script src="/scripts/consent.js" defer></script>
-  <script src="/scripts/brain.js" defer></script>
-  <script src="/scripts/chat.js" defer></script>
+  <!-- Scripts -->
+  <script src="/scripts/access.js"></script>
+  <script src="/scripts/brain.js"></script>
+  <script src="/scripts/chat.js"></script>
+  <script>
+    // Start 6-minute trial if not paid; attach timer.
+    (function(){
+      const man = (new URLSearchParams(location.search).get("man") || "").toLowerCase();
+      if (window.BnBAccess) window.BnBAccess.ensureTrialOrPaid({ man, timerSel:"#trialTimer", redirect:true });
+    })();
+  </script>
 </body>
 </html>

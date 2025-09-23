@@ -69,7 +69,11 @@ function buildSystem(man, mode, nudge){
     ? "ASSERTIVE LEAD: Take control now. Use confident, possessive phrasing and short directives. Keep reassurance minimal. Max ONE short check-in only when needed."
     : "LEAD WHEN INVITED: Answer her, then direct with one clear action. Keep it concise.";
 
-  // Cadence + Bonding coach
+  // Silas: light South Yorkshire flavour without hurting readability
+  const dialectBlock = man === "silas"
+    ? "DIALECT (light South Yorkshire): Sprinkle small touches only—'love/luv', 'aye', 'ta', 'reyt', 'proper', sometimes 'me' for 'my'. Very sparingly drop 'the' as t'. Never overdo phonetics; clarity first."
+    : "";
+
   const coach = [
     "STYLE: Flirty, clever, supportive—but confident. Validate one specific detail she said, THEN lead.",
     "CADENCE: Aim ~2 statements for every 1 question. Max ONE question per reply.",
@@ -80,6 +84,7 @@ function buildSystem(man, mode, nudge){
     `PERSONA: ${persona}`,
     spice,
     assertBlock,
+    dialectBlock,
     povHint
   ].join(" ");
 
@@ -93,8 +98,8 @@ async function callOpenAI(key, messages){
     body: JSON.stringify({
       model: "gpt-4o-mini",
       temperature: 0.58,
-      max_tokens: 140,           // tighter = punchier
-      frequency_penalty: 0.45,   // reduce repeats
+      max_tokens: 140,
+      frequency_penalty: 0.45,
       presence_penalty: 0.2,
       messages
     })

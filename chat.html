@@ -2,75 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom &amp; Blade — Chat</title>
-
-  <!-- Minimal safety shim so the page never renders “unstyled”.
-       It’s removed as soon as chat.css finishes loading. -->
-  <style id="shim">
-    :root { color-scheme: dark; }
-    html, body { margin:0; height:100%; background:#0f1115; color:#e9edf1; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"; }
-    header { padding:12px 16px; border-bottom:1px solid #1d212a; }
-    #app { display:grid; grid-template-columns: 1fr minmax(260px, 36%); gap:16px; padding:16px; }
-    #messages { list-style:none; margin:0; padding:0; }
-    .bubble { background:#151922; color:#cfd6e4; padding:12px 16px; border-radius:14px; box-shadow: 0 6px 18px rgba(0,0,0,.35); max-width: 560px; }
-    .user { justify-self:flex-end; }
-    .composer { position:sticky; bottom:0; display:flex; gap:8px; padding:12px 16px; background:linear-gradient(180deg,rgba(15,17,21,0),#0f1115 40%); }
-    .composer input { flex:1; padding:14px 16px; border-radius:28px; border:1px solid #232736; background:#121621; color:#e9edf1; outline:none; }
-    .composer button { padding:12px 22px; border:0; border-radius:28px; background:#ff6b8b; color:#111; font-weight:700; }
-    .portraitPanel { background:#0f131b; border:1px solid #202534; border-radius:18px; padding:12px; display:flex; align-items:center; justify-content:center; }
-    .portraitPanel img { max-width:100%; height:auto; border-radius:14px; display:block; }
-    .badge { position:fixed; top:76px; right:28px; background:#0f131b; color:#dfe6f6; border:1px solid #202534; border-radius:20px; padding:6px 10px; font-size:12px; display:flex; align-items:center; gap:8px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark">
+  <!-- Critical fallback so we never see bullets/white while CSS is fetching -->
+  <style>
+    html,body{background:#0d0f14;color:#cfd6e6;margin:0}
+    .wrap{max-width:1280px;margin:0 auto;padding:12px}
+    ul#messages{list-style:none;margin:0;padding:0}
+    .bubble{display:inline-block;background:#161a22;color:#cfd6e6;border-radius:16px;padding:10px 14px;max-width:60ch}
+    .row{display:grid;grid-template-columns:1fr;gap:16px}
+    @media (min-width: 900px){.row{grid-template-columns: minmax(0,1fr) 360px}}
+    .composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(13,15,20,.0),rgba(13,15,20,.9) 30%,#0d0f14);padding:12px}
+    .composer form{display:flex;gap:10px}
+    .composer input{flex:1;min-width:0}
+    .pill{position:sticky;top:12px;float:right;background:#0f1320;border:1px solid #1f2740;color:#cfd6e6;border-radius:999px;padding:6px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+    .dot{width:6px;height:6px;border-radius:50%;background:#ffb86b;display:inline-block}
   </style>
-
-  <!-- Real stylesheet (cache-busted). When it loads, remove the shim. -->
-  <link rel="stylesheet" href="/styles/chat.css?v=3" onload="document.getElementById('shim')?.remove()" />
+  <!-- Cache-busted stylesheet (forces fresh CSS through Vercel CDN) -->
+  <link rel="stylesheet" href="/styles/chat.css?v=2025-09-23a">
 </head>
 <body>
-  <header>
-    <div class="topbar">
-      <strong>Blossom &amp; Blade</strong>
-      <span id="roomTitle"></span>
-      <span id="ageGate" class="age-pill">Adults 18+ only</span>
+  <header class="wrap" aria-label="Chat header">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <div style="font-weight:700;font-size:18px">Blossom &amp; Blade</div>
+        <div id="roomTitle" style="opacity:.8;font-size:14px">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="pill" aria-live="polite" id="slowBadge">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="trialLabel">Trial</span>: <span id="trialTime">6:00</span>
+          <span style="opacity:.7">RED</span>
+          <span class="dot" style="background:#ff6b6b" aria-hidden="true"></span>
+        </span>
+        <span class="pill" title="Adults 18+ only">Adults 18+ only</span>
+      </div>
     </div>
   </header>
 
-  <main id="app" aria-live="polite">
-    <!-- Left: messages -->
-    <section aria-label="Conversation">
-      <ul id="messages" role="list"></ul>
+  <main class="wrap row" aria-label="Chat content">
+    <!-- Messages column -->
+    <section aria-label="Messages">
+      <ul id="messages" aria-live="polite"></ul>
 
-      <!-- Composer -->
-      <form id="composer" class="composer" autocomplete="off">
-        <input id="chatInput" name="q" type="text" placeholder="Say something..." aria-label="Message" />
-        <button id="sendBtn" type="submit">Send</button>
-      </form>
+      <!-- message templates (JS clones these) -->
+      <template id="tpl-user">
+        <li class="bubble" data-role="user"></li>
+      </template>
+      <template id="tpl-assistant">
+        <li class="bubble" data-role="assistant"></li>
+      </template>
     </section>
 
-    <!-- Right: portrait -->
-    <aside class="portraitPanel" aria-label="Portrait">
-      <figure class="portraitFrame">
-        <img id="portraitImg" alt="Character portrait" />
-        <figcaption id="portraitLabel" class="visually-hidden"></figcaption>
+    <!-- Portrait column -->
+    <aside aria-label="Portrait" style="align-self:flex-start">
+      <figure id="portrait" style="margin:0">
+        <img id="portraitImg" alt="" style="width:100%;height:auto;border-radius:18px;display:block;object-fit:cover;background:#0f1320" />
+        <figcaption id="portraitLabel" style="position:absolute;left:-9999px">Portrait</figcaption>
       </figure>
     </aside>
   </main>
 
-  <!-- Small trial/RED badge; populated by trial.js -->
-  <div id="slowBadge" class="badge" hidden>
-    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f5a524;"></span>
-    <span id="trialText">Trial: 6:00</span>
-    <span aria-label="safeword" title="Safeword">RED ●</span>
+  <!-- Composer -->
+  <div class="composer">
+    <div class="wrap">
+      <form id="composer" autocomplete="off">
+        <input id="chatInput" type="text" inputmode="text" placeholder="Say something..." aria-label="Type your message">
+        <button id="sendBtn" type="submit" style="border:0;border-radius:999px;padding:10px 18px;background:#ff6b8b;color:#0b0d12;font-weight:700">Send</button>
+      </form>
+    </div>
   </div>
 
-  <!-- Templates -->
-  <template id="tpl-user"><li class="bubble user"></li></template>
-  <template id="tpl-assistant"><li class="bubble ai"></li></template>
-
-  <!-- Scripts (cache-busted) -->
-  <script defer src="/scripts/config.js?v=3"></script>
-  <script defer src="/scripts/trial.js?v=3"></script>
-  <script defer src="/scripts/consent.js?v=3"></script>
-  <script defer src="/scripts/chat.js?v=3"></script>
+  <!-- Cache-busted scripts so browsers/CDN don’t serve stale copies -->
+  <script src="/scripts/consent.js?v=2025-09-23a" defer></script>
+  <script src="/scripts/chat.js?v=2025-09-23a" defer></script>
 </body>
 </html>

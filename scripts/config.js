@@ -1,18 +1,18 @@
-// Blossom & Blade — public (non-secret) UI config.
-// Safe to version. Secrets (API keys) stay in Vercel only.
+/* Blossom & Blade — global config (trial length, checkout URLs, simple admin toggles) */
 (() => {
-  window.BnB = window.BnB || {};
-  window.BnB.CONFIG = {
-    // Free trial settings
-    TRIAL_MINUTES: 6,                         // length of the try-out
-    TRIAL_LOCALSTORAGE_KEY: "bnb.trial.start",
-    PAID_FLAG_KEY: "bnb.paid",                // set to "true" by checkout pages when she pays
+  const BB = (window.BB ||= {});
 
-    // Where to send after trial ends
-    PAYWALL_URL: "/pay.html",                 // existing pay page in your repo
+  // Trial length (default 6 minutes). You can override by setting localStorage 'bnb.trialMs'
+  // e.g. for testing: localStorage.setItem('bnb.trialMs', 15000)
+  const lsTrial = parseInt(localStorage.getItem('bnb.trialMs') || '', 10);
+  BB.TRIAL_MS = Number.isFinite(lsTrial) && lsTrial > 0 ? lsTrial : (6 * 60 * 1000);
 
-    // Safeword chip copy (already aligned with your preference)
-    SAFEWORD: "RED",
-    SAFEWORD_HINT: "Say RED to stop."
-  };
+  // Simple “paid” flag and admin switch (for you during testing)
+  BB.isPaid = () => localStorage.getItem('bnb.paid') === 'true';
+  BB.setPaid = (v) => localStorage.setItem('bnb.paid', v ? 'true' : 'false');
+  BB.isAdmin = () => !!localStorage.getItem('bnb.admin');  // set to any value to enable
+
+  // Where to send users when trial ends
+  BB.DAY_CHECKOUT = '/checkout-day.html';
+  BB.MONTH_CHECKOUT = '/checkout-month.html';
 })();

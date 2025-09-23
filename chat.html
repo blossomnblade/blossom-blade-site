@@ -147,31 +147,46 @@
   <script src="/scripts/chat.js" type="module"></script>
 
   <!-- Tiny UI helper: keep list sized & always scrolled to newest -->
-  <script>
-    (function(){
-      const list = document.getElementById('messages');
-      const top = document.querySelector('.top');
-      const comp = document.getElementById('composer');
+ <script>
+  (function(){
+    const list = document.getElementById('messages');
+    const top  = document.querySelector('.top');
+    const comp = document.getElementById('composer');
 
-      function sizeList(){
-        const t = top.getBoundingClientRect().height;
-        const c = comp.getBoundingClientRect().height;
-        // leave a small cushion so the sticky bar has room
-        list.style.height = `calc(100svh - ${t + c + 28}px)`;
-      }
+    function sizeList(){
+      // heights of sticky header + composer
+      const t = top.getBoundingClientRect().height || 0;
+      const c = comp.getBoundingClientRect().height || 0;
+      // fill viewport, leave a tiny cushion
+      list.style.height = `calc(100svh - ${t + c + 28}px)`;
+    }
 
-      // auto-scroll whenever a new message arrives
-      const obs = new MutationObserver(()=>{ list.scrollTop = list.scrollHeight; });
-      obs.observe(list, { childList:true });
+    function scrollBottom(smooth=true){
+      // always keep the newest message in view
+      list.scrollTo({ top: list.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+    }
 
-      sizeList();
-      addEventListener('resize', sizeList);
-      addEventListener('orientationchange', sizeList);
-      if (window.visualViewport){
-        visualViewport.addEventListener('resize', sizeList);
-        visualViewport.addEventListener('scroll', sizeList);
-      }
-    })();
-  </script>
+    // Auto-scroll whenever messages change (including streaming text)
+    const obs = new MutationObserver(() => scrollBottom(true));
+    obs.observe(list, { childList: true, subtree: true, characterData: true });
+
+    // Initial sizing + keep it correct on viewport/composer/header changes
+    sizeList();
+    addEventListener('load',        () => { sizeList(); scrollBottom(false); });
+    addEventListener('resize',      sizeList);
+    addEventListener('orientationchange', sizeList);
+    if (window.visualViewport){
+      visualViewport.addEventListener('resize', sizeList);
+      visualViewport.addEventListener('scroll', sizeList);
+    }
+
+    // Also jump to bottom when you send a message
+    document.getElementById('composer')?.addEventListener('submit', () => {
+      // defer until the DOM gets the new <li>
+      setTimeout(() => scrollBottom(true), 0);
+    });
+  })();
+</script>
+
 </body>
 </html>

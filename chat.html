@@ -3,22 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <title>Blossom &amp; Blade — Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+
   <meta name="color-scheme" content="dark">
   <!-- Critical fallback so we never see bullets/white while CSS is fetching -->
   <style>
-    html,body{background:#0d0f14;color:#cfd6e6;margin:0}
-    .wrap{max-width:1280px;margin:0 auto;padding:12px}
-    ul#messages{list-style:none;margin:0;padding:0}
-    .bubble{display:inline-block;background:#161a22;color:#cfd6e6;border-radius:16px;padding:10px 14px;max-width:60ch}
-    .row{display:grid;grid-template-columns:1fr;gap:16px}
-    @media (min-width: 900px){.row{grid-template-columns: minmax(0,1fr) 360px}}
-    .composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(13,15,20,.0),rgba(13,15,20,.9) 30%,#0d0f14);padding:12px}
-    .composer form{display:flex;gap:10px}
-    .composer input{flex:1;min-width:0}
-    .pill{position:sticky;top:12px;float:right;background:#0f1320;border:1px solid #1f2740;color:#cfd6e6;border-radius:999px;padding:6px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
-    .dot{width:6px;height:6px;border-radius:50%;background:#ffb86b;display:inline-block}
-  </style>
+  /* --- layout & page scroll control --- */
+  :root { --composer-h: 84px; }                       /* height we reserve for the composer */
+  html, body { height: 100%; margin: 0; background:#0d0f14; color:#cfd6e6; overflow: hidden; }
+
+  .wrap {                                             /* outer page container */
+    max-width: 1280px;
+    margin: 0 auto;
+    min-height: 100dvh;                               /* dynamic viewport for mobile bars */
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .row {                                              /* main area (messages | portrait) */
+    flex: 1 1 auto;
+    min-height: 0;                                    /* allows child to scroll */
+    display: grid;
+    grid-template-columns: 1fr;                       /* 1 column on mobile */
+    gap: 16px;
+    overflow: hidden;                                 /* prevent page scrolling */
+  }
+  @media (min-width: 900px) {
+    .row { grid-template-columns: minmax(0,1fr) 360px; } /* messages | portrait on desktop */
+  }
+
+  /* --- messages pane (the only thing that scrolls) --- */
+  ul#messages {
+    list-style: none;
+    margin: 0; padding: 0;
+    height: 100%;
+    overflow: auto;
+    scroll-behavior: smooth;
+    /* keep last bubble above the pinned composer */
+    padding-bottom: calc(var(--composer-h) + 20px);
+    scroll-padding-bottom: calc(var(--composer-h) + 20px);
+  }
+  .bubble {
+    display: inline-block;
+    background: #0c1926;
+    color: #cfd6e6;
+    border-radius: 16px;
+    padding: 10px 14px;
+    max-width: 60ch;
+  }
+
+  /* --- portrait (right column) --- */
+  .portrait-panel { overflow: auto; }
+  .portrait-panel img {
+    max-width: 100%;
+    height: auto;
+    max-height: 70vh;                                 /* don’t force page to scroll */
+    object-fit: cover;
+    border-radius: 16px;
+  }
+
+  /* --- trial chip --- */
+  .pill {
+    position: fixed; top: 12px; right: 12px; z-index: 60;
+    background:#0f1320; border:1px solid #1f2740; color:#cfd6e6;
+    border-radius: 999px; padding: 6px 10px; font-size: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .dot { width: 6px; height: 6px; background:#ff6b6b; border-radius: 999px; display: inline-block; }
+
+  /* --- pinned composer bar --- */
+  .composer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.85) 30%, rgba(8,10,14,0.95) 100%);
+  }
+  .composer form { display: flex; gap: 10px; max-width: 1100px; margin: 0 auto; }
+  .composer input { flex: 1; min-width: 0; }
+
+  /* --- mobile tweaks --- */
+  @media (max-width: 900px) {
+    .row { gap: 12px; }
+    .portrait-panel img { max-height: 45vh; }
+  }
+</style>
+
   <!-- Cache-busted stylesheet (forces fresh CSS through Vercel CDN) -->
   <link rel="stylesheet" href="/styles/chat.css?v=2025-09-23a">
 </head>

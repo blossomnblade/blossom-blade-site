@@ -3,10 +3,10 @@
 (() => {
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
-
   const urlMode = (qs.get("mode") || "").toLowerCase();
-  const consent = (localStorage.getItem("bnb.consent") === "1");
 
+  // Consent & slow state
+  const rx = (localStorage.getItem("bnb.consent") === "1"); // paid/green box
   const slowKey = (m) => `bnb.${m}.slow`;
   let slow = loadJson(slowKey(man), "off"); // "red"|"off"
 
@@ -32,20 +32,20 @@
   // Title + portrait
   if (VALID.includes(man)){
     document.title = `Blossom & Blade — ${pretty[man]}`;
-    el.title.textContent = `— ${pretty[man]}`;
+    document.getElementById("roomTitle").textContent = `— ${pretty[man]}`;
   } else {
     document.title = "Blossom & Blade — Chat";
-    el.title.textContent = "— pick a character";
+    document.getElementById("roomTitle").textContent = "— pick a character";
   }
   const FALLBACK_LOGO = "/images/logo.jpg";
   function imgPathChat(m){ return `/images/characters/${m}/${m}-chat.webp`; }
   function imgPathCard(m){ return `/images/characters/${m}/${m}-card-on.webp`; }
   (function setPortrait(){
-    const img = el.portrait;
+    const img = document.getElementById("portraitImg");
     if (!img) return;
     img.dataset.stage = "chat";
     img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
-    el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
+    document.getElementById("portraitLabel").textContent = VALID.includes(man) ? `${pretty[man]} portrait` : "";
     img.src = VALID.includes(man) ? imgPathChat(man) : FALLBACK_LOGO;
     img.onerror = () => {
       switch (img.dataset.stage) {
@@ -90,7 +90,7 @@
 
   // Render
   function addBubble(role, text){
-    const tpl = role === "user" ? el.tplUser : el.tplAi;
+    const tpl = role === "user" ? document.getElementById("tpl-user") : document.getElementById("tpl-assistant");
     const node = tpl.content.firstElementChild.cloneNode(true);
     node.textContent = text;
     el.list.appendChild(node);
@@ -160,9 +160,7 @@
         profile = loadJson(pKey(man), {});
       }
 
-      const rx = (localStorage.getItem("bnb.consent") === "1");
       const activeMode = urlMode === "soft" ? "soft" : (slow === "red" ? "soft" : (rx ? "rx" : "soft"));
-
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
@@ -172,24 +170,22 @@
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          man, userId: localStorage.getItem(uidKey), mode: activeMode,
-          history: recent, memory,
-          nudge:{ lead: assert, assert, topic, pov: (pov === "first" ? "first" : undefined) }
+          man,
+          userId,
+          mode: activeMode,
+          history: recent,
+          memory,
+          nudge:{
+            lead: assert, assert, topic,
+            pov: (pov === "first" ? "first" : undefined),
+            consented: rx
+          }
         })
       });
 
       const data = await res.json();
       let reply = sanitizeReply(data.reply || "");
 
-      // Optional persona stock blend (~18%)
-      if (window.BnBBrain && Math.random() < 0.18){
-        const recentUsed = history.slice(-8).filter(m => m.role === "assistant").map(m => m.content);
-        const stock = window.BnBBrain.getStockLine(man, { mode: activeMode, lastUser: text, recentUsed });
-        if (stock){
-          const joiner = Math.random() < 0.5 ? `${stock}\n${reply}` : `${reply}\n${stock}`;
-          reply = sanitizeReply(joiner);
-        }
-      }
       if (window.BnBBrain) reply = window.BnBBrain.postProcess(man, reply);
 
       pushAndRender("assistant", reply);
@@ -212,7 +208,7 @@
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          man, userId: localStorage.getItem("bnb.userId"),
+          man, userId,
           recent: history.slice(-(WINDOW_FOR_PROMPT + 40)),
           previousSummary: (typeof summary === "string" ? summary : summary?.text || ""),
           previousProfile: profile

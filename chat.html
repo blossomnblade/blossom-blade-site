@@ -3,148 +3,202 @@
 <head>
   <meta charset="utf-8" />
   <title>Blossom &amp; Blade — Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
 
-  <meta name="color-scheme" content="dark">
-  <!-- Critical fallback so we never see bullets/white while CSS is fetching -->
+  <!-- Inline fallback styles (robust on phone + desktop) -->
   <style>
-  /* --- layout & page scroll control --- */
-  :root { --composer-h: 84px; }                       /* height we reserve for the composer */
-  html, body { height: 100%; margin: 0; background:#0d0f14; color:#cfd6e6; overflow: hidden; }
+    /* —— Layout: messages + portrait with pinned composer —— */
+    :root { --composer-h: 84px; }
 
-  .wrap {                                             /* outer page container */
-    max-width: 1280px;
-    margin: 0 auto;
-    min-height: 100dvh;                               /* dynamic viewport for mobile bars */
-    display: flex;
-    flex-direction: column;
-    padding: 12px;
-  }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background:#0d0f14;
+      color:#cfd6e6;
+      overflow: auto; /* allow page to scroll if needed */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
 
-  .row {                                              /* main area (messages | portrait) */
-    flex: 1 1 auto;
-    min-height: 0;                                    /* allows child to scroll */
-    display: grid;
-    grid-template-columns: 1fr;                       /* 1 column on mobile */
-    gap: 16px;
-    overflow: hidden;                                 /* prevent page scrolling */
-  }
-  @media (min-width: 900px) {
-    .row { grid-template-columns: minmax(0,1fr) 360px; } /* messages | portrait on desktop */
-  }
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      min-height: 100svh;            /* dynamic viewport for mobile */
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      box-sizing: border-box;
+    }
 
-  /* --- messages pane (the only thing that scrolls) --- */
-  ul#messages {
-    list-style: none;
-    margin: 0; padding: 0;
-    height: 100%;
-    overflow: auto;
-    scroll-behavior: smooth;
-    /* keep last bubble above the pinned composer */
-    padding-bottom: calc(var(--composer-h) + 20px);
-    scroll-padding-bottom: calc(var(--composer-h) + 20px);
-  }
-  .bubble {
-    display: inline-block;
-    background: #0c1926;
-    color: #cfd6e6;
-    border-radius: 16px;
-    padding: 10px 14px;
-    max-width: 60ch;
-  }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 4px 12px;
+      font-weight: 600;
+      color: #cfd6e6;
+    }
+    header .brand { opacity: .9; }
+    header .title  { opacity: .85; }
 
-  /* --- portrait (right column) --- */
-  .portrait-panel { overflow: auto; }
-  .portrait-panel img {
-    max-width: 100%;
-    height: auto;
-    max-height: 70vh;                                 /* don’t force page to scroll */
-    object-fit: cover;
-    border-radius: 16px;
-  }
+    /* Trial / RED chip */
+    .pill {
+      position: fixed; top: 12px; right: 12px; z-index: 60;
+      background:#0f1320; border:1px solid #1f2740; color:#cfd6e6;
+      border-radius: 999px; padding: 6px 10px; font-size: 12px;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    }
+    .dot { width: 6px; height: 6px; background:#ff6b6b; border-radius: 999px; display:inline-block; }
 
-  /* --- trial chip --- */
-  .pill {
-    position: fixed; top: 12px; right: 12px; z-index: 60;
-    background:#0f1320; border:1px solid #1f2740; color:#cfd6e6;
-    border-radius: 999px; padding: 6px 10px; font-size: 12px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .dot { width: 6px; height: 6px; background:#ff6b6b; border-radius: 999px; display: inline-block; }
+    /* two-column area */
+    .row {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (min-width: 900px) {
+      .row { grid-template-columns: minmax(0,1fr) 360px; }
+    }
 
-  /* --- pinned composer bar --- */
-  .composer {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-    padding: 12px 16px max(12px, env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.85) 30%, rgba(8,10,14,0.95) 100%);
-  }
-  .composer form { display: flex; gap: 10px; max-width: 1100px; margin: 0 auto; }
-  .composer input { flex: 1; min-width: 0; }
+    /* messages column: its own scroller */
+    ul#messages {
+      list-style: none;
+      margin: 0;
+      padding: 0 0 16px 0;
+      overflow: auto;
+      max-height: calc(100svh - var(--composer-h) - 32px);
+      scroll-behavior: smooth;
+    }
 
-  /* --- mobile tweaks --- */
-  @media (max-width: 900px) {
-    .row { gap: 12px; }
-    .portrait-panel img { max-height: 45vh; }
-  }
-</style>
+    .bubble {
+      display: inline-block;
+      background:#0c1926;
+      color:#cfd6e6;
+      border-radius: 16px;
+      padding: 10px 14px;
+      max-width: 60ch;
+      box-shadow: 0 8px 28px rgba(0,0,0,.30);
+    }
 
-  <!-- Cache-busted stylesheet (forces fresh CSS through Vercel CDN) -->
-  <link rel="stylesheet" href="/styles/chat.css?v=2025-09-23a">
+    /* portrait column: also scrolls independently */
+    .portrait-panel {
+      overflow: auto;
+      max-height: calc(100svh - var(--composer-h) - 32px);
+      padding-right: 2px; /* keep scrollbar off edge */
+    }
+    .portrait-card {
+      background:#0c1118;
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    #portraitImg {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    #portraitLabel {
+      margin-top: 8px;
+      font-size: 12px;
+      color:#9fb0cc;
+      opacity: .9;
+    }
+
+    /* pinned composer */
+    .composer {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      padding: 12px 16px max(12px, env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.88) 35%, rgba(8,10,14,0.98) 100%);
+      backdrop-filter: blur(4px);
+    }
+    .composer form { display: flex; gap: 10px; max-width: 1100px; margin: 0 auto; }
+    .composer input[type="text"] {
+      flex: 1; min-width: 0;
+      background:#0f1722; border:1px solid #223046; color:#d5def0;
+      border-radius: 999px; padding: 14px 16px; outline: none;
+    }
+    .composer button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      background:#ff6b93; color:#10141c;
+      box-shadow: 0 10px 24px rgba(255,107,147,.35);
+    }
+    .composer button:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* make sure content can scroll behind the fixed composer if needed */
+    body { padding-bottom: var(--composer-h); }
+
+    /* small screens */
+    @media (max-width: 900px) {
+      .row { gap: 12px; }
+      #portraitImg { max-height: 45vh; }
+    }
+  </style>
+
+  <!-- Cache-busted external stylesheet (optional; keep if you already use one) -->
+  <link rel="stylesheet" href="/styles/chat.css?v=2025-09-23" />
 </head>
 <body>
-  <header class="wrap" aria-label="Chat header">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div>
-        <div style="font-weight:700;font-size:18px">Blossom &amp; Blade</div>
-        <div id="roomTitle" style="opacity:.8;font-size:14px">—</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="pill" aria-live="polite" id="slowBadge">
-          <span class="dot" aria-hidden="true"></span>
-          <span id="trialLabel">Trial</span>: <span id="trialTime">6:00</span>
-          <span style="opacity:.7">RED</span>
-          <span class="dot" style="background:#ff6b6b" aria-hidden="true"></span>
-        </span>
-        <span class="pill" title="Adults 18+ only">Adults 18+ only</span>
-      </div>
+  <div class="wrap">
+    <header>
+      <div class="brand">Blossom &amp; Blade</div>
+      <div class="title">— <span id="roomTitle">…</span></div>
+      <!-- adults-only chip lives on landing; kept simple here -->
+    </header>
+
+    <!-- Trial / RED indicator the JS updates -->
+    <div class="pill" id="slowBadge">
+      <span class="dot"></span>
+      <span id="trialText">Trial</span>
+      <span>•</span>
+      <span id="redText">RED</span>
+      <span class="dot"></span>
     </div>
-  </header>
 
-  <main class="wrap row" aria-label="Chat content">
-    <!-- Messages column -->
-    <section aria-label="Messages">
-      <ul id="messages" aria-live="polite"></ul>
+    <main class="row">
+      <!-- Messages -->
+      <section>
+        <ul id="messages" aria-live="polite" aria-label="Messages"></ul>
+      </section>
 
-      <!-- message templates (JS clones these) -->
-      <template id="tpl-user">
-        <li class="bubble" data-role="user"></li>
-      </template>
-      <template id="tpl-assistant">
-        <li class="bubble" data-role="assistant"></li>
-      </template>
-    </section>
-
-    <!-- Portrait column -->
-    <aside aria-label="Portrait" style="align-self:flex-start">
-      <figure id="portrait" style="margin:0">
-        <img id="portraitImg" alt="" style="width:100%;height:auto;border-radius:18px;display:block;object-fit:cover;background:#0f1320" />
-        <figcaption id="portraitLabel" style="position:absolute;left:-9999px">Portrait</figcaption>
-      </figure>
-    </aside>
-  </main>
-
-  <!-- Composer -->
-  <div class="composer">
-    <div class="wrap">
-      <form id="composer" autocomplete="off">
-        <input id="chatInput" type="text" inputmode="text" placeholder="Say something..." aria-label="Type your message">
-        <button id="sendBtn" type="submit" style="border:0;border-radius:999px;padding:10px 18px;background:#ff6b8b;color:#0b0d12;font-weight:700">Send</button>
-      </form>
-    </div>
+      <!-- Portrait -->
+      <aside class="portrait-panel">
+        <div class="portrait-card">
+          <img id="portraitImg" alt="portrait" />
+          <div id="portraitLabel"></div>
+        </div>
+      </aside>
+    </main>
   </div>
 
-  <!-- Cache-busted scripts so browsers/CDN don’t serve stale copies -->
-  <script src="/scripts/consent.js?v=2025-09-23a" defer></script>
-  <script src="/scripts/chat.js?v=2025-09-23a" defer></script>
+  <!-- Pinned composer -->
+  <div class="composer">
+    <form id="composer" autocomplete="off">
+      <input id="chatInput" type="text" placeholder="Say something..." />
+      <button id="sendBtn" type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Templates the script clones for messages -->
+  <template id="tpl-user">
+    <li><div class="bubble" style="background:#172233;color:#d7e3ff;"></div></li>
+  </template>
+  <template id="tpl-assistant">
+    <li><div class="bubble"></div></li>
+  </template>
+
+  <!-- App scripts (order matters: helpers/brain before chat) -->
+  <script src="/scripts/mod.js" defer></script>
+  <script src="/scripts/brain.js" defer></script>
+  <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

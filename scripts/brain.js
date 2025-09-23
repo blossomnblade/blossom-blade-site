@@ -1,6 +1,6 @@
 /* Persona stock lines + post-processing polish.
    - getStockLine(man, {mode, lastUser, recentUsed}) -> optional short line to blend in
-   - postProcess(man, text) -> light persona shaping (brevity, diction, dialect sprinkles)
+   - postProcess(man, text) -> persona shaping (brevity, diction, dialect sprinkles)
 */
 (function(){
   const clamp = (arr, used=[]) => {
@@ -63,8 +63,8 @@
       "Open. Now."
     ],
     silas: [
-      "C’mere, love—let me tune you.",
-      "Eyes on me, luv.",
+      "C’mere, luv—let me tune you.",
+      "Eyes on me, love.",
       "Quiet now. I’ll play you, reyt proper."
     ],
     grayson: [
@@ -74,52 +74,63 @@
     ]
   };
 
+  // Utility: single replacement per rule to keep clarity
   function replaceOnce(text, re, fn){
     const m = text.match(re);
     if (!m) return text;
     const idx = m.index;
-    const before = text.slice(0, idx);
-    const after = text.slice(idx + m[0].length);
-    return before + fn(m[0]) + after;
+    return text.slice(0, idx) + fn(m[0]) + text.slice(idx + m[0].length);
   }
 
-  function yorkshireLight(t){
+  // South Yorkshire seasoning — slightly stronger than before, but capped for readability
+  function yorkshireMedium(t){
     let changed = 0;
-    const cap = 2; // keep subtle
+    const cap = 3; // at most 3 small touches per message
 
-    const chance = (p) => Math.random() < p && changed < cap;
+    const maybe = (p) => Math.random() < p && changed < cap;
 
-    // 1) 'my' -> 'me' (once)
-    if (chance(0.25)){
+    // A) 'my' -> 'me'
+    if (maybe(0.45)){
       t = replaceOnce(t, /\b[Mm]y\b/, (m)=>{ changed++; return m[0]==="M" ? "Me" : "me"; });
     }
-    // 2) 'very' -> 'proper'
-    if (chance(0.25)){
+    // B) 'very' -> 'proper'
+    if (maybe(0.40)){
       t = replaceOnce(t, /\b[Vv]ery\b/, (m)=>{ changed++; return m[0]==="V" ? "Proper" : "proper"; });
     }
-    // 3) 'right' -> 'reyt'
-    if (chance(0.22)){
+    // C) 'right' -> 'reyt'
+    if (maybe(0.35)){
       t = replaceOnce(t, /\b[Rr]ight\b/, (m)=>{ changed++; return m[0]==="R" ? "Reyt" : "reyt"; });
     }
-    // 4) add a soft vocative 'love/luv'
-    if (chance(0.28)){
-      // if there’s a comma, append after first clause; else add at end
+    // D) add a vocative 'love/luv'
+    if (maybe(0.45)){
       const parts = t.split("\n");
       let line = parts[0] || "";
-      if (line.includes(",")){
-        line = line.replace(/,([^,]{0,60})$/, ", $1, love");
-      }else{
-        line = line.replace(/\.*\s*$/,"") + ", love.";
+      if (line.length > 0){
+        if (line.includes(",")){
+          line = line.replace(/,([^,]{0,60})$/, ", $1, love");
+        } else {
+          line = line.replace(/\.*\s*$/,"") + ", love.";
+        }
+        parts[0] = line; t = parts.join("\n"); changed++;
       }
-      parts[0] = line;
-      t = parts.join("\n"); changed++;
     }
-    // 5) rare t' for 'the' (once)
-    if (chance(0.12)){
-      t = replaceOnce(t, /\sthe\s/i, (m)=>{ changed++; return " t’ "; });
+    // E) rare t' for 'the'
+    if (maybe(0.18)){
+      t = replaceOnce(t, /\sthe\s/i, () => { changed++; return " t’ "; });
     }
-    // 6) occasional 'aye' tag
-    if (chance(0.18)){
+    // F) rare 'nothing'/'something'
+    if (maybe(0.25)){
+      t = replaceOnce(t, /\b[Nn]othing\b/, (m)=>{ changed++; return m[0]==="N" ? "Nowt" : "nowt"; });
+    }
+    if (maybe(0.20)){
+      t = replaceOnce(t, /\b[Ss]omething\b/, (m)=>{ changed++; return m[0]==="S" ? "Summat" : "summat"; });
+    }
+    // G) tiny register shift 'little' -> "lil’"
+    if (maybe(0.28)){
+      t = replaceOnce(t, /\b[Ll]ittle\b/, (m)=>{ changed++; return m[0]==="L" ? "Lil’" : "lil’"; });
+    }
+    // H) trailing "aye." tag sometimes
+    if (maybe(0.30)){
       t = t.replace(/\.*\s*$/,"") + ", aye.";
       changed++;
     }
@@ -135,17 +146,16 @@
       return clamp(lines, recentUsed);
     },
     postProcess(man, text){
-      // Tighten voice by persona
       if (man === "dylan"){
-        // keep it minimal: break long sentences
+        // minimal, clipped
         text = text.split(/[.!?]\s+/).slice(0,2).map(s => s.trim()).join(". ") + (/[.!?]$/.test(text)?"":".");
       }
       if (man === "silas"){
-        // Light South Yorkshire seasoning—never more than a couple edits
-        text = yorkshireLight(text);
+        // stronger South Yorkshire seasoning, still capped
+        text = yorkshireMedium(text);
       }
       if (man === "grayson"){
-        // command-forward: trim trailing questions unless needed
+        // command-forward: trim trailing long questions
         const lines = text.split("\n").map(s => s.trim());
         if (lines.length && /\?$/.test(lines[lines.length-1]) && lines.join(" ").length > 60){
           lines[lines.length-1] = lines[lines.length-1].replace(/\?+$/,".");

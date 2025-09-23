@@ -5,260 +5,171 @@
   <title>Blossom &amp; Blade — Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
-
   <style>
-    /* ---------- Base / reset ---------- */
+    /* ---- Critical inline CSS so we never see bullets/white while CSS loads ---- */
     :root{
-      --bg:#0d0f14;           /* page background */
-      --panel:#121620;        /* cards */
-      --ink:#e9eefc;          /* primary text */
-      --ink-dim:#b8c0d9;      /* secondary text */
-      --ink-faint:#7b859f;    /* meta text */
-      --bubble-user:#1a2230;  /* your bubbles */
-      --bubble-bot:#0f1520;   /* his bubbles */
-      --accent:#ff4d7e;       /* pink buttons */
-      --chip:#151b27;
-      --ring:#1f2a3b;
-      --agent-name:"";        /* filled by JS so we can show a label */
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg:#0d0f14;
+      --panel:#0f1625;
+      --panel-2:#131b2b;
+      --ink:#cfd6e6;
+      --ink-dim:#9fb0ca;
+      --hot:#ff7aa2;
+      --ring:#1e2840;
+      --shadow: 0 8px 24px rgba(0,0,0,.35);
+      --radius:16px;
     }
-
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--ink);
-      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
-
-    /* Keep content visible even if external CSS didn’t load */
-    .fallback *{ list-style:none; padding:0; margin:0; }
-
-    /* ---------- Header row ---------- */
-    .top{
-      position:sticky; top:0; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
-      padding:14px 18px;
-      background:linear-gradient(180deg, rgba(8,10,16,.92), rgba(8,10,16,.66) 70%, transparent);
-      backdrop-filter:saturate(120%) blur(6px);
-      border-bottom:1px solid rgba(255,255,255,.04);
-    }
-    .brand{ font-weight:700; letter-spacing:.25px; }
-    .who{ color:var(--ink-faint); }
-    .chips{ display:flex; align-items:center; gap:8px; }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      font-size:12px; color:var(--ink-dim);
-      padding:6px 10px; border-radius:999px; background:var(--chip);
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .dot{ width:6px; height:6px; border-radius:999px; background:#ffb347; display:inline-block; }
-    .red{ background:#ef2c4a !important; }
-
-    /* ---------- Layout ---------- */
+    html,body{height:100%;background:var(--bg);color:var(--ink);}
+    body{margin:0;font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;}
     .wrap{
+      min-height:100svh;
       max-width:1280px;
       margin:0 auto;
-      padding:12px 12px calc(96px + var(--safe-bottom)); /* space for composer */
-      min-height:100svh; /* fill screen height (mobile safe) */
+      padding:12px;
       display:grid;
-      grid-template-columns: 1fr;
-      gap:16px;
+      gap:24px;
+      grid-template-columns: 1fr minmax(260px,420px);
     }
-    @media (min-width: 980px){
-      .wrap{
-        grid-template-columns: 1fr 360px;
-        gap:20px;
-      }
+    .col-left{min-width:0;display:flex;flex-direction:column}
+    .top{
+      position:sticky; top:0; z-index:5;
+      display:flex; align-items:center; gap:10px;
+      padding:8px 6px 10px;
+      background:linear-gradient(180deg, rgba(13,15,20,.95), rgba(13,15,20,.75) 60%, rgba(13,15,20,0));
+      backdrop-filter:saturate(120%) blur(6px);
     }
-
-    /* ---------- Messages ---------- */
+    .brand{font-weight:700; letter-spacing:.2px}
+    .title{opacity:.85}
+    .badges{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      background:#101828; border:1px solid var(--ring);
+      color:var(--ink); border-radius:999px; padding:6px 10px; font-size:12px;
+      box-shadow: var(--shadow);
+    }
+    .pill.hot{background:#1b0f19;color:#ffd7e5;border-color:#3b2034}
+    .pill.adults{opacity:.8}
+    /* --- layout --- */
     #messages{
-      display:flex; flex-direction:column; gap:12px;
-      padding:0; margin:0;
+      list-style:none; margin:8px 0 12px; padding:0;
+      display:flex; flex-direction:column; gap:10px;
+      overflow:auto; /* we size this in JS so the composer is always visible */
+      scrollbar-gutter: stable;
+      scroll-behavior:smooth;
     }
-    .row{
-      display:flex; align-items:flex-start; gap:10px;
-      max-width: 68ch;
-    }
-    /* Accept either .bot or .assistant (depending on chat.js) */
-    .assistant, .bot { margin-left:auto; justify-content:flex-end; }
-    .user{ margin-right:auto; justify-content:flex-start; }
-
     .bubble{
-      border-radius:16px;
+      max-width:70ch;
+      background:var(--panel);
+      border:1px solid var(--ring);
+      border-radius:14px;
       padding:12px 14px;
-      border:1px solid rgba(255,255,255,.06);
-      box-shadow: 0 6px 14px rgba(0,0,0,.25);
+      box-shadow: var(--shadow);
       word-wrap:break-word; white-space:pre-wrap;
     }
-    .user .bubble{ background:var(--bubble-user); }
-    .assistant .bubble, .bot .bubble{ background:var(--bubble-bot); }
-
-    .tag{
-      display:block;
-      font-size:11px;
-      letter-spacing:.2px;
-      color:var(--ink-faint);
-      margin:0 0 6px 2px;
-      opacity:.9;
-    }
-    .assistant .tag::before, .bot .tag::before{ content: var(--agent-name); }
-    .user .tag::before{ content:"You"; }
-
-    /* ---------- Portrait panel ---------- */
-    .portrait{
-      background:var(--panel);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px;
-      padding:10px;
-      box-shadow: 0 10px 26px rgba(0,0,0,.35);
-      height:fit-content;
-      position:sticky; top:86px;
-    }
-    .portrait img{
-      width:100%; height:auto; display:block; border-radius:12px;
-    }
-    .portrait small{
-      display:block; color:var(--ink-faint); margin-top:6px; text-align:center;
-    }
-    @media (max-width: 979px){
-      .portrait{ position:static; order:2; }
-    }
-
-    /* ---------- Composer ---------- */
-    .composer{
-      position:sticky; bottom:0; z-index:20;
-      background: linear-gradient(180deg, transparent, rgba(8,10,16,.5) 35%, rgba(8,10,16,.9));
-      padding: 10px 12px calc(10px + var(--safe-bottom));
-      display:flex; justify-content:center;
-      border-top:1px solid rgba(255,255,255,.06);
-    }
-    .composer .inner{
-      width:min(940px, 100%);
-      display:flex; gap:8px; align-items:center;
-      background:var(--panel); border:1px solid var(--ring);
-      padding:12px; border-radius:999px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.28);
+    .bubble.assistant{align-self:flex-start;background:var(--panel)}
+    .bubble.user{align-self:flex-end;background:var(--panel-2)}
+    /* composer */
+    #composer{
+      position:sticky; bottom:env(safe-area-inset-bottom, 8px); z-index:6;
+      display:flex; gap:10px; align-items:center;
+      background:linear-gradient(180deg, rgba(16,24,40,.85), rgba(16,24,40,.85));
+      border:1px solid var(--ring);
+      border-radius:999px; padding:8px 10px;
+      box-shadow: var(--shadow);
     }
     #chatInput{
-      flex:1; background:transparent; border:0; outline:0; color:var(--ink);
-      font-size:16px;
+      flex:1 1 auto; min-width:0; height:44px;
+      background:#0e1320; border:1px solid #1a2338; color:var(--ink);
+      border-radius:999px; padding:0 14px; outline:none;
     }
+    #chatInput::placeholder{color:var(--ink-dim)}
     #sendBtn{
-      border:0; outline:0; cursor:pointer;
-      background:var(--accent); color:white; font-weight:700;
-      padding:10px 18px; border-radius:999px;
-      box-shadow:0 10px 22px rgba(255,77,126,.35);
+      appearance:none; border:0; cursor:pointer;
+      padding:10px 18px; height:44px;
+      background:radial-gradient(120% 120% at 30% -10%, #ff9dc0, #ff5d8c);
+      color:#1b0f19; font-weight:700; border-radius:999px;
+      box-shadow:0 8px 28px rgba(255,93,140,.28);
     }
-    #sendBtn:disabled{ opacity:.5; cursor:not-allowed; }
-
-    /* ---------- Utilities ---------- */
-    .sr{ position:absolute !important; left:-9999px; width:1px; height:1px; overflow:hidden; }
-    .muted{ color:var(--ink-faint); }
+    /* portrait */
+    aside#portrait{position:sticky; top:76px; align-self:start}
+    figure.pframe{
+      margin:0; padding:0; background:#0b0f19; border:1px solid var(--ring);
+      border-radius:18px; overflow:hidden; box-shadow: var(--shadow);
+    }
+    #portraitImg{display:block; width:100%; height:auto; object-fit:cover; aspect-ratio:3/4}
+    #portraitLabel{padding:10px 14px; font-size:12px; color:var(--ink-dim)}
+    /* mobile: stack columns */
+    @media (max-width: 900px){
+      .wrap{grid-template-columns: 1fr}
+      aside#portrait{position:relative; top:auto}
+      #portraitImg{aspect-ratio:auto}
+    }
   </style>
 </head>
+<body>
+  <div class="wrap">
+    <main class="col-left" id="app">
+      <header class="top">
+        <div class="brand">Blossom &amp; Blade</div>
+        <div class="title" id="roomTitle">—</div>
+        <div class="badges">
+          <span class="pill hot" id="slowBadge" title="Say RED to slow erotica">RED</span>
+          <span class="pill" id="trialBadge">Trial</span>
+          <span class="pill adults">Adults 18+ only</span>
+        </div>
+      </header>
 
-<body class="fallback">
-  <header class="top">
-    <div class="brand">Blossom &amp; Blade <span class="who" id="roomTitle"></span></div>
-    <div class="chips">
-      <span class="chip"><span class="dot"></span><span id="trial">Trial</span></span>
-      <span class="chip"><span class="dot red"></span>RED</span>
-      <span class="chip">Adults 18+ only</span>
-    </div>
-  </header>
+      <ul id="messages" aria-live="polite" aria-label="Conversation"></ul>
 
-  <main class="wrap">
-    <!-- messages column -->
-    <section aria-live="polite" aria-label="Conversation">
-      <ul id="messages"></ul>
-    </section>
+      <form id="composer" autocomplete="off">
+        <input id="chatInput" name="q" placeholder="Say something..." />
+        <button id="sendBtn" type="submit">Send</button>
+      </form>
 
-    <!-- portrait column -->
-    <aside class="portrait">
-      <img id="portraitImg" alt="Portrait" />
-      <small id="portraitLabel" class="muted">portrait</small>
+      <!-- message templates (used by scripts/chat.js) -->
+      <template id="tpl-user">
+        <li class="bubble user"><span class="txt"></span></li>
+      </template>
+      <template id="tpl-assistant">
+        <li class="bubble assistant"><span class="txt"></span></li>
+      </template>
+    </main>
+
+    <aside id="portrait">
+      <figure class="pframe">
+        <img id="portraitImg" alt="" />
+        <figcaption id="portraitLabel"></figcaption>
+      </figure>
     </aside>
-  </main>
-
-  <!-- composer -->
-  <div class="composer">
-    <div class="inner">
-      <label for="chatInput" class="sr">Type a message</label>
-      <input id="chatInput" autocomplete="off" placeholder="Say something..." />
-      <button id="sendBtn">Send</button>
-    </div>
   </div>
 
-  <!-- Templated system bubbles (optional, hidden) -->
-  <template id="tpl-user"><li class="row user"><div class="bubble"><span class="tag"></span><span class="msg"></span></div></li></template>
-  <template id="tpl-assistant"><li class="row assistant"><div class="bubble"><span class="tag"></span><span class="msg"></span></div></li></template>
+  <!-- App logic -->
+  <script src="/scripts/chat.js" type="module"></script>
 
-  <!-- Core chat logic (your existing file) -->
-  <script src="./scripts/chat.js"></script>
-
+  <!-- Tiny UI helper: keep list sized & always scrolled to newest -->
   <script>
     (function(){
-      /* read query to figure out which guy this room is */
-      const qs = new URLSearchParams(location.search);
-      const man = (qs.get("man") || "").toLowerCase();
-      const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
-      const agentName = pretty[man] || (man ? man[0].toUpperCase()+man.slice(1) : "Alexander");
+      const list = document.getElementById('messages');
+      const top = document.querySelector('.top');
+      const comp = document.getElementById('composer');
 
-      // Put nice title + label
-      const title = document.getElementById("roomTitle");
-      if (title) title.textContent = agentName ? ` — ${agentName}` : "";
-
-      // Make the agent name available to CSS for the bubble label
-      document.documentElement.style.setProperty("--agent-name", `"${agentName}"`);
-
-      // Hook into your chat.js renderer if present to keep scrolled
-      const messages = document.getElementById("messages");
-      function toBottom(){ messages && (messages.scrollTop = messages.scrollHeight); }
-      // try a few times while initial content appears
-      let tries = 0; const t = setInterval(()=>{ toBottom(); if (++tries>20) clearInterval(t); }, 150);
-
-      // When new nodes are appended, keep bottom in view
-      const obs = new MutationObserver(toBottom);
-      if (messages) obs.observe(messages, {childList:true, subtree:false});
-
-      // Portrait defaults (works with your chat.js that may swap images)
-      const portraits = {
-        blade:"/images/blade.jpg",
-        dylan:"/images/dylan.jpg",
-        jesse:"/images/jesse.jpg",
-        alexander:"/images/alexander.jpg",
-        silas:"/images/silas.jpg",
-        grayson:"/images/grayson.jpg"
-      };
-      const img = document.getElementById("portraitImg");
-      const label = document.getElementById("portraitLabel");
-      if (img){
-        img.src = portraits[man] || portraits.alexander;
-        img.alt = agentName + " portrait";
+      function sizeList(){
+        const t = top.getBoundingClientRect().height;
+        const c = comp.getBoundingClientRect().height;
+        // leave a small cushion so the sticky bar has room
+        list.style.height = `calc(100svh - ${t + c + 28}px)`;
       }
-      if (label) label.textContent = agentName + " portrait";
 
-      // Trial timer (6 minutes)
-      const trialEl = document.getElementById("trial");
-      const TRIAL_MS = 6 * 60 * 1000;
-      const start = Date.now();
-      function tick(){
-        const left = Math.max(0, TRIAL_MS - (Date.now() - start));
-        const m = String(Math.floor(left/60000)).padStart(1,"0");
-        const s = String(Math.floor((left%60000)/1000)).padStart(2,"0");
-        if (trialEl) trialEl.textContent = `Trial: ${m}:${s}`;
-        if (left>0) requestAnimationFrame(tick);
+      // auto-scroll whenever a new message arrives
+      const obs = new MutationObserver(()=>{ list.scrollTop = list.scrollHeight; });
+      obs.observe(list, { childList:true });
+
+      sizeList();
+      addEventListener('resize', sizeList);
+      addEventListener('orientationchange', sizeList);
+      if (window.visualViewport){
+        visualViewport.addEventListener('resize', sizeList);
+        visualViewport.addEventListener('scroll', sizeList);
       }
-      tick();
-
-      // If your chat.js emits .assistant not .bot, our CSS already supports both.
-      // If it emits plain <li> with role classes, we add a label automatically below.
-      // No extra wiring required here.
     })();
   </script>
 </body>

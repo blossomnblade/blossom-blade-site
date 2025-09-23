@@ -6,199 +6,260 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
 
-  <!-- Inline fallback styles (robust on phone + desktop) -->
   <style>
-    /* —— Layout: messages + portrait with pinned composer —— */
-    :root { --composer-h: 84px; }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      background:#0d0f14;
-      color:#cfd6e6;
-      overflow: auto; /* allow page to scroll if needed */
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    /* ---------- Base / reset ---------- */
+    :root{
+      --bg:#0d0f14;           /* page background */
+      --panel:#121620;        /* cards */
+      --ink:#e9eefc;          /* primary text */
+      --ink-dim:#b8c0d9;      /* secondary text */
+      --ink-faint:#7b859f;    /* meta text */
+      --bubble-user:#1a2230;  /* your bubbles */
+      --bubble-bot:#0f1520;   /* his bubbles */
+      --accent:#ff4d7e;       /* pink buttons */
+      --chip:#151b27;
+      --ring:#1f2a3b;
+      --agent-name:"";        /* filled by JS so we can show a label */
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      min-height: 100svh;            /* dynamic viewport for mobile */
-      display: flex;
-      flex-direction: column;
-      padding: 12px;
-      box-sizing: border-box;
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
     }
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 6px 4px 12px;
-      font-weight: 600;
-      color: #cfd6e6;
-    }
-    header .brand { opacity: .9; }
-    header .title  { opacity: .85; }
+    /* Keep content visible even if external CSS didn’t load */
+    .fallback *{ list-style:none; padding:0; margin:0; }
 
-    /* Trial / RED chip */
-    .pill {
-      position: fixed; top: 12px; right: 12px; z-index: 60;
-      background:#0f1320; border:1px solid #1f2740; color:#cfd6e6;
-      border-radius: 999px; padding: 6px 10px; font-size: 12px;
-      display: inline-flex; align-items: center; gap: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    /* ---------- Header row ---------- */
+    .top{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding:14px 18px;
+      background:linear-gradient(180deg, rgba(8,10,16,.92), rgba(8,10,16,.66) 70%, transparent);
+      backdrop-filter:saturate(120%) blur(6px);
+      border-bottom:1px solid rgba(255,255,255,.04);
     }
-    .dot { width: 6px; height: 6px; background:#ff6b6b; border-radius: 999px; display:inline-block; }
+    .brand{ font-weight:700; letter-spacing:.25px; }
+    .who{ color:var(--ink-faint); }
+    .chips{ display:flex; align-items:center; gap:8px; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--ink-dim);
+      padding:6px 10px; border-radius:999px; background:var(--chip);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .dot{ width:6px; height:6px; border-radius:999px; background:#ffb347; display:inline-block; }
+    .red{ background:#ef2c4a !important; }
 
-    /* two-column area */
-    .row {
-      flex: 1 1 auto;
-      display: grid;
+    /* ---------- Layout ---------- */
+    .wrap{
+      max-width:1280px;
+      margin:0 auto;
+      padding:12px 12px calc(96px + var(--safe-bottom)); /* space for composer */
+      min-height:100svh; /* fill screen height (mobile safe) */
+      display:grid;
       grid-template-columns: 1fr;
-      gap: 16px;
-      align-items: start;
+      gap:16px;
     }
-    @media (min-width: 900px) {
-      .row { grid-template-columns: minmax(0,1fr) 360px; }
-    }
-
-    /* messages column: its own scroller */
-    ul#messages {
-      list-style: none;
-      margin: 0;
-      padding: 0 0 16px 0;
-      overflow: auto;
-      max-height: calc(100svh - var(--composer-h) - 32px);
-      scroll-behavior: smooth;
+    @media (min-width: 980px){
+      .wrap{
+        grid-template-columns: 1fr 360px;
+        gap:20px;
+      }
     }
 
-    .bubble {
-      display: inline-block;
-      background:#0c1926;
-      color:#cfd6e6;
-      border-radius: 16px;
-      padding: 10px 14px;
-      max-width: 60ch;
-      box-shadow: 0 8px 28px rgba(0,0,0,.30);
+    /* ---------- Messages ---------- */
+    #messages{
+      display:flex; flex-direction:column; gap:12px;
+      padding:0; margin:0;
+    }
+    .row{
+      display:flex; align-items:flex-start; gap:10px;
+      max-width: 68ch;
+    }
+    /* Accept either .bot or .assistant (depending on chat.js) */
+    .assistant, .bot { margin-left:auto; justify-content:flex-end; }
+    .user{ margin-right:auto; justify-content:flex-start; }
+
+    .bubble{
+      border-radius:16px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow: 0 6px 14px rgba(0,0,0,.25);
+      word-wrap:break-word; white-space:pre-wrap;
+    }
+    .user .bubble{ background:var(--bubble-user); }
+    .assistant .bubble, .bot .bubble{ background:var(--bubble-bot); }
+
+    .tag{
+      display:block;
+      font-size:11px;
+      letter-spacing:.2px;
+      color:var(--ink-faint);
+      margin:0 0 6px 2px;
+      opacity:.9;
+    }
+    .assistant .tag::before, .bot .tag::before{ content: var(--agent-name); }
+    .user .tag::before{ content:"You"; }
+
+    /* ---------- Portrait panel ---------- */
+    .portrait{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:10px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.35);
+      height:fit-content;
+      position:sticky; top:86px;
+    }
+    .portrait img{
+      width:100%; height:auto; display:block; border-radius:12px;
+    }
+    .portrait small{
+      display:block; color:var(--ink-faint); margin-top:6px; text-align:center;
+    }
+    @media (max-width: 979px){
+      .portrait{ position:static; order:2; }
     }
 
-    /* portrait column: also scrolls independently */
-    .portrait-panel {
-      overflow: auto;
-      max-height: calc(100svh - var(--composer-h) - 32px);
-      padding-right: 2px; /* keep scrollbar off edge */
+    /* ---------- Composer ---------- */
+    .composer{
+      position:sticky; bottom:0; z-index:20;
+      background: linear-gradient(180deg, transparent, rgba(8,10,16,.5) 35%, rgba(8,10,16,.9));
+      padding: 10px 12px calc(10px + var(--safe-bottom));
+      display:flex; justify-content:center;
+      border-top:1px solid rgba(255,255,255,.06);
     }
-    .portrait-card {
-      background:#0c1118;
-      border-radius: 16px;
-      padding: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    .composer .inner{
+      width:min(940px, 100%);
+      display:flex; gap:8px; align-items:center;
+      background:var(--panel); border:1px solid var(--ring);
+      padding:12px; border-radius:999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.28);
     }
-    #portraitImg {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 12px;
-      object-fit: cover;
+    #chatInput{
+      flex:1; background:transparent; border:0; outline:0; color:var(--ink);
+      font-size:16px;
     }
-    #portraitLabel {
-      margin-top: 8px;
-      font-size: 12px;
-      color:#9fb0cc;
-      opacity: .9;
+    #sendBtn{
+      border:0; outline:0; cursor:pointer;
+      background:var(--accent); color:white; font-weight:700;
+      padding:10px 18px; border-radius:999px;
+      box-shadow:0 10px 22px rgba(255,77,126,.35);
     }
+    #sendBtn:disabled{ opacity:.5; cursor:not-allowed; }
 
-    /* pinned composer */
-    .composer {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-      padding: 12px 16px max(12px, env(safe-area-inset-bottom, 0px));
-      background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.88) 35%, rgba(8,10,14,0.98) 100%);
-      backdrop-filter: blur(4px);
-    }
-    .composer form { display: flex; gap: 10px; max-width: 1100px; margin: 0 auto; }
-    .composer input[type="text"] {
-      flex: 1; min-width: 0;
-      background:#0f1722; border:1px solid #223046; color:#d5def0;
-      border-radius: 999px; padding: 14px 16px; outline: none;
-    }
-    .composer button {
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 20px;
-      font-weight: 700;
-      cursor: pointer;
-      background:#ff6b93; color:#10141c;
-      box-shadow: 0 10px 24px rgba(255,107,147,.35);
-    }
-    .composer button:disabled { opacity: .5; cursor: not-allowed; }
-
-    /* make sure content can scroll behind the fixed composer if needed */
-    body { padding-bottom: var(--composer-h); }
-
-    /* small screens */
-    @media (max-width: 900px) {
-      .row { gap: 12px; }
-      #portraitImg { max-height: 45vh; }
-    }
+    /* ---------- Utilities ---------- */
+    .sr{ position:absolute !important; left:-9999px; width:1px; height:1px; overflow:hidden; }
+    .muted{ color:var(--ink-faint); }
   </style>
-
-  <!-- Cache-busted external stylesheet (optional; keep if you already use one) -->
-  <link rel="stylesheet" href="/styles/chat.css?v=2025-09-23" />
 </head>
-<body>
-  <div class="wrap">
-    <header>
-      <div class="brand">Blossom &amp; Blade</div>
-      <div class="title">— <span id="roomTitle">…</span></div>
-      <!-- adults-only chip lives on landing; kept simple here -->
-    </header>
 
-    <!-- Trial / RED indicator the JS updates -->
-    <div class="pill" id="slowBadge">
-      <span class="dot"></span>
-      <span id="trialText">Trial</span>
-      <span>•</span>
-      <span id="redText">RED</span>
-      <span class="dot"></span>
+<body class="fallback">
+  <header class="top">
+    <div class="brand">Blossom &amp; Blade <span class="who" id="roomTitle"></span></div>
+    <div class="chips">
+      <span class="chip"><span class="dot"></span><span id="trial">Trial</span></span>
+      <span class="chip"><span class="dot red"></span>RED</span>
+      <span class="chip">Adults 18+ only</span>
     </div>
+  </header>
 
-    <main class="row">
-      <!-- Messages -->
-      <section>
-        <ul id="messages" aria-live="polite" aria-label="Messages"></ul>
-      </section>
+  <main class="wrap">
+    <!-- messages column -->
+    <section aria-live="polite" aria-label="Conversation">
+      <ul id="messages"></ul>
+    </section>
 
-      <!-- Portrait -->
-      <aside class="portrait-panel">
-        <div class="portrait-card">
-          <img id="portraitImg" alt="portrait" />
-          <div id="portraitLabel"></div>
-        </div>
-      </aside>
-    </main>
-  </div>
+    <!-- portrait column -->
+    <aside class="portrait">
+      <img id="portraitImg" alt="Portrait" />
+      <small id="portraitLabel" class="muted">portrait</small>
+    </aside>
+  </main>
 
-  <!-- Pinned composer -->
+  <!-- composer -->
   <div class="composer">
-    <form id="composer" autocomplete="off">
-      <input id="chatInput" type="text" placeholder="Say something..." />
-      <button id="sendBtn" type="submit">Send</button>
-    </form>
+    <div class="inner">
+      <label for="chatInput" class="sr">Type a message</label>
+      <input id="chatInput" autocomplete="off" placeholder="Say something..." />
+      <button id="sendBtn">Send</button>
+    </div>
   </div>
 
-  <!-- Templates the script clones for messages -->
-  <template id="tpl-user">
-    <li><div class="bubble" style="background:#172233;color:#d7e3ff;"></div></li>
-  </template>
-  <template id="tpl-assistant">
-    <li><div class="bubble"></div></li>
-  </template>
+  <!-- Templated system bubbles (optional, hidden) -->
+  <template id="tpl-user"><li class="row user"><div class="bubble"><span class="tag"></span><span class="msg"></span></div></li></template>
+  <template id="tpl-assistant"><li class="row assistant"><div class="bubble"><span class="tag"></span><span class="msg"></span></div></li></template>
 
-  <!-- App scripts (order matters: helpers/brain before chat) -->
-  <script src="/scripts/mod.js" defer></script>
-  <script src="/scripts/brain.js" defer></script>
-  <script src="/scripts/chat.js" defer></script>
+  <!-- Core chat logic (your existing file) -->
+  <script src="./scripts/chat.js"></script>
+
+  <script>
+    (function(){
+      /* read query to figure out which guy this room is */
+      const qs = new URLSearchParams(location.search);
+      const man = (qs.get("man") || "").toLowerCase();
+      const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
+      const agentName = pretty[man] || (man ? man[0].toUpperCase()+man.slice(1) : "Alexander");
+
+      // Put nice title + label
+      const title = document.getElementById("roomTitle");
+      if (title) title.textContent = agentName ? ` — ${agentName}` : "";
+
+      // Make the agent name available to CSS for the bubble label
+      document.documentElement.style.setProperty("--agent-name", `"${agentName}"`);
+
+      // Hook into your chat.js renderer if present to keep scrolled
+      const messages = document.getElementById("messages");
+      function toBottom(){ messages && (messages.scrollTop = messages.scrollHeight); }
+      // try a few times while initial content appears
+      let tries = 0; const t = setInterval(()=>{ toBottom(); if (++tries>20) clearInterval(t); }, 150);
+
+      // When new nodes are appended, keep bottom in view
+      const obs = new MutationObserver(toBottom);
+      if (messages) obs.observe(messages, {childList:true, subtree:false});
+
+      // Portrait defaults (works with your chat.js that may swap images)
+      const portraits = {
+        blade:"/images/blade.jpg",
+        dylan:"/images/dylan.jpg",
+        jesse:"/images/jesse.jpg",
+        alexander:"/images/alexander.jpg",
+        silas:"/images/silas.jpg",
+        grayson:"/images/grayson.jpg"
+      };
+      const img = document.getElementById("portraitImg");
+      const label = document.getElementById("portraitLabel");
+      if (img){
+        img.src = portraits[man] || portraits.alexander;
+        img.alt = agentName + " portrait";
+      }
+      if (label) label.textContent = agentName + " portrait";
+
+      // Trial timer (6 minutes)
+      const trialEl = document.getElementById("trial");
+      const TRIAL_MS = 6 * 60 * 1000;
+      const start = Date.now();
+      function tick(){
+        const left = Math.max(0, TRIAL_MS - (Date.now() - start));
+        const m = String(Math.floor(left/60000)).padStart(1,"0");
+        const s = String(Math.floor((left%60000)/1000)).padStart(2,"0");
+        if (trialEl) trialEl.textContent = `Trial: ${m}:${s}`;
+        if (left>0) requestAnimationFrame(tick);
+      }
+      tick();
+
+      // If your chat.js emits .assistant not .bot, our CSS already supports both.
+      // If it emits plain <li> with role classes, we add a label automatically below.
+      // No extra wiring required here.
+    })();
+  </script>
 </body>
 </html>

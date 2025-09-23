@@ -1,88 +1,103 @@
-/* Blossom & Blade — Chat layout (dark theme, robust fallbacks) */
-
-/* Theme tokens with hard fallbacks so we NEVER paint white */
-:root{
-  --bg:#0f1115;
-  --panel:#0f131b;
-  --border:#202534;
-  --text:#e9edf1;
-  --muted:#cfd6e4;
-  --bubble:#151922;
-  --bubble-user:#1b2030;
-  --accent:#ff6b8b;
-  --shadow: 0 10px 30px rgba(0,0,0,.45);
+/* --- viewport + layout --- */
+html, body {
+  height: 100%;
+  margin: 0;
+  /* the page itself won't scroll; only the messages pane will */
+  overflow: hidden;
 }
 
-*{ box-sizing:border-box; }
-
-html,body{ height:100%; margin:0; background:var(--bg,#0f1115); color:var(--text,#e9edf1); }
-
-.topbar{
-  display:flex; align-items:center; gap:12px;
-  max-width:1200px; margin:0 auto; color:var(--muted);
-}
-.age-pill{
-  margin-left:auto; font-size:12px; padding:6px 10px; border-radius:18px;
-  background:var(--panel,#0f131b); border:1px solid var(--border,#202534);
+/* wrapper around the whole chat area (whatever your outer container is) */
+.chat-shell {
+  /* use dynamic viewport unit so mobile browser bars don't chop content */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-#app{
-  max-width:1200px; margin:0 auto; padding:16px;
-  display:grid; gap:18px; grid-template-columns: minmax(300px,1fr) minmax(260px,36%);
+/* the main two-column area (messages + portrait) */
+.chat-main {
+  flex: 1 1 auto;
+  overflow: hidden;                 /* prevent page scrollbars */
+  display: grid;
+  grid-template-columns: 1fr 420px; /* messages | portrait (desktop) */
+  gap: 24px;
+  padding: 16px;
 }
 
-@media (max-width: 920px){
-  #app{ grid-template-columns: 1fr; }
+/* messages list area */
+#messages {
+  list-style: none;                 /* kill bullets just in case */
+  padding: 0 0 0 0;
+  margin: 0;
+  height: 100%;
+  overflow: auto;                   /* ONLY this scrolls */
+  scroll-behavior: smooth;
+  /* reserve space for the fixed composer so the last bubble isn’t hidden */
+  padding-bottom: calc(var(--composer-h, 84px) + 20px);
+  scroll-padding-bottom: calc(var(--composer-h, 84px) + 20px);
 }
 
-header{ background:var(--panel,#0f131b); border-bottom:1px solid var(--border,#202534); }
-
-section[aria-label="Conversation"]{ min-width:0; }
-
-#messages{
-  list-style:none; /* kill bullets ALWAYS */
-  margin:0; padding:0 0 96px 0;  /* leave space for sticky composer */
-  display:grid; gap:14px;
+/* pinned composer bar */
+.composer-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* respect iPhone safe area */
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.85) 30%, rgba(8,10,14,0.95) 100%);
+  z-index: 50;
 }
 
-.bubble{
-  background:var(--bubble,#151922); color:var(--muted,#cfd6e4);
-  border-radius:16px; padding:12px 16px; max-width:68ch; box-shadow:var(--shadow);
-  width:max-content;
-}
-.bubble.ai{ }
-.bubble.user{
-  background:var(--bubble-user,#1b2030); color:var(--text,#e9edf1);
-  margin-left:auto;
+/* inner composer width matches the chat content column */
+.composer {
+  --composer-h: 84px;               /* expose height to JS/CSS */
+  max-width: 1100px;                /* center on wide screens */
+  margin: 0 auto;
+  padding: 12px 16px;
 }
 
-.composer{
-  position:sticky; bottom:0; display:flex; gap:10px; padding:10px 0 6px;
-  background:linear-gradient(180deg, rgba(15,17,21,0), var(--bg,#0f1115) 40%);
-}
-#chatInput{
-  flex:1; padding:14px 16px; border-radius:28px;
-  border:1px solid var(--border,#202534); background:#121621; color:var(--text,#e9edf1);
-  outline:none;
-}
-#sendBtn{
-  padding:12px 22px; border:0; border-radius:28px; background:var(--accent,#ff6b8b);
-  color:#111; font-weight:700; cursor:pointer;
+/* portrait panel */
+.portrait-panel {
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
-.portraitPanel{
-  background:var(--panel,#0f131b); border:1px solid var(--border,#202534);
-  border-radius:18px; padding:12px; display:flex; align-items:center; justify-content:center;
-}
-.portraitPanel img{ width:100%; height:auto; border-radius:14px; object-fit:cover; display:block; }
-
-/* Trial / RED chip */
-#slowBadge{
-  position:fixed; top:72px; right:24px; z-index:40;
-  background:var(--panel,#0f131b); border:1px solid var(--border,#202534);
-  color:var(--text,#e9edf1); border-radius:20px; padding:6px 10px; font-size:12px;
-  display:flex; align-items:center; gap:8px; box-shadow:var(--shadow);
+.portrait-panel img {
+  max-width: 100%;
+  height: auto;
+  max-height: 70vh;                 /* keep big photos from forcing scroll */
+  object-fit: cover;
+  border-radius: 16px;
 }
 
-/* Utilities */
-.visually-hidden{ position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+/* timer chip stays visible */
+.trial-chip {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 60;
+}
+
+/* --- mobile: stack layout, keep image manageable --- */
+@media (max-width: 900px) {
+  .chat-main {
+    grid-template-columns: 1fr;     /* single column */
+    gap: 12px;
+    padding: 8px 8px 0 8px;
+  }
+
+  .portrait-panel {
+    order: -1;                      /* image above messages */
+  }
+
+  .portrait-panel img {
+    max-height: 45vh;               /* smaller on phones */
+  }
+
+  .composer {
+    padding: 8px 12px;
+  }
+}

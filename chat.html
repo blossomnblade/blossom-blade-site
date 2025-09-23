@@ -97,7 +97,9 @@
       border-radius:18px; overflow:hidden; box-shadow: var(--shadow);
     }
     #portraitImg{display:block; width:100%; height:auto; object-fit:cover; aspect-ratio:3/4}
-    #portraitLabel{padding:10px 14px; font-size:12px; color:var(--ink-dim)}
+    #portraitLabel,
+#portrait figcaption { display: none !important; }
+
     /* mobile: stack columns */
     @media (max-width: 900px){
       .wrap{grid-template-columns: 1fr}

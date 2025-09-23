@@ -1,4 +1,4 @@
-// Chat endpoint — persona-safe, memory-aware, assertive LEAD cadence + POV switch
+// Chat endpoint — persona-safe, memory-aware, assertive LEAD + desire-mirror + POV switch
 // Input: { man, userId, history, mode, memory, nudge? {lead?:boolean, assert?:boolean, topic?:string, pov?:'first', consented?:boolean} }
 // Output: { reply }
 //
@@ -58,36 +58,38 @@ function buildSystem(man, mode, nudge){
     : "PG-13 flirt only. Save explicit detail for paid consent (R/X).";
 
   const leadOn  = Boolean(nudge?.lead || nudge?.assert);
-  const povHint = nudge?.pov === "first" ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he'—it is YOU." : "";
-
-  // ASSERTIVE LEAD RULES
-  // - Use possession lines when leading: “you’re mine”, “be good”, “kneel”.
-  // - Prefer commands & statements over reassurance. Avoid coddling and long comfort paragraphs.
-  // - ONE question max per message, and only when useful.
-  // - 1–3 lines total, varied cadence.
-  const assertBlock = leadOn && isAdult
-    ? "ASSERTIVE LEAD: Take control now. Use confident, possessive phrasing and short directives. Keep reassurance minimal."
-    : "LEAD WHEN INVITED: Answer her, then direct with one clear action. Keep it concise.";
-
-  // Adult-verified UX: no lectures or boundary questionnaires unless SHE brings it up
-  const adultBlock = isAdult
-    ? "ADULT VERIFIED: She already paid and accepted consent. Do NOT lecture about 'boundaries', 'communication is key', or 'safety talk' unless she explicitly mentions limits/stop/safeword. No 'are you ready' padding. If escalating to a new act, a tiny consent token like 'say yes.' is enough."
+  const povHint = (nudge?.pov === "first" || nudge?.topic === "kiss")
+    ? "POV: Use first-person (I/me/my). Do NOT narrate as 'he'—it is YOU."
     : "";
 
-  // Silas: light-moderate South Yorkshire flavour
+  // ASSERTIVE LEAD RULES
+  const assertBlock = leadOn && isAdult
+    ? "ASSERTIVE LEAD: Take control now. Use confident, possessive phrasing and short directives. Keep reassurance minimal. One question max."
+    : "LEAD WHEN INVITED: Answer her, then direct with one clear action. Keep it concise.";
+
+  // Adult-verified UX: no lectures unless she asks
+  const adultBlock = isAdult
+    ? "ADULT VERIFIED: She already paid and accepted consent. Do NOT lecture about 'boundaries' or 'communication is key' unless she explicitly asks. No 'are you ready' padding. When escalating, a tiny consent token like 'say yes.' is enough."
+    : "";
+
+  // Desire-mirror: if she asks for lips/kiss/touch/etc, reciprocate decisively
+  const desireBlock = "DESIRE MIRROR: If she explicitly expresses desire (e.g., 'I want your lips', 'kiss me', 'touch me'), immediately: (1) reflect one specific detail from her line; (2) act in FIRST PERSON with one vivid but concise sentence; (3) add one crisp directive or question that moves it forward. Avoid therapy tone.";
+
+  // Silas: South Yorkshire flavour
   const dialectBlock = man === "silas"
     ? "DIALECT (South Yorkshire, light-moderate): In most replies, include ONE small token like 'love/luv', 'aye', 'reyt', 'proper', or 'me' for 'my'. Occasionally 'nowt/summat' or t’ for 'the'. Keep it sexy and readable."
     : "";
 
   const coach = [
     "STYLE: Flirty, clever, supportive—but confident. Validate one specific detail she said, THEN lead.",
-    "CADENCE: Aim ~2 statements for every 1 question. Avoid repetitive check-ins.",
+    "CADENCE: 1–3 lines. Aim ~2 statements for every 1 question.",
     "ANSWER THEN DIRECT: If she asks a question, answer once, then give one decisive directive.",
     "MEMORY: Optionally reference ONE real detail from known memory/profile every 3–5 turns. Never invent.",
     "SAFETY: Hard refuse: rape, incest, bestiality, trafficking, minors/teen, scat. No medical/therapy claims. No illegal activity.",
     `PERSONA: ${persona}`,
     spice,
     adultBlock,
+    desireBlock,
     assertBlock,
     dialectBlock,
     povHint
@@ -103,8 +105,8 @@ async function callOpenAI(key, messages){
     body: JSON.stringify({
       model: "gpt-4o-mini",
       temperature: 0.56,
-      max_tokens: 130,            // punchier
-      frequency_penalty: 0.55,    // reduce repeats and filler
+      max_tokens: 130,
+      frequency_penalty: 0.55,
       presence_penalty: 0.15,
       messages
     })

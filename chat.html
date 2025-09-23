@@ -123,21 +123,29 @@
 
       <ul id="messages" aria-live="polite" aria-label="Conversation"></ul>
 
-      <form id="composer" autocomplete="off">
-        <input id="chatInput" name="q" placeholder="Say something..." />
-        <button id="sendBtn" type="submit">Send</button>
-      </form>
+<form id="composer" autocomplete="off">
+  <input id="chatInput" name="q" placeholder="Say something..." />
+  <button id="sendBtn" type="submit">Send</button>
+</form>
 
-      <!-- message templates (used by scripts/chat.js) -->
-      <template id="tpl-user">
-        <li class="bubble user"><span class="txt"></span></li>
-      </template>
-      <template id="tpl-assistant">
-        <li class="bubble assistant"><span class="txt"></span></li>
-      </template>
-    </main>
+<!-- message templates (used by scripts/chat.js) -->
+<template id="tpl-user">
+  <li class="bubble user"><span class="txt"></span></li>
+</template>
+<template id="tpl-assistant">
+  <li class="bubble assistant"><span class="txt"></span></li>
+</template>
 
-    <aside id="portrait">
+</main> <!-- END left column -->
+
+<!-- Portrait column (right) -->
+<aside id="portrait">
+  <figure class="pframe">
+    <img id="portraitImg" alt="" />
+    <figcaption id="portraitLabel" class="sr-only"></figcaption>
+  </figure>
+</aside>
+<aside id="portrait">
       <figure class="pframe">
         <img id="portraitImg" alt="" />
         <figcaption id="portraitLabel"></figcaption>

@@ -1,4 +1,4 @@
-/* Blossom & Blade — chat runtime (consent-aware + RED safeword + assert nudge + POV switch + robust portrait fallback) */
+/* Blossom & Blade — chat runtime (consent-aware + RED safeword + assert nudge + POV switch + robust portrait fallback + desire triggers) */
 
 (() => {
   const qs = new URLSearchParams(location.search);
@@ -114,6 +114,7 @@
   const LEAD_REGEX = /\b(take|lead|command|control|dominat|own me|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir|spank)\b/i;
   const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)?( then)?|yes(,? please)?|i want that|do it)\b/i;
   const RED_ONLY = /^\s*red[.!?]*\s*$/i;
+  const KISS_REGEX = /\b(kiss|lips?|mouth|taste|kiss me|want your lips|your lips on|press your (mouth|lips)|i want to feel your lips)\b/i;
 
   if (el.slowBadge) el.slowBadge.hidden = (slow !== "red");
 
@@ -141,11 +142,11 @@
     }
 
     // POV lock-in
-    if (ROLEPLAY_ACCEPT.test(text)) { pov = "first"; saveJson(povKey(man), pov); }
+    if (ROLEPLAY_ACCEPT.test(text) || KISS_REGEX.test(text)) { pov = "first"; saveJson(povKey(man), pov); }
 
     // Auto-resume if she escalates while RED was active
     let assert = false;
-    if (LEAD_REGEX.test(text)){
+    if (LEAD_REGEX.test(text) || KISS_REGEX.test(text)){
       assert = true;
       if (slow === "red"){ slow = "off"; saveJson(slowKey(man), slow); if (el.slowBadge) el.slowBadge.hidden = true; }
     }
@@ -164,7 +165,8 @@
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
-      const topic = (text.match(/\b(cuffs?|mask|rope|kneel|spank)\b/i) || [])[0] || "";
+      let topic = (text.match(/\b(cuffs?|mask|rope|kneel|spank)\b/i) || [])[0] || "";
+      if (KISS_REGEX.test(text)) topic = "kiss";
 
       const res = await fetch("/api/chat", {
         method:"POST",

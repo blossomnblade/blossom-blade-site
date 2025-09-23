@@ -100,12 +100,17 @@
     #portraitLabel,
 #portrait figcaption { display: none !important; }
 
-    /* mobile: stack columns */
-    @media (max-width: 900px){
-      .wrap{grid-template-columns: 1fr}
-      aside#portrait{position:relative; top:auto}
-      #portraitImg{aspect-ratio:auto}
-    }
+  /* Keep two columns on all screens; scale portrait on small phones */
+.wrap{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) min(44vw, 360px); /* chat | portrait */
+  gap: 16px;
+}
+
+@media (max-width: 480px){
+  .wrap{ grid-template-columns: minmax(0,1fr) 42vw; }
+}
+ 
   </style>
 </head>
 <body>

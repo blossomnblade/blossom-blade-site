@@ -2,70 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Blossom & Blade — Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade — Unlock</title>
+  <link rel="stylesheet" href="/styles/home.css" />
   <style>
-    :root { --bg:#0b0b0f; --fg:#f6f6fb; --muted:#b8b8c7; --accent:#ff2f86; }
-    html,body{margin:0;padding:0;background:var(--bg) url('/images/gothic-bg.jpg') center/cover fixed no-repeat;color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
-    .card{width:min(820px,94vw);backdrop-filter:blur(6px);background:rgba(14,14,20,.68);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px 22px 10px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-    h1{margin:0 0 6px}
-    p{margin:0 0 12px;color:var(--muted)}
-    .tiers{display:grid;gap:12px;grid-template-columns:1fr}
-    .tier{border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:16px}
-    .tier h3{margin:0 0 6px}
-    .price{font-weight:800;margin:6px 0 10px}
-    .btn{width:100%;padding:12px 14px;border-radius:10px;border:0;background:#fff;color:#111;font-weight:800;cursor:pointer}
-    .fine{font-size:12px;color:var(--muted);margin-top:10px}
-    .badge{font-size:12px;background:#111;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 10px;float:right;margin-top:-6px}
-    @media(min-width:760px){.tiers{grid-template-columns:1fr 1fr}}
+    .pricing { display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); margin-block:1.25rem; }
+    .card { background:#17171b; border:1px solid #26262b; border-radius:16px; padding:1rem 1.25rem; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+    .card h3 { margin:0 0 .2rem; font-size:1.15rem; }
+    .price { font-size:1.75rem; font-weight:700; margin:.25rem 0 .75rem; }
+    .cta { display:flex; gap:.5rem; align-items:center; }
+    .cta button { background:#ff5a7a; border:none; color:#fff; border-radius:999px; padding:.7rem 1rem; font-weight:700; cursor:pointer; }
+    .cta button:disabled { opacity:.5; cursor:not-allowed; }
+    .muted { color:#9aa; font-size:.95rem; }
+    .radio-row { display:flex; flex-wrap:wrap; gap:.5rem .75rem; margin:.25rem 0 .75rem; }
+    .radio-row label { display:flex; align-items:center; gap:.4rem; background:#111216; border:1px solid #252530; padding:.45rem .6rem; border-radius:999px; cursor:pointer; }
+    .topline { display:flex; gap:.75rem; align-items:center; justify-content:space-between; }
+    .big-brand { font-size:1.6rem; font-weight:800; letter-spacing:.3px; }
+    .pill { font-size:.85rem; padding:.25rem .6rem; border-radius:999px; background:#22232a; color:#cfd3d9; border:1px solid #2e2f37; }
+    .hero { margin-top:.6rem; background:#0e0f13; border:1px solid #23242b; border-radius:16px; padding:1rem 1.2rem; }
+    .success { background:#0f1a12; border-color:#1f3b2a; color:#cfe9d6 }
+    .notice { margin-top:.75rem; font-size:.95rem; color:#aeb4c0 }
+    .divider { height:1px; background:#262830; margin:.75rem 0; }
+    .back { color:#cdd2db; text-decoration:none; }
+    @media (max-width:640px){ .big-brand{font-size:1.35rem;} }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="badge">Adults 18+ only</div>
-      <h1>Unlock Rooms</h1>
-      <p>Safe, flirty, and on your terms. $1 from every purchase goes to a DV charity.</p>
+  <header class="site-top">
+    <div class="big-brand">Blossom &amp; Blade</div>
+    <div class="pill">Adults 18+ only</div>
+  </header>
 
-      <div class="tiers">
-        <div class="tier">
-          <h3>Day Pass — one man</h3>
-          <div class="price">$7.99</div>
-          <button class="btn" data-plan="day_single">Continue</button>
-          <div class="fine">Pick your favorite and stay the day.</div>
+  <section class="hero">
+    <div class="topline">
+      <h1 style="margin:0;font-size:1.15rem">Unlock the conversation</h1>
+      <div id="status" class="pill" aria-live="polite"></div>
+    </div>
+    <p class="notice">Every monthly subscription sends <strong>$1</strong> to domestic-violence support. Thank you for backing safe, consensual fantasy.</p>
+    <div class="divider"></div>
+
+    <div class="pricing">
+      <div class="card">
+        <h3>Day Pass — Pick One</h3>
+        <div class="price">$7.99 <span class="muted">/ 24 hours</span></div>
+        <div class="radio-row" id="manOptions" role="radiogroup" aria-label="Choose your guy for the day">
+          <label><input type="radio" name="man" value="blade">Blade</label>
+          <label><input type="radio" name="man" value="dylan">Dylan</label>
+          <label><input type="radio" name="man" value="jesse">Jesse</label>
+          <label><input type="radio" name="man" value="alexander">Alexander</label>
+          <label><input type="radio" name="man" value="silas">Silas</label>
+          <label><input type="radio" name="man" value="grayson">Grayson</label>
         </div>
-        <div class="tier">
-          <h3>Monthly — all six rooms</h3>
-          <div class="price">$14.99</div>
-          <button class="btn" data-plan="monthly_all">Continue</button>
-          <div class="fine">Unlimited access to Blade, Dylan, Jesse, Alexander, Silas, Grayson.</div>
+        <div class="cta">
+          <button id="buyDay">Unlock Day Pass</button>
+          <span class="muted">You’ll have 24h with your choice.</span>
         </div>
       </div>
 
-      <p class="fine">Voice add-on: coming soon.</p>
+      <div class="card">
+        <h3>Monthly — All 6</h3>
+        <div class="price">$14.99 <span class="muted">/ month</span></div>
+        <p class="muted">Unlimited access to every persona for 30 days.</p>
+        <div class="cta"><button id="buyMonth">Unlock All 6</button></div>
+      </div>
     </div>
-  </div>
 
+    <p class="notice">Already purchased on this device? Your access will be detected automatically.</p>
+    <p class="notice"><a class="back" href="/index.html">← Back to characters</a></p>
+  </section>
+
+  <section id="after" class="hero success" hidden>
+    <h2 style="margin:0 0 .25rem;font-size:1.05rem">You’re in.</h2>
+    <p style="margin:.25rem 0 .5rem">Access granted. Jump back into the chat.</p>
+    <p><a class="back" id="returnLink" href="/index.html">Enter chat →</a></p>
+  </section>
+
+  <script src="/scripts/access.js"></script>
   <script>
-    // simple client → server handoff. replace with your processor later.
-    addEventListener("click", async (e) => {
-      const btn = e.target.closest(".btn[data-plan]");
-      if (!btn) return;
-      btn.disabled = true; btn.textContent = "Preparing…";
-      try {
-        const r = await fetch("/api/checkout", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ plan: btn.dataset.plan })
-        });
-        const data = await r.json();
-        location.href = data.redirectUrl || "/thank-you.html?plan="+btn.dataset.plan;
-      } catch (err) {
-        alert("Sorry, that didn’t go through. Try again in a moment.");
-        btn.disabled = false; btn.textContent = "Continue";
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      const preselect = (qs.get("man") || "").toLowerCase();
+      if (preselect) {
+        const r = document.querySelector(`input[type=radio][name=man][value="${preselect}"]`);
+        if (r) r.checked = true;
+      } else {
+        document.querySelector('input[type=radio][name=man]')?.click();
       }
-    });
+
+      const status = document.getElementById("status");
+      const setStatus = () => {
+        const man = (document.querySelector('input[name=man]:checked')||{}).value || preselect || "blade";
+        status.textContent = window.BnBAccess ? window.BnBAccess.remainingCopy(man) : "";
+      };
+      setStatus(); setInterval(setStatus, 1000);
+
+      document.getElementById("buyDay").addEventListener("click", () => {
+        const man = (document.querySelector('input[name=man]:checked')||{}).value;
+        if (!man) return alert("Pick your guy for today.");
+        window.BnBAccess.grantDayPass(man, 24);
+        showAfter(man);
+      });
+
+      document.getElementById("buyMonth").addEventListener("click", () => {
+        window.BnBAccess.grantMonthAll(30);
+        const man = (document.querySelector('input[name=man]:checked')||{}).value || "blade";
+        showAfter(man);
+      });
+
+      function showAfter(man){
+        document.querySelector(".hero").hidden = true;
+        const a = document.getElementById("after");
+        a.hidden = false;
+        const link = document.getElementById("returnLink");
+        link.href = `/chat.html?man=${encodeURIComponent(man)}&sub=night`;
+      }
+    })();
   </script>
 </body>
 </html>

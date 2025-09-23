@@ -1,53 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Chat</title>
+  <title>Blossom &amp; Blade — Chat</title>
   <link rel="preload" href="/styles/chat.css" as="style" />
   <link rel="stylesheet" href="/styles/chat.css" />
+  <link rel="icon" href="/images/logo.jpg" />
 </head>
-<body class="chat">
-  <header class="topbar">
+<body>
+  <!-- Header -->
+  <header class="site-header">
     <div class="brand">Blossom &amp; Blade</div>
-    <div id="roomTitle" class="room">—</div>
-    <div class="age-pill">Adults 18+ only</div>
-    <div id="trialTimer" class="trial-timer" aria-live="polite" hidden>Trial 6:00 left</div>
+    <div id="roomTitle" class="room-title">— <span id="roomTitleName">...</span></div>
+    <div class="age-pill" id="slowBadge" aria-label="Adults 18+ only">Adults 18+ only</div>
   </header>
 
-  <main class="layout">
-    <section class="messages">
-      <div id="messages" class="stack" aria-live="polite"></div>
-
+  <!-- Layout: messages (left) / portrait (right) -->
+  <main class="chat-shell" id="chatShell" aria-live="polite">
+    <!-- Message stack -->
+    <section class="messages-wrap" aria-label="Conversation">
+      <ul id="messages" class="messages"></ul>
+      <!-- Composer -->
       <form id="composer" class="composer" autocomplete="off">
-        <label class="sr-only" for="chatInput">Message</label>
-        <input id="chatInput" name="q" type="text" placeholder="Say something..." inputmode="text" />
+        <label for="chatInput" class="sr-only">Message</label>
+        <input id="chatInput" name="chatInput" type="text" inputmode="text"
+               placeholder="Say something..." autocomplete="off" />
         <button id="sendBtn" type="submit" class="send">Send</button>
       </form>
     </section>
 
-    <aside class="portrait">
-      <figure class="frame">
-        <img id="portraitImg" alt="" />
-        <figcaption id="portraitLabel" class="sr-only"></figcaption>
+    <!-- Portrait panel -->
+    <aside class="portrait-wrap" aria-label="Character portrait">
+      <figure class="portrait-frame">
+        <img id="portraitImg" alt="Character portrait" referrerpolicy="no-referrer"
+             onerror="this.src='/images/characters/blade/blade-chat.webp'" />
+        <figcaption id="portraitLabel" class="sr-only">Portrait</figcaption>
       </figure>
     </aside>
   </main>
 
-  <!-- Templates -->
-  <template id="tpl-user"><div class="bubble user"></div></template>
-  <template id="tpl-assistant"><div class="bubble ai"></div></template>
+  <!-- Message bubble templates the JS clones -->
+  <template id="tpl-user">
+    <li class="bubble user"><span class="dot" aria-hidden="true"></span><div class="txt"></div></li>
+  </template>
+  <template id="tpl-assistant">
+    <li class="bubble ai"><span class="dot" aria-hidden="true"></span><div class="txt"></div></li>
+  </template>
 
-  <!-- Scripts -->
-  <script src="/scripts/access.js"></script>
-  <script src="/scripts/brain.js"></script>
-  <script src="/scripts/chat.js"></script>
-  <script>
-    // Start 6-minute trial if not paid; attach timer.
-    (function(){
-      const man = (new URLSearchParams(location.search).get("man") || "").toLowerCase();
-      if (window.BnBAccess) window.BnBAccess.ensureTrialOrPaid({ man, timerSel:"#trialTimer", redirect:true });
-    })();
-  </script>
+  <!-- Scripts: config + trial FIRST, then consent + chat runtime -->
+  <script defer src="/scripts/config.js"></script>
+  <script defer src="/scripts/trial.js"></script>
+  <script defer src="/scripts/consent.js"></script>
+  <script defer src="/scripts/chat.js"></script>
 </body>
 </html>

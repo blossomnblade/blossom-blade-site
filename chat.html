@@ -5,120 +5,43 @@
   <title>Blossom &amp; Blade — Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
+  <link rel="preload" as="image" href="/images/logo.jpg" />
+  <link rel="stylesheet" href="/styles/chat.css" />
   <style>
-    /* ---- Critical inline CSS so we never see bullets/white while CSS loads ---- */
-    :root{
-      --bg:#0d0f14;
-      --panel:#0f1625;
-      --panel-2:#131b2b;
-      --ink:#cfd6e6;
-      --ink-dim:#9fb0ca;
-      --hot:#ff7aa2;
-      --ring:#1e2840;
-      --shadow: 0 8px 24px rgba(0,0,0,.35);
-      --radius:16px;
+    body { background:#0b0f14; color:#cfd6e6; margin:0; padding:12px; }
+    .wrap{max-width:1280px;margin:0 auto;padding:12px;}
+    header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .brand{font-weight:700;color:#cfd6e6}
+    .title{color:#aeb9d0}
+    .badges{display:flex;gap:10px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#101826;border:1px solid #1f2740;font-size:12px;color:#cfd6e6}
+    main{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    @media (max-width: 980px){ main{grid-template-columns:1fr} aside#portrait{position:relative;top:auto} }
+    ul#messages{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 240px);overflow:auto}
+    li.bubble{background:#101826;border:1px solid #1f2740;border-radius:18px;padding:10px 14px;display:inline-block;max-width:60ch}
+    li.bubble.assistant{background:#0f1627;border-color:#24325a}
+    form#composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(12,16,32,.0),rgba(12,16,32,.8) 30%, #0b0f14);padding:12px 0;display:flex;gap:10px;align-items:center}
+    input#chatInput{flex:1;min-width:0;background:#0f1627;border:1px solid #24325a;border-radius:10px;padding:12px;color:#cfd6e6}
+    button#sendBtn{appearance:none;border:0;cursor:pointer;padding:10px 18px;height:44px;background:radial-gradient(120% at 30% -10%, #ff90dc, #ff5d8c);color:#0b0f19;font-weight:700;border-radius:999px;box-shadow:0 8px 28px rgba(255,93,140,.28)}
+    aside#portrait{position:sticky;top:76px;align-self:start}
+    figure.pframe{margin:0;padding:0;background:#0b0f19;border:1px solid #1f2740;border-radius:18px;overflow:hidden;box-shadow:0 8px 28px rgba(255,93,140,.28)}
+    #portraitImg{display:block;width:100%;height:auto;object-fit:cover;aspect-ratio:3/4}
+    #portraitLabel{padding:10px 14px;font-size:12px;color:#aeb9d0}
+    /* mobile tweak */
+    @media (max-width: 900px){
+      .wrap{grid-template-columns:1fr}
+      #portraitImg{aspect-ratio:auto}
     }
-   html,body{height:100%;background:var(--bg);color:var(--ink);overflow:hidden;}
-
-    body{margin:0;font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;}
-    .wrap{
-      min-height:100svh;
-      max-width:1280px;
-      margin:0 auto;
-      padding:12px;
-      display:grid;
-      gap:24px;
-      grid-template-columns: 1fr minmax(260px,420px);
-    }
-    .col-left{min-width:0;display:flex;flex-direction:column}
-    .top{
-      position:sticky; top:0; z-index:5;
-      display:flex; align-items:center; gap:10px;
-      padding:8px 6px 10px;
-      background:linear-gradient(180deg, rgba(13,15,20,.95), rgba(13,15,20,.75) 60%, rgba(13,15,20,0));
-      backdrop-filter:saturate(120%) blur(6px);
-    }
-    .brand{font-weight:700; letter-spacing:.2px}
-    .title{opacity:.85}
-    .badges{margin-left:auto;display:flex;gap:8px;align-items:center}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      background:#101828; border:1px solid var(--ring);
-      color:var(--ink); border-radius:999px; padding:6px 10px; font-size:12px;
-      box-shadow: var(--shadow);
-    }
-    .pill.hot{background:#1b0f19;color:#ffd7e5;border-color:#3b2034}
-    .pill.adults{opacity:.8}
-    /* --- layout --- */
-    #messages{
-      list-style:none; margin:8px 0 12px; padding:0;
-      display:flex; flex-direction:column; gap:10px;
-      overflow:auto; /* we size this in JS so the composer is always visible */
-      scrollbar-gutter: stable;
-      scroll-behavior:smooth;
-    }
-    .bubble{
-      max-width:70ch;
-      background:var(--panel);
-      border:1px solid var(--ring);
-      border-radius:14px;
-      padding:12px 14px;
-      box-shadow: var(--shadow);
-      word-wrap:break-word; white-space:pre-wrap;
-    }
-    .bubble.assistant{align-self:flex-start;background:var(--panel)}
-    .bubble.user{align-self:flex-end;background:var(--panel-2)}
-    /* composer */
-    #composer{
-      position:sticky; bottom:env(safe-area-inset-bottom, 8px); z-index:6;
-      display:flex; gap:10px; align-items:center;
-      background:linear-gradient(180deg, rgba(16,24,40,.85), rgba(16,24,40,.85));
-      border:1px solid var(--ring);
-      border-radius:999px; padding:8px 10px;
-      box-shadow: var(--shadow);
-    }
-    #chatInput{
-      flex:1 1 auto; min-width:0; height:44px;
-      background:#0e1320; border:1px solid #1a2338; color:var(--ink);
-      border-radius:999px; padding:0 14px; outline:none;
-    }
-    #chatInput::placeholder{color:var(--ink-dim)}
-    #sendBtn{
-      appearance:none; border:0; cursor:pointer;
-      padding:10px 18px; height:44px;
-      background:radial-gradient(120% 120% at 30% -10%, #ff9dc0, #ff5d8c);
-      color:#1b0f19; font-weight:700; border-radius:999px;
-      box-shadow:0 8px 28px rgba(255,93,140,.28);
-    }
-    /* portrait */
-    aside#portrait{position:sticky; top:76px; align-self:start}
-    figure.pframe{
-      margin:0; padding:0; background:#0b0f19; border:1px solid var(--ring);
-      border-radius:18px; overflow:hidden; box-shadow: var(--shadow);
-    }
-    #portraitImg{display:block; width:100%; height:auto; object-fit:cover; aspect-ratio:3/4}
-    #portraitLabel,
-#portrait figcaption { display: none !important; }
-
-  /* Keep two columns on all screens; scale portrait on small phones */
-.wrap{
-  display: grid;
-  grid-template-columns: minmax(0,1fr) min(44vw, 360px); /* chat | portrait */
-  gap: 16px;
-}
-
-@media (max-width: 480px){
-  .wrap{ grid-template-columns: minmax(0,1fr) 42vw; }
-}
- 
   </style>
 </head>
 <body>
   <div class="wrap">
     <main class="col-left" id="app">
       <header class="top">
-        <div class="brand">Blossom &amp; Blade</div>
-        <div class="title" id="roomTitle">—</div>
+        <div>
+          <div class="brand">Blossom &amp; Blade</div>
+          <div class="title" id="roomTitle">—</div>
+        </div>
         <div class="badges">
           <span class="pill hot" id="slowBadge" title="Say RED to slow erotica">RED</span>
           <span class="pill" id="trialBadge">Trial</span>
@@ -128,80 +51,31 @@
 
       <ul id="messages" aria-live="polite" aria-label="Conversation"></ul>
 
-<form id="composer" autocomplete="off">
-  <input id="chatInput" name="q" placeholder="Say something..." />
-  <button id="sendBtn" type="submit">Send</button>
-</form>
+      <form id="composer" autocomplete="off">
+        <input id="chatInput" name="q" placeholder="Say something..." />
+        <button id="sendBtn" type="submit">Send</button>
+      </form>
 
-<!-- message templates (used by scripts/chat.js) -->
-<template id="tpl-user">
-  <li class="bubble user"><span class="txt"></span></li>
-</template>
-<template id="tpl-assistant">
-  <li class="bubble assistant"><span class="txt"></span></li>
-</template>
+      <!-- message templates -->
+      <template id="tpl-user">
+        <li class="bubble user"><span class="txt"></span></li>
+      </template>
+      <template id="tpl-assistant">
+        <li class="bubble assistant"><span class="txt"></span></li>
+      </template>
+    </main>
 
-</main> <!-- END left column -->
-
-<!-- Portrait column (right) -->
-<aside id="portrait">
-  <figure class="pframe">
-    <img id="portraitImg" alt="" />
-    <figcaption id="portraitLabel" class="sr-only"></figcaption>
-  </figure>
-</aside>
-<aside id="portrait">
+    <aside id="portrait">
       <figure class="pframe">
-        <img id="portraitImg" alt="" />
-        <figcaption id="portraitLabel"></figcaption>
+        <img id="portraitImg" alt="portrait" />
+        <figcaption id="portraitLabel"> </figcaption>
       </figure>
     </aside>
   </div>
 
-  <!-- App logic -->
-  <script src="/scripts/chat.js" type="module"></script>
-
-  <!-- Tiny UI helper: keep list sized & always scrolled to newest -->
- <script>
-  (function(){
-    const list = document.getElementById('messages');
-    const top  = document.querySelector('.top');
-    const comp = document.getElementById('composer');
-
-    function sizeList(){
-      // heights of sticky header + composer
-      const t = top.getBoundingClientRect().height || 0;
-      const c = comp.getBoundingClientRect().height || 0;
-      // fill viewport, leave a tiny cushion
-      list.style.height = `calc(100svh - ${t + c + 28}px)`;
-    }
-
-    function scrollBottom(smooth=true){
-      // always keep the newest message in view
-      list.scrollTo({ top: list.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
-    }
-
-    // Auto-scroll whenever messages change (including streaming text)
-    const obs = new MutationObserver(() => scrollBottom(true));
-    obs.observe(list, { childList: true, subtree: true, characterData: true });
-
-    // Initial sizing + keep it correct on viewport/composer/header changes
-    sizeList();
-    addEventListener('load',        () => { sizeList(); scrollBottom(false); });
-    addEventListener('resize',      sizeList);
-    addEventListener('orientationchange', sizeList);
-    if (window.visualViewport){
-      visualViewport.addEventListener('resize', sizeList);
-      visualViewport.addEventListener('scroll', sizeList);
-    }
-
-    // Also jump to bottom when you send a message
-    document.getElementById('composer')?.addEventListener('submit', () => {
-      // defer until the DOM gets the new <li>
-      setTimeout(() => scrollBottom(true), 0);
-    });
-  })();
-</script>
-
+  <!-- brains (phrase banks), trial, then chat runtime -->
+  <script src="/scripts/brain.js"></script>
+  <script src="/scripts/trial.js"></script>
+  <script src="/scripts/chat.js"></script>
 </body>
 </html>

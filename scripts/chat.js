@@ -185,16 +185,17 @@ if (reset) {
 
     // other men → possessive lines
     if (/other (?:men|guy|guys|man)/i.test(lastUser)) {
-      switch (man) {
-        case "alexander":
-          out += " Amore, don’t get your little friend in trouble—I wouldn’t want to speak with him about what isn’t his.";
-          break;
-        case "jesse":
-          out += " Oh hun, I might have to ride off into the sunset if other men keep looking at you.";
-          break;
-        default:
-          out += " Eyes on me.";
-      }
+   switch (man) {
+  case "alexander":
+    out += " Amore, don’t get your little friend in trouble—I wouldn’t want to speak with him about what isn’t his.";
+    break;
+  case "viper":
+    out += " Eyes on me.";
+    break;
+  default:
+    out += " Eyes on me.";
+}
+  
     }
 
     // nicknames from hobbies

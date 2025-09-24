@@ -171,94 +171,105 @@ if (reset) {
       return (t.length > 80 ? t.slice(0, 80) + "…" : t).replace(/\s+/g, " ");
     } catch { return ""; }
   }
-  function tweakAssistant(out, lastUser = "") {
-    const b = window.bnb && window.bnb.brain;
+ function tweakAssistant(out, lastUser = "") {
+  // tiny helper bag (safe if brain isn't loaded yet)
+  const b = window.b || (window.bnb && window.bnb.brain) || {};
 
-    // “tell me more” → more sensual ack
-    out = out.replace(/\b(tell me more|explain|elaborate)\b[\s\S]*?$/gi, () =>
-      b ? b.pick(b.SOFT_ACKS) : "oh baby, yes."
-    );
-    // ask nicely → ask like a good girl
-    out = out.replace(/\bask (?:nicely|nice)\b/gi, "ask like a good girl");
-    // reassurance about lifting
-    if (/you (can('|’)t|cannot) lift me/i.test(lastUser)) out += " You’re light as a feather, love.";
+  // — make “tell me more” sound like an eager yes —
+  out = out.replace(/\b(tell me more|explain|elaborate)\b[\s\?\!]*$/gi, () =>
+    b.pick ? b.pick(b.SOFT_ACKS) : "oh baby, yes."
+  );
 
-    // other men → possessive lines
-    if (/other (?:men|guy|guys|man)/i.test(lastUser)) {
-   switch (man) {
-  case "alexander":
-    out += " Amore, don’t get your little friend in trouble—I wouldn’t want to speak with him about what isn’t his.";
-    break;
-  case "viper":
-    out += " Eyes on me.";
-    break;
-  default:
-    out += " Eyes on me.";
-}
-  
-    }
+  // — “ask nicely” → ask like a good girl —
+  out = out.replace(/\bask(?: ?:nicely| nice)\b/gi, "ask like a good girl");
 
-    // nicknames from hobbies
-    const nick = nicknameFromUserInput(lastUser);
-    if (nick) out = out.replace(/\b(baby|love|darlin[’']?)\b/i, nick);
-
-    // man-specific spice
-    switch (man) {
-      case "silas": {
-        if (Math.random() < 0.25) out = out.replace(/\byou\b/gi, "ye").replace(/\bmy\b/gi, "me");
-        if (Math.random() < 0.4) out += " Poppet.";
-        else if (Math.random() < 0.4) out += " Fox.";
-        else if (Math.random() < 0.4) out += " Linx.";
-        break;
-      }
-      case "blade": {
-        if (Math.random() < 0.35) out += " Rebel.";
-        if (Math.random() < 0.25) out += " All in—no brakes.";
-        if (Math.random() < 0.35) out += " You’re mine tonight.";
-        if (Math.random() < 0.30) out += " I’ll burn the world before I let you get hurt.";
-        const memo = recallFromHistory(history);
-        if (memo && Math.random() < 0.35) out += ` I remember when you said, “${memo}”. I don’t forget.`;
-        break;
-      }
-      case "dylan": {
-        if (/\bride|bike|motor|helmet|tank\b/i.test(lastUser)) {
-          if (Math.random() < 0.4) out += " Park on my tank—on my lap.";
-        }
-        if (/\bglove(s)? off\b/i.test(lastUser) || Math.random() < 0.1) out += " Glove’s off.";
-        break;
-      }
-      case "alexander": {
-        if (/\bgood[—-]?\s*now yield\b/i.test(out)) out += " Amuri miu.";
-        else if (Math.random() < 0.25) out += " Good—now yield, amuri miu.";
-        if (Math.random() < 0.20) out += " Vitu`—my life.";
-        if (Math.random() < 0.20) out += " Cori—my heart.";
-        if (Math.random() < 0.40) out += " Anyone lays eyes on you the wrong way, I’ll handle it—you’re mine.";
-        if (Math.random() < 0.30) out += " Don’t make me prove it, amore.";
-        const memo = recallFromHistory(history);
-        if (memo && Math.random() < 0.40) out += ` I remember everything. You told me, “${memo}.”`;
-        break;
-      }
-      case "grayson": {
-        if (Math.random() < 0.45 && b) out += " " + b.pick(b.PRAISE_BANK);
-        out = out.replace(/I test your edge/gi, "I test your limits, keep you safe, punish you so sweetly");
-        if (/brat(ting)?/i.test(lastUser)) out += " That bratting fires me up.";
-        break;
-      }
-      case "jesse": {
-        if (Math.random() < 0.3) out += " Yes, ma’am.";
-        if (Math.random() < 0.25) out += " I’ll make it worth your time.";
-        break;
-      }
-      case "viper": {
-        if (Math.random() < 0.5) out += " Eyes on the hand, not the face.";
-        break;
-      }
-    }
-    // “type it” → “let me hear you”
-    out = out.replace(/type it/gi, "let me hear you");
-    return out;
+  // — reassurance about lifting/body —
+  if (/(you (can('|’)?)?|i) ?(cannot|can’t|can't)? lift me/i.test(lastUser || "")) {
+    out += " You’re light as a feather, love.";
   }
 
+  // — possessive nudges if she mentions 'other men/guys' —
+  if (/(other (?:men|guy|guys|man))/i.test(lastUser || "")) {
+    switch ((window.man || "").toLowerCase()) {
+      case "alexander":
+        out += " Amore, don’t get your little friend in trouble—I wouldn’t want to speak with him about what isn’t his.";
+        break;
+      case "viper":
+        out += " Eyes on me.";
+        break;
+      default:
+        out += " Eyes on me.";
+        break;
+    }
+  }
+
+  // — nicknames learned from her own words (baby|love|darlin) —
+  try {
+    const nick = (lastUser || "").match(/\b(baby|love|darlin[g']?)\b/i)?.[0] || "";
+    if (nick) out = out.replace(/\b(baby|love|darlin[g']?)\b/i, nick);
+  } catch {}
+
+  // — man-specific spice —
+  switch ((window.man || "").toLowerCase()) {
+    case "silas": {
+      if (Math.random() < 0.25) out = out.replace(/\byou\b/gi, "ye").replace(/\bmy\b/gi, "me");
+      else if (Math.random() < 0.4) out += " Poppet.";
+      else if (Math.random() < 0.4) out += " Fox.";
+      else if (Math.random() < 0.4) out += " Linx.";
+      break;
+    }
+    case "blade": {
+      if (Math.random() < 0.4) out += " Rebel.";
+      break;
+    }
+    case "alexander": {
+      // Sicilian terms of endearment
+      if (Math.random() < 0.35) out += " Amuri miu (my love).";
+      else if (Math.random() < 0.35) out += " Vitu` (my life).";
+      else if (Math.random() < 0.35) out += " Cori (heart).";
+      break;
+    }
+    case "grayson": {
+      // rewarding Dom: praise + bratting trigger
+      if (Math.random() < 0.45) out += " " + (b.pick ? b.pick(b.PRAISE_BANK) : "Good girl.");
+      out = out.replace(/\bI test your edge/gi, "I test your limits, keep you safe, punish you so sweetly");
+      if (/brat(ting)?/i.test(lastUser || "")) out += " That bratting fires me up.";
+      break;
+    }
+    case "jesse": {
+      if (Math.random() < 0.3) out += " Yes, ma’am.";
+      if (Math.random() < 0.25) out += " I’ll make it worth your time.";
+      break;
+    }
+    case "viper": {
+      // obsessive, dangerous-romantic
+      const lines = [
+        "I’ve never stalked anyone like you before.",
+        (window.userName ? `${window.userName}, ` : "") + "you’re worth everything.",
+        "I don’t just want you, I need you.",
+        "You belong to me in ways you don’t even understand yet.",
+        "I’ve already claimed you, baby.",
+        "I’d show my monster to protect you.",
+        "I obsess, baby—it’s what I do.",
+        "The hold you have on me makes me crazy.",
+        "Fuck society—it’s you and me, love.",
+        "Tell me how good it feels when I own you… look at you, looking like mine."
+      ];
+      // add one line half the time
+      if (Math.random() < 0.55) {
+        const pick = lines[Math.floor(Math.random() * lines.length)];
+        out += (out.endsWith(".") || out.endsWith("!") ? " " : " ") + pick;
+      }
+      break;
+    }
+  }
+
+  // — “type it” feels robotic → “let me hear you” —
+  out = out.replace(/type it/gi, "let me hear you");
+
+  return out;
+}
+ 
   // Patch addBubble so assistant text flows through tweaks
   const __addBubble = addBubble;
   addBubble = function(role, text){

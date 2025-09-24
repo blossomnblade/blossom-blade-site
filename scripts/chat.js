@@ -100,16 +100,24 @@
   function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
   // Render
-  function addBubble(role, text){
-    const tpl = role === "user" ? document.getElementById("tpl-user") : document.getElementById("tpl-assistant");
-    const node = tpl.content.firstElementChild.cloneNode(true);
-    node.textContent = text;
-    el.list.appendChild(node);
-    el.list.scrollTop = el.list.scrollHeight;
-  }
-  function renderAll(){
-    el.list.innerHTML = "";
-    for (const m of history) addBubble(m.role, m.content);
+ function addBubble(role, text){
+  // Polish assistant messages using our global hook (safe if not present)
+  try{
+    if (role === "assistant" && window.bnb && typeof bnb.afterAssistant === "function") {
+      text = bnb.afterAssistant(text, man, history);
+    }
+  }catch(_){}
+
+  const tpl = role === "user"
+    ? document.getElementById("tpl-user")
+    : document.getElementById("tpl-assistant");
+
+  const node = tpl.content.firstElementChild.cloneNode(true);
+  node.textContent = text;
+  el.list.appendChild(node);
+  el.list.scrollTop = el.list.scrollHeight;
+}
+
   }
 
   if (VALID.includes(man) && history.length === 0){

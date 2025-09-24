@@ -1,4 +1,4 @@
-/* Blossom & Blade — chat runtime (consent-aware + RED safeword + assert nudge + POV switch + robust portrait fallback + desire triggers) */
+/* Blossom & Blade — chat runtime (consent-aware + RED safeword + assert nudge + POV switch + robust portrait fallback) */
 
 (() => {
   const qs = new URLSearchParams(location.search);
@@ -25,18 +25,7 @@
 
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
-  const firstLines = [
-  "Hi", "Hello", "Good morning", "Good night",
-  "Hey there", "Glad to see you", "There you are",
-  "It's been a while", "It's good to see you", "Hey love",
-  "Look who it is!", "I was just thinking of you",
-  "Was wondering if I'd see you again", "Where have you been?",
-  "The pleasure is mine", "You're welcome",
-  "Allow me to introduce myself", "Nice to meet you",
-  "You are perfect", "How have you been?",
-  "Oh my, you look like a snack."
-];
-
+  const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 
@@ -100,24 +89,16 @@
   function trimHistory(){ if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS); }
 
   // Render
- function addBubble(role, text){
-  // Polish assistant messages using our global hook (safe if not present)
-  try{
-    if (role === "assistant" && window.bnb && typeof bnb.afterAssistant === "function") {
-      text = bnb.afterAssistant(text, man, history);
-    }
-  }catch(_){}
-
-  const tpl = role === "user"
-    ? document.getElementById("tpl-user")
-    : document.getElementById("tpl-assistant");
-
-  const node = tpl.content.firstElementChild.cloneNode(true);
-  node.textContent = text;
-  el.list.appendChild(node);
-  el.list.scrollTop = el.list.scrollHeight;
-}
-
+  function addBubble(role, text){
+    const tpl = role === "user" ? document.getElementById("tpl-user") : document.getElementById("tpl-assistant");
+    const node = tpl.content.firstElementChild.cloneNode(true);
+    node.textContent = text;
+    el.list.appendChild(node);
+    el.list.scrollTop = el.list.scrollHeight;
+  }
+  function renderAll(){
+    el.list.innerHTML = "";
+    for (const m of history) addBubble(m.role, m.content);
   }
 
   if (VALID.includes(man) && history.length === 0){
@@ -133,7 +114,6 @@
   const LEAD_REGEX = /\b(take|lead|command|control|dominat|own me|use me|make me|tell me what to do|tie me|cuffs?|mask(ed)?|kneel|yes sir|spank)\b/i;
   const ROLEPLAY_ACCEPT = /\b(let'?s (do|try) (it|that|this|roleplay)|let'?s roleplay|i (do|will)|ok(ay)?( then)?|yes(,? please)?|i want that|do it)\b/i;
   const RED_ONLY = /^\s*red[.!?]*\s*$/i;
-  const KISS_REGEX = /\b(kiss|lips?|mouth|taste|kiss me|want your lips|your lips on|press your (mouth|lips)|i want to feel your lips)\b/i;
 
   if (el.slowBadge) el.slowBadge.hidden = (slow !== "red");
 
@@ -161,11 +141,11 @@
     }
 
     // POV lock-in
-    if (ROLEPLAY_ACCEPT.test(text) || KISS_REGEX.test(text)) { pov = "first"; saveJson(povKey(man), pov); }
+    if (ROLEPLAY_ACCEPT.test(text)) { pov = "first"; saveJson(povKey(man), pov); }
 
     // Auto-resume if she escalates while RED was active
     let assert = false;
-    if (LEAD_REGEX.test(text) || KISS_REGEX.test(text)){
+    if (LEAD_REGEX.test(text)){
       assert = true;
       if (slow === "red"){ slow = "off"; saveJson(slowKey(man), slow); if (el.slowBadge) el.slowBadge.hidden = true; }
     }
@@ -184,8 +164,7 @@
       const recent = history.slice(-WINDOW_FOR_PROMPT);
       const memory = { summary: typeof summary === "string" ? summary : (summary?.text || ""), profile };
 
-      let topic = (text.match(/\b(cuffs?|mask|rope|kneel|spank)\b/i) || [])[0] || "";
-      if (KISS_REGEX.test(text)) topic = "kiss";
+      const topic = (text.match(/\b(cuffs?|mask|rope|kneel|spank)\b/i) || [])[0] || "";
 
       const res = await fetch("/api/chat", {
         method:"POST",

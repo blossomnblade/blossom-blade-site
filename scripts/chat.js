@@ -25,7 +25,19 @@
 
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
-  const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
+  // Persona-aware first lines (pulls from brain.js if present)
+const firstLines = (() => {
+  const fallback = ["hey you.", "look who’s here.", "aww, you came to see me."];
+  const b = window.bnb && window.bnb.brain;
+  if (!b) return fallback;
+  const per = b.MAN_OPENERS[man] || [""];
+  // Build a few combined intros so the first one feels alive
+  const lines = new Array(6).fill(0).map(() =>
+    `${b.pick(b.COMMON_OPENERS)} ${b.pick(per)}`.trim()
+  );
+  return lines;
+})();
+
 
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 

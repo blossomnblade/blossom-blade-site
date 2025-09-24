@@ -1,82 +1,68 @@
-/* Blossom & Blade — light "brain": greetings + lexicon helpers
-   - No build step; global attach as window.bnb
-   - Safe to include before chat.js and mod.js
+/* Blossom & Blade — persona brain (greetings + style helpers)
+   - No build step; global attach.
+   - Safe to include before chat.js
 */
 (() => {
-  const bnb = (window.bnb = window.bnb || {});
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  // Common short openers (varied cadence)
+  // Very common openers (short; varied cadence)
   const COMMON_OPENERS = [
     "hey you.", "look who’s here.", "aww, you came to see me.",
-    "hi.", "hello.", "good morning.", "good night.", "good.",
-    "what’s up?", "hey there.", "glad to see you.", "there you are.",
-    "it’s been a while.", "it’s good to see you.", "hey, love.",
-    "look who it is!", "i was just thinking of you.", "was wondering if i’d see you again.",
-    "where have you been?", "the pleasure’s mine.", "you’re welcome.",
-    "thank you.", "allow me to introduce myself.", "nice to meet you.",
-    "you’re perfect.", "how have you been?", "oh my— you look like a snack."
+    "Hi.", "Hello.", "Good morning.", "Good night.", "Good.",
+    "What’s up?", "Hey there.", "Glad to see you.", "There you are.",
+    "It’s been a while.", "It’s good to see you.", "Hey, love.",
+    "Look who it is!", "I was just thinking of you.", "Was wondering if I’d see you again.",
+    "Where have you been?", "The pleasure’s mine.", "You’re welcome.",
+    "Thank you.", "Allow me to introduce myself.", "Nice to meet you.",
+    "You’re perfect.", "How have you been?", "Oh my— you look like a snack."
   ];
 
-  // Tiny persona-flavoured openers (single line)
+  // Micro openers per man (1 short line each, flavor-first)
   const MAN_OPENERS = {
     blade: [
-      "come here.", "run—i’ll catch you.", "don’t look away.", "hunt’s over. you’re mine.",
-      "that heartbeat? keep it racing for me.", "good girl—move.", "rebel, you’re late."
+      "come here.", "run—I’ll catch you.", "don’t look away.",
+      "hunt’s over. you’re mine.", "rebel, you’re with me.", "all in tonight."
     ],
     dylan: [
-      "helmet’s off.", "you made it. talk to me.", "ride or rest?", "smirk’s for you.",
-      "tank or my lap?", "good girl—ask for it.", "neon’s humming. you ready?"
+      "helmet’s off.", "you made it. talk to me.", "ride or rest?",
+      "smirk’s for you.", "on my tank or on my lap?"
     ],
     jesse: [
-      "be good for me.", "closer.", "what do you want, darlin’?", "say please.",
-      "c’mon, ma’am—i’ll make it worth your time.", "oh sugar, you undo me."
+      "yes ma’am.", "is that what you want?", "I’ll make it worth your time.",
+      "Oh sugar, that please undoes me.", "Let me put my fingerprints on your hips."
     ],
     alexander: [
-      "mm. you again. good.", "brief me.", "look at me.", "i’ll take it from here.",
-      "good—now yield, amuri miu.", "come here, **Cori**.", "Vitu’, don’t tease."
+      "mm. you again. good.", "brief me.", "look at me.",
+      "I’ll take it from here.", "Good—now yield, amuri miu.",
+      "Vitu`, stay close. Cori—my heart—watch me."
     ],
     silas: [
-      "got you, fox.", "poppet, sit close.", "aye, Linx—give me the truth.",
-      "what’s the tempo tonight?", "mmm, play me honest, luv."
+      "evenin’, poppet.", "easy now, fox.", "c’mere, linx.",
+      "I could play ye all night.", "let me hear ye."
     ],
     grayson: [
-      "yes, ma’am.", "are you ready to obey?", "hands behind.", "eyes on me.",
-      "good girl—hold still.", "i test your limits; keep you safe."
+      "good girl.", "show me your best bratt—then behave.",
+      "I’ll test your limits and keep you safe.", "praise or punishment—earn it."
     ],
+    viper: [
+      "eyes on the hand, not the face.", "closer.", "let me feel your pulse.",
+      "truth—slowly.", "mine, now."
+    ]
   };
 
-  // Word bank / nicknames / detectors
-  const L = {
-    yes: [
-      "yes", "yes please", "yes sir", "hell yes", "i do", "i want that",
-      "make me", "take me", "i'm ready", "do it", "please", "good girl"
-    ],
-    askVariants: [
-      "ask like a good girl", "ask properly", "beg for it"
-    ],
-    // Contextual nicknames (regex → options)
-    nickFromContext: [
-      [/\b(horse|rodeo|barrel|equestrian|dressage|reins|saddle)\b/i, ["my lil equestrian", "cowgirl"]],
-      [/\b(book|novel|reader|paperback|library|bookish)\b/i, ["my lil bookworm"]],
-      [/\b(clean|tidy|organize|neat freak|scrub|shine)\b/i, ["Ms. Clean"]],
-    ],
-    // Reassurance hooks
-    reassure: [
-      {
-        re: /\b(can('?|no)t)\s*(lift|carry|pick)\s*me\b/i,
-        replies: [
-          "oh baby, you’re light as a feather.",
-          "sweetheart, i’ll lift you like nothing.",
-          "love, i’ve got you—easy.",
-        ],
-      },
-    ],
+  // Small banks used by heuristics
+  const YES_BANK    = ["Yes.", "Yes, please.", "Yes, Sir.", "Hell yes.", "Oh—yes."];
+  const PRAISE_BANK = ["Good girl.", "That’s it.", "Perfect.", "There you go."];
+  const SOFT_ACKS   = ["oh baby, yes.", "mm—keep going.", "that’s for me, isn’t it?"];
+
+  // Interest → nickname seeds (used when we detect context)
+  const NICKNAMES = {
+    equestrian: ["my lil equestrian"],
+    book:       ["my lil bookworm"],
+    clean:      ["Ms Clean"]
   };
 
-  // Export
-  bnb.pick = pick;
-  bnb.COMMON_OPENERS = COMMON_OPENERS;
-  bnb.MAN_OPENERS = MAN_OPENERS;
-  bnb.L = L;
+  // expose
+  window.bnb = window.bnb || {};
+  window.bnb.brain = { pick, COMMON_OPENERS, MAN_OPENERS, YES_BANK, PRAISE_BANK, SOFT_ACKS, NICKNAMES };
 })();

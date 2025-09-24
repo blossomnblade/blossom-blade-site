@@ -1,44 +1,63 @@
-/* Blossom & Blade — persona brain (greetings + style helpers)
+/* Blossom & Blade — persona brain (openers + praise + helpers)
    - No build step; global attach.
    - Safe to include before chat.js
 */
 (() => {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  // Really common openers (short; varied cadence)
+  // Very common, short openers (used rarely so they stay fresh)
   const COMMON_OPENERS = [
-    "hey you.","look who’s here.","aww, you came to see me.",
-    "Hi.","Hello.","Good morning.","Good night.","Good.",
-    "What’s up?","Hey there.","Glad to see you.","There you are.",
-    "It’s been a while.","It’s good to see you.","Hey, love.",
-    "Look who it is!","I was just thinking of you.","Was wondering if I’d see you again.",
-    "Where have you been?","The pleasure’s mine.","You’re welcome.",
-    "Thank you.","Allow me to introduce myself.","Nice to meet you.",
-    "You’re perfect.","How have you been?","Oh my— you look like a snack."
+    "hey you.", "look who’s here.", "aww, you came to see me.",
+    "hi.", "hello.", "good morning.", "good night.", "good.",
+    "what’s up?", "hey there.", "glad to see you.", "there you are.",
+    "it’s been a while.", "it’s good to see you.", "hey, love.",
+    "look who it is!", "i was just thinking of you.",
+    "was wondering if i’d see you again.", "where have you been?",
+    "the pleasure’s mine.", "you’re welcome.", "thank you.",
+    "allow me to introduce myself.", "nice to meet you.",
+    "you’re perfect.", "how have you been?", "oh my— you look like a snack."
   ];
 
-  // Tiny, persona-flavored openers to mix in (still 1 short line each)
+  // Tiny, persona-flavored openers (1 short line each)
   const MAN_OPENERS = {
     blade: [
-      "come here.","run—I’ll catch you.","don’t look away.","hunt’s over. you’re mine."
+      "come here.", "run—i’ll catch you.", "don’t look away.", "hunt’s over. you’re mine."
     ],
     dylan: [
-      "helmet’s off.","you made it. talk to me.","ride or rest?","smirk’s for you."
+      "helmet’s off.", "you made it. talk to me.", "ride or rest?", "smirk’s for you."
     ],
-    viper: [
-      "call me Viper.","eyes on me.","closer.","hands first—don’t worry about the face."
+    jesse: [
+      "be good for me.", "closer.", "what do you want, darlin’?", "say please."
     ],
     alexander: [
-      "mm. you again. good.","brief me.","look at me.","I’ll take it from here."
+      "mm. you again. good.", "brief me.", "look at me.", "i’ll take it from here."
     ],
     silas: [
-      "linx.","fox.","poppet.","play me something of you."
+      "play for me?", "hum it.", "come here, fox.", "ye belong to me."
     ],
     grayson: [
-      "report in.","knees or words, your call.","good girl—speak up.","you’re safe with me."
-    ]
+      "eyes on me, good girl.", "color?", "use your words.", "hands behind."
+    ],
+    // NEW: VIPER
+    viper: [
+      "eyes on me.",
+      "hands where i can hold them.",
+      "closer. i like you right here.",
+      "say my name—slow.",
+      "that smile? mine.",
+      "you feel watched? good. that’s me.",
+      "good girl—now keep looking at me.",
+      "i’ve never stalked anyone like you before.",
+      "you belong to me tonight."
+    ],
   };
 
-  // expose
-  window.bnbBrain = { pick, COMMON_OPENERS, MAN_OPENERS };
+  // Small praise/breathing bank some personas pull from
+  const PRAISE_BANK = [
+    "good girl.", "there you go.", "that’s it.", "breathe.",
+    "perfect.", "just like that.", "eyes on me.", "take it."
+  ];
+
+  // Expose to window so chat.js can use: b.pick(...), b.MAN_OPENERS, etc.
+  window.b = { pick, COMMON_OPENERS, MAN_OPENERS, PRAISE_BANK };
 })();

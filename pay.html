@@ -3,41 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Unlock</title>
-  <link rel="stylesheet" href="/styles/home.css" />
+  <title>Unlock — Blossom & Blade</title>
+  <meta name="color-scheme" content="dark" />
   <style>
-    .pricing { display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); margin-block:1.25rem; }
-    .card { background:#17171b; border:1px solid #26262b; border-radius:16px; padding:1rem 1.25rem; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
-    .card h3 { margin:0 0 .2rem; font-size:1.15rem; }
-    .price { font-size:1.75rem; font-weight:700; margin:.25rem 0 .75rem; }
-    .cta { display:flex; gap:.5rem; align-items:center; }
-    .cta button { background:#ff5a7a; border:none; color:#fff; border-radius:999px; padding:.7rem 1rem; font-weight:700; cursor:pointer; }
-    .cta button:disabled { opacity:.5; cursor:not-allowed; }
-    .muted { color:#9aa; font-size:.95rem; }
-    .radio-row { display:flex; flex-wrap:wrap; gap:.5rem .75rem; margin:.25rem 0 .75rem; }
-    .radio-row label { display:flex; align-items:center; gap:.4rem; background:#111216; border:1px solid #252530; padding:.45rem .6rem; border-radius:999px; cursor:pointer; }
-    .topline { display:flex; gap:.75rem; align-items:center; justify-content:space-between; }
-    .big-brand { font-size:1.6rem; font-weight:800; letter-spacing:.3px; }
-    .pill { font-size:.85rem; padding:.25rem .6rem; border-radius:999px; background:#22232a; color:#cfd3d9; border:1px solid #2e2f37; }
-    .hero { margin-top:.6rem; background:#0e0f13; border:1px solid #23242b; border-radius:16px; padding:1rem 1.2rem; }
-    .success { background:#0f1a12; border-color:#1f3b2a; color:#cfe9d6 }
-    .notice { margin-top:.75rem; font-size:.95rem; color:#aeb4c0 }
-    .divider { height:1px; background:#262830; margin:.75rem 0; }
-    .back { color:#cdd2db; text-decoration:none; }
-    @media (max-width:640px){ .big-brand{font-size:1.35rem;} }
+    body{background:#0b0f19;color:#cfd6e6;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:0;padding:20px}
+    .wrap{max-width:880px;margin:0 auto}
+    .divider{height:1px;background:#1f2740;margin:18px 0}
+    .card{background:#0e1525;border:1px solid #1f2740;border-radius:18px;padding:16px 14px;box-shadow:0 8px 28px rgba(15,23,42,.28);margin:18px 0}
+    .radio-row{display:grid;gap:8px}
+    .cta{margin-top:12px}
+    button{cursor:pointer;border:0;background:radial-gradient(120% 120% at 30% -10%,#ff90c0,#ff5d8c);color:#0b0f19;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 28px rgba(255,93,140,.28)}
+    .pill{display:inline-block;background:#0e1525;border:1px solid #24304d;color:#7e8bb6;border-radius:999px;padding:6px 10px;font-size:12px}
+    .muted{color:#7e8bb6}
+    h1{font-size:1.5rem;margin:0 0 8px}
   </style>
 </head>
 <body>
-  <header class="site-top">
-    <div class="big-brand">Blossom &amp; Blade</div>
-    <div class="pill">Adults 18+ only</div>
-  </header>
-
-  <section class="hero">
-    <div class="topline">
-      <h1 style="margin:0;font-size:1.15rem">Unlock the conversation</h1>
-      <div id="status" class="pill" aria-live="polite"></div>
-    </div>
+  <div class="wrap">
+    <h1>Unlock the conversation</h1>
+    <div id="status" class="pill" aria-live="polite"></div>
     <p class="notice">Every monthly subscription sends <strong>$1</strong> to domestic-violence support. Thank you for backing safe, consensual fantasy.</p>
     <div class="divider"></div>
 
@@ -48,7 +32,8 @@
         <div class="radio-row" id="manOptions" role="radiogroup" aria-label="Choose your guy for the day">
           <label><input type="radio" name="man" value="blade">Blade</label>
           <label><input type="radio" name="man" value="dylan">Dylan</label>
-          <label><input type="radio" name="man" value="jesse">Jesse</label>
+          <!-- Jesse ➜ Viper -->
+          <label><input type="radio" name="man" value="viper">Viper</label>
           <label><input type="radio" name="man" value="alexander">Alexander</label>
           <label><input type="radio" name="man" value="silas">Silas</label>
           <label><input type="radio" name="man" value="grayson">Grayson</label>
@@ -66,57 +51,17 @@
         <div class="cta"><button id="buyMonth">Unlock All 6</button></div>
       </div>
     </div>
+  </div>
 
-    <p class="notice">Already purchased on this device? Your access will be detected automatically.</p>
-    <p class="notice"><a class="back" href="/index.html">← Back to characters</a></p>
-  </section>
-
-  <section id="after" class="hero success" hidden>
-    <h2 style="margin:0 0 .25rem;font-size:1.05rem">You’re in.</h2>
-    <p style="margin:.25rem 0 .5rem">Access granted. Jump back into the chat.</p>
-    <p><a class="back" id="returnLink" href="/index.html">Enter chat →</a></p>
-  </section>
-
-  <script src="/scripts/access.js"></script>
   <script>
-    (function(){
-      const qs = new URLSearchParams(location.search);
-      const preselect = (qs.get("man") || "").toLowerCase();
-      if (preselect) {
-        const r = document.querySelector(`input[type=radio][name=man][value="${preselect}"]`);
-        if (r) r.checked = true;
-      } else {
-        document.querySelector('input[type=radio][name=man]')?.click();
-      }
-
-      const status = document.getElementById("status");
-      const setStatus = () => {
-        const man = (document.querySelector('input[name=man]:checked')||{}).value || preselect || "blade";
-        status.textContent = window.BnBAccess ? window.BnBAccess.remainingCopy(man) : "";
-      };
-      setStatus(); setInterval(setStatus, 1000);
-
-      document.getElementById("buyDay").addEventListener("click", () => {
-        const man = (document.querySelector('input[name=man]:checked')||{}).value;
-        if (!man) return alert("Pick your guy for today.");
-        window.BnBAccess.grantDayPass(man, 24);
-        showAfter(man);
-      });
-
-      document.getElementById("buyMonth").addEventListener("click", () => {
-        window.BnBAccess.grantMonthAll(30);
-        const man = (document.querySelector('input[name=man]:checked')||{}).value || "blade";
-        showAfter(man);
-      });
-
-      function showAfter(man){
-        document.querySelector(".hero").hidden = true;
-        const a = document.getElementById("after");
-        a.hidden = false;
-        const link = document.getElementById("returnLink");
-        link.href = `/chat.html?man=${encodeURIComponent(man)}&sub=night`;
-      }
-    })();
+    // (stub: your real purchase hooks live elsewhere)
+    document.getElementById('buyDay').onclick = () => {
+      const picked = document.querySelector('input[name="man"]:checked')?.value || 'blade';
+      location.href = `/chat.html?man=${picked}&sub=night`;
+    };
+    document.getElementById('buyMonth').onclick = () => {
+      location.href = `/chat.html?man=viper&sub=night`;
+    };
   </script>
 </body>
 </html>

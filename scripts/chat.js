@@ -25,8 +25,12 @@
   };
 
   // -------- Roster / names --------
-  const VALID = ["blade","dylan","jesse","alexander","silas","grayson","viper"];
-  const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson", viper:"Viper" };
+ const VALID  = ["blade","dylan","alexander","silas","grayson","viper"];
+const pretty = {
+  blade:"Blade", dylan:"Dylan", alexander:"Alexander",
+  silas:"Silas", grayson:"Grayson", viper:"Viper"
+};
+
   const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
 
   // -------- Taboo filter (do not change lightly) --------

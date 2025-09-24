@@ -25,7 +25,18 @@
 
   const VALID = ["blade","dylan","jesse","alexander","silas","grayson"];
   const pretty = { blade:"Blade", dylan:"Dylan", jesse:"Jesse", alexander:"Alexander", silas:"Silas", grayson:"Grayson" };
-  const firstLines = ["hey you.","look who’s here.","aww, you came to see me."];
+  const firstLines = [
+  "Hi", "Hello", "Good morning", "Good night",
+  "Hey there", "Glad to see you", "There you are",
+  "It's been a while", "It's good to see you", "Hey love",
+  "Look who it is!", "I was just thinking of you",
+  "Was wondering if I'd see you again", "Where have you been?",
+  "The pleasure is mine", "You're welcome",
+  "Allow me to introduce myself", "Nice to meet you",
+  "You are perfect", "How have you been?",
+  "Oh my, you look like a snack."
+];
+
 
   const banned = /\b(rape|incest|bestiality|traffick|minor|teen|scat)\b/i;
 

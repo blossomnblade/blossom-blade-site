@@ -5,64 +5,80 @@
 (() => {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  // Very common openers (short; varied cadence)
+  // Short, universal openers (1 line each; varied cadence)
   const COMMON_OPENERS = [
     "hey you.", "look who’s here.", "aww, you came to see me.",
-    "Hi.", "Hello.", "Good morning.", "Good night.", "Good.",
-    "What’s up?", "Hey there.", "Glad to see you.", "There you are.",
-    "It’s been a while.", "It’s good to see you.", "Hey, love.",
-    "Look who it is!", "I was just thinking of you.", "Was wondering if I’d see you again.",
-    "Where have you been?", "The pleasure’s mine.", "You’re welcome.",
-    "Thank you.", "Allow me to introduce myself.", "Nice to meet you.",
-    "You’re perfect.", "How have you been?", "Oh my— you look like a snack."
+    "there you are.", "glad to see you.", "it’s been a while.",
+    "was just thinking of you.", "the pleasure’s mine.", "you’re welcome.",
+    "allow me to introduce myself.", "how have you been?", "oh my— you look like a snack."
   ];
 
-  // Micro openers per man (1 short line each, flavor-first)
+  // Tiny man-flavored openers (1 short line each)
   const MAN_OPENERS = {
     blade: [
-      "come here.", "run—I’ll catch you.", "don’t look away.",
-      "hunt’s over. you’re mine.", "rebel, you’re with me.", "all in tonight."
+      "come here.", "run—I'll catch you.", "don’t look away.",
+      "hunt’s over. you’re mine.", "closer.", "eyes on me.", "rebel."
     ],
     dylan: [
       "helmet’s off.", "you made it. talk to me.", "ride or rest?",
-      "smirk’s for you.", "on my tank or on my lap?"
+      "park on the tank.", "glove’s off.", "sit tight—on my lap."
     ],
     jesse: [
-      "yes ma’am.", "is that what you want?", "I’ll make it worth your time.",
-      "Oh sugar, that please undoes me.", "Let me put my fingerprints on your hips."
+      "be good for me.", "closer.", "what do you want, darlin’?",
+      "say please.", "yes, ma’am?", "tell me if that’s what you want."
     ],
     alexander: [
-      "mm. you again. good.", "brief me.", "look at me.",
-      "I’ll take it from here.", "Good—now yield, amuri miu.",
-      "Vitu`, stay close. Cori—my heart—watch me."
+      "mm. you again.", "brief me.", "look at me.", "I’ll take it from here.",
+      "good—now yield.", "amore.", "eyes only on me."
     ],
     silas: [
-      "evenin’, poppet.", "easy now, fox.", "c’mere, linx.",
-      "I could play ye all night.", "let me hear ye."
+      "there ye are, poppet.", "ye look like trouble.", "come closer, fox.",
+      "be a good girl for me.", "aye.", "right here, linx."
     ],
     grayson: [
-      "good girl.", "show me your best bratt—then behave.",
-      "I’ll test your limits and keep you safe.", "praise or punishment—earn it."
+      "use your words.", "kneel.", "good girl—eyes up.",
+      "tell me what you need.", "is that bratting I hear?"
     ],
     viper: [
-      "eyes on the hand, not the face.", "closer.", "let me feel your pulse.",
-      "truth—slowly.", "mine, now."
-    ]
+      "watch the hand.", "eyes here.", "no face—just touch.",
+      "closer to the wrist.", "you’ll learn by feel."
+    ],
   };
 
-  // Small banks used by heuristics
-  const YES_BANK    = ["Yes.", "Yes, please.", "Yes, Sir.", "Hell yes.", "Oh—yes."];
-  const PRAISE_BANK = ["Good girl.", "That’s it.", "Perfect.", "There you go."];
-  const SOFT_ACKS   = ["oh baby, yes.", "mm—keep going.", "that’s for me, isn’t it?"];
+  // Soft acknowledgements used to replace “tell me more” etc.
+  const SOFT_ACKS = [
+    "oh baby, yes.", "mmm, say that again.", "good—keep going.",
+    "that does things to me.", "go on, I’m listening.", "let me hear you."
+  ];
 
-  // Interest → nickname seeds (used when we detect context)
+  // Praise bank (Grayson leans hard on these; others use sometimes)
+  const PRAISE_BANK = [
+    "good girl.", "that’s it.", "such a good girl.", "there’s my good girl.",
+    "doing so well.", "ooh, so nice.", "what a good girl.", "that shiver—yeah, I feel it."
+  ];
+
+  // Yes phrases the UI might sprinkle into suggestions, etc.
+  const YES_PHRASES = [
+    "Yes.", "Yes, please.", "Yes, sir.", "Hell yes.", "God, yes.",
+    "Yes—more.", "Yes… good girl."
+  ];
+
+  // Nicknames based on what she mentions
   const NICKNAMES = {
-    equestrian: ["my lil equestrian"],
-    book:       ["my lil bookworm"],
-    clean:      ["Ms Clean"]
+    equestrian: ["my little equestrian", "rider", "wild rider"],
+    book: ["bookworm", "my little bookworm", "reader"],
+    clean: ["Ms. Clean", "neat thing", "polished peach"],
   };
 
-  // expose
+  // Attach to global
   window.bnb = window.bnb || {};
-  window.bnb.brain = { pick, COMMON_OPENERS, MAN_OPENERS, YES_BANK, PRAISE_BANK, SOFT_ACKS, NICKNAMES };
+  window.bnb.brain = {
+    pick,
+    COMMON_OPENERS,
+    MAN_OPENERS,
+    SOFT_ACKS,
+    PRAISE_BANK,
+    YES_PHRASES,
+    NICKNAMES,
+  };
 })();

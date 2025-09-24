@@ -88,6 +88,16 @@ const pretty = {
   const MAX_TURNS = 400;
   const WINDOW_FOR_PROMPT = 28;
   const AUTOSUMMARY_EVERY = 25; // reserved/unused
+// Allow ?reset=1 to clear this man's local history/summary/profile POV
+const reset = qs.get("reset") === "1";
+if (reset) {
+  try{
+    localStorage.removeItem(hKey(man));
+    localStorage.removeItem(sKey(man));
+    localStorage.removeItem(pKey(man));
+    localStorage.removeItem(povKey(man));
+  }catch{}
+}
 
   // -------- Memory/history --------
   function loadJson(k, fallback){

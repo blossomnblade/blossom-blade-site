@@ -100,7 +100,88 @@
     saveJson(hKey, history);
   }
 
-  renderAll(history);
+  renderAll(history);// ---------- anti-repeat helpers (paste above askAssistant) ----------
+const ANTI_REPEAT = {
+  blade: [
+    "Got a request, pretty thing?",
+    "Your move. I deliver.",
+    "Tell me what you want—and say it clearly."
+  ],
+  alexander: [
+    "Right on time. I like that.",
+    "Go on—surprise me.",
+    "What are we doing first?"
+  ],
+  grayson: [
+    "Careful what you wish for. I deliver.",
+    "Say the word.",
+    "You lead. I’ll make it happen."
+  ],
+  dylan: [
+    "You again? Put that smile away before I steal it.",
+    "Hop on—figuratively… unless?",
+    "What’s the vibe right now?"
+  ],
+  viper: [
+    "Look who’s here.",
+    "You dressed up for me or for trouble?",
+    "Speak. I’m listening."
+  ],
+  silas: [
+    "Hey you.",
+    "Play me a line, I’ll play you back.",
+    "Start us off."
+  ]
+};
+
+function varyLine(man, fallback){
+  const pool = ANTI_REPEAT[man] || [];
+  if (!pool.length) return fallback;
+  const choices = pool.filter(l => l.toLowerCase() !== (fallback||"").toLowerCase());
+  return choices.length ? choices[Math.floor(Math.random()*choices.length)] : pool[0];
+}
+
+// -------- Send handler (no dupes + anti-repeat) --------
+async function onSend(e){
+  e.preventDefault();
+  const text = (el.input.value || "").trim();
+  if (!text) return;
+
+  // taboo guard if present
+  if (typeof BANNED !== "undefined" && BANNED.test(text)){
+    addBubble("assistant", "I can’t do that. I’ll keep you safe and stay within the lines, okay?");
+    el.input.value = "";
+    return;
+  }
+
+  // user bubble
+  history.push({ role: "user", content: text, t: Date.now() });
+  addBubble("user", text);
+  el.input.value = "";
+  trimHistory();
+  saveJson(hKey(man), history);
+
+  // ask the assistant (uses your askAssistant from above)
+  let reply = "";
+  try {
+    reply = await askAssistant(text);
+  } catch (err) {
+    console.error("askAssistant failed:", err);
+    reply = ""; // don’t spam a fallback bubble here
+  }
+  if (!reply) return;
+
+  // anti-repeat: if reply == last assistant line, swap to a variant
+  const norm = s => (s||"").toLowerCase().replace(/[^\w\s]/g,"").trim();
+  const lastA = [...history].reverse().find(m => m.role === "assistant")?.content || "";
+  if (norm(reply) === norm(lastA)) reply = varyLine(man, reply);
+
+  // append assistant ONCE
+  history.push({ role: "assistant", content: reply, t: Date.now() });
+  trimHistory();
+  saveJson(hKey(man), history);
+  addBubble("assistant", reply);
+}
 
   // -------- API call (with demo fallback) --------
   async function askAssistant(userText){

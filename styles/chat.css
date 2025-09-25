@@ -281,6 +281,27 @@ html, body {
   color:#FFD6EA;
   border:1px solid rgba(255,93,140,.22);
   margin-left:auto;
+}/* ===== role-tinted bubbles ===== */
+.msg {
+  background: #121828;
+  color: #d7e2ff;
+  border-radius: 14px;
+  padding: 10px 12px;
 }
+
+/* you (user) */
+.msg.user {
+  background: #0f2436;
+  color: #cfe0ff;
+  align-self: flex-end;
+}
+
+/* him (assistant) */
+.msg.assistant {
+  background: #1a1b2c;
+  color: #e7f0ff;
+  align-self: flex-start;
+}
+
 
 

@@ -1,80 +1,50 @@
-:root{
-  --bg:#0b1220;
-  --card:#0f1826;
-  --ink:#cfd6e6;
-  --muted:#90a4c2;
-  --assistant:#10243a;
-  --user:#341726;
-  --ring:#fc4b86;
-  --glow: 0 10px 28px rgba(252,75,134,.25);
-}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom & Blade — Chat</title>
+  <link rel="stylesheet" href="/styles/chat.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <h1 id="roomTitle">Blossom &amp; Blade —</h1>
+      <div class="chips">
+        <span id="slowBadge" class="chip" hidden>RED</span>
+        <span class="chip muted">Adults 18+ only</span>
+      </div>
+    </header>
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-}
+    <section class="chat-main">
+      <!-- LEFT: portrait -->
+      <aside class="portrait-panel">
+        <img id="portraitImg" alt="portrait" />
+        <div id="portraitLabel" class="muted"></div>
+      </aside>
 
-.wrap{max-width:1200px;margin:0 auto;padding:28px}
+      <!-- RIGHT: messages + composer -->
+      <section class="messages-panel">
+        <div class="messages-wrap">
+          <ul id="messages" class="messages" aria-live="polite"></ul>
 
-.top{
-  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
-}
-h1{margin:0;font-size:32px;letter-spacing:.3px}
-.chips{display:flex;gap:10px}
-.chip{padding:6px 10px;border-radius:999px;background:#111b2a;border:1px solid #1b2a40}
-.muted{color:var(--muted)}
+          <form id="composer" class="composer">
+            <input id="chatInput" type="text" placeholder="Say something…" autocomplete="off" />
+            <button id="sendBtn" type="submit" class="btn">Send</button>
+          </form>
+        </div>
+      </section>
+    </section>
+  </main>
 
-.chat-main{
-  display:grid;grid-template-columns:420px 1fr;gap:28px;
-}
+  <!-- Bubble templates (used by JS) -->
+  <template id="tpl-user">
+    <li class="right"><div class="bubble user"></div></li>
+  </template>
+  <template id="tpl-assistant">
+    <li class="left"><div class="bubble ai"></div></li>
+  </template>
 
-.portrait-panel{
-  background:var(--card);border:1px solid #1b2a40;border-radius:14px;
-  padding:14px;box-shadow: var(--glow);
-  align-self:start;
-}
-.portrait-panel img{
-  width:100%;height:auto;display:block;border-radius:10px;
-}
-.portrait-label{margin-top:8px;color:var(--muted);font-size:13px}
-
-.messages-panel{
-  background:var(--card);border:1px solid #1b2a40;border-radius:14px;
-  padding:16px 16px 12px 16px;min-height:380px;position:relative;box-shadow: var(--glow);
-  display:flex;flex-direction:column;
-}
-.messages{
-  list-style:none;margin:0;padding:0;
-  overflow-y:auto;flex:1 1 auto;scroll-behavior:smooth;
-}
-.msg{
-  max-width:68ch;padding:10px 14px;border-radius:14px;
-  margin:10px 0;word-wrap:break-word;
-}
-.msg.assistant{background:var(--assistant);align-self:flex-start;border:1px solid #1b3556}
-.msg.user{background:var(--user);align-self:flex-end;border:1px solid #4a1c34}
-
-.composer{
-  margin-top:12px;display:flex;gap:10px;flex:0 0 auto;
-}
-#chatInput{
-  flex:1 1 auto;background:#0c1423;color:var(--ink);border:1px solid #1b2a40;
-  padding:12px 14px;border-radius:12px;outline:none;
-}
-#chatInput:focus{border-color:#2c4b7b;box-shadow:0 0 0 3px rgba(44,75,123,.25)}
-#sendBtn{
-  padding:10px 18px;border:none;border-radius:12px;background:#ff4f8d;color:white;
-  font-weight:600;cursor:pointer;box-shadow:0 10px 26px rgba(252,75,134,.35);
-}
-#sendBtn:active{transform:translateY(1px)}
-
-/* mobile */
-@media (max-width: 980px){
-  .chat-main{grid-template-columns:1fr}
-  .portrait-panel{order:-1}
-  .portrait-panel img{max-height:45vh;object-fit:cover}
-}
+  <script src="/scripts/chat.js"></script>
+</body>
+</html>

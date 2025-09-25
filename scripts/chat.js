@@ -220,21 +220,40 @@
     return out;
   }
 
-  // Patch addBubble so assistant text flows through tweaks
  // keep the thread pinned to the latest message
 function scrollToBottom(){
   try { el.list.scrollTop = el.list.scrollHeight; } catch(e){}
 }
- const __addBubble = addBubble;
-  addBubble = function(role, text){
-    try{
-      if (role === "assistant") {
-        const lastUser = (history || []).filter(m => m.role === "user").slice(-1)[0]?.content || "";
-        text = tweakAssistant(text, lastUser);
-      }
-    }catch{}
-    return __addBubble(role, text);
-  };
+
+/* Patch addBubble so assistant text flows through tweaks + auto-scroll + role tint */
+const __addBubble = addBubble;
+addBubble = function(role, text){
+  try {
+    // run persona tweaks only for assistant lines using the last user message
+    if (role === "assistant") {
+      const lastUser = (history || [])
+        .filter(m => m.role === "user")
+        .slice(-1)[0]?.content || "";
+      text = tweakAssistant(text, lastUser);
+    }
+  } catch(e){ /* non-fatal */ }
+
+  // let the original renderer do its thing (adds to DOM + saves history)
+  const out = __addBubble(role, text);
+
+  // add role class to the newest bubble so CSS can style user vs assistant
+  try {
+    const last = el.list.lastElementChild;
+    if (last) last.classList.add("msg", role); // → .msg.user / .msg.assistant
+  } catch(e){}
+
+  // pin the viewport to the latest message (double-tap to catch after paint)
+  scrollToBottom();
+  requestAnimationFrame(scrollToBottom);
+
+  return out;
+};
+
 
   // ---------- Form handling ----------
   if (el.slowBadge) el.slowBadge.hidden = (slow !== "red");

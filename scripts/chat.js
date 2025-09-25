@@ -10,7 +10,7 @@
   const V = "9";
 
   // Demo fallback while backend is flaky. Set to false when the API is fully wired.
-  const DEMO_MODE = true;
+  const DEMO_MODE = false;
   const OPENERS = {
     blade:     ["hey you.", "aww, you came to see me."],
     dylan:     ["you came to see me? i won’t pretend i’m not pleased."],

@@ -41,14 +41,16 @@
   let sending = false;
 
   // bubble DOM
-  function addBubble(role, text) {
-    const div = document.createElement("div");
-    div.className = `bubble ${role === "assistant" ? "assistant" : "user"}`;
-    div.textContent = text;
-    el.list.appendChild(div);
-    // autoscroll
-    el.panel.scrollTop = el.panel.scrollHeight + 9999;
-  }
+  function addBubble(role, text){
+  const li = document.createElement("li");
+  li.className = `msg ${role}`;
+  li.textContent = text;
+  el.list.appendChild(li);
+
+  // auto-scroll to latest
+  el.list.scrollTop = el.list.scrollHeight;
+}
+
 
   function renderAll() {
     el.list.innerHTML = "";
@@ -85,36 +87,55 @@
   renderAll();
 
   // ---------- Send handling ----------
-  async function onSend(e) {
-    e.preventDefault();
-    if (sending) return;
+ async function onSend(e){
+  e.preventDefault();
 
-    const text = (el.input.value || "").trim();
-    if (!text) return;
+  const text = (el.input.value || "").trim();
+  if (!text) return;
 
-    // append user
-    history.push({ role: "user", content: text, t: Date.now() });
-    saveJson(hKey(man || "logo"), history);
-    addBubble("user", text);
-    el.input.value = "";
+  // show user bubble immediately
+  history.push({ role: "user", content: text, t: Date.now() });
+  saveJson(hKey(man), history);
+  addBubble("user", text);
+  el.input.value = "";
 
-    if (!VALID.includes(man)) return; // no backend chat without character
+  // --- build request payload ---
+  const body = {
+    man,
+    userId,
+    history,
+    mode: urlMode || "soft",
+    memory: { summary, profile },
+    pov,
+    consented: rx,
+  };
 
-    sending = true;
-    el.send.disabled = true;
+  let reply = "";
+  try {
+    const r = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    reply = (j && j.reply) ? String(j.reply) : "";
+  } catch (err) {
+    // network or server error -> we'll use fallback text below
+    reply = "";
+  }
 
-    // build request
-    const uid = loadJson(uidKey, crypto.randomUUID());
-    localStorage.setItem(uidKey, JSON.stringify(uid));
+  // if backend gave us nothing, show a single gentle fallback line
+  if (!reply.trim()) {
+    reply = "Lost you for a sec—say that again, love.";
+  }
 
-    const body = {
-      man,
-      userId: uid,
-      history: history.slice(-20), // small context
-      mode: "soft",
-      pov: "",
-      consented: true
-    };
+  // append assistant bubble
+  history.push({ role: "assistant", content: reply, t: Date.now() });
+  trimHistory();
+  saveJson(hKey(man), history);
+  addBubble("assistant", reply);
+}
+;
 
     let reply = "";
     try {

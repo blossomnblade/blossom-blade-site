@@ -162,14 +162,14 @@
       return;             // ← prevents duplicate “hiccup” lines
     }
 
-    // append AI reply once
-    history.push({ role:"assistant", content:reply, t: Date.now() });
-    // trim long histories
-    if (history.length > 60) history = history.slice(-60);
+   // append AI reply
+if (!reply) return;
 
-    saveJson(hKey(man), history);
-    addBubble("assistant", reply);
-  }
+history.push({ role: "assistant", content: reply, t: Date.now() });
+trimHistory();
+saveJson(hKey(man), history);
+addBubble("assistant", reply);
+
 
   // init
   setTitleAndPortrait();

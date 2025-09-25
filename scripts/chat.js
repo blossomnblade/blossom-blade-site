@@ -1,177 +1,135 @@
-/* Blossom & Blade — chat runtime (2-column layout, bubble colors, no duplicate sends) */
+/* Blossom & Blade — Chat (no trials, no redirects, robust fallback) */
 (() => {
-  // ---------- URL / roster ----------
+  // ---------- URL state ----------
   const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
+  const urlMode = (qs.get("sub") || "").toLowerCase();
 
-  const VALID = ["blade","dylan","alexander","silas","grayson","viper"];
+  const VALID = ["blade", "dylan", "alexander", "silas", "grayson", "viper"];
   const pretty = { blade:"Blade", dylan:"Dylan", alexander:"Alexander", silas:"Silas", grayson:"Grayson", viper:"Viper" };
-
-  const FIRST_LINES = [
+  const firstLines = [
+    "hey you.",
     "look who’s here.",
-    "aww, you came to see me.",
-    "hey you."
+    "aww, you came to see me."
   ];
 
-  // ---------- DOM refs ----------
+  // ---------- DOM ----------
   const el = {
     title: document.getElementById("roomTitle"),
-    list: document.getElementById("messages"),
-    input: document.getElementById("chatInput"),
-    send: document.getElementById("sendBtn"),
-    form: document.getElementById("composer"),
     portrait: document.getElementById("portraitImg"),
     portraitLabel: document.getElementById("portraitLabel"),
-    panel: document.getElementById("messagePanel"),
+    list: document.getElementById("messages"),
+    input: document.getElementById("chatInput"),
+    form: document.getElementById("composer"),
   };
 
-  // ---------- helpers ----------
-  const logo = "/images/logo.jpg";
+  // ---------- Storage helpers ----------
+  const uidKey = "bnb.userId";
+  const hKey   = (m) => `bnb.${m}.history`;
+
+  const loadJson = (k, d=[]) => {
+    try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(d)); } catch { return d; }
+  };
+  const saveJson = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const trimHistory = () => { if (history.length > 40) history.splice(0, history.length-40); };
+
+  // user id (anonymous)
+  let userId = localStorage.getItem(uidKey);
+  if (!userId) { userId = Math.random().toString(36).slice(2); localStorage.setItem(uidKey, userId); }
+
+  // ---------- Portrait ----------
+  const FALLBACK_LOGO = "/images/logo.jpg";
   const imgPathChat = (m) => `/images/characters/${m}/${m}-chat.webp`;
 
-  const uidKey = "bnb.userId";
-  const hKey   = (m) => `bnb.s.${m}.history`;
+  function setPortrait(){
+    if (!VALID.includes(man)) {
+      el.title.textContent = "Blossom & Blade —";
+      el.portrait.src = FALLBACK_LOGO;
+      el.portraitLabel.textContent = "";
+      return;
+    }
+    el.title.textContent = pretty[man];
+    el.portrait.alt = `${pretty[man]} portrait`;
+    el.portrait.src = imgPathChat(man);
+    el.portrait.onerror = () => { el.portrait.src = FALLBACK_LOGO; el.portrait.onerror = null; };
+    el.portraitLabel.textContent = `${pretty[man]} — portrait`;
+  }
 
-  const loadJson = (k, fallback) => {
-    try { const x = JSON.parse(localStorage.getItem(k)); return x ?? fallback; } catch { return fallback; }
-  };
-  const saveJson = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-
-  let history = [];
-  let sending = false;
-
-  // bubble DOM
+  // ---------- UI helpers ----------
   function addBubble(role, text){
-  const li = document.createElement("li");
-  li.className = `msg ${role}`;
-  li.textContent = text;
-  el.list.appendChild(li);
-
-  // auto-scroll to latest
-  el.list.scrollTop = el.list.scrollHeight;
-}
-
-
-  function renderAll() {
+    const li = document.createElement("li");
+    li.className = `msg ${role}`;
+    li.textContent = text;
+    el.list.appendChild(li);
+    // autoscroll
+    el.list.scrollTop = el.list.scrollHeight;
+  }
+  function renderAll(){
     el.list.innerHTML = "";
     for (const m of history) addBubble(m.role, m.content);
-    el.panel.scrollTop = el.panel.scrollHeight + 9999;
   }
 
-  // ---------- Init title + portrait ----------
-  if (VALID.includes(man)) {
-    document.title = `Blossom & Blade — ${pretty[man]}`;
-    el.title.textContent = pretty[man];
-    el.portrait.src = imgPathChat(man);
-    el.portrait.alt = `${pretty[man]} portrait`;
-    el.portraitLabel.textContent = `${pretty[man]} portrait`;
+  // ---------- Boot ----------
+  let history = loadJson(hKey(man), []);
+  setPortrait();
+
+  if (VALID.includes(man)){
+    if (history.length === 0){
+      const first = firstLines[Math.floor(Math.random()*firstLines.length)];
+      history.push({role:"assistant", content:first, t:Date.now()});
+      saveJson(hKey(man), history);
+    }
+    renderAll();
   } else {
-    document.title = "Blossom & Blade — Chat";
-    el.title.textContent = "Blossom & Blade —";
-    el.portrait.src = logo;
-    el.portrait.alt = "Blossom & Blade";
-    el.portraitLabel.textContent = "";
+    // invalid/blank man -> show logo, but still allow chat UI
+    el.list.innerHTML = "";
   }
 
-  // ---------- Load history + maybe add a first line ----------
-  history = loadJson(hKey(man || "logo"), []);
+  // ---------- Send / reply ----------
+  async function onSend(e){
+    e.preventDefault();
+    const text = (el.input.value || "").trim();
+    if (!text) return;
 
-  if (history.length === 0) {
-    const first = VALID.includes(man)
-      ? FIRST_LINES[Math.floor(Math.random() * FIRST_LINES.length)]
-      : "Pick a character from the main page to begin.";
-    history.push({ role: "assistant", content: first, t: Date.now() });
-    saveJson(hKey(man || "logo"), history);
-  }
+    // user bubble
+    history.push({ role:"user", content:text, t:Date.now() });
+    saveJson(hKey(man), history);
+    addBubble("user", text);
+    el.input.value = "";
 
-  renderAll();
+    // build payload
+    const body = {
+      man,
+      userId,
+      history,
+      mode: urlMode || "soft",
+      memory: {}, // (kept simple; hook yours here if needed)
+      pov: "you",
+      consented: true
+    };
 
-  // ---------- Send handling ----------
- async function onSend(e){
-  e.preventDefault();
-
-  const text = (el.input.value || "").trim();
-  if (!text) return;
-
-  // show user bubble immediately
-  history.push({ role: "user", content: text, t: Date.now() });
-  saveJson(hKey(man), history);
-  addBubble("user", text);
-  el.input.value = "";
-
-  // --- build request payload ---
-  const body = {
-    man,
-    userId,
-    history,
-    mode: urlMode || "soft",
-    memory: { summary, profile },
-    pov,
-    consented: rx,
-  };
-
-  let reply = "";
-  try {
-    const r = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const j = await r.json();
-    reply = (j && j.reply) ? String(j.reply) : "";
-  } catch (err) {
-    // network or server error -> we'll use fallback text below
-    reply = "";
-  }
-
-  // if backend gave us nothing, show a single gentle fallback line
-  if (!reply.trim()) {
-    reply = "Lost you for a sec—say that again, love.";
-  }
-
-  // append assistant bubble
-  history.push({ role: "assistant", content: reply, t: Date.now() });
-  trimHistory();
-  saveJson(hKey(man), history);
-  addBubble("assistant", reply);
-}
-;
-
+    // talk to API; always show *something* back
     let reply = "";
     try {
       const r = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(body)
       });
       const j = await r.json();
-      reply = (j && j.reply) ? String(j.reply) : "(no reply)";
-    } catch (err) {
-      console.error("chat send failed:", err);
-      sending = false;
-      el.send.disabled = false;
-      return;   // <- do NOT add a fallback bubble
+      reply = (j && j.reply) ? String(j.reply) : "";
+    } catch (err){
+      reply = "";
+    }
+    if (!reply.trim()){
+      reply = "Lost you for a sec—say that again, love.";
     }
 
-    // append AI reply (single!)
-    if (!reply) { sending = false; el.send.disabled = false; return; }
-    history.push({ role: "assistant", content: reply, t: Date.now() });
-    saveJson(hKey(man || "logo"), history);
+    history.push({ role:"assistant", content:reply, t:Date.now() });
+    trimHistory();
+    saveJson(hKey(man), history);
     addBubble("assistant", reply);
-
-    sending = false;
-    el.send.disabled = false;
   }
 
-  // listeners
   el.form.addEventListener("submit", onSend);
-  el.send.addEventListener("click", () => el.form.requestSubmit());
-
-  // convenience: Enter sends, Shift+Enter makes newline (for future textarea)
-  el.input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      el.form.requestSubmit();
-    }
-  });
 })();

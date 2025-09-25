@@ -178,5 +178,109 @@ html, body {
     padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
     z-index: 10;
   }
+}/* ===== Fixed portrait left, chat stream right ===== */
+
+/* Desktop */
+@media (min-width: 980px) {
+  .chat-main{
+    display:grid;
+    grid-template-columns: 420px minmax(0,1fr); /* portrait | chat */
+    gap:24px;
+    align-items:start;
+  }
+
+  /* left column (portrait) sticks under header */
+  .portrait-panel{
+    position:sticky;
+    top:96px;
+    align-self:start;
+  }
+  .portrait-panel img{
+    width:100%;
+    height:calc(100vh - 160px);
+    object-fit:cover;
+    border-radius:16px;
+    box-shadow:0 8px 28px rgba(255,93,140,0.18);
+  }
+
+  /* right column: scrolling message list */
+  #messages, .messages, .thread{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-height:calc(100vh - 220px); /* room for header + composer */
+    overflow-y:auto;
+    padding-right:8px;
+    scroll-behavior:smooth;
+  }
+
+  /* input area stays visible at the bottom of the right column */
+  .composer{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(180deg, rgba(16,24,38,.6) 0%, rgba(16,24,38,.95) 70%, #101826 100%);
+    border-top:1px solid rgba(255,255,255,.06);
+    padding:12px;
+    border-radius:16px;
+    backdrop-filter:blur(6px);
+    z-index:5;
+    margin-top:12px;
+  }
 }
+
+/* Mobile: stack portrait above chat; keep sticky composer */
+@media (max-width: 979px) {
+  .chat-main{ display:block; }
+
+  .portrait-panel{ margin-bottom:12px; }
+  .portrait-panel img{
+    width:100%;
+    height:52vh;
+    object-fit:cover;
+    border-radius:16px;
+  }
+
+  #messages, .messages, .thread{
+    max-height:calc(48vh - 100px);
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    scroll-behavior:smooth;
+  }
+
+  .composer{
+    position:sticky;
+    bottom:env(safe-area-inset-bottom, 0);
+    background:linear-gradient(180deg, rgba(16,24,38,.6) 0%, rgba(16,24,38,.95) 70%, #101826 100%);
+    border-top:1px solid rgba(255,255,255,.06);
+    padding-bottom:calc(12px + env(safe-area-inset-bottom, 0));
+    z-index:10;
+  }
+}
+
+/* ===== Bubble styling (assistant vs user) ===== */
+.message, .bubble, .msg{
+  padding:14px 16px;
+  border-radius:18px;
+  max-width:85%;
+  width:fit-content;
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+}
+
+/* Assistant (his) */
+.message.assistant, .bubble.assistant, .msg.assistant{
+  background:#0E1726;              /* deep blue */
+  color:#D9E6FF;
+  border:1px solid rgba(120,160,255,.18);
+}
+
+/* User (yours) — float to right */
+.message.user, .bubble.user, .msg.user{
+  background:#281521;              /* wine/rose */
+  color:#FFD6EA;
+  border:1px solid rgba(255,93,140,.22);
+  margin-left:auto;
+}
+
 

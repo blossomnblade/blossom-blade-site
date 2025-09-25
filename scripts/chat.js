@@ -307,12 +307,20 @@ addBubble = function(role, text){
       const r = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
       const j = await r.json();
       reply = (j && j.reply) ? String(j.reply) : "(no reply)";
-    }catch{
-      reply = "Connection hiccup—say that again, love.";
-    }
+    } catch (err) {
+  console.error("chat send failed:", err);
+  return; // don't add a fallback bubble
+}
+
 
     // append AI reply
-    history.push({role:"assistant", content:reply, t:Date.now()});
+  
+if (!reply) return;                 // <— add this line
+history.push({role:"assistant", content:reply, t:Date.now()});
+trimHistory();
+saveJson(hKey(man), history);
+addBubble("assistant", reply);
+ history.push({role:"assistant", content:reply, t:Date.now()});
     trimHistory();
     saveJson(hKey(man), history);
     addBubble("assistant", reply);

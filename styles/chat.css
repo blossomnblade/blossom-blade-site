@@ -1,50 +1,70 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Chat</title>
-  <link rel="stylesheet" href="/styles/chat.css" />
-</head>
-<body>
-  <main class="wrap">
-    <header class="top">
-      <h1 id="roomTitle">Blossom &amp; Blade —</h1>
-      <div class="chips">
-        <span id="slowBadge" class="chip" hidden>RED</span>
-        <span class="chip muted">Adults 18+ only</span>
-      </div>
-    </header>
+:root{
+  --bg:#0b1118; --card:#0f1722; --ink:#cfd6e6; --muted:#9fb0c7;
+  --rose:#f66293; --bubbleMe:#3a0a1e; --bubbleBot:#11243b;
+  --border:#273246; --glow:0 0 32px rgba(246,98,147,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;
+}
 
-    <section class="chat-main">
-      <!-- LEFT: portrait -->
-      <aside class="portrait-panel">
-        <img id="portraitImg" alt="portrait" />
-        <div id="portraitLabel" class="muted"></div>
-      </aside>
+/* Header */
+.top{max-width:1200px;margin:24px auto 12px;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+h1{margin:0;font-weight:800;letter-spacing:.5px}
+.chips{display:flex;gap:10px}
+.chip{padding:6px 12px;border-radius:999px;background:var(--card);color:var(--muted);border:1px solid var(--border)}
+.chip.red{color:#f66}
 
-      <!-- RIGHT: messages + composer -->
-      <section class="messages-panel">
-        <div class="messages-wrap">
-          <ul id="messages" class="messages" aria-live="polite"></ul>
+/* Layout */
+.chat-main{
+  max-width:1200px; margin:0 auto; padding:0 16px 64px;
+  display:grid; grid-template-columns:420px 1fr; gap:24px;
+}
 
-          <form id="composer" class="composer">
-            <input id="chatInput" type="text" placeholder="Say something…" autocomplete="off" />
-            <button id="sendBtn" type="submit" class="btn">Send</button>
-          </form>
-        </div>
-      </section>
-    </section>
-  </main>
+/* Portrait */
+.portrait-panel{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:18px; padding:14px; box-shadow:var(--glow);
+}
+.portrait-panel img{
+  display:block; width:100%; height:auto; border-radius:14px;
+}
+.portrait-panel .caption{margin-top:8px;color:var(--muted);font-size:.9rem}
 
-  <!-- Bubble templates (used by JS) -->
-  <template id="tpl-user">
-    <li class="right"><div class="bubble user"></div></li>
-  </template>
-  <template id="tpl-assistant">
-    <li class="left"><div class="bubble ai"></div></li>
-  </template>
+/* Chat column */
+.chat-panel{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:18px; padding:16px; display:flex; flex-direction:column;
+  min-height:520px; box-shadow:var(--glow);
+}
+.messages{
+  flex:1; overflow-y:auto; display:flex; flex-direction:column;
+  gap:12px; padding-right:6px;
+}
+.bubble{
+  max-width:78%; padding:12px 14px; border-radius:14px;
+  font-size:15px; line-height:1.4; word-wrap:break-word;
+}
+.bubble.assistant{align-self:flex-start;background:var(--bubbleBot);border:1px solid #223145}
+.bubble.user{align-self:flex-end;background:var(--bubbleMe);border:1px solid #461a2e}
 
-  <script src="/scripts/chat.js"></script>
-</body>
-</html>
+/* Composer */
+.composer{display:flex;gap:12px;margin-top:16px}
+#chatInput{
+  flex:1; height:44px; background:#0b1118; border:1px solid var(--border);
+  border-radius:12px; color:var(--ink); padding:0 14px;
+}
+#chatInput::placeholder{color:#6b7c95}
+#sendBtn{
+  padding:0 18px; height:44px; border-radius:12px; border:0;
+  background:linear-gradient(90deg,#ff3a7a,#ffa4c0); color:#fff; font-weight:700;
+  box-shadow:0 6px 26px rgba(246,98,147,.35);
+}
+#sendBtn:active{transform:translateY(1px)}
+
+@media (max-width:980px){
+  .chat-main{grid-template-columns:1fr}
+  .portrait-panel{order:-1}
+}

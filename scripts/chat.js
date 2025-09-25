@@ -1,150 +1,118 @@
-/* Blossom & Blade — chat runtime
-   - consent aware + RED safeword + POV switch + robust portrait fallback
-*/
-
+/* Blossom & Blade — chat runtime (2-column layout, bubble colors, no duplicate sends) */
 (() => {
-  // ---------- URL state ----------
-  const qs  = new URLSearchParams(location.search);
+  // ---------- URL / roster ----------
+  const qs = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
 
-  // Update this list if you add/remove a guy
-  const VALID  = ["blade","dylan","alexander","silas","grayson","viper"];
-  const PRETTY = {
-    blade: "Blade",
-    dylan: "Dylan",
-    alexander: "Alexander",
-    silas: "Silas",
-    grayson: "Grayson",
-    viper: "Viper"
-  };
+  const VALID = ["blade","dylan","alexander","silas","grayson","viper"];
+  const pretty = { blade:"Blade", dylan:"Dylan", alexander:"Alexander", silas:"Silas", grayson:"Grayson", viper:"Viper" };
 
-  // ---------- DOM ----------
+  const FIRST_LINES = [
+    "look who’s here.",
+    "aww, you came to see me.",
+    "hey you."
+  ];
+
+  // ---------- DOM refs ----------
   const el = {
-    roomTitle:   document.getElementById("roomTitle"),
-    list:        document.getElementById("messages"),
-    input:       document.getElementById("chatInput"),
-    send:        document.getElementById("sendBtn"),
-    form:        document.getElementById("composer"),
-    portrait:    document.getElementById("portraitImg"),
-    portraitLbl: document.getElementById("portraitLabel"),
-    slowBadge:   document.getElementById("slowBadge")
+    title: document.getElementById("roomTitle"),
+    list: document.getElementById("messages"),
+    input: document.getElementById("chatInput"),
+    send: document.getElementById("sendBtn"),
+    form: document.getElementById("composer"),
+    portrait: document.getElementById("portraitImg"),
+    portraitLabel: document.getElementById("portraitLabel"),
+    panel: document.getElementById("messagePanel"),
   };
 
-  // ---------- Title + portrait ----------
-  const FALLBACK_LOGO = "/images/logo.jpg";
+  // ---------- helpers ----------
+  const logo = "/images/logo.jpg";
+  const imgPathChat = (m) => `/images/characters/${m}/${m}-chat.webp`;
 
-  function imgPathChat(m) {  return `/images/characters/${m}/${m}-chat.webp`; }
-  function imgPathCard(m) {  return `/images/characters/${m}/${m}-card-on.webp`; }
-
-  function setTitleAndPortrait() {
-    // Title
-    document.title = VALID.includes(man)
-      ? `Blossom & Blade — ${PRETTY[man]}`
-      : "Blossom & Blade — Chat";
-    if (el.roomTitle) el.roomTitle.textContent = VALID.includes(man) ? PRETTY[man] : "";
-
-    // Portrait (robust fallback: chat -> card -> logo)
-    const img = el.portrait;
-    if (!img) return;
-    img.dataset.stage = "chat";
-    img.alt = VALID.includes(man) ? `${PRETTY[man]} portrait` : "portrait";
-
-    const tryCard = () => {
-      img.dataset.stage = "card";
-      img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO; };
-      img.src = imgPathCard(man);
-    };
-
-    img.onerror = tryCard;
-    img.src = VALID.includes(man) ? imgPathChat(man) : FALLBACK_LOGO;
-
-    // Label
-    if (el.portraitLbl) el.portraitLbl.textContent =
-      VALID.includes(man) ? `${PRETTY[man]} portrait` : "";
-  }
-
-  // ---------- Simple state ----------
   const uidKey = "bnb.userId";
-  const hKey   = (m) => `bnb.${m}.history`;
+  const hKey   = (m) => `bnb.s.${m}.history`;
 
-  function loadJson(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key) || "null") ?? fallback; }
-    catch { return fallback; }
-  }
-  function saveJson(key, v){ try { localStorage.setItem(key, JSON.stringify(v)); } catch{} }
+  const loadJson = (k, fallback) => {
+    try { const x = JSON.parse(localStorage.getItem(k)); return x ?? fallback; } catch { return fallback; }
+  };
+  const saveJson = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 
-  const userId  = loadJson(uidKey, Math.random().toString(36).slice(2));
-  saveJson(uidKey, userId);
+  let history = [];
+  let sending = false;
 
-  let history = loadJson(hKey(man), []);
-
-  // ---------- Bubbles ----------
-  function addBubble(role, text){
-    if (!el.list) return;
-
-    const li = document.createElement("li");
-    li.className = `bubble ${role}`;
-    li.textContent = text;
-
-    el.list.appendChild(li);
-
-    // auto-scroll right column
-    el.list.parentElement?.scrollTo({
-      top: el.list.parentElement.scrollHeight,
-      behavior: "smooth"
-    });
+  // bubble DOM
+  function addBubble(role, text) {
+    const div = document.createElement("div");
+    div.className = `bubble ${role === "assistant" ? "assistant" : "user"}`;
+    div.textContent = text;
+    el.list.appendChild(div);
+    // autoscroll
+    el.panel.scrollTop = el.panel.scrollHeight + 9999;
   }
 
-  function renderAll(){
-    if (!el.list) return;
+  function renderAll() {
     el.list.innerHTML = "";
     for (const m of history) addBubble(m.role, m.content);
+    el.panel.scrollTop = el.panel.scrollHeight + 9999;
   }
 
-  // First welcome line if fresh visit and man is valid
-  const FIRST_LINES = ["hey you.", "look who’s here.", "aww, you came to see me."];
-  if (VALID.includes(man) && history.length === 0){
-    const first = FIRST_LINES[Math.floor(Math.random()*FIRST_LINES.length)];
-    history.push({ role:"assistant", content:first, t: Date.now() });
-    saveJson(hKey(man), history);
+  // ---------- Init title + portrait ----------
+  if (VALID.includes(man)) {
+    document.title = `Blossom & Blade — ${pretty[man]}`;
+    el.title.textContent = pretty[man];
+    el.portrait.src = imgPathChat(man);
+    el.portrait.alt = `${pretty[man]} portrait`;
+    el.portraitLabel.textContent = `${pretty[man]} portrait`;
+  } else {
+    document.title = "Blossom & Blade — Chat";
+    el.title.textContent = "Blossom & Blade —";
+    el.portrait.src = logo;
+    el.portrait.alt = "Blossom & Blade";
+    el.portraitLabel.textContent = "";
   }
+
+  // ---------- Load history + maybe add a first line ----------
+  history = loadJson(hKey(man || "logo"), []);
+
+  if (history.length === 0) {
+    const first = VALID.includes(man)
+      ? FIRST_LINES[Math.floor(Math.random() * FIRST_LINES.length)]
+      : "Pick a character from the main page to begin.";
+    history.push({ role: "assistant", content: first, t: Date.now() });
+    saveJson(hKey(man || "logo"), history);
+  }
+
   renderAll();
 
-  // ---------- Safeword / filters ----------
-  const BANNED = /\b(?:rape|incest|bestiality|traffick|minors?|teen|scat)\b/i;
-
-  // ---------- Send ----------
-  if (el.form && el.send){
-    el.form.addEventListener("submit", onSend);
-    el.send.addEventListener("click", () => el.form.requestSubmit());
-  }
-
-  async function onSend(e){
+  // ---------- Send handling ----------
+  async function onSend(e) {
     e.preventDefault();
+    if (sending) return;
+
     const text = (el.input.value || "").trim();
     if (!text) return;
 
-    // taboo guard
-    if (BANNED.test(text)){
-      addBubble("assistant", "I can’t do that. I’ll keep you safe and stay within the lines, okay?");
-      el.input.value = "";
-      return;
-    }
-
     // append user
-    history.push({ role:"user", content:text, t: Date.now() });
-    saveJson(hKey(man), history);
+    history.push({ role: "user", content: text, t: Date.now() });
+    saveJson(hKey(man || "logo"), history);
     addBubble("user", text);
     el.input.value = "";
 
-    // build request to API
+    if (!VALID.includes(man)) return; // no backend chat without character
+
+    sending = true;
+    el.send.disabled = true;
+
+    // build request
+    const uid = loadJson(uidKey, crypto.randomUUID());
+    localStorage.setItem(uidKey, JSON.stringify(uid));
+
     const body = {
       man,
-      userId,
-      history,
+      userId: uid,
+      history: history.slice(-20), // small context
       mode: "soft",
-      memory: { summary: "", profile: "" },
-      pov: "first",
+      pov: "",
       consented: true
     };
 
@@ -159,18 +127,30 @@
       reply = (j && j.reply) ? String(j.reply) : "(no reply)";
     } catch (err) {
       console.error("chat send failed:", err);
-      return;             // ← prevents duplicate “hiccup” lines
+      sending = false;
+      el.send.disabled = false;
+      return;   // <- do NOT add a fallback bubble
     }
 
-   // append AI reply
-if (!reply) return;
+    // append AI reply (single!)
+    if (!reply) { sending = false; el.send.disabled = false; return; }
+    history.push({ role: "assistant", content: reply, t: Date.now() });
+    saveJson(hKey(man || "logo"), history);
+    addBubble("assistant", reply);
 
-history.push({ role: "assistant", content: reply, t: Date.now() });
-trimHistory();
-saveJson(hKey(man), history);
-addBubble("assistant", reply);
+    sending = false;
+    el.send.disabled = false;
+  }
 
+  // listeners
+  el.form.addEventListener("submit", onSend);
+  el.send.addEventListener("click", () => el.form.requestSubmit());
 
-  // init
-  setTitleAndPortrait();
+  // convenience: Enter sends, Shift+Enter makes newline (for future textarea)
+  el.input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      el.form.requestSubmit();
+    }
+  });
 })();

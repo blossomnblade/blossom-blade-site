@@ -28,12 +28,12 @@
   #portraitImg[loading="eager"]{ contain: paint; }
 
   /* Chat column scrolls only inside messages list */
-  #messages{
-    max-height: calc(100vh - 260px);
-    overflow-y: auto;
-    will-change: scroll-position;
-    scroll-behavior: smooth;
-  }
+  /* Let the page scroll, not the chat column */
+#messages{
+  max-height: none;
+  overflow: visible;
+}
+
   #composer{
     position: sticky;
     bottom: 0;

@@ -221,7 +221,11 @@
   }
 
   // Patch addBubble so assistant text flows through tweaks
-  const __addBubble = addBubble;
+ // keep the thread pinned to the latest message
+function scrollToBottom(){
+  try { el.list.scrollTop = el.list.scrollHeight; } catch(e){}
+}
+ const __addBubble = addBubble;
   addBubble = function(role, text){
     try{
       if (role === "assistant") {

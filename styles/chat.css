@@ -1,307 +1,163 @@
-/* --- viewport + layout --- */
-html, body {
-  height: 100%;
-  margin: 0;
-  /* the page itself won't scroll; only the messages pane will */
-  overflow: hidden;
+:root{
+  --bg:#0b0f19;
+  --panel:#101826;
+  --panel-2:#0f1624;
+  --text:#cfd6e6;
+  --muted:#aeb9d0;
+  --accent:#f12740;
+
+  /* bubbles */
+  --bubble-user:#16233a;
+  --bubble-user-border:#294166;
+  --bubble-ai:#0d1a2e;
+  --bubble-ai-border:#1f2b44;
+
+  --radius:16px;
+  --shadow:0 8px 28px rgba(255,93,140,.28);
 }
 
-/* wrapper around the whole chat area (whatever your outer container is) */
-.chat-shell {
-  /* use dynamic viewport unit so mobile browser bars don't chop content */
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
 }
 
-/* the main two-column area (messages + portrait) */
-.chat-main {
-  flex: 1 1 auto;
-  overflow: hidden;                 /* prevent page scrollbars */
-  display: grid;
-  grid-template-columns: 1fr 420px; /* messages | portrait (desktop) */
-  gap: 24px;
-  padding: 16px;
+/* page wrapper / header */
+.wrap{max-width:1280px; margin:0 auto; padding:12px}
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+h1{margin:8px 0}
+.muted{color:var(--muted)}
+
+/* TIMER CHIP – hidden until launch */
+.trial-chip{ display:none !important; }
+
+/* ===== Chat layout ===== */
+.chat-main{
+  display:grid;
+  grid-template-columns: 420px 1fr;   /* portrait | messages */
+  gap:18px;
+  align-items:start;
+  height:calc(100vh - 140px);         /* leave space for header */
+  margin-top:12px;
 }
 
-/* messages list area */
-#messages {
-  list-style: none;                 /* kill bullets just in case */
-  padding: 0 0 0 0;
-  margin: 0;
-  height: 100%;
-  overflow: auto;                   /* ONLY this scrolls */
-  scroll-behavior: smooth;
-  /* reserve space for the fixed composer so the last bubble isn’t hidden */
-  padding-bottom: calc(var(--composer-h, 84px) + 20px);
-  scroll-padding-bottom: calc(var(--composer-h, 84px) + 20px);
+/* left: portrait panel */
+.portrait-panel{
+  position:sticky;
+  top:90px;                /* keeps it in view while messages scroll */
+  align-self:start;
+  background:var(--panel);
+  border:1px solid #1f2740;
+  border-radius:var(--radius);
+  padding:8px;
+  box-shadow:var(--shadow);
+  max-height:calc(100vh - 160px);
+}
+.portrait-panel img{
+  width:100%;
+  height:auto;
+  aspect-ratio:4/5;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
 }
 
-/* pinned composer bar */
-.composer-wrap {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* respect iPhone safe area */
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.85) 30%, rgba(8,10,14,0.95) 100%);
-  z-index: 50;
+/* right: messages + composer stacked */
+.messages-panel{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  min-height:0; /* allow child to shrink inside grid */
 }
 
-/* inner composer width matches the chat content column */
-.composer {
-  --composer-h: 84px;               /* expose height to JS/CSS */
-  max-width: 1100px;                /* center on wide screens */
-  margin: 0 auto;
-  padding: 12px 16px;
+.messages{
+  list-style:none;
+  margin:0;
+  padding:0 8px 0 0;     /* a bit of right padding for scrollbar */
+  height:100%;
+  overflow-y:auto;
+  scroll-behavior:smooth;
 }
 
-/* portrait panel */
-.portrait-panel {
-  overflow: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+/* bubbles */
+.msg{ display:flex; margin:8px 0; }
+.msg.user{ justify-content:flex-end; }
+.msg .bubble{
+  max-width:72ch;
+  padding:12px 14px;
+  border-radius:14px;
+  line-height:1.45;
+  word-wrap:break-word;
+  white-space:pre-wrap;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+.msg.user   .bubble{ background:var(--bubble-user); border:1px solid var(--bubble-user-border); }
+.msg.assistant .bubble{ background:var(--bubble-ai); border:1px solid var(--bubble-ai-border); }
+
+/* composer (input + send) */
+.composer{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  background:var(--panel);
+  border:1px solid #1f2740;
+  border-radius:14px;
+  padding:10px;
+  position:sticky;      /* stays visible while messages scroll */
+  bottom:8px;
+}
+.composer input[type="text"]{
+  appearance:none;
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #1f2740;
+  border-radius:12px;
+  background:var(--panel-2);
+  color:var(--text);
+  outline:none;
+}
+.composer button{
+  appearance:none;
+  border:0;
+  border-radius:12px;
+  padding:10px 16px;
+  background:linear-gradient(180deg,#f45a8a,#cf3a6b);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(255,93,140,.25);
+}
+.composer button:disabled{ opacity:.6; cursor:not-allowed }
+
+/* small chips (e.g., RED, Adults 18+ ) */
+.pill{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#0f1828;
+  border:1px solid #1f2740;
+  color:var(--muted);
+  font-size:12px;
 }
 
-.portrait-panel img {
-  max-width: 100%;
-  height: auto;
-  max-height: 70vh;                 /* keep big photos from forcing scroll */
-  object-fit: cover;
-  border-radius: 16px;
-}
-
-/* timer chip stays visible */
-.trial-chip {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 60;
-}
-
-/* --- mobile: stack layout, keep image manageable --- */
-@media (max-width: 900px) {
-  .chat-main {
-    grid-template-columns: 1fr;     /* single column */
-    gap: 12px;
-    padding: 8px 8px 0 8px;
-  }
-
-  .portrait-panel {
-    order: -1;                      /* image above messages */
-  }
-
-  .portrait-panel img {
-    max-height: 45vh;               /* smaller on phones */
-  }
-
-  .composer {
-    padding: 8px 12px;
-  }
-}/* ===== BnB Chat layout fix (append at end) ===== */
-
-/* Desktop: 2-col grid */
-@media (min-width: 980px) {
-  .chat-main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
-    gap: 24px;
-    align-items: start;
-  }
-
-  /* Left column scroller (support id or class) */
-  #messages, .messages, .thread {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: calc(100vh - 220px); /* room for header + composer */
-    overflow-y: auto;
-    padding-right: 8px;
-    scroll-behavior: smooth;
-  }
-
-  /* Sticky composer at bottom of left column */
-  .composer {
-    position: sticky;
-    bottom: 0;
-    background: linear-gradient(180deg, rgba(16,24,38,0.6) 0%, rgba(16,24,38,0.95) 70%, #101826 100%);
-    border-top: 1px solid rgba(255,255,255,0.06);
-    padding: 12px;
-    border-radius: 16px;
-    backdrop-filter: blur(6px);
-    z-index: 5;
-    margin-top: 12px;
-  }
-
-  /* Right column (portrait) sticks under header */
-  .portrait-panel {
-    position: sticky;
-    top: 96px;
-  }
-  .portrait-panel img {
-    width: 100%;
-    height: calc(100vh - 160px);
-    object-fit: cover;
-    border-radius: 16px;
-    box-shadow: 0 8px 28px rgba(255,93,140,0.18);
-  }
-}
-
-/* Mobile: stack; portrait first; composer sticky bottom */
-@media (max-width: 979px) {
-  .chat-main { display: block; }
-
-  .portrait-panel { margin-bottom: 12px; }
-  .portrait-panel img {
-    width: 100%;
-    height: 52vh;
-    object-fit: cover;
-    border-radius: 16px;
-  }
-
-  #messages, .messages, .thread {
-    max-height: calc(48vh - 100px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scroll-behavior: smooth;
-  }
-
-  .composer {
-    position: sticky;
-    bottom: env(safe-area-inset-bottom, 0);
-    background: linear-gradient(180deg, rgba(16,24,38,0.6) 0%, rgba(16,24,38,0.95) 70%, #101826 100%);
-    border-top: 1px solid rgba(255,255,255,0.06);
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
-    z-index: 10;
-  }
-}/* ===== Fixed portrait left, chat stream right ===== */
-
-/* Desktop */
-@media (min-width: 980px) {
+/* ===== Mobile stack ===== */
+@media (max-width: 900px){
   .chat-main{
-    display:grid;
-    grid-template-columns: 420px minmax(0,1fr); /* portrait | chat */
-    gap:24px;
-    align-items:start;
+    grid-template-columns: 1fr;   /* stack */
+    height:auto;
   }
-
-  /* left column (portrait) sticks under header */
   .portrait-panel{
-    position:sticky;
-    top:96px;
-    align-self:start;
+    position:static;    /* no sticky on small screens */
+    max-height:none;
   }
-  .portrait-panel img{
-    width:100%;
-    height:calc(100vh - 160px);
-    object-fit:cover;
-    border-radius:16px;
-    box-shadow:0 8px 28px rgba(255,93,140,0.18);
-  }
-
-  /* right column: scrolling message list */
-  #messages, .messages, .thread{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    max-height:calc(100vh - 220px); /* room for header + composer */
-    overflow-y:auto;
-    padding-right:8px;
-    scroll-behavior:smooth;
-  }
-
-  /* input area stays visible at the bottom of the right column */
-  .composer{
-    position:sticky;
-    bottom:0;
-    background:linear-gradient(180deg, rgba(16,24,38,.6) 0%, rgba(16,24,38,.95) 70%, #101826 100%);
-    border-top:1px solid rgba(255,255,255,.06);
-    padding:12px;
-    border-radius:16px;
-    backdrop-filter:blur(6px);
-    z-index:5;
-    margin-top:12px;
-  }
+  .portrait-panel img{ max-height:40vh; }
+  .messages{ height:min(54vh, 480px); }
 }
-
-/* Mobile: stack portrait above chat; keep sticky composer */
-@media (max-width: 979px) {
-  .chat-main{ display:block; }
-
-  .portrait-panel{ margin-bottom:12px; }
-  .portrait-panel img{
-    width:100%;
-    height:52vh;
-    object-fit:cover;
-    border-radius:16px;
-  }
-
-  #messages, .messages, .thread{
-    max-height:calc(48vh - 100px);
-    overflow-y:auto;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    scroll-behavior:smooth;
-  }
-
-  .composer{
-    position:sticky;
-    bottom:env(safe-area-inset-bottom, 0);
-    background:linear-gradient(180deg, rgba(16,24,38,.6) 0%, rgba(16,24,38,.95) 70%, #101826 100%);
-    border-top:1px solid rgba(255,255,255,.06);
-    padding-bottom:calc(12px + env(safe-area-inset-bottom, 0));
-    z-index:10;
-  }
-}
-
-/* ===== Bubble styling (assistant vs user) ===== */
-.message, .bubble, .msg{
-  padding:14px 16px;
-  border-radius:18px;
-  max-width:85%;
-  width:fit-content;
-  box-shadow:0 6px 16px rgba(0,0,0,.18);
-}
-
-/* Assistant (his) */
-.message.assistant, .bubble.assistant, .msg.assistant{
-  background:#0E1726;              /* deep blue */
-  color:#D9E6FF;
-  border:1px solid rgba(120,160,255,.18);
-}
-
-/* User (yours) — float to right */
-.message.user, .bubble.user, .msg.user{
-  background:#281521;              /* wine/rose */
-  color:#FFD6EA;
-  border:1px solid rgba(255,93,140,.22);
-  margin-left:auto;
-}/* ===== role-tinted bubbles ===== */
-.msg {
-  background: #121828;
-  color: #d7e2ff;
-  border-radius: 14px;
-  padding: 10px 12px;
-}
-
-/* you (user) */
-.msg.user {
-  background: #0f2436;
-  color: #cfe0ff;
-  align-self: flex-end;
-}
-
-/* him (assistant) */
-.msg.assistant {
-  background: #1a1b2c;
-  color: #e7f0ff;
-  align-self: flex-start;
-}
-
-
-

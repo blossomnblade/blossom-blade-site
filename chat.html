@@ -4,47 +4,33 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blossom & Blade — Chat</title>
-  <link rel="stylesheet" href="/styles/chat.css" />
+  <link rel="stylesheet" href="/styles/chat.css?v=9" />
 </head>
 <body>
-  <main class="wrap">
-    <header class="top">
-      <h1 id="roomTitle">Blossom &amp; Blade —</h1>
-      <div class="chips">
-        <span id="slowBadge" class="chip" hidden>RED</span>
-        <span class="chip muted">Adults 18+ only</span>
-      </div>
-    </header>
+  <header class="top">
+    <h1 id="roomTitle">Blossom &amp; Blade —</h1>
+    <div class="chips">
+      <span class="chip red">RED</span>
+      <span class="chip adult">Adults 18+ only</span>
+    </div>
+  </header>
 
-    <section class="chat-main">
-      <!-- LEFT: portrait -->
-      <aside class="portrait-panel">
-        <img id="portraitImg" alt="portrait" />
-        <div id="portraitLabel" class="muted"></div>
-      </aside>
+  <main class="chat-main">
+    <section class="portrait-panel">
+      <img id="portraitImg" alt="portrait" />
+      <div class="caption" id="portraitLabel"></div>
+    </section>
 
-      <!-- RIGHT: messages + composer -->
-      <section class="messages-panel">
-        <div class="messages-wrap">
-          <ul id="messages" class="messages" aria-live="polite"></ul>
+    <section class="chat-panel">
+      <div id="messages" class="messages"></div>
 
-          <form id="composer" class="composer">
-            <input id="chatInput" type="text" placeholder="Say something…" autocomplete="off" />
-            <button id="sendBtn" type="submit" class="btn">Send</button>
-          </form>
-        </div>
-      </section>
+      <form id="composer" class="composer" autocomplete="off">
+        <input id="chatInput" type="text" placeholder="Say something..." />
+        <button id="sendBtn" type="submit">Send</button>
+      </form>
     </section>
   </main>
 
-  <!-- Bubble templates (used by JS) -->
-  <template id="tpl-user">
-    <li class="right"><div class="bubble user"></div></li>
-  </template>
-  <template id="tpl-assistant">
-    <li class="left"><div class="bubble ai"></div></li>
-  </template>
-
-  <script src="/scripts/chat.js"></script>
+  <script src="/scripts/chat.js?v=9" defer></script>
 </body>
 </html>

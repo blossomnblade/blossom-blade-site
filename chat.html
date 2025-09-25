@@ -2,80 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Blossom &amp; Blade — Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
-  <link rel="preload" as="image" href="/images/logo.jpg" />
+  <title>Blossom &amp; Blade — Chat</title>
   <link rel="stylesheet" href="/styles/chat.css" />
-  <style>
-    body { background:#0b0f14; color:#cfd6e6; margin:0; padding:12px; }
-    .wrap{max-width:1280px;margin:0 auto;padding:12px;}
-    header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-    .brand{font-weight:700;color:#cfd6e6}
-    .title{color:#aeb9d0}
-    .badges{display:flex;gap:10px}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#101826;border:1px solid #1f2740;font-size:12px;color:#cfd6e6}
-    main{display:grid;grid-template-columns:1fr 360px;gap:16px}
-    @media (max-width: 980px){ main{grid-template-columns:1fr} aside#portrait{position:relative;top:auto} }
-    ul#messages{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 240px);overflow:auto}
-    li.bubble{background:#101826;border:1px solid #1f2740;border-radius:18px;padding:10px 14px;display:inline-block;max-width:60ch}
-    li.bubble.assistant{background:#0f1627;border-color:#24325a}
-    form#composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(12,16,32,.0),rgba(12,16,32,.8) 30%, #0b0f14);padding:12px 0;display:flex;gap:10px;align-items:center}
-    input#chatInput{flex:1;min-width:0;background:#0f1627;border:1px solid #24325a;border-radius:10px;padding:12px;color:#cfd6e6}
-    button#sendBtn{appearance:none;border:0;cursor:pointer;padding:10px 18px;height:44px;background:radial-gradient(120% at 30% -10%, #ff90dc, #ff5d8c);color:#0b0f19;font-weight:700;border-radius:999px;box-shadow:0 8px 28px rgba(255,93,140,.28)}
-    aside#portrait{position:sticky;top:76px;align-self:start}
-    figure.pframe{margin:0;padding:0;background:#0b0f19;border:1px solid #1f2740;border-radius:18px;overflow:hidden;box-shadow:0 8px 28px rgba(255,93,140,.28)}
-    #portraitImg{display:block;width:100%;height:auto;object-fit:cover;aspect-ratio:3/4}
-    #portraitLabel{padding:10px 14px;font-size:12px;color:#aeb9d0}
-    /* mobile tweak */
-    @media (max-width: 900px){
-      .wrap{grid-template-columns:1fr}
-      #portraitImg{aspect-ratio:auto}
-    }
-  </style>
 </head>
 <body>
   <div class="wrap">
-    <main class="col-left" id="app">
-      <header class="top">
-        <div>
-          <div class="brand">Blossom &amp; Blade</div>
-          <div class="title" id="roomTitle">—</div>
-        </div>
-        <div class="badges">
-          <span class="pill hot" id="slowBadge" title="Say RED to slow erotica">RED</span>
-          <span class="pill" id="trialBadge">Trial</span>
-          <span class="pill adults">Adults 18+ only</span>
-        </div>
-      </header>
+    <header>
+      <h1 id="roomTitle">Blossom &amp; Blade — <span id="portraitLabel"></span></h1>
+      <div>
+        <span id="slowBadge" class="pill">RED</span>
+        <!-- Trial chip intentionally omitted; CSS also hides any .trial-chip -->
+        <span class="pill">Adults 18+ only</span>
+      </div>
+    </header>
 
-      <ul id="messages" aria-live="polite" aria-label="Conversation"></ul>
+    <main class="chat-main" id="chatLayout">
+      <!-- Left: portrait -->
+      <aside class="portrait-panel">
+        <img id="portraitImg" alt="portrait" src="/images/logo.jpg" />
+      </aside>
 
-      <form id="composer" autocomplete="off">
-        <input id="chatInput" name="q" placeholder="Say something..." />
-        <button id="sendBtn" type="submit">Send</button>
-      </form>
+      <!-- Right: messages + composer -->
+      <section class="messages-panel">
+        <div id="messages" class="messages" aria-live="polite"></div>
 
-      <!-- message templates -->
-      <template id="tpl-user">
-        <li class="bubble user"><span class="txt"></span></li>
-      </template>
-      <template id="tpl-assistant">
-        <li class="bubble assistant"><span class="txt"></span></li>
-      </template>
+        <form id="composer" class="composer" autocomplete="off">
+          <input id="chatInput" type="text" placeholder="Say something..." />
+          <button id="sendBtn" type="submit">Send</button>
+        </form>
+      </section>
     </main>
 
-    <aside id="portrait">
-      <figure class="pframe">
-        <img id="portraitImg" alt="portrait" />
-        <figcaption id="portraitLabel"> </figcaption>
-      </figure>
-    </aside>
+    <!-- message templates the JS clones -->
+    <template id="tpl-user">
+      <div class="msg user"><div class="bubble"></div></div>
+    </template>
+    <template id="tpl-assistant">
+      <div class="msg assistant"><div class="bubble"></div></div>
+    </template>
   </div>
 
-  <!-- brains (phrase banks), trial, then chat runtime -->
-  <script src="/scripts/brain.js"></script>
-  <script src="/scripts/trial.js"></script>
-  <script src="/scripts/chat.js"></script>
+  <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

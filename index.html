@@ -20,9 +20,26 @@
     .enter{display:inline-block;margin:0 14px 18px;padding:8px 12px;border-radius:999px;background:#101826;border:1px solid #1f2740;color:#cfd6e6;text-decoration:none}
     .enter.locked{opacity:.55;pointer-events:none}
     .banner{margin-top:10px;padding:10px 12px;border:1px dashed #394869;border-radius:12px;background:#0f1627}
-  </style>
+ /* --- HOME PAGE SCROLL FIX (index.html only) --- */
+html, body { 
+  height: auto !important;
+  overflow-y: auto !important;   /* allow vertical scroll */
+  overflow-x: hidden;
+}
+
+body.home .wrap,
+body.home main,
+body.home .grid,
+body.home .cards {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  padding-bottom: 24px;          /* room for last row of cards */
+}
+ </style>
 </head>
-<body>
+<body class="home">
+
   <div class="wrap">
     <header>
       <h1>Blossom &amp; Blade</h1>

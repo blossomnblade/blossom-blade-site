@@ -2,30 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blossom & Blade — Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blossom &amp; Blade — Chat</title>
   <link rel="stylesheet" href="/styles/chat.css" />
 </head>
 <body>
   <div class="wrap">
-    <header style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+    <header class="top">
       <h1 id="roomTitle">Blossom &amp; Blade —</h1>
-      <div style="display:flex;gap:8px">
-        <span class="pill">RED</span>
-        <span class="pill">Adults 18+ only</span>
+      <div class="chips">
+        <span class="chip muted">RED</span>
+        <span class="chip muted">Adults 18+ only</span>
       </div>
     </header>
 
     <main class="chat-main">
-      <!-- Portrait column -->
       <aside class="portrait-panel">
-        <img id="portraitImg" class="portrait" alt="portrait" src="/images/logo.jpg" data-stage="chat" />
+        <img id="portraitImg" alt="portrait" />
         <div id="portraitLabel" class="portrait-label"></div>
       </aside>
 
-      <!-- Messages + composer column -->
-      <section class="message-panel" id="messagePanel">
-        <div id="messages" class="list" aria-live="polite"></div>
+      <section class="messages-panel">
+        <ul id="messages" class="messages"></ul>
 
         <form id="composer" class="composer" autocomplete="off">
           <input id="chatInput" type="text" placeholder="Say something..." />
@@ -35,6 +33,6 @@
     </main>
   </div>
 
-  <script defer src="/scripts/chat.js"></script>
+  <script src="/scripts/chat.js"></script>
 </body>
 </html>

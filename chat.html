@@ -3,30 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
   <title>Blossom &amp; Blade — Chat</title>
   <link rel="stylesheet" href="/styles/chat.css" />
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <h1 id="roomTitle">Blossom &amp; Blade — <span id="portraitLabel"></span></h1>
-      <div>
-        <span id="slowBadge" class="pill">RED</span>
-        <!-- Trial chip intentionally omitted; CSS also hides any .trial-chip -->
-        <span class="pill">Adults 18+ only</span>
+    <header class="chat-header">
+      <h1 id="roomTitle">Blossom &amp; Blade —</h1>
+      <div class="chips">
+        <span class="chip">RED</span>
+        <span class="chip">Adults 18+ only</span>
       </div>
     </header>
 
-    <main class="chat-main" id="chatLayout">
-      <!-- Left: portrait -->
-      <aside class="portrait-panel">
-        <img id="portraitImg" alt="portrait" src="/images/logo.jpg" />
-      </aside>
+    <main class="chat-main">
+      <!-- Left: fixed portrait panel -->
+      <section class="portrait-panel">
+        <img id="portraitImg" src="/images/logo.jpg" alt="portrait" />
+        <p id="portraitlabel" class="muted"></p>
+      </section>
 
       <!-- Right: messages + composer -->
-      <section class="messages-panel">
-        <div id="messages" class="messages" aria-live="polite"></div>
+      <section class="message-panel">
+        <ul id="messages" aria-live="polite" aria-label="Conversation"></ul>
 
         <form id="composer" class="composer" autocomplete="off">
           <input id="chatInput" type="text" placeholder="Say something..." />
@@ -34,16 +33,9 @@
         </form>
       </section>
     </main>
-
-    <!-- message templates the JS clones -->
-    <template id="tpl-user">
-      <div class="msg user"><div class="bubble"></div></div>
-    </template>
-    <template id="tpl-assistant">
-      <div class="msg assistant"><div class="bubble"></div></div>
-    </template>
   </div>
 
-  <script src="/scripts/chat.js" defer></script>
+  <!-- Your runtime -->
+  <script src="/scripts/chat.js"></script>
 </body>
 </html>

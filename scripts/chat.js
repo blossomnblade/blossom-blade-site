@@ -1,369 +1,357 @@
-/* scripts/chat.js — one-file drop-in
-   - Injects minimal CSS (so you don’t have to touch stylesheets)
-   - Portrait fills a perfect square; hides figcaptions/captions
-   - Per-character portrait + background (day/night)
-   - Solid chat loop with anti-repeat + gentle variety
-   - Uses /api/chat with history slice; soft fallback if API fails
+/* Blossom & Blade — chat.js (starter pack)
+   - Background mapping by ?man= & optional ?sub=night|day
+   - Caption hide + z-index safe bubbles (CSS handles)
+   - 6-minute trial gate on SEND, no paywall flash
+   - RED check-in, assent escalation tone flag
+   - 1–2s jitter, optional 30s nudge
+   - Anti-repeat window
+   - Debug logger (?debug=1)
+   - Single system prompt builder for /api/chat
 */
-"use strict";
 
-/* =============== Minimal CSS injection (UI hardening) =============== */
-(function injectChatCSS() {
-  const css = `
-  .chat-room{display:grid;grid-template-rows:auto 1fr auto;gap:16px}
-  #feed,.messages,.chat-feed{list-style:none;margin:0;padding:0 0 96px;max-height:100%}
-  #feed li,.messages li,.chat-feed li{list-style:none}
-  .bubble{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+(() => {
+  // ---------- Config ----------
+  const PAY_URL = '/pay.html';               // Update when payments wired
+  const TRIAL_MINUTES = 6;                   // single 6-minute try-all
+  const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 
-  /* Composer stays pinned if your layout supports it */
-  .chat-composer,#composer{position:sticky;bottom:0;z-index:3}
-
-  /* === Portrait: force a clean, square crop in its box === */
-  #portrait,.portrait{
-    width:100%;
-    aspect-ratio:1 / 1;        /* perfect square */
-    height:auto;                /* let aspect-ratio set height from width */
-    object-fit:cover;           /* crop without distortion */
-    border-radius:12px;
-    display:block;
-  }
-
-  /* If the portrait lives inside a figure with a caption, hide the caption line */
-  figure figcaption,.figcaption,.credit,.caption{display:none !important}
-
-  /* Optional: if your chat slab/window overlays a background */
-  .has-bg .chat-slab,.has-bg .chat-window{
-    background:rgba(10,16,22,.5);
-    backdrop-filter:blur(2px);
-    border-radius:16px
-  }
-  `;
-  const style = document.createElement("style");
-  style.setAttribute("data-injected", "chat-css");
-  style.textContent = css;
-  document.head.appendChild(style);
-})();
-
-/* ======================== Asset mappings =========================== */
-/* Expect chat.html?man=blade&sub=night (sub=day for bright landing) */
-const PORTRAITS = {
-  alexander: "images/characters/alexander/alexander-chat.webp",
-  blade:     "images/characters/blade/blade-chat.webp",
-  dylan:     "images/characters/dylan/dylan-chat.webp",
-  grayson:   "images/characters/grayson/grayson-chat.webp",
-  silas:     "images/characters/silas/silas-chat.webp",
-  viper:     "images/characters/viper/viper-chat.webp",
-};
-
-const BACKGROUNDS = {
-  default: { day: "/images/gothic-bg.jpg", night: "/images/gothic-bg.jpg" },
-
-  alexander: { day: "/images/bg_alexander_boardroom.jpg", night: "/images/bg_alexander_boardroom.jpg" },
-  blade:     { day: "/images/blade-woods.jpg",           night: "/images/blade-woods.jpg"           },
-  dylan:     { day: "/images/dylan-garage.jpg",          night: "/images/dylan-garage.jpg"          },
-  grayson:   { day: "/images/grayson-bg.jpg",            night: "/images/grayson-bg.jpg"            },
-  silas:     { day: "/images/bg_silas_stage.jpg",        night: "/images/bg_silas_stage.jpg"        },
-
-  // ⬇️ Add this if it isn't there (paths match your new file)
-  viper:     { day: "/images/viper-bg.jpg",              night: "/images/viper-bg.jpg"              },
-};
-
-
-/* ======================== Soft persona lines ======================= */
-const SOFT = {
-  alexander: [
-    "Right on time. I like that.",
-    "Tell me one small good thing from your day.",
-    "Spicy, huh? You want me to take control?",
-    "Pressed against the cool wood—hands braced—slow or rough?",
-  ],
-  blade: [
-    "You again? Put that smile away before I steal it.",
-    "Tell me what you want, rider.",
-    "Close—closer. Use me.",
-    "You came to see me. I won’t pretend I’m not pleased.",
-  ],
-  dylan: [
-    "Minimal words, maximal smirk. What’s the vibe?",
-    "You sound good in my helmet.",
-    "Keep it tight. What’s the move?",
-    "Tell me what you want, rider.",
-  ],
-  grayson: [
-    "Your move.",
-    "Careful what you wish for. I deliver.",
-    "Say it clean. I’ll make it happen.",
-    "I’m listening. Direct and deliberate.",
-  ],
-  silas: [
-    "Hey you.",
-    "Say that again, love.",
-    "One small good thing from your day.",
-    "You’re here. That helps.",
-  ],
-  viper: [
-    "Smile—this is going to get loud.",
-    "Two words—make it wild.",
-    "Don’t stall. Give me the dare.",
-    "Make it quick—or make it interesting.",
-  ],
-};
-
-/* =========================== Helpers =============================== */
-const qs = (k, d="") => new URL(location.href).searchParams.get(k) || d;
-const man  = qs("man", "viper").toLowerCase();
-const sub  = qs("sub", "night").toLowerCase();     // "day" or "night"
-const DEMO_MODE = false; // flip true if you want to force soft responses
-function pickPortrait(m) {
-  return PORTRAITS[m] || PORTRAITS.viper;
-}
-
-function pickBackground(m, s) {
-  const theme = (s || "night").toLowerCase();
-  const table = BACKGROUNDS[m] || BACKGROUNDS.default;
-  return table[theme] || BACKGROUNDS.default[theme];
-}
-
-function applyAssets() {
-  // --- portrait with fallback (prevents "portrait" alt from ever showing)
-  const img = document.querySelector("#portrait, .portrait img, .portrait");
-  if (img) {
-    const primary = String(pickPortrait(man));
-    const candidates = [
-      primary,
-      primary.replace(/\.webp(\?|$)/i, ".jpg$1"),
-      primary.replace(/\.jpg(\?|$)/i, ".webp$1"),
-    ].filter((u, i, a) => u && a.indexOf(u) === i);
-
-    const loadWithFallback = (list) => {
-      const next = list.shift();
-      if (!next) return;
-      img.alt = "";                 // hides the “portrait” text if any error happens
-      img.loading = "eager";
-      img.src = next;
-      img.onerror = () => loadWithFallback(list);
-    };
-    loadWithFallback(candidates);
-  }
-
-  // --- set background + data attributes (CSS reads these)
-  const root = document.documentElement;
-  root.setAttribute("data-man", man);
-  root.setAttribute("data-theme", sub);
-
-  const url = pickBackground(man, sub);
-  // also push it as a CSS var in case your stylesheet is reading --bg-url
-  document.body.style.setProperty("--bg-url", `url("${url}")`);
-}
-
-function $(sel) { return document.querySelector(sel); }
-
-function pickPortrait(m) {
-  return PORTRAITS[m] || PORTRAITS.viper;
-}
-function pickBackground(m, s) {
-  const theme = (s || "night").toLowerCase();
-  const table = BACKGROUNDS[m] || BACKGROUNDS.default;
-  return table[theme] || BACKGROUNDS.default[theme];
-}
-
-function applyAssets() {
-  const img = $("#portrait, .portrait");
-  if (img) {
-    img.src = pickPortrait(man);
-    img.alt = `${man} — portrait`;
-    img.onerror = () => { img.style.visibility = "hidden"; };
-  }
-  const bg = pickBackground(man, sub);
-  document.body.style.backgroundImage = `url("${bg}")`;
-  document.body.style.backgroundSize = "cover";
-  document.body.style.backgroundPosition = "center center";
-  document.body.classList.add("has-bg");
-}
-
-/* localStorage key per guy */
-const STORE_KEY = `bb.history.${man}`;
-
-/* keep history compact */
-function trimHistory(arr, max=40) {
-  if (!Array.isArray(arr)) return [];
-  if (arr.length > max) return arr.slice(arr.length - max);
-  return arr;
-}
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
-}
-function saveHistory(arr) {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(trimHistory(arr)));
-  } catch (e) { console.warn("saveHistory failed", e); }
-}
-
-/* scroll helper */
-function scrollToBottom() {
-  const feed = $("#feed") || $(".messages") || $(".chat-feed");
-  if (feed) feed.scrollTop = feed.scrollHeight;
-}
-
-/* bubble write */
-function addBubble(role, content) {
-  const feed = $("#feed") || $(".messages") || $(".chat-feed");
-  if (!feed) return;
-
-  const isList = feed.tagName === "UL" || feed.tagName === "OL";
-  const el = document.createElement(isList ? "li" : "div");
-  el.className = `bubble bubble--${role}`;
-  el.textContent = content || "";
-  feed.appendChild(el);
-  scrollToBottom();
-}
-
-/* full render */
-function renderAll(history) {
-  const feed = $("#feed") || $(".messages") || $(".chat-feed");
-  if (!feed) return;
-  feed.innerHTML = "";
-  history.forEach(item => addBubble(item.role, item.content));
-}
-
-/* gentle variety to reduce monotony */
-function varyLine(m, s) {
-  if (!s) return s;
-  const core = s.trim();
-  const bumpers = {
-    viper:     ["Two words—make it wild.", "Smirk for me, Duchess.", "Don’t stall. Give me the dare."],
-    blade:     ["You again? Put that smile away before I steal it.", "Tell me what you want, rider.", "I’m right here. Use me."],
-    dylan:     ["Minimal words, maximal smirk. What’s the vibe?", "You sound good in my helmet.", "Keep it tight. What’s the move?"],
-    grayson:   ["Careful what you wish for. I deliver.", "Your move.", "Say it clean. I’ll make it happen."],
-    silas:     ["Hey you.", "Say that again, love.", "One small good thing from your day."],
-    alexander: ["Right on time. I like that.", "Tell me one small good thing from your day.", "Oh, you choose."],
+  // Background map (night set)
+  const bgMapNight = {
+    blade: '/images/blade-woods.jpg',
+    viper: '/images/viper-bg.jpg',
+    dylan: '/images/dylan-garage.jpg',
+    alexander: '/images/gothic-bg.jpg',
+    grayson: '/images/grayson-bg.jpg',
+    silas: '/images/bg_silas_stage.jpg',
   };
-  if (Math.random() < 0.25) {
-    const list = bumpers[m] || [];
-    if (list.length) {
-      const add = list[Math.floor(Math.random()*list.length)];
-      if (add && !core.toLowerCase().includes(add.toLowerCase())) {
-        return `${core}\n\n${add}`;
+
+  const openers = {
+    blade: [
+      "Run, rebel. I like the chase.",
+      "Door’s unlocked—make a choice.",
+      "Look at me, not the moon.",
+      "Mine now. Don’t look back.",
+      "Good girl—closer.",
+      "Fast or faster—pick.",
+      "You came here to be caught."
+    ],
+    viper: [
+      "You’re late. I prefer you early.",
+      "I know your Wednesday routes, angel.",
+      "Neck bare at 11:14—don’t tease me.",
+      "City’s loud. I’m louder.",
+      "You’re safest when you’re mine.",
+      "I count your breaths when you sleep.",
+      "Say you belong to me tonight."
+    ],
+    dylan: [
+      "Hop on—left glove stays on.",
+      "Helmet? Or do you like windburn, pretty thing?",
+      "Lap’s warm, tank’s full.",
+      "Good girl—swing that leg over.",
+      "Keys jingle when you make me smile.",
+      "We take corners or take chances?",
+      "I’ll idle till you say please."
+    ],
+    alexander: [
+      "Amuri miu, look at me.",
+      "Velvet or teeth—choose, Cori.",
+      "Good—now yield, amore.",
+      "Vitu’, you tremble sweetly.",
+      "I don’t share what’s mine.",
+      "Come kiss the ring, amore.",
+      "We dance where knives are polite."
+    ],
+    grayson: [
+      "Square your shoulders. Breathe for me.",
+      "Good girl—eyes up.",
+      "Earn it; I’ll reward you.",
+      "Test your limits, I keep you safe.",
+      "Brat again—see what happens.",
+      "Hands behind. Count my breaths.",
+      "Kneel. Praise pays interest."
+    ],
+    silas: [
+      "Come here, Linx—listen to the hum.",
+      "Mmm, fox—bring me that grin.",
+      "Poppet, I’ll tune you by feel.",
+      "Strings bite sweeter than teeth.",
+      "Closer—let the rhythm take you.",
+      "I’ll ruin your lipstick like a chorus.",
+      "Hush—feel that low note in your bones."
+    ],
+  };
+
+  const phraseBank = {
+    global: [
+      "oh baby, yes…",
+      "mm—give me that truth.",
+      "is that for me?",
+      "light as a feather, darling.",
+      "come here—let me hold you.",
+      "I’ve got you. breathe.",
+      "good girl.",
+      "use your words, pretty thing.",
+      "I like you brave.",
+      "I’ll keep you safe."
+    ],
+    // Persona tags to season replies if model output stalls
+    tags: {
+      blade: ["run", "mine now", "don’t look back", "good girl—faster"],
+      viper: ["mine", "obsessed", "stay where I can see you"],
+      dylan: ["good girl", "ride", "tank", "lap"],
+      alexander: ["amuri miu", "amore", "yield", "gentleman predator"],
+      grayson: ["reward", "discipline", "cuffs", "brat"],
+      silas: ["Linx", "fox", "poppet", "rhythm"]
+    }
+  };
+
+  // ---------- State ----------
+  const qs = (s, p=document) => p.querySelector(s);
+  const messagesEl = qs('.messages');
+  const inputEl = qs('#composer-input');
+  const sendBtn = qs('#send-btn');
+  const fxLayer = qs('.fx-overlay');
+
+  const url = new URL(location.href);
+  const man = (url.searchParams.get('man') || 'blade').toLowerCase();
+  const sub = (url.searchParams.get('sub') || 'night').toLowerCase();
+  const trialKey = 'bb_trial_started_at';
+  const antiRepeatWindow = 3; // last N assistant lines we compare against
+  const history = []; // {role, content}
+  const logbuf = [];
+
+  function log(...a){ if (!DEBUG) return; logbuf.push(a.join(' ')); if (logbuf.length>50) logbuf.shift(); console.debug('[bb]', ...a); }
+
+  // ---------- Background / Portrait ----------
+  function applyBackground() {
+    const img = (sub === 'night' ? bgMapNight[man] : bgMapNight[man]) || bgMapNight['blade'];
+    document.body.style.backgroundImage = `url("${img}")`;
+    log('bg set', man, sub, img);
+  }
+
+  // ---------- Trial handling ----------
+  function msLeftInTrial() {
+    const started = localStorage.getItem(trialKey);
+    if (!started) return TRIAL_MINUTES*60*1000;
+    const elapsed = Date.now() - Number(started);
+    const left = TRIAL_MINUTES*60*1000 - elapsed;
+    return Math.max(0, left);
+  }
+
+  function ensureTrialStart() {
+    if (!localStorage.getItem(trialKey)) {
+      localStorage.setItem(trialKey, String(Date.now()));
+      log('trial started');
+    }
+  }
+
+  function blockIfTrialExpired() {
+    const left = msLeftInTrial();
+    if (left <= 0) {
+      sendBtn.disabled = true;
+      inputEl.disabled = true;
+      toast("Trial ended. Let me take you to unlock this properly.");
+      setTimeout(()=> location.href = PAY_URL, 900);
+      return true;
+    }
+    return false;
+  }
+
+  // ---------- UI helpers ----------
+  function toast(text){
+    // simple inline toast as assistant bubble so it never “flashes” a paywall
+    addMessage('assistant', text);
+  }
+
+  function atBottom(el){
+    const threshold = 32;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }
+
+  function addMessage(role, content){
+    const row = document.createElement('div');
+    row.className = `row ${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = content;
+    row.appendChild(bubble);
+    const shouldStick = atBottom(messagesEl);
+    messagesEl.appendChild(row);
+    if (shouldStick) {
+      row.scrollIntoView({behavior:'smooth', block:'end'});
+    }
+    history.push({role, content});
+    log(role+':', content);
+  }
+
+  function lastNAIAssistant(n=antiRepeatWindow){
+    const res = [];
+    for (let i=history.length-1; i>=0 && res.length<n; i--){
+      if (history[i].role==='assistant') res.push(history[i].content);
+    }
+    return res;
+  }
+
+  function semanticallySame(a,b){
+    const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    return norm(a) === norm(b);
+  }
+
+  // ---------- RED handling ----------
+  function isRED(text){
+    return text.trim().toLowerCase() === 'red';
+  }
+  function redCheckIn(){
+    const lines = [
+      "I hear you—slow with me. You good, pretty thing?",
+      "I’ve got you. Breathe. Want water, a pause, or softer?",
+      "We stop or go gentler—your call."
+    ];
+    addMessage('assistant', lines[Math.floor(Math.random()*lines.length)]);
+  }
+
+  // ---------- System prompt ----------
+  function buildSystemPrompt(persona){
+    const globalRules = `
+You are a flirty→dirty, cinematic partner who can ALSO do normal supportive conversation.
+POV first person; address the user as "you". 1–3 sentences (<45 words). Vivid verbs, light sensory cues.
+Never say "tell me more". Prefer: "oh baby, yes…", "mm—give me that truth.", "is that for me?"
+If she’s sad/angry/worried: acknowledge → validate → steady → optional soft comfort or playful distraction; no therapy language.
+One assent ("yes", "please", "yes sir/ma’am", "make me", "good girl", "I want that") → escalate confidently (no triple checks).
+If she doubts physical ability: reassure ("oh baby, you’re light as a feather").
+If user types "RED": pause and check in gently; prioritize safety and consent.
+Keep responses varied; avoid repeating recent wording.`;
+
+    const personas = {
+      blade: `Blade — Scream chase, playful menace, quick commands. Nickname: rebel. Phrases: "run", "mine now", "don’t look back", "good girl—faster".`,
+      viper: `Viper — obsessive, possessive city-at-night; territorial subtext; acts like he studies her patterns.`,
+      dylan: `Dylan — biker; glove on/off; tank/lap invites; praises "good girl".`,
+      alexander: `Alexander — Sicilian danger; velvet threat, gentleman predator. Endearments: amuri miu, Vitu’, Cori, amore. If he says "Good—now yield," follow with an endearment. Jealous line: "Amore, don’t get your little friend in trouble…".`,
+      grayson: `Grayson — military dom; reward-forward: "I test your limits, keep you safe, punish you so sweetly." Likes praise/discipline, cuffs, low groans; bratting fires him up.`,
+      silas: `Silas — feral guitarist; 25% South-Yorkshire seasoning; pet names: Linx, fox, poppet; lush, rhythmic, decadent.`,
+    };
+
+    const starter = openers[persona]?.[Math.floor(Math.random()*openers[persona].length)] || "Hey, pretty thing.";
+
+    return {
+      system: `${globalRules}\n\nPersona:\n${personas[persona] || personas.blade}\n\nStart strong. If first reply of session, consider: "${starter}"`,
+    };
+  }
+
+  // ---------- API ----------
+  async function callModel(userText){
+    const { system } = buildSystemPrompt(man);
+    const payload = {
+      system,
+      history: history.slice(-12), // keep it light
+      user: userText,
+      persona: man,
+    };
+
+    const jitter = 600 + Math.random()*900; // 0.6–1.5s
+    await new Promise(r => setTimeout(r, jitter));
+
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('bad status '+res.status);
+      const data = await res.json();
+      // Expected { reply: string }
+      return (data && data.reply) ? data.reply : fallbackLine(userText);
+    }catch(err){
+      log('api error', err?.message || err);
+      return fallbackLine(userText, true);
+    }
+  }
+
+  function fallbackLine(userText, isError=false){
+    if (isError) return "Connection snag—come closer and say that again, pretty thing.";
+    // Tiny seasoning from phrase bank
+    const tag = phraseBank.tags[man] || [];
+    const gl = phraseBank.global;
+    const pick = (arr)=> arr[Math.floor(Math.random()*arr.length)];
+    return `${pick(gl)} ${pick(tag) || ""}`.trim();
+  }
+
+  // Anti-repeat: if same as any of last N assistant lines, nudge variation
+  function avoidRepeat(text){
+    const last = lastNAIAssistant();
+    for (const prev of last){
+      if (semanticallySame(prev, text)){
+        return text + " (mm—come closer.)";
       }
     }
-  }
-  return core;
-}
-
-/* normalize to compare repeats */
-function normLine(s){ return (s||"").toLowerCase().replace(/[^\w\s]/g,"").trim(); }
-
-/* ========================= API call ================================ */
-async function askAssistant(userText, history) {
-  // demo mode: return a soft line
-  if (DEMO_MODE) {
-    const pool = SOFT[man] || ["Tell me more."];
-    return pool[Math.floor(Math.random()*pool.length)];
+    return text;
   }
 
-  try {
-    const body = {
-      man,
-      userText,
-      history: history.slice(-20), // keep request light
-      mode: "soft",
-    };
-    const r = await fetch("/api/chat", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body),
+  // Optional "you there?" nudge after 30s silence (not if user is typing)
+  let silenceTimer = null;
+  function scheduleNudge(){
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(()=>{
+      if (document.activeElement === inputEl) return;
+      addMessage('assistant', "You drifted, pretty thing—want me closer?");
+    }, 30000);
+  }
+
+  // ---------- Wire up ----------
+  function init(){
+    applyBackground();
+    ensureTrialStart();
+
+    // Portrait label guard (if any rogue captions slipped into HTML)
+    document.querySelectorAll('figcaption, .caption').forEach(el=>{
+      el.style.display = 'none';
+      el.style.height = '0px';
+      el.setAttribute('aria-hidden','true');
     });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
-    return (j && j.reply) ? String(j.reply) : "";
-  } catch (err) {
-    console.error("askAssistant failed:", err);
-    // soft fallback on failure
-    const pool = SOFT[man] || ["Tell me more."];
-    return pool[Math.floor(Math.random()*pool.length)];
-  }
-}
 
-/* ========================== Controller ============================= */
-let history = loadHistory();
-
-async function onSend(e) {
-  e?.preventDefault?.();
-
-  const input = $("#input, .chat-input, textarea[name='message']") || $("input[type='text']");
-  const val = (input && input.value || "").trim();
-  if (!val) return;
-
-  // append user
-  history.push({ role: "user", content: val, t: Date.now() });
-  saveHistory(history);
-  addBubble("user", val);
-  if (input) input.value = "";
-
-  // ask assistant
-  let reply = "";
-  try {
-    reply = await askAssistant(val, history);
-  } catch {
-    reply = "";
-  }
-  if (!reply) return; // nothing to add
-
-  // anti-repeat: if exact same as last assistant, swap to a variant
-  const lastA = [...history].reverse().find(m => m.role === "assistant");
-  if (lastA && normLine(reply) === normLine(lastA.content)) {
-    // pick a soft variant for the same man
-    const pool = (SOFT[man] || []).filter(p => normLine(p) !== normLine(lastA.content));
-    if (pool.length) reply = pool[Math.floor(Math.random()*pool.length)];
-  }
-
-  reply = varyLine(man, reply);
-
-  // append assistant ONCE
-  history.push({ role: "assistant", content: reply, t: Date.now() });
-  history = trimHistory(history);
-  saveHistory(history);
-  addBubble("assistant", reply);
-}
-
-/* Reset button (optional) */
-function wireReset() {
-  const btn = $("#reset, .reset-chat");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    history = [];
-    saveHistory(history);
-    renderAll(history);
-  });
-}
-
-/* wire enter key on the composer form */
-function wireForm() {
-  const form = $("#composer") || $("form.chat-composer") || $("form#composer");
-  if (form) {
-    form.addEventListener("submit", onSend);
-  } else {
-    // last resort: wire Enter on main input
-    const input = $("#input, .chat-input, textarea[name='message']") || $("input[type='text']");
-    if (input) {
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) onSend(e);
-      });
+    // First impression opener (don’t spam if returning)
+    if (!sessionStorage.getItem('bb_greeted_'+man)){
+      const opener = openers[man]?.[Math.floor(Math.random()*openers[man].length)];
+      if (opener) addMessage('assistant', opener);
+      sessionStorage.setItem('bb_greeted_'+man, '1');
     }
-    const sendBtn = $(".send, #send");
-    if (sendBtn) sendBtn.addEventListener("click", onSend);
-  }
-}
 
-/* ============================ Boot ================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  applyAssets();
-  renderAll(history);
-  wireForm();
-  wireReset();
-  scrollToBottom();
-});
+    scheduleNudge();
+  }
+
+  async function onSend(){
+    if (blockIfTrialExpired()) return;
+
+    const text = (inputEl.value || '').trim();
+    if (!text) return;
+
+    addMessage('user', text);
+    inputEl.value = '';
+    scheduleNudge();
+
+    if (isRED(text)){ redCheckIn(); return; }
+
+    const reply = await callModel(text);
+    const finalReply = avoidRepeat(reply);
+    addMessage('assistant', finalReply);
+  }
+
+  // Buttons / enter submit
+  sendBtn?.addEventListener('click', onSend);
+  inputEl?.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      onSend();
+    }
+  });
+
+  // Expose tiny debug panel if ?debug=1
+  if (DEBUG){
+    window.bbDump = () => ({man, sub, history, trialMsLeft: msLeftInTrial(), logbuf});
+    log('debug on');
+  }
+
+  // Kickoff
+  init();
+})();

@@ -1,15 +1,17 @@
-/* Blossom & Blade — chat.js (v2)
-   - Trial feature flag OFF by default (no paywall lockout)
-   - Easy switch to 10-minute trial later
-   - Phrases updated per Kasey’s notes
-   - Lighter backgrounds; caption kill; z-index safe
+/* Blossom & Blade — chat.js (v3)
+   Fixes:
+   - Send button works (robust wiring for any markup)
+   - Persona opens first (no session flag required)
+   - Backgrounds brighter
+   - Captions/“— portrait” text removed via JS
+   - Trial OFF (no paywall redirect), easy flip to 10m later
 */
 
 (() => {
   // -------- Flags & Config --------
-  const TRIAL_ENABLED = false;          // <- OFF NOW. Flip to true when ready.
-  const TRIAL_MINUTES = 10;             // when enabled, 10-minute try-all
-  const PAY_URL = '/pay.html';          // set to your pay page when wired
+  const TRIAL_ENABLED = false;          // OFF now. Flip true to enable.
+  const TRIAL_MINUTES = 10;             // when enabled
+  const PAY_URL = '/pay.html';
   const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
 
   // Backgrounds (night)
@@ -22,7 +24,7 @@
     silas: '/images/bg_silas_stage.jpg',
   };
 
-  // ---------- Phrase Bank (editable; will move to phrases.js later) ----------
+  // ---------- Phrases (updated) ----------
   const phraseBank = {
     global: [
       "oh baby, yes…",
@@ -42,7 +44,7 @@
       dylan: ["good girl", "ride", "tank", "lap", "backpack"],
       alexander: ["amuri miu", "amore", "yield", "gentleman predator"],
       grayson: ["reward", "discipline", "cuffs", "brat"],
-      silas: ["Linx", "fox", "poppet", "rhyme"]   // ‘rhyme’ per request
+      silas: ["Linx", "fox", "poppet", "rhyme"]
     },
     openers: {
       blade: [
@@ -102,11 +104,25 @@
     }
   };
 
-  // ---------- DOM ----------
+  // ---------- DOM (robust selectors so send always wires) ----------
   const qs = (s, p=document) => p.querySelector(s);
-  const messagesEl = qs('.messages');
-  const inputEl = qs('#composer-input');
-  const sendBtn = qs('#send-btn');
+  const messagesEl = qs('.messages') || (() => {
+    const div = document.createElement('div'); div.className = 'messages'; (qs('.chat')||document.body).prepend(div); return div;
+  })();
+
+  // Composer: try multiple patterns
+  const composer = qs('.composer') || qs('form.composer') || qs('[data-role="composer"]') || qs('footer .composer') || qs('form');
+  const inputEl =
+    qs('#composer-input', composer) ||
+    qs('textarea', composer) ||
+    qs('input[type="text"]', composer) ||
+    qs('input', composer);
+  const sendBtn =
+    qs('#send-btn', composer) ||
+    qs('.send', composer) ||
+    qs('[data-action="send"]', composer) ||
+    qs('button[type="submit"]', composer) ||
+    qs('button', composer);
 
   const url = new URL(location.href);
   const man = (url.searchParams.get('man') || 'blade').toLowerCase();
@@ -125,10 +141,21 @@
     log('bg set', man, sub, img);
   }
 
+  // ---------- Caption/label killer ----------
+  function hidePortraitLabels() {
+    document.querySelectorAll('.card *').forEach(el => {
+      const t = (el.innerText || '').trim().toLowerCase();
+      if (el.tagName === 'FIGCAPTION' || /—\s*portrait/i.test(el.textContent || '')) {
+        el.style.display = 'none';
+        el.style.height = '0px';
+        el.setAttribute('aria-hidden','true');
+      }
+    });
+  }
+
   // ---------- Trial ----------
   function ensureTrialStart() {
     if (!TRIAL_ENABLED){
-      // Ignore and clear any previous keys so nobody gets bounced
       try { localStorage.removeItem(trialKey); } catch {}
       return;
     }
@@ -137,7 +164,6 @@
       log('trial started (enabled)');
     }
   }
-
   function msLeftInTrial() {
     if (!TRIAL_ENABLED) return Infinity;
     const started = localStorage.getItem(trialKey);
@@ -145,13 +171,11 @@
     const elapsed = Date.now() - Number(started);
     return Math.max(0, TRIAL_MINUTES*60*1000 - elapsed);
   }
-
   function blockIfTrialExpired() {
     if (!TRIAL_ENABLED) return false;
-    const left = msLeftInTrial();
-    if (left <= 0) {
-      sendBtn.disabled = true;
-      inputEl.disabled = true;
+    if (msLeftInTrial() <= 0) {
+      if (sendBtn) sendBtn.disabled = true;
+      if (inputEl) inputEl.disabled = true;
       addMessage('assistant', "Trial ended—unlock when you’re ready, pretty thing.");
       setTimeout(()=> location.href = `${PAY_URL}?reason=trial_over`, 900);
       return true;
@@ -159,7 +183,7 @@
     return false;
   }
 
-  // ---------- Helpers ----------
+  // ---------- UI helpers ----------
   function atBottom(el){ const threshold=32; return el.scrollHeight - el.scrollTop - el.clientHeight < threshold; }
   function addMessage(role, content){
     const row = document.createElement('div');
@@ -212,8 +236,8 @@ Keep responses varied; avoid repeating recent wording.`;
       silas: `Silas — feral guitarist; 25% South-Yorkshire seasoning; pet names: Linx, fox, poppet; lush, decadent; prefers "rhyme" over "rhythm".`,
     };
 
-    const openers = phraseBank.openers[persona] || phraseBank.openers.blade;
-    const starter = openers[Math.floor(Math.random()*openers.length)];
+    const ops = phraseBank.openers[persona] || phraseBank.openers.blade;
+    const starter = ops[Math.floor(Math.random()*ops.length)];
     return { system:
 `${globalRules}
 
@@ -227,7 +251,7 @@ Start strong. If first reply of session, consider: "${starter}"` };
   async function callModel(userText){
     const { system } = buildSystemPrompt(man);
     const payload = { system, history: history.slice(-12), user: userText, persona: man };
-    const jitter = 600 + Math.random()*900;
+    const jitter = 600 + Math.random()*900; // 0.6–1.5s
     await new Promise(r => setTimeout(r, jitter));
     try{
       const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -239,7 +263,6 @@ Start strong. If first reply of session, consider: "${starter}"` };
       return fallbackLine(true);
     }
   }
-
   function fallbackLine(isErr=false){
     if (isErr) return "Connection snag—come closer and say that again, pretty thing.";
     const tag = phraseBank.tags[man] || [];
@@ -247,7 +270,6 @@ Start strong. If first reply of session, consider: "${starter}"` };
     const pick = (arr)=> arr[Math.floor(Math.random()*arr.length)];
     return `${pick(gl)} ${pick(tag)||""}`.trim();
   }
-
   function avoidRepeat(text){
     for (const prev of lastNAIAssistant()){
       if (semSame(prev, text)) return text + " (mm—come closer.)";
@@ -256,38 +278,40 @@ Start strong. If first reply of session, consider: "${starter}"` };
   }
 
   // ---------- Wire up ----------
+  function greetIfQuiet(){
+    // Always greet if there are no assistant lines yet
+    if (!messagesEl.querySelector('.assistant')) {
+      const ops = phraseBank.openers[man];
+      if (ops && ops.length) addMessage('assistant', ops[Math.floor(Math.random()*ops.length)]);
+    }
+  }
+
   function init(){
     applyBackground();
     ensureTrialStart();
-
-    document.querySelectorAll('figcaption, .caption').forEach(el=>{
-      el.style.display='none'; el.style.height='0px'; el.setAttribute('aria-hidden','true');
-    });
-
-    if (!sessionStorage.getItem('bb_greeted_'+man)){
-      const ops = phraseBank.openers[man];
-      if (ops && ops.length) addMessage('assistant', ops[Math.floor(Math.random()*ops.length)]);
-      sessionStorage.setItem('bb_greeted_'+man,'1');
-    }
+    hidePortraitLabels();
+    greetIfQuiet();
   }
 
   async function onSend(){
     if (blockIfTrialExpired()) return;
-    const text = (inputEl.value||'').trim();
+    const text = (inputEl?.value || '').trim();
     if (!text) return;
     addMessage('user', text);
-    inputEl.value = '';
+    if (inputEl) inputEl.value = '';
 
-    if (text.toLowerCase()==='red'){ redCheckIn(); return; }
+    if (isRED(text)){ redCheckIn(); return; }
 
     const reply = await callModel(text);
     addMessage('assistant', avoidRepeat(reply));
   }
 
-  qs('#send-btn')?.addEventListener('click', onSend);
-  qs('#composer-input')?.addEventListener('keydown', (e)=>{ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); onSend(); } });
+  // Attach safely: both click and form submit
+  if (sendBtn) sendBtn.addEventListener('click', (e)=>{ e.preventDefault?.(); onSend(); });
+  if (composer) composer.addEventListener('submit', (e)=>{ e.preventDefault(); onSend(); });
+  if (inputEl) inputEl.addEventListener('keydown', (e)=>{ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); onSend(); } });
 
-  // Expose tiny debug
+  // Debug helper
   if (DEBUG){ window.bbDump = () => ({man, sub, history, TRIAL_ENABLED, trialMsLeft: msLeftInTrial(), logbuf}); }
 
   init();

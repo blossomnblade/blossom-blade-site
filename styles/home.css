@@ -1,6 +1,4 @@
-/* Blossom & Blade — home.css (bb6)
-   Clean choose grid + top/bottom info bars. No trial overlays, no gating.
-*/
+/* Blossom & Blade — home.css (bb7) */
 *{box-sizing:border-box}
 :root{
   --ink:#e7eaf3; --bg:#070a0f; --panel:#101826; --line:rgba(255,255,255,.08);
@@ -8,8 +6,9 @@
 }
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+
 .sitehead{padding:18px 0}
 .sitehead h1{margin:0;font-size:clamp(26px,4vw,36px)}
 
@@ -29,6 +28,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   background:rgba(16,24,38,.7); border:1px solid var(--line);
   box-shadow:0 12px 36px rgba(0,0,0,.35);
 }
+.card .block{display:block; color:inherit; text-decoration:none}
 .card figure{margin:0}
 .card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;filter:saturate(1.06) contrast(1.03)}
 .card .meta{padding:14px}
@@ -39,11 +39,10 @@ body{margin:0;background:var(--bg);color:var(--ink);
   display:flex; gap:10px; align-items:center; justify-content:flex-start;
 }
 .btn{
-  appearance:none; border:none; cursor:pointer;
-  border-radius:12px; padding:10px 14px; font-weight:800;
+  display:inline-block; border-radius:12px; padding:10px 14px; font-weight:800;
   background:var(--pink); color:#170d14;
 }
-.btn.ghost{background:transparent;color:#d6ddff;border:1px solid var(--line)}
 .badge{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.42);border:1px solid var(--line);font-size:12px}
 .shadow-glow{box-shadow:0 0 0 0 rgba(255,63,134,.0); transition:box-shadow .25s ease}
-.card:hover .shadow-glow{box-shadow:0 0 0 6px color-mix(in oklab, var(--glow) 40%, transparent)}
+.card:hover .shadow-glow,
+.card:hover{box-shadow:0 0 0 6px color-mix(in oklab, var(--glow) 40%, transparent)}

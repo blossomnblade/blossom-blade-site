@@ -1,148 +1,306 @@
-// /scripts/chat.js
-// Minimal chat front-end logic + light relationship memory + signals.
+/* scripts/chat.js — one-file drop-in
+   - Injects minimal CSS (so you don’t have to touch stylesheets)
+   - Applies per-character portrait + background
+   - Solid chat loop with anti-repeat + gentle variety
+   - Uses /api/chat with history slice; soft fallback if API fails
+*/
+"use strict";
 
-const kKey = (man) => `bb_history_${man}`;
-const kProfile = "bb_profile_v1";
+/* =============== Minimal CSS injection (UI hardening) =============== */
+(function injectChatCSS() {
+  const css = `
+  .chat-room{display:grid;grid-template-rows:auto 1fr auto;gap:16px}
+  #feed,.messages,.chat-feed{list-style:none;margin:0;padding:0 0 96px;overflow-y:auto;max-height:100%}
+  #feed li,.messages li,.chat-feed li{list-style:none}
+  .bubble{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+  .chat-composer,#composer{position:sticky;bottom:0;z-index:3}
+  #portrait,.portrait{display:block;max-width:100%;height:auto;object-fit:cover;border-radius:12px}
+  .has-bg .chat-slab,.has-bg .chat-window{background:rgba(10,16,22,.5);backdrop-filter:blur(2px);border-radius:16px}
+  `;
+  const style = document.createElement("style");
+  style.setAttribute("data-injected", "chat-css");
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
 
-let man = new URLSearchParams(location.search).get("man") || "viper";
-let sub = new URLSearchParams(location.search).get("sub") || "night";
+/* ======================== Asset mappings =========================== */
+/* Expect chat.html?man=blade&sub=night (sub=day for bright landing) */
+const PORTRAITS = {
+  alexander: "images/characters/alexander/alexander-chat.webp",
+  blade:     "images/characters/blade/blade-chat.webp",
+  dylan:     "images/characters/dylan/dylan-chat.webp",
+  grayson:   "images/characters/grayson/grayson-chat.webp",
+  silas:     "images/characters/silas/silas-chat.webp",
+  viper:     "images/characters/viper/viper-chat.webp", // fallback if anything else missing
+};
 
-const elHistory = document.querySelector("#history");
-const elInput   = document.querySelector("#say");
-const elSend    = document.querySelector("#send");
-const elTitle   = document.querySelector("#title");
+const BACKGROUNDS = {
+  default: {
+    day:   "images/bg_dark_romance.jpg", // bright / landing
+    night: "images/gothic-bg.jpg",       // dark / paywall
+  },
+  alexander: { day: "images/bg_alexander_boardroom.jpg", night: "images/gothic-bg.jpg" },
+  blade:     { day: "images/blade-woods.jpg",            night: "images/blade-woods.jpg" },
+  dylan:     { day: "images/dylan-garage.jpg",           night: "images/dylan-garage.jpg" },
+  grayson:   { day: "images/grayson-bg.jpg",             night: "images/grayson-bg.jpg" },
+  silas:     { day: "images/bg_silas_stage.jpg",         night: "images/bg_silas_stage.jpg" },
+  viper:     { day: "images/gothic-bg.jpg",              night: "images/gothic-bg.jpg" }, // update once you upload a Viper bg
+};
 
-elTitle && (elTitle.textContent = (man[0]?.toUpperCase() + man.slice(1)) || "Blossom & Blade");
+/* ======================== Soft persona lines ======================= */
+const SOFT = {
+  alexander: [
+    "Right on time. I like that.",
+    "Tell me one small good thing from your day.",
+    "Spicy, huh? You want me to take control?",
+    "Pressed against the cool wood—hands braced—slow or rough?",
+  ],
+  blade: [
+    "You again? Put that smile away before I steal it.",
+    "Tell me what you want, rider.",
+    "Close—closer. Use me.",
+    "You came to see me. I won’t pretend I’m not pleased.",
+  ],
+  dylan: [
+    "Minimal words, maximal smirk. What’s the vibe?",
+    "You sound good in my helmet.",
+    "Keep it tight. What’s the move?",
+    "Tell me what you want, rider.",
+  ],
+  grayson: [
+    "Your move.",
+    "Careful what you wish for. I deliver.",
+    "Say it clean. I’ll make it happen.",
+    "I’m listening. Direct and deliberate.",
+  ],
+  silas: [
+    "Hey you.",
+    "Say that again, love.",
+    "One small good thing from your day.",
+    "You’re here. That helps.",
+  ],
+  viper: [
+    "Smile—this is going to get loud.",
+    "Two words—make it wild.",
+    "Don’t stall. Give me the dare.",
+    "Make it quick—or make it interesting.",
+  ],
+};
 
-// ───────────── local persistence ─────────────
-function loadJson(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(_){ return def; } }
-function saveJson(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+/* =========================== Helpers =============================== */
+const qs = (k, d="") => new URL(location.href).searchParams.get(k) || d;
+const man  = qs("man", "viper").toLowerCase();
+const sub  = qs("sub", "night").toLowerCase();     // "day" or "night"
+const DEMO_MODE = false; // flip true if you want to force soft responses
 
-let history = loadJson(kKey(man), []);
-renderAll(history);
+function $(sel) { return document.querySelector(sel); }
 
-function loadProfile(){ return loadJson(kProfile, { name:"", petName:"", mood:"", notes:"" }); }
-function saveProfile(p){ saveJson(kProfile, p); }
-
-// Simple name grabber from "i'm X"/"im X"
-function extractName(s=""){
-  const m = s.match(/\b(i['’]?m|i am)\s+([a-z][a-z0-9_-]{1,20})\b/i);
-  return m ? m[2].replace(/[^a-z0-9_-]/ig,"") : "";
+function pickPortrait(m) {
+  return PORTRAITS[m] || PORTRAITS.viper;
+}
+function pickBackground(m, s) {
+  const theme = (s || "night").toLowerCase();
+  const table = BACKGROUNDS[m] || BACKGROUNDS.default;
+  return table[theme] || BACKGROUNDS.default[theme];
 }
 
-// Heuristic “withdrawn” signal (2 short replies in a row or classic deflections)
-function deriveSignals(hist, userText){
-  const userLines = hist.filter(h=>h.role==="user").slice(-3).map(h=>h.content);
-  const short = (t) => (t || "").trim().split(/\s+/).length <= 3;
-  const withdrawnWords = ["idk","fine","whatever","tired","busy","ok","k","nothing"];
-  const withdrawn = [...userLines, userText].filter(Boolean).some(t=>{
-    const n = t.toLowerCase().trim();
-    return short(n) && withdrawnWords.includes(n);
-  });
+function applyAssets() {
+  const img = $("#portrait, .portrait");
+  if (img) {
+    img.src = pickPortrait(man);
+    img.alt = `${man} — portrait`;
+    img.onerror = () => { img.style.visibility = "hidden"; };
+  }
+  const bg = pickBackground(man, sub);
+  document.body.style.backgroundImage = `url("${bg}")`;
+  document.body.style.backgroundSize = "cover";
+  document.body.style.backgroundPosition = "center center";
+  document.body.classList.add("has-bg");
+}
 
-  const shortRun = userLines.length >= 2 && short(userLines[userLines.length-1]) && short(userLines[userLines.length-2]);
+/* localStorage key per guy */
+const STORE_KEY = `bb.history.${man}`;
 
-  return {
-    firstTurns: hist.length < 4,
-    shortReplies: shortRun || short(userText),
-    withdrawn: withdrawn
+/* keep history compact */
+function trimHistory(arr, max=40) {
+  if (!Array.isArray(arr)) return [];
+  if (arr.length > max) return arr.slice(arr.length - max);
+  return arr;
+}
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveHistory(arr) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(trimHistory(arr)));
+  } catch (e) { console.warn("saveHistory failed", e); }
+}
+
+/* scroll helper */
+function scrollToBottom() {
+  const feed = $("#feed") || $(".messages") || $(".chat-feed");
+  if (feed) feed.scrollTop = feed.scrollHeight;
+}
+
+/* bubble write */
+function addBubble(role, content) {
+  const feed = $("#feed") || $(".messages") || $(".chat-feed");
+  if (!feed) return;
+
+  const isList = feed.tagName === "UL" || feed.tagName === "OL";
+  const el = document.createElement(isList ? "li" : "div");
+  el.className = `bubble bubble--${role}`;
+  el.textContent = content || "";
+  feed.appendChild(el);
+  scrollToBottom();
+}
+
+/* full render */
+function renderAll(history) {
+  const feed = $("#feed") || $(".messages") || $(".chat-feed");
+  if (!feed) return;
+  feed.innerHTML = "";
+  history.forEach(item => addBubble(item.role, item.content));
+}
+
+/* gentle variety to reduce monotony */
+function varyLine(m, s) {
+  if (!s) return s;
+  const core = s.trim();
+  const bumpers = {
+    viper:     ["Two words—make it wild.", "Smirk for me, Duchess.", "Don’t stall. Give me the dare."],
+    blade:     ["You again? Put that smile away before I steal it.", "Tell me what you want, rider.", "I’m right here. Use me."],
+    dylan:     ["Minimal words, maximal smirk. What’s the vibe?", "You sound good in my helmet.", "Keep it tight. What’s the move?"],
+    grayson:   ["Careful what you wish for. I deliver.", "Your move.", "Say it clean. I’ll make it happen."],
+    silas:     ["Hey you.", "Say that again, love.", "One small good thing from your day."],
+    alexander: ["Right on time. I like that.", "Tell me one small good thing from your day.", "Oh, you choose."],
   };
+  if (Math.random() < 0.25) {
+    const list = bumpers[m] || [];
+    if (list.length) {
+      const add = list[Math.floor(Math.random()*list.length)];
+      if (add && !core.toLowerCase().includes(add.toLowerCase())) {
+        return `${core}\n\n${add}`;
+      }
+    }
+  }
+  return core;
 }
 
-// Update relationship memory from user text
-function updateProfileFromUserText(userText){
-  if (!userText) return;
-  const p = loadProfile();
+/* normalize to compare repeats */
+function normLine(s){ return (s||"").toLowerCase().replace(/[^\w\s]/g,"").trim(); }
 
-  // Name
-  if (!p.name) {
-    const got = extractName(userText);
-    if (got) p.name = got[0].toUpperCase() + got.slice(1).toLowerCase();
+/* ========================= API call ================================ */
+async function askAssistant(userText, history) {
+  // demo mode: return a soft line
+  if (DEMO_MODE) {
+    const pool = SOFT[man] || ["Tell me more."];
+    return pool[Math.floor(Math.random()*pool.length)];
   }
 
-  // Mood snapshots (very light)
-  const t = userText.toLowerCase();
-  if (/\b(bad day|stressed|tired|lonely|down|sad)\b/.test(t)) p.mood = "low";
-  if (/\b(happy|excited|great|good day|fun)\b/.test(t)) p.mood = "up";
-
-  saveProfile(p);
-  return p;
-}
-
-// ───────────── rendering ─────────────
-function bubble(role, text){
-  const div = document.createElement("div");
-  div.className = `bubble ${role}`;
-  div.textContent = text;
-  elHistory.appendChild(div);
-  elHistory.scrollTop = elHistory.scrollHeight;
-}
-
-function renderAll(hist){
-  elHistory.innerHTML = "";
-  hist.forEach(m => bubble(m.role, m.content));
-}
-
-// ───────────── send flow ─────────────
-async function onSend(){
-  const text = (elInput.value || "").trim();
-  if (!text) return;
-
-  // client memory/signals
-  const profile = updateProfileFromUserText(text) || loadProfile();
-  const signals = deriveSignals(history, text);
-
-  history.push({ role: "user", content: text, t: Date.now() });
-  saveJson(kKey(man), history);
-  bubble("user", text);
-  elInput.value = "";
-
-  // Build body for API
-  const body = {
-    man,
-    userText: text,
-    history: history.slice(-50),        // keep more context, steadier voice
-    mode: "soft",
-    pov: "",
-    consented: true,
-    memory: {
-      name: profile.name || "",
-      petName: profile.petName || "",   // optional: set this once elsewhere in UI
-      mood: profile.mood || "",
-      notes: profile.notes || ""
-    },
-    signals
-  };
-
-  let reply = "";
-  try{
+  try {
+    const body = {
+      man,
+      userText,
+      history: history.slice(-20), // keep request light
+      mode: "soft",
+    };
     const r = await fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const j = await r.json();
-    reply = (j && j.reply) ? String(j.reply) : "";
-  } catch (err){
-    console.error("chat send failed:", err);
-    reply = "Lost you for a sec—say it again, and tell me what you need from me.";
-  }
-
-  if (reply){
-    history.push({ role:"assistant", content: reply, t: Date.now() });
-    saveJson(kKey(man), history);
-    bubble("assistant", reply);
+    return (j && j.reply) ? String(j.reply) : "";
+  } catch (err) {
+    console.error("askAssistant failed:", err);
+    // soft fallback on failure
+    const pool = SOFT[man] || ["Tell me more."];
+    return pool[Math.floor(Math.random()*pool.length)];
   }
 }
 
-elSend?.addEventListener("click", onSend);
-elInput?.addEventListener("keydown", (e)=>{ if (e.key==="Enter" && !e.shiftKey) onSend(); });
+/* ========================== Controller ============================= */
+let history = loadHistory();
 
-// Simple reset hotkey: R
-document.addEventListener("keydown", (e)=>{
-  if (e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey)) {
-    history = [];
-    saveJson(kKey(man), history);
-    renderAll(history);
+async function onSend(e) {
+  e?.preventDefault?.();
+
+  const input = $("#input, .chat-input, textarea[name='message']") || $("input[type='text']");
+  const val = (input && input.value || "").trim();
+  if (!val) return;
+
+  // append user
+  history.push({ role: "user", content: val, t: Date.now() });
+  saveHistory(history);
+  addBubble("user", val);
+  if (input) input.value = "";
+
+  // ask assistant
+  let reply = "";
+  try {
+    reply = await askAssistant(val, history);
+  } catch {
+    reply = "";
   }
+  if (!reply) return; // nothing to add
+
+  // anti-repeat: if exact same as last assistant, swap to a variant
+  const lastA = [...history].reverse().find(m => m.role === "assistant");
+  if (lastA && normLine(reply) === normLine(lastA.content)) {
+    // pick a soft variant for the same man
+    const pool = (SOFT[man] || []).filter(p => normLine(p) !== normLine(lastA.content));
+    if (pool.length) reply = pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  reply = varyLine(man, reply);
+
+  // append assistant ONCE
+  history.push({ role: "assistant", content: reply, t: Date.now() });
+  history = trimHistory(history);
+  saveHistory(history);
+  addBubble("assistant", reply);
+}
+
+/* Reset button (optional) */
+function wireReset() {
+  const btn = $("#reset, .reset-chat");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    history = [];
+    saveHistory(history);
+    renderAll(history);
+  });
+}
+
+/* wire enter key on the composer form */
+function wireForm() {
+  const form = $("#composer") || $("form.chat-composer") || $("form#composer");
+  if (form) {
+    form.addEventListener("submit", onSend);
+  } else {
+    // last resort: wire Enter on main input
+    const input = $("#input, .chat-input, textarea[name='message']") || $("input[type='text']");
+    if (input) {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) onSend(e);
+      });
+    }
+    const sendBtn = $(".send, #send");
+    if (sendBtn) sendBtn.addEventListener("click", onSend);
+  }
+}
+
+/* ============================ Boot ================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  applyAssets();
+  renderAll(history);
+  wireForm();
+  wireReset();
+  scrollToBottom();
 });

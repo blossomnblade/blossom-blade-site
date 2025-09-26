@@ -1,36 +1,65 @@
-/* Blossom & Blade — home.css (bb7) */
+/* Blossom & Blade — home.css (bg set to /images/bg_dark_romance.jpg) */
 *{box-sizing:border-box}
 :root{
   --ink:#e7eaf3; --bg:#070a0f; --panel:#101826; --line:rgba(255,255,255,.08);
   --pink:#ff3f86; --glow:#ff3f86;
 }
+
+/* Full-page background image + subtle veil */
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background: var(--bg) url("/images/bg_dark_romance.jpg") center center / cover fixed no-repeat;
+  position:relative;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  /* gentle vignette + slight darken so cards/text pop */
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(7,10,15,0.20), rgba(7,10,15,0.55)),
+    linear-gradient(180deg, rgba(7,10,15,0.25), rgba(7,10,15,0.45));
+  z-index:0;
+}
+
+/* Ensure content sits above the veil */
+.wrap, .sitehead, .infobar, .grid, .card { position:relative; z-index:1; }
+
 .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
 
 .sitehead{padding:18px 0}
 .sitehead h1{margin:0;font-size:clamp(26px,4vw,36px)}
 
-.infobar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-  background:rgba(16,24,38,.55);backdrop-filter:saturate(140%) blur(2px);
-  color:#dfe7ff}
+.infobar{
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:rgba(16,24,38,.55); backdrop-filter:saturate(140%) blur(2px);
+  color:#dfe7ff;
+}
 .infobar .wrap{padding:12px 18px}
 .infobar.top{margin-bottom:12px}
 .infobar.bottom{margin-top:18px;color:#ffdbe7}
 
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:12px 0 24px}
+.grid{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:20px; padding:12px 0 24px;
+}
 @media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
 .card{
   position:relative; overflow:hidden; border-radius:18px;
-  background:rgba(16,24,38,.7); border:1px solid var(--line);
+  background:rgba(16,24,38,.72); border:1px solid var(--line);
   box-shadow:0 12px 36px rgba(0,0,0,.35);
 }
 .card .block{display:block; color:inherit; text-decoration:none}
 .card figure{margin:0}
-.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;filter:saturate(1.06) contrast(1.03)}
+.card img{
+  display:block; width:100%; aspect-ratio:4/3; object-fit:cover;
+  filter:saturate(1.06) contrast(1.03);
+}
 .card .meta{padding:14px}
 .card h3{margin:0;font-size:22px;letter-spacing:.2px}
 
@@ -43,6 +72,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   background:var(--pink); color:#170d14;
 }
 .badge{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.42);border:1px solid var(--line);font-size:12px}
+
 .shadow-glow{box-shadow:0 0 0 0 rgba(255,63,134,.0); transition:box-shadow .25s ease}
 .card:hover .shadow-glow,
 .card:hover{box-shadow:0 0 0 6px color-mix(in oklab, var(--glow) 40%, transparent)}

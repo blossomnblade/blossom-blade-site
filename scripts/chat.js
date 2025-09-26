@@ -1,28 +1,131 @@
-/* Blossom & Blade — Chat runtime (fixed portrait + robust replies + anti-repeat) */
+/* Blossom & Blade — Chat runtime
+   - Portrait left, chat right (IDs must exist in chat.html)
+   - Auto-scroll to newest message (page scroll, no inner scrollbars)
+   - Short first-line greeting on first visit
+   - Safe-words / banned topics guard
+   - Robust reply: calls /api/chat, falls back to soft persona line on errors
+   - Anti-repeat: avoids echoing the last few assistant lines
+   - Per-character localStorage history (trimmed to stay fast)
+   - Optional background via ?sub=night|garage|boardroom|woods|gothic|stage|grayson
+*/
 (() => {
-  // ---------- URL & State ----------
-  const qs = new URLSearchParams(location.search);
+  // ---------- URL state ----------
+  const qs  = new URLSearchParams(location.search);
   const man = (qs.get("man") || "").toLowerCase();
-  const urlMode = (qs.get("mode") || "").toLowerCase();
+  const sub = (qs.get("sub") || "night").toLowerCase();
 
-  const VALID = ["blade","dylan","alexander","silas","grayson","viper"];
-  const pretty = {
-    blade:"Blade", dylan:"Dylan", alexander:"Alexander",
-    silas:"Silas", grayson:"Grayson", viper:"Viper"
+  const VALID  = ["blade","dylan","alexander","silas","grayson","viper"];
+  const pretty = { blade:"Blade", dylan:"Dylan", alexander:"Alexander", silas:"Silas", grayson:"Grayson", viper:"Viper" };
+
+  // Backgrounds (optional; shown if your CSS uses --chat-bg on body::before)
+  const BGS = {
+    night: "/images/bg_dark_romance.jpg",
+    boardroom: "/images/bg_alexander_boardroom.jpg",
+    garage: "/images/dylan-garage.jpg",
+    woods: "/images/blade-woods.jpg",
+    gothic: "/images/gothic-bg.jpg",
+    stage: "/images/bg_silas_stage.jpg",
+    grayson: "/images/grayson-bg.jpg"
+  };
+  const bgURL = BGS[sub] || BGS.night || "";
+  document.documentElement.style.setProperty("--chat-bg", bgURL ? `url("${bgURL}")` : "none");
+
+  // ---------- DOM ----------
+  const el = {
+    title:         document.getElementById("roomTitle"),
+    list:          document.getElementById("messages"),
+    input:         document.getElementById("chatInput"),
+    send:          document.getElementById("sendBtn"),
+    form:          document.getElementById("composer"),
+    portrait:      document.getElementById("portraitImg"),
+    portraitLabel: document.getElementById("portraitLabel"),
   };
 
-  // First-visit openers (short, varied cadence)
+  // Title
+  if (VALID.includes(man)) {
+    document.title = `Blossom & Blade — ${pretty[man]}`;
+    if (el.title) el.title.textContent = `${pretty[man]}`;
+  } else {
+    document.title = "Blossom & Blade — Chat";
+    if (el.title) el.title.textContent = "— pick a character";
+  }
+
+  // ---------- Portrait ----------
+  function imgPathChat(m){ return `/images/characters/${m}/${m}-chat.webp`; }
+  (function setPortrait(){
+    const img = el.portrait;
+    if (!img) return;
+    img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
+    img.loading = "eager";
+    img.decoding = "async";
+    img.src = VALID.includes(man) ? imgPathChat(man) : "/images/logo.jpg";
+    img.onerror = () => { img.onerror = null; img.src = "/images/logo.jpg"; };
+    if (el.portraitLabel) el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} — portrait` : "";
+  })();
+
+  // ---------- Storage ----------
+  const hKey = (m) => `bnb.${m}.history`;
+  const loadJson = (k, d=[]) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
+  const saveJson = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+  const MAX_HISTORY = 40;
+  let history = VALID.includes(man) ? loadJson(hKey(man), []) : [];
+  function trimHistory(){ if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY); }
+
+  // ---------- First visit greeting ----------
   const FIRST_LINES = [
     "hey you.",
     "look who’s here.",
-    "you came to see me? i won’t pretend i’m not pleased."
+    "aww, you came to see me."
   ];
+  if (VALID.includes(man) && history.length === 0){
+    const first = FIRST_LINES[Math.floor(Math.random()*FIRST_LINES.length)];
+    history.push({ role:"assistant", content:first, t:Date.now() });
+    saveJson(hKey(man), history);
+  }
 
-  // Gentle, safe “soft” lines used for fallbacks / demo
+  // ---------- Scroll helper (page scroll, no inner scroller) ----------
+  function scrollToBottom(smooth = true){
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    });
+  }
+
+  // ---------- Bubble renderers ----------
+  function addBubble(role, text){
+    if (!el.list || !text) return;
+    const li = document.createElement("li");
+    // Set both directional and role classes to match different CSS variants you’ve used
+    li.className = role === "user" ? "right msg--user" : "left msg--assistant";
+    const b = document.createElement("div");
+    b.className = "bubble " + (role === "user" ? "user" : "ai");
+    b.textContent = String(text || "").trim();
+    li.appendChild(b);
+    el.list.appendChild(li);
+    scrollToBottom(); // auto-scroll on each append
+  }
+
+  function renderAll(){
+    if (!el.list) return;
+    el.list.innerHTML = "";
+    for (const m of history) addBubble(m.role, m.content);
+    scrollToBottom(false); // jump (no animation) when redrawing all
+  }
+
+  renderAll();
+
+  // ---------- Safety / heuristics ----------
+  const BANNED = /\b(?:rape|incest|bestiality|traffick|minors?|teen|scat)\b/i;
+
+  // Anti-repeat helpers
+  const norm = (s) => (s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim();
   const SOFT = {
     blade: [
       "Got a request, pretty thing?",
-      "Careful what you wish for. I deliver.",
+      "You again? Put that smile away before I steal it.",
       "Tell me what you want. I’ll make it feel inevitable."
     ],
     dylan: [
@@ -35,15 +138,15 @@
       "Ask for what you want, kitten.",
       "Tell me one small good thing from your day."
     ],
+    silas: [
+      "hey you.",
+      "What kind of fun? Be specific.",
+      "Closer? Say the word."
+    ],
     grayson: [
       "Your move.",
       "Careful what you wish for. I deliver.",
       "Be clear. I follow precision."
-    ],
-    silas: [
-      "hey you.",
-      "Tell me what you want to hear and I’ll tune to it.",
-      "Closer? Say the word."
     ],
     viper: [
       "look who’s here.",
@@ -52,191 +155,96 @@
     ]
   };
 
-  // ---------- DOM ----------
-  const el = {
-    title: document.getElementById("roomTitle"),
-    list: document.getElementById("messages"),
-    input: document.getElementById("chatInput"),
-    send: document.getElementById("sendBtn"),
-    form: document.getElementById("composer"),
-    portrait: document.getElementById("portraitImg"),
-    portraitLabel: document.getElementById("portraitLabel"),
-    slowBadge: document.getElementById("slowBadge"),
-  };
-
-  // ---------- Keys / Storage ----------
-  const uidKey = "bnb.userId";
-  const hKey  = m => `bnb.${m}.history`;
-  const sKey  = m => `bnb.${m}.summary`;
-  const pKey  = m => `bnb.${m}.profile`;
-
-  function loadJson(key, fallback){
-    try { return JSON.parse(localStorage.getItem(key) || "null") ?? fallback; }
-    catch { return fallback; }
-  }
-  function saveJson(key, value){
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-  }
-
-  // Keep it light: we only retain the last 40 messages in local cache
-  function trimHistory(){
-    if (!VALID.includes(man)) return;
-    if (history.length > 40) history = history.slice(-40);
-  }
-
-  // ---------- Title & Portrait ----------
-  if (VALID.includes(man)){
-    document.title = `Blossom & Blade — ${pretty[man]}`;
-    el.title.textContent = `${pretty[man]}`;
-  } else {
-    document.title = "Blossom & Blade — Chat";
-    el.title.textContent = "— pick a character";
-  }
-
-  const FALLBACK_LOGO = "/images/logo.jpg";
-  (function setPortrait(){
-    const img = el.portrait;
-    if (!img) return;
-    img.dataset.stage = "chat";
-    if (el.portraitLabel) el.portraitLabel.textContent = VALID.includes(man) ? `${pretty[man]} — portrait` : "";
-    img.alt = VALID.includes(man) ? `${pretty[man]} portrait` : "portrait";
-    img.src = VALID.includes(man) ? `/images/characters/${man}/${man}-chat.webp` : FALLBACK_LOGO;
-    img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO; };
-  })();
-
-  // ---------- History boot ----------
-  let history = loadJson(hKey(man), []);
-  function renderAll(){
-    el.list.innerHTML = "";
-    for (const m of history) addBubble(m.role, m.content);
-  }
-
-  // ---------- Bubble ----------
-  function addBubble(role, text){
-    if (!text) return;
-    const li = document.createElement("li");
-    li.className = role === "assistant" ? "bubble assistant" : "bubble user";
-    li.dataset.role = role;
-    li.textContent = text;
-    el.list.appendChild(li);
-    // auto-scroll
-    el.list.parentElement?.scrollTo({ top: el.list.parentElement.scrollHeight, behavior: "smooth" });
-  }
-
-  // ---------- Helpers ----------
-  const norm = s => (s || "").toLowerCase().replace(/[^\w\s]/g,"").trim();
-  function varyLine(man, line){
-    // simple variants to dodge repetition
-    const map = {
-      "your move.": ["Your turn.", "Go on."],
-      "right on time. i like that.": ["Punctual. I like that.", "On time—good."],
-      "careful what you wish for. i deliver.": ["Be certain. I deliver.", "Ask precisely. I deliver."],
-      "ask for what you want, kitten.": ["Say it plainly, kitten.", "Tell me what you want, kitten."],
-      "minimal words, maximal smirk. what’s the vibe?": ["Keep it tight—what’s the vibe?", "Few words. Give me the vibe."]
-    };
-    const key = norm(line);
-    const pool = map[key] || [];
-    if (!pool.length) return line;
-    return pool[Math.floor(Math.random()*pool.length)];
-  }
-
-  function softFallback(man, userText){
-    const text = (userText || "").toLowerCase();
+  function softFallback(m, userText){
+    const t = (userText || "").toLowerCase();
     const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
-    // small “topic” nudges
-    if (text.includes("bad day") || text.includes("tired")){
+    if (t.includes("bad day") || t.includes("tired")){
       return pick([
         "Come here. Tell me one good thing and I’ll add another.",
         "Rough day? I’ll take the edge off—say how."
       ]);
     }
-    if (text.includes("fun") || text.includes("play")){
+    if (t.includes("fun") || t.includes("play")){
       return pick([
         "What kind of fun? Be specific.",
         "Fun has rules. Name yours."
       ]);
     }
-    // default to character pool
-    const pool = SOFT[man] || ["Tell me more."];
-    return pick(pool);
+    return pick(SOFT[m] || ["Tell me more."]);
   }
 
-  // ---------- First visit line ----------
-  if (VALID.includes(man) && history.length === 0){
-    const first = FIRST_LINES[Math.floor(Math.random()*FIRST_LINES.length)];
-    history.push({ role:"assistant", content:first, t: Date.now() });
-    saveJson(hKey(man), history);
+  function antiRepeat(reply){
+    const lastA = [...history].filter(m => m.role === "assistant").slice(-3).map(m => norm(m.content));
+    const nr = norm(reply);
+    if (lastA.includes(nr)) {
+      // choose a different soft line to dodge loops
+      let alt = softFallback(man, "");
+      if (lastA.includes(norm(alt))) alt += " Tell me more.";
+      return alt;
+    }
+    return reply;
   }
 
-  renderAll();
-
-  // ---------- Form handling ----------
+  // ---------- Send ----------
   if (el.form){
     el.form.addEventListener("submit", onSend);
-    el.send.addEventListener("click", (e)=> el.form.requestSubmit());
+  }
+  if (el.send){
+    el.send.addEventListener("click", () => el.form?.requestSubmit());
   }
 
-  // ---------- SEND ----------
   async function onSend(e){
-    e.preventDefault();
-    const text = (el.input.value || "").trim();
+    e?.preventDefault?.();
+    const text = (el.input?.value || "").trim();
     if (!text) return;
 
-    // append user
-    history.push({ role:"user", content:text, t: Date.now() });
-    trimHistory();
-    saveJson(hKey(man), history);
-    addBubble("user", text);
-    el.input.value = "";
+    if (BANNED.test(text)){
+      const guard = "I can’t do that. I’ll keep you safe and stay within the lines, okay?";
+      history.push({ role:"assistant", content:guard, t:Date.now() });
+      trimHistory(); saveJson(hKey(man), history); addBubble("assistant", guard);
+      if (el.input) el.input.value = "";
+      return;
+    }
 
-    // ask assistant
+    // User bubble
+    history.push({ role:"user", content:text, t:Date.now() });
+    trimHistory(); saveJson(hKey(man), history); addBubble("user", text);
+    if (el.input) el.input.value = "";
+
+    // Assistant reply
     let reply = "";
     try {
       reply = await askAssistant(text);
-    } catch (err){
+    } catch (err) {
       console.error("askAssistant failed:", err);
-      reply = "";
     }
+    if (!reply) reply = softFallback(man, text);
+    reply = antiRepeat(reply);
 
-    // Fallback when empty (no more silent drops)
-    if (!reply) {
-      reply = softFallback(man, text);
-    }
-
-    // anti-repeat: if same as last assistant line, vary it
-    const lastA = [...history].reverse().find(m => m.role === "assistant")?.content || "";
-    if (norm(reply) === norm(lastA)) reply = varyLine(man, reply);
-
-    // append assistant ONCE
-    history.push({ role:"assistant", content:reply, t: Date.now() });
-    trimHistory();
-    saveJson(hKey(man), history);
-    addBubble("assistant", reply);
+    history.push({ role:"assistant", content:reply, t:Date.now() });
+    trimHistory(); saveJson(hKey(man), history); addBubble("assistant", reply);
   }
 
   // ---------- API call ----------
   async function askAssistant(userText){
-    // Real call with compact history
     const body = {
       man,
       userText,
-      history: history.slice(-20), // keep it light
+      history: history.slice(-20), // compact context
       mode: "soft"
     };
 
     try {
       const r = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type":"application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = await r.json();
-      const reply = (j && j.reply) ? String(j.reply) : "";
-      return reply;
+      const out = (j && j.reply) ? String(j.reply) : "";
+      return out;
     } catch (err) {
-      // swallow error; caller will fallback
       console.error("chat send failed:", err);
       return "";
     }

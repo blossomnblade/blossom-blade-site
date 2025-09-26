@@ -114,6 +114,47 @@ const qs = (k, d="") => new URL(location.href).searchParams.get(k) || d;
 const man  = qs("man", "viper").toLowerCase();
 const sub  = qs("sub", "night").toLowerCase();     // "day" or "night"
 const DEMO_MODE = false; // flip true if you want to force soft responses
+function pickPortrait(m) {
+  return PORTRAITS[m] || PORTRAITS.viper;
+}
+
+function pickBackground(m, s) {
+  const theme = (s || "night").toLowerCase();
+  const table = BACKGROUNDS[m] || BACKGROUNDS.default;
+  return table[theme] || BACKGROUNDS.default[theme];
+}
+
+function applyAssets() {
+  // --- portrait with fallback (prevents "portrait" alt from ever showing)
+  const img = document.querySelector("#portrait, .portrait img, .portrait");
+  if (img) {
+    const primary = String(pickPortrait(man));
+    const candidates = [
+      primary,
+      primary.replace(/\.webp(\?|$)/i, ".jpg$1"),
+      primary.replace(/\.jpg(\?|$)/i, ".webp$1"),
+    ].filter((u, i, a) => u && a.indexOf(u) === i);
+
+    const loadWithFallback = (list) => {
+      const next = list.shift();
+      if (!next) return;
+      img.alt = "";                 // hides the “portrait” text if any error happens
+      img.loading = "eager";
+      img.src = next;
+      img.onerror = () => loadWithFallback(list);
+    };
+    loadWithFallback(candidates);
+  }
+
+  // --- set background + data attributes (CSS reads these)
+  const root = document.documentElement;
+  root.setAttribute("data-man", man);
+  root.setAttribute("data-theme", sub);
+
+  const url = pickBackground(man, sub);
+  // also push it as a CSS var in case your stylesheet is reading --bg-url
+  document.body.style.setProperty("--bg-url", `url("${url}")`);
+}
 
 function $(sel) { return document.querySelector(sel); }
 

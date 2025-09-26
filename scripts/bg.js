@@ -1,26 +1,22 @@
-/* Blossom & Blade — per-character chat backgrounds
-   Drop this in /scripts/bg.js and include it on chat.html with defer.
-*/
+/* Blossom & Blade — per-character chat backgrounds */
 (function () {
   const params = new URLSearchParams(location.search);
   const man = (params.get("man") || "default").toLowerCase();
-  const sub = (params.get("sub") || "").toLowerCase(); // e.g., "night" (not used yet, but available)
 
-  // Map each man to a background image (your current filenames)
+  // Keep these filenames exactly as they are in your repo
   const BG = {
-    default: "/images/gothic-bg.jpg",
-    blade:   "/images/blade-woods.jpg",
-    dylan:   "/images/dylan-garage.jpg",
-    grayson: "/images/grayson-bg.jpg",
-    silas:   "/images/bg_silas_stage.jpg",
+    default:   "/images/gothic-bg.jpg",
+    blade:     "/images/blade-woods.jpg",
+    dylan:     "/images/dylan-garage.jpg",
+    grayson:   "/images/grayson-bg.jpg",
+    silas:     "/images/bg_silas_stage.jpg",
     alexander: "/images/bg_alexander_boardroom.jpg",
-    viper:   "/images/viper-bg.jpg",            // <- you just added this
+    viper:     "/images/viper-bg.jpg"
   };
 
-  // Choose; fall back to default if anything is off
   const url = BG[man] || BG.default;
 
-  // Create the backdrop + vignette exactly once
+  // Create backdrop + vignette once
   let back = document.getElementById("bg-backdrop");
   if (!back) {
     back = document.createElement("div");
@@ -33,9 +29,8 @@
   }
   back.style.backgroundImage = `url("${url}")`;
 
-  // Defensive: if the image 404s for any reason, revert to default
-  const tester = new Image();
-  tester.onload = () => { /* good */ };
-  tester.onerror = () => { back.style.backgroundImage = `url("${BG.default}")`; };
-  tester.src = url;
+  // Fallback if 404
+  const test = new Image();
+  test.onerror = () => { back.style.backgroundImage = `url("${BG.default}")`; };
+  test.src = url;
 })();

@@ -56,17 +56,18 @@ const PORTRAITS = {
 };
 
 const BACKGROUNDS = {
-  default: {
-    day:   "images/bg_dark_romance.jpg", // bright / landing
-    night: "images/gothic-bg.jpg",       // dark / paywall
-  },
-  alexander: { day: "images/bg_alexander_boardroom.jpg", night: "images/gothic-bg.jpg" },
-  blade:     { day: "images/blade-woods.jpg",            night: "images/blade-woods.jpg" },
-  dylan:     { day: "images/dylan-garage.jpg",           night: "images/dylan-garage.jpg" },
-  grayson:   { day: "images/grayson-bg.jpg",             night: "images/grayson-bg.jpg" },
-  silas:     { day: "images/bg_silas_stage.jpg",         night: "images/bg_silas_stage.jpg" },
-  viper:     { day: "images/gothic-bg.jpg",              night: "images/gothic-bg.jpg" }, // update later with Viper bg
+  default: { day: "/images/gothic-bg.jpg", night: "/images/gothic-bg.jpg" },
+
+  alexander: { day: "/images/bg_alexander_boardroom.jpg", night: "/images/bg_alexander_boardroom.jpg" },
+  blade:     { day: "/images/blade-woods.jpg",           night: "/images/blade-woods.jpg"           },
+  dylan:     { day: "/images/dylan-garage.jpg",          night: "/images/dylan-garage.jpg"          },
+  grayson:   { day: "/images/grayson-bg.jpg",            night: "/images/grayson-bg.jpg"            },
+  silas:     { day: "/images/bg_silas_stage.jpg",        night: "/images/bg_silas_stage.jpg"        },
+
+  // ⬇️ Add this if it isn't there (paths match your new file)
+  viper:     { day: "/images/viper-bg.jpg",              night: "/images/viper-bg.jpg"              },
 };
+
 
 /* ======================== Soft persona lines ======================= */
 const SOFT = {

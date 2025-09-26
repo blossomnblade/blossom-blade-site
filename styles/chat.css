@@ -1,25 +1,45 @@
-/* Blossom & Blade — chat.css (bb4)
-   Brighter background pop; caption kill; bubble z-index locked
-*/
+/* Blossom & Blade — chat.css (v4: locked viewport, fixed portrait/bg, autoscroll) */
+
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+
+/* Lock the page; only the messages pane scrolls */
+html, body { height: 100%; overflow: hidden; }
+
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   color: #e7eaf3;
-  background: #070a0f no-repeat center/cover fixed; /* image set via JS */
+  background: #070a0f no-repeat center/cover fixed; /* image set by JS */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Super-light veil so rooms glow around the chat */
+/* Header */
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 18px clamp(16px, 4vw, 48px) 8px;
+}
+.logo { font-size: clamp(26px, 3vw, 34px); font-weight: 800; letter-spacing: 0.02em; }
+.badges { display:flex; gap:10px; }
+.badge {
+  font-size: 12px; line-height: 1;
+  padding: 8px 10px; border-radius: 999px;
+  background: #1a2431; border: 1px solid rgba(255,255,255,0.12); color: #ffb4c8;
+}
+.badge.red { color:#ffe1e6; background:#461b24; border-color:#863848; }
+
+/* Main grid fills remaining height; no page scroll */
 .page {
-  min-height: 100%;
+  flex: 1; min-height: 0; /* enables children to size correctly */
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 24px;
-  padding: 28px clamp(16px, 4vw, 48px);
+  padding: 10px clamp(16px, 4vw, 48px) 22px;
   background: linear-gradient(180deg, rgba(6,10,14,0.10), rgba(6,10,14,0.10));
+  overflow: hidden; /* prevent page scrollbars */
 }
 
+/* Portrait card never moves */
 .card {
   background: rgba(14,19,26,0.34);
   border: 1px solid rgba(255,255,255,0.06);
@@ -28,22 +48,26 @@ body {
   position: relative;
   z-index: 3;
 }
-.card .media { display:block; width:100%; aspect-ratio:4/5; object-fit:cover; background:#0a0f14; }
+.card .media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  background: #0a0f14;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.card .media.ready { opacity: 1; }
 
-/* Hard kill for captions/labels anywhere */
-figure { margin:0; }
+/* Hard kill any captions/labels */
+figure { margin: 0; }
 figcaption { display:none !important; height:0 !important; overflow:hidden !important; }
-.card :is(.caption, .image-caption, .alt, .label, .credit) { display:none !important; height:0 !important; overflow:hidden !important; }
+.card :is(.caption,.image-caption,.alt,.label,.credit) { display:none !important; height:0 !important; overflow:hidden !important; }
 
-.header { display:flex; align-items:center; justify-content:space-between; margin:4px 0 16px; }
-.logo { font-size: clamp(26px, 3vw, 34px); font-weight:800; letter-spacing:.02em; }
-.badges { display:flex; gap:10px; }
-.badge { font-size:12px; line-height:1; padding:8px 10px; border-radius:999px; background:#1a2431; border:1px solid rgba(255,255,255,.12); color:#ffb4c8; }
-.badge.red { color:#ffe1e6; background:#461b24; border-color:#863848; }
-
+/* Chat panel occupies the rest; only messages scroll */
 .chat {
   position: relative;
-  background: rgba(14,19,26,0.28);  /* lighter for more pop */
+  background: rgba(14,19,26,0.28);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 18px;
   display: grid;
@@ -53,39 +77,52 @@ figcaption { display:none !important; height:0 !important; overflow:hidden !impo
   box-shadow: 0 12px 48px rgba(0,0,0,0.35);
 }
 
-.messages { padding:18px 18px 6px; overflow-y:auto; scroll-behavior:smooth; }
+/* Messages pane: the ONLY scrollable area */
+.messages {
+  padding: 18px 18px 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  min-height: 0;
+}
 
+/* Bubbles always above effects */
 .row { display:flex; gap:10px; margin:10px 0; }
-.row.user { justify-content:flex-end; }
+.row.user { justify-content: flex-end; }
 .bubble {
   max-width: 70ch;
   padding: 10px 14px;
   border-radius: 14px;
   line-height: 1.35;
   position: relative;
-  z-index: 10; /* keep above overlays forever */
+  z-index: 10;
+  background: #0f1826;
+  border: 1px solid rgba(255,255,255,0.08);
 }
-.user .bubble { background:#ff3f86; color:#1a0f16; }
-.assistant .bubble { background:#0f1826; border:1px solid rgba(255,255,255,0.08); }
+.user .bubble { background:#ff3f86; color:#1a0f16; border: none; }
 
+/* Composer sticks to bottom of the panel */
 .composer {
   display:flex; gap:10px; padding:12px;
-  border-top:1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255,255,255,0.06);
   background: linear-gradient(180deg, rgba(11,16,22,0.18), rgba(11,16,22,0.30));
 }
-.composer input[type="text"]{
-  flex:1; padding:12px 14px; background:#0c131c; color:#e7eaf3;
-  border:1px solid rgba(255,255,255,0.12); border-radius:12px; outline:none;
+#composer-input {
+  flex:1; padding:12px 14px;
+  background:#0c131c; color:#e7eaf3;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px; outline:none;
 }
-button.send{
+#send-btn {
   padding:12px 18px; border-radius:12px;
   background:#ff3f86; color:#1a0f16;
   border:none; font-weight:700; cursor:pointer;
 }
-button.send:disabled{ opacity:.55; cursor:not-allowed; }
+#send-btn:disabled { opacity: .55; cursor: not-allowed; }
 
+/* Effects layer stays under text */
 .fx-overlay { position:absolute; inset:0; pointer-events:none; z-index:4; }
 
-.empty { opacity:.6; font-size:14px; padding:10px; }
-
-@media (max-width: 980px){ .page { grid-template-columns: 1fr; } }
+@media (max-width: 980px){
+  .page { grid-template-columns: 1fr; }
+}

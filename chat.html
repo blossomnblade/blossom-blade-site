@@ -1,79 +1,99 @@
 <!doctype html>
 <html lang="en">
-<head><style id="chat-fixes">
-  /* Background image set by --chat-bg */
-  :root { --chat-bg: none; }
-  body::before{
-    content:"";
-    position: fixed;
-    inset: 0;
-    background-image: var(--chat-bg);
-    background-size: cover;
-    background-position: center;
-    opacity: .22;
-    filter: saturate(.95) brightness(.85);
-    pointer-events: none;
-    z-index: -1;
-  }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blossom &amp; Blade — Chat</title>
+  <link rel="icon" href="/images/logo.jpg">
 
-  /* Keep portrait steady and non-jumpy */
-  #portraitImg{
-    display:block;
-    width: 100%;
-    height: auto;
-    max-height: 68vh;
-    object-fit: cover;
-    border-radius: 14px;
-  }
-  #portraitImg[loading="eager"]{ contain: paint; }
+  <!-- Your existing global/chat CSS (keep if you have it) -->
+  <!-- <link rel="stylesheet" href="/styles/site.css"> -->
 
-  /* Chat column scrolls only inside messages list */
-  /* Let the page scroll, not the chat column */
-#messages{
-  max-height: none;
-  overflow: visible;
-}
+  <!-- New background + portrait hardening -->
+  <link rel="stylesheet" href="/styles/bg.css">
 
-  #composer{
-    position: sticky;
-    bottom: 0;
-    padding-top: .5rem;
-    background: linear-gradient(180deg, rgba(10,12,20,0) 0%,
-                                       rgba(10,12,20,.65) 40%,
-                                       rgba(10,12,20,.85) 100%);
-  }
-</style>
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blossom & Blade — Chat</title>
-  <link rel="stylesheet" href="/styles/chat.css?v=9" />
+  <!-- Minimal safety styles so the page looks right even without site.css -->
+  <style>
+    :root{--card:#101728;--ink:#e5eef7;--inkdim:#9fb0c5;--accent:#ff6b9e;}
+    *{box-sizing:border-box}
+    body{margin:0;color:var(--ink);font:16px/1.45 system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif}
+    .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{margin:0;font-size:40px}
+    .badges{display:flex;gap:12px}
+    .badge{background:#0b1220;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--ink)}
+    .grid{display:grid;gap:28px;grid-template-columns:1fr 2fr}
+    .card{background:rgba(16,23,40,.85);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px;box-shadow:0 0 40px rgba(255,0,120,.08)}
+    #bubbles{height:64vh;overflow:auto}
+    .inputRow{display:flex;gap:12px;margin-top:12px}
+    #input{flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:var(--ink)}
+    #sendBtn{background:var(--accent);color:#fff;padding:12px 18px;border:none;border-radius:14px;font-weight:600;cursor:pointer}
+    #portraitCaption{opacity:.8;margin-top:8px;font-size:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
-  <header class="top">
-    <h1 id="roomTitle">Blossom &amp; Blade —</h1>
-    <div class="chips">
-      <span class="chip red">RED</span>
-      <span class="chip adult">Adults 18+ only</span>
-    </div>
-  </header>
 
-  <main class="chat-main">
-    <section class="portrait-panel">
-      <img id="portraitImg" alt="portrait" />
-      <div class="caption" id="portraitLabel"></div>
+  <div class="wrap">
+    <header>
+      <h1>Blossom &amp; Blade —</h1>
+      <div class="badges">
+        <span class="badge" id="redBadge">RED</span>
+        <span class="badge">Adults 18+ only</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <!-- Portrait column -->
+      <aside class="card">
+        <div id="portrait" class="portrait">
+          <img id="portraitImg" alt="portrait" loading="eager" />
+        </div>
+        <div id="portraitCaption"></div>
+      </aside>
+
+      <!-- Chat column -->
+      <main class="card">
+        <div id="bubbles" class="chat-scroll" aria-live="polite"></div>
+        <div class="inputRow">
+          <input id="input" type="text" placeholder="Say something..." autocomplete="off">
+          <button id="sendBtn">Send</button>
+        </div>
+      </main>
     </section>
+  </div>
 
-    <section class="chat-panel">
-      <div id="messages" class="messages"></div>
+  <!-- AUTO-PORTRAIT LOADER (matches your repo filenames) -->
+  <script>
+    (function () {
+      const p = new URLSearchParams(location.search);
+      const man = (p.get('man') || 'viper').toLowerCase();
+      const portraits = {
+        blade:     '/images/characters/blade/blade-chat.webp',
+        dylan:     '/images/characters/dylan/dylan-chat.webp',
+        grayson:   '/images/characters/grayson/grayson-chat.webp',
+        silas:     '/images/characters/silas/silas-chat.webp',
+        alexander: '/images/characters/alexander/alexander-chat.webp',
+        viper:     '/images/characters/viper/viper-chat.webp',
+        default:   '/images/characters/viper/viper-chat.webp'
+      };
+      const captions = {
+        blade:'Blade — portrait', dylan:'Dylan — portrait', grayson:'Grayson — portrait',
+        silas:'Silas — portrait', alexander:'Alexander — portrait', viper:'Viper — portrait'
+      };
+      const img = document.getElementById('portraitImg');
+      const cap = document.getElementById('portraitCaption');
+      const src = portraits[man] || portraits.default;
+      img.src = src;
+      cap.textContent = captions[man] || '— portrait';
+      img.onerror = () => { img.removeAttribute('src'); cap.textContent = ''; };
+    })();
+  </script>
 
-      <form id="composer" class="composer" autocomplete="off">
-        <input id="chatInput" type="text" placeholder="Say something..." />
-        <button id="sendBtn" type="submit">Send</button>
-      </form>
-    </section>
-  </main>
+  <!-- NEW: per-guy background switcher -->
+  <script src="/scripts/bg.js" defer></script>
 
-  <script src="/scripts/chat.js?v=9" defer></script>
+  <!-- YOUR EXISTING CHAT APP (keep this exactly as in your repo) -->
+  <script src="/scripts/chat.js" defer></script>
 </body>
 </html>

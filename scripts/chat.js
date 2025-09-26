@@ -1,6 +1,7 @@
 /* scripts/chat.js — one-file drop-in
    - Injects minimal CSS (so you don’t have to touch stylesheets)
-   - Applies per-character portrait + background
+   - Portrait fills a perfect square; hides figcaptions/captions
+   - Per-character portrait + background (day/night)
    - Solid chat loop with anti-repeat + gentle variety
    - Uses /api/chat with history slice; soft fallback if API fails
 */
@@ -10,12 +11,32 @@
 (function injectChatCSS() {
   const css = `
   .chat-room{display:grid;grid-template-rows:auto 1fr auto;gap:16px}
-  #feed,.messages,.chat-feed{list-style:none;margin:0;padding:0 0 96px;overflow-y:auto;max-height:100%}
+  #feed,.messages,.chat-feed{list-style:none;margin:0;padding:0 0 96px;max-height:100%}
   #feed li,.messages li,.chat-feed li{list-style:none}
   .bubble{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+
+  /* Composer stays pinned if your layout supports it */
   .chat-composer,#composer{position:sticky;bottom:0;z-index:3}
-  #portrait,.portrait{display:block;max-width:100%;height:auto;object-fit:cover;border-radius:12px}
-  .has-bg .chat-slab,.has-bg .chat-window{background:rgba(10,16,22,.5);backdrop-filter:blur(2px);border-radius:16px}
+
+  /* === Portrait: force a clean, square crop in its box === */
+  #portrait,.portrait{
+    width:100%;
+    aspect-ratio:1 / 1;        /* perfect square */
+    height:auto;                /* let aspect-ratio set height from width */
+    object-fit:cover;           /* crop without distortion */
+    border-radius:12px;
+    display:block;
+  }
+
+  /* If the portrait lives inside a figure with a caption, hide the caption line */
+  figure figcaption,.figcaption,.credit,.caption{display:none !important}
+
+  /* Optional: if your chat slab/window overlays a background */
+  .has-bg .chat-slab,.has-bg .chat-window{
+    background:rgba(10,16,22,.5);
+    backdrop-filter:blur(2px);
+    border-radius:16px
+  }
   `;
   const style = document.createElement("style");
   style.setAttribute("data-injected", "chat-css");
@@ -31,7 +52,7 @@ const PORTRAITS = {
   dylan:     "images/characters/dylan/dylan-chat.webp",
   grayson:   "images/characters/grayson/grayson-chat.webp",
   silas:     "images/characters/silas/silas-chat.webp",
-  viper:     "images/characters/viper/viper-chat.webp", // fallback if anything else missing
+  viper:     "images/characters/viper/viper-chat.webp",
 };
 
 const BACKGROUNDS = {
@@ -44,7 +65,7 @@ const BACKGROUNDS = {
   dylan:     { day: "images/dylan-garage.jpg",           night: "images/dylan-garage.jpg" },
   grayson:   { day: "images/grayson-bg.jpg",             night: "images/grayson-bg.jpg" },
   silas:     { day: "images/bg_silas_stage.jpg",         night: "images/bg_silas_stage.jpg" },
-  viper:     { day: "images/gothic-bg.jpg",              night: "images/gothic-bg.jpg" }, // update once you upload a Viper bg
+  viper:     { day: "images/gothic-bg.jpg",              night: "images/gothic-bg.jpg" }, // update later with Viper bg
 };
 
 /* ======================== Soft persona lines ======================= */

@@ -1,201 +1,148 @@
-// scripts/chat.js  — Blossom & Blade (drop-in)
-/* eslint-disable */
+// /scripts/chat.js
+// Minimal chat front-end logic + light relationship memory + signals.
 
-// -------------------------- tiny helpers --------------------------
-const $  = (sel, el=document) => el.querySelector(sel);
-const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
-const on = (el, ev, fn) => el.addEventListener(ev, fn, { passive: true });
+const kKey = (man) => `bb_history_${man}`;
+const kProfile = "bb_profile_v1";
 
-const params = new URLSearchParams(location.search);
-const man = params.get("man") || "blade";   // persona id in URL
-const sub = params.get("sub") || "night";   // theme/variant if you use it
+let man = new URLSearchParams(location.search).get("man") || "viper";
+let sub = new URLSearchParams(location.search).get("sub") || "night";
 
-const FEED = $("#feed");
-const SAY  = $("#say");
-const BTN  = $("#send");
+const elHistory = document.querySelector("#history");
+const elInput   = document.querySelector("#say");
+const elSend    = document.querySelector("#send");
+const elTitle   = document.querySelector("#title");
 
-// localStorage key per persona
-const hKey = (m) => `bb.history.${m}`;
+elTitle && (elTitle.textContent = (man[0]?.toUpperCase() + man.slice(1)) || "Blossom & Blade");
 
-// keep history light but with timestamps for debug
-let history = loadJson(hKey(man)) || [];
+// ───────────── local persistence ─────────────
+function loadJson(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(_){ return def; } }
+function saveJson(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 
-// soft openers per persona used as demo/fallback lines
-// (kept punchy to reduce repetition feel)
-const SOFT = {
-  blade: [
-    "hey you.",
-    "you again? put that smile away before i steal it.",
-    "tell me what you want, rider.",
-    "mm. closer or behave?",
-    "ask for what you want—no flinching."
-  ],
-  dylan: [
-    "you came to see me? i won’t pretend i’m not pleased.",
-    "you sound good in my helmet.",
-    "minimal words, maximal smirk. what’s the vibe?",
-    "tell me what you want, rider."
-  ],
-  viper: [
-    "hey you.",
-    "look who’s here.",
-    "make it quick or make it interesting.",
-    "smile—this is going to get loud.",
-    "two words—make it wild."
-  ],
-  alexander: [
-    "mm. you again. good.",
-    "right on time. i like that.",
-    "i’m listening. closer or should i behave?",
-    "one good thing from your day—go."
-  ],
-  grayson: [
-    "your move.",
-    "careful what you wish for. i deliver.",
-    "look who’s here.",
-    "say it like you mean it."
-  ],
-  silas: [
-    "hey you.",
-    "start it—I’ll match your tempo.",
-    "play a line; I’ll echo the rhythm.",
-    "closer. now talk."
-  ]
-};
+let history = loadJson(kKey(man), []);
+renderAll(history);
 
-// normalize for repeat detection
-const norm = (s) => (s || "")
-  .toLowerCase()
-  .replace(/[^\p{L}\p{N}\s]/gu, "")
-  .replace(/\s+/g, " ")
-  .trim();
+function loadProfile(){ return loadJson(kProfile, { name:"", petName:"", mood:"", notes:"" }); }
+function saveProfile(p){ saveJson(kProfile, p); }
 
-// very light “variant” swap if model repeats exact last line
-function varyLine(m, line) {
-  const pool = (SOFT[m] || SOFT.blade).filter(v => norm(v) !== norm(line));
-  if (pool.length === 0) return line;
-  return pool[Math.floor(Math.random() * pool.length)];
+// Simple name grabber from "i'm X"/"im X"
+function extractName(s=""){
+  const m = s.match(/\b(i['’]?m|i am)\s+([a-z][a-z0-9_-]{1,20})\b/i);
+  return m ? m[2].replace(/[^a-z0-9_-]/ig,"") : "";
 }
 
-// -------------------------- persistence --------------------------
-function saveJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
-function loadJson(k)    { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
-
-// keep only the latest N messages (user+assistant mixed)
-function trimHistory(max = 40) {
-  if (history.length > max) history = history.slice(-max);
-}
-
-// render feed from history
-function renderAll(list) {
-  FEED.innerHTML = "";
-  for (const m of list) addBubble(m.role, m.content);
-  queueMicrotask(scrollToBottom);
-}
-
-// add one chat bubble
-function addBubble(role, text) {
-  const li = document.createElement("div");
-  li.className = `bubble ${role}`;
-  li.innerText = text;
-  FEED.appendChild(li);
-  // auto-scroll after paint
-  requestAnimationFrame(scrollToBottom);
-}
-
-function scrollToBottom() {
-  const box = $(".chat");
-  if (!box) return;
-  box.scrollTop = box.scrollHeight + 9999;
-}
-
-// -------------------------- network --------------------------
-
-// if you want to switch to “demo only” set to true
-const DEMO_MODE = false;
-
-// main API call (with graceful soft fallback)
-async function askAssistant(userText) {
-  // optional demo; picks a soft line
-  if (DEMO_MODE) {
-    const pool = SOFT[man] || SOFT.blade;
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-
-  // build lightweight payload
-  const body = {
-    man,
-    userText,
-    history: history.slice(-20),     // keep it light
-    mode: "soft"                     // server can use this to pick prompt style
-  };
-
-  try {
-    const r = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
-    const reply = (j && j.reply) ? String(j.reply) : "";
-    return reply;
-  } catch (err) {
-    console.error("askAssistant failed:", err);
-    // fallback to a soft line (no “hiccup” bubbles that break vibe)
-    const pool = SOFT[man] || SOFT.blade;
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-}
-
-// -------------------------- send flow --------------------------
-
-async function onSend(e) {
-  e && e.preventDefault();
-
-  const text = (SAY.value || "").trim();
-  if (!text) return;
-
-  // append user bubble immediately
-  history.push({ role: "user", content: text, t: Date.now() });
-  trimHistory();
-  saveJson(hKey(man), history);
-  addBubble("user", text);
-  SAY.value = "";
-
-  // ask assistant (one call; no duplicate appends)
-  let reply = "";
-  try {
-    reply = await askAssistant(text);
-  } catch (err) {
-    console.error(err);
-    reply = "";
-  }
-
-  // if empty for any reason, don’t add a bubble
-  if (!reply) return;
-
-  // anti-repeat: compare to last assistant line
-  const lastA = [...history].reverse().find(m => m.role === "assistant")?.content || "";
-  if (norm(reply) === norm(lastA)) reply = varyLine(man, reply);
-
-  // append assistant ONCE
-  history.push({ role: "assistant", content: reply, t: Date.now() });
-  trimHistory();
-  saveJson(hKey(man), history);
-  addBubble("assistant", reply);
-}
-
-// -------------------------- boot --------------------------
-
-function wire() {
-  if (BTN) on(BTN, "click", onSend);
-  if (SAY) on(SAY, "keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(e); }
+// Heuristic “withdrawn” signal (2 short replies in a row or classic deflections)
+function deriveSignals(hist, userText){
+  const userLines = hist.filter(h=>h.role==="user").slice(-3).map(h=>h.content);
+  const short = (t) => (t || "").trim().split(/\s+/).length <= 3;
+  const withdrawnWords = ["idk","fine","whatever","tired","busy","ok","k","nothing"];
+  const withdrawn = [...userLines, userText].filter(Boolean).some(t=>{
+    const n = t.toLowerCase().trim();
+    return short(n) && withdrawnWords.includes(n);
   });
 
-  renderAll(history);
-  scrollToBottom();
+  const shortRun = userLines.length >= 2 && short(userLines[userLines.length-1]) && short(userLines[userLines.length-2]);
+
+  return {
+    firstTurns: hist.length < 4,
+    shortReplies: shortRun || short(userText),
+    withdrawn: withdrawn
+  };
 }
 
-document.addEventListener("DOMContentLoaded", wire);
+// Update relationship memory from user text
+function updateProfileFromUserText(userText){
+  if (!userText) return;
+  const p = loadProfile();
+
+  // Name
+  if (!p.name) {
+    const got = extractName(userText);
+    if (got) p.name = got[0].toUpperCase() + got.slice(1).toLowerCase();
+  }
+
+  // Mood snapshots (very light)
+  const t = userText.toLowerCase();
+  if (/\b(bad day|stressed|tired|lonely|down|sad)\b/.test(t)) p.mood = "low";
+  if (/\b(happy|excited|great|good day|fun)\b/.test(t)) p.mood = "up";
+
+  saveProfile(p);
+  return p;
+}
+
+// ───────────── rendering ─────────────
+function bubble(role, text){
+  const div = document.createElement("div");
+  div.className = `bubble ${role}`;
+  div.textContent = text;
+  elHistory.appendChild(div);
+  elHistory.scrollTop = elHistory.scrollHeight;
+}
+
+function renderAll(hist){
+  elHistory.innerHTML = "";
+  hist.forEach(m => bubble(m.role, m.content));
+}
+
+// ───────────── send flow ─────────────
+async function onSend(){
+  const text = (elInput.value || "").trim();
+  if (!text) return;
+
+  // client memory/signals
+  const profile = updateProfileFromUserText(text) || loadProfile();
+  const signals = deriveSignals(history, text);
+
+  history.push({ role: "user", content: text, t: Date.now() });
+  saveJson(kKey(man), history);
+  bubble("user", text);
+  elInput.value = "";
+
+  // Build body for API
+  const body = {
+    man,
+    userText: text,
+    history: history.slice(-50),        // keep more context, steadier voice
+    mode: "soft",
+    pov: "",
+    consented: true,
+    memory: {
+      name: profile.name || "",
+      petName: profile.petName || "",   // optional: set this once elsewhere in UI
+      mood: profile.mood || "",
+      notes: profile.notes || ""
+    },
+    signals
+  };
+
+  let reply = "";
+  try{
+    const r = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    reply = (j && j.reply) ? String(j.reply) : "";
+  } catch (err){
+    console.error("chat send failed:", err);
+    reply = "Lost you for a sec—say it again, and tell me what you need from me.";
+  }
+
+  if (reply){
+    history.push({ role:"assistant", content: reply, t: Date.now() });
+    saveJson(kKey(man), history);
+    bubble("assistant", reply);
+  }
+}
+
+elSend?.addEventListener("click", onSend);
+elInput?.addEventListener("keydown", (e)=>{ if (e.key==="Enter" && !e.shiftKey) onSend(); });
+
+// Simple reset hotkey: R
+document.addEventListener("keydown", (e)=>{
+  if (e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey)) {
+    history = [];
+    saveJson(kKey(man), history);
+    renderAll(history);
+  }
+});

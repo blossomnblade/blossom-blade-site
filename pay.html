@@ -1,67 +1,87 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Unlock — Blossom & Blade</title>
-  <meta name="color-scheme" content="dark" />
+  <link rel="stylesheet" href="/styles/home.css?v=bb5">
   <style>
-    body{background:#0b0f19;color:#cfd6e6;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:0;padding:20px}
-    .wrap{max-width:880px;margin:0 auto}
-    .divider{height:1px;background:#1f2740;margin:18px 0}
-    .card{background:#0e1525;border:1px solid #1f2740;border-radius:18px;padding:16px 14px;box-shadow:0 8px 28px rgba(15,23,42,.28);margin:18px 0}
-    .radio-row{display:grid;gap:8px}
-    .cta{margin-top:12px}
-    button{cursor:pointer;border:0;background:radial-gradient(120% 120% at 30% -10%,#ff90c0,#ff5d8c);color:#0b0f19;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 28px rgba(255,93,140,.28)}
-    .pill{display:inline-block;background:#0e1525;border:1px solid #24304d;color:#7e8bb6;border-radius:999px;padding:6px 10px;font-size:12px}
-    .muted{color:#7e8bb6}
-    h1{font-size:1.5rem;margin:0 0 8px}
+    :root { --ink:#e7eaf3; --panel:#0f1621; --pink:#ff3f86; --line:rgba(255,255,255,.08); }
+    body{margin:0;background:#070a0f;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px;}
+    h1{font-size:clamp(24px,4vw,32px);margin:0 0 12px;}
+    .note{opacity:.8;margin:0 0 24px;}
+    .card{background:rgba(15,22,33,.72);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0;}
+    .row{display:flex;gap:18px;flex-wrap:wrap;}
+    .col{flex:1 1 320px}
+    .price{font-weight:800}
+    .btn{display:inline-block;padding:12px 18px;border-radius:12px;background:var(--pink);color:#160c14;font-weight:800;border:none;cursor:not-allowed;opacity:.6}
+    fieldset{border:0;margin:0;padding:0}
+    label{display:block;margin:8px 0;cursor:pointer}
+    .toplinks{display:flex;gap:14px;margin-top:18px}
+    a.link{color:#b9d9ff;text-decoration:none;border-bottom:1px dashed #b9d9ff;}
+    .muted{opacity:.65}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Unlock the conversation</h1>
-    <div id="status" class="pill" aria-live="polite"></div>
-    <p class="notice">Every monthly subscription sends <strong>$1</strong> to domestic-violence support. Thank you for backing safe, consensual fantasy.</p>
-    <div class="divider"></div>
+    <p class="note">Payments are being wired up. Nothing here will charge you yet. 👀</p>
 
-    <div class="pricing">
-      <div class="card">
-        <h3>Day Pass — Pick One</h3>
-        <div class="price">$7.99 <span class="muted">/ 24 hours</span></div>
-        <div class="radio-row" id="manOptions" role="radiogroup" aria-label="Choose your guy for the day">
-          <label><input type="radio" name="man" value="blade">Blade</label>
-          <label><input type="radio" name="man" value="dylan">Dylan</label>
-          <!-- Jesse ➜ Viper -->
-          <label><input type="radio" name="man" value="viper">Viper</label>
-          <label><input type="radio" name="man" value="alexander">Alexander</label>
-          <label><input type="radio" name="man" value="silas">Silas</label>
-          <label><input type="radio" name="man" value="grayson">Grayson</label>
-        </div>
-        <div class="cta">
-          <button id="buyDay">Unlock Day Pass</button>
-          <span class="muted">You’ll have 24h with your choice.</span>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Day Pass — <span class="price">$7.99 / 24h</span></h3>
+          <p class="muted">Pick one and play for a day.</p>
+          <fieldset id="pick-one">
+            <label><input type="radio" name="man" value="blade"> Blade</label>
+            <label><input type="radio" name="man" value="dylan"> Dylan</label>
+            <label><input type="radio" name="man" value="viper"> Viper</label>
+            <label><input type="radio" name="man" value="alexander"> Alexander</label>
+            <label><input type="radio" name="man" value="silas"> Silas</label>
+            <label><input type="radio" name="man" value="grayson"> Grayson</label>
+          </fieldset>
+          <p><button class="btn" disabled title="Coming soon">Unlock Day Pass</button></p>
+          <p class="muted">You’ll have 24h with your choice.</p>
         </div>
       </div>
 
-      <div class="card">
-        <h3>Monthly — All 6</h3>
-        <div class="price">$14.99 <span class="muted">/ month</span></div>
-        <p class="muted">Unlimited access to every persona for 30 days.</p>
-        <div class="cta"><button id="buyMonth">Unlock All 6</button></div>
+      <div class="col">
+        <div class="card">
+          <h3>Monthly — All 6 <span class="price">$14.99 / mo</span></h3>
+          <p class="muted">Unlimited access to every persona for 30 days.</p>
+          <p><button class="btn" disabled title="Coming soon">Unlock All 6</button></p>
+          <p class="muted">$1 from each monthly plan goes to domestic-violence support.</p>
+        </div>
       </div>
     </div>
+
+    <div class="toplinks">
+      <a id="back-link" class="link" href="/chat.html">⬅ Back to chat — try them all</a>
+      <a class="link" href="/index.html">Home</a>
+    </div>
+
+    <p class="muted" id="why"></p>
   </div>
 
   <script>
-    // (stub: your real purchase hooks live elsewhere)
-    document.getElementById('buyDay').onclick = () => {
-      const picked = document.querySelector('input[name="man"]:checked')?.value || 'blade';
-      location.href = `/chat.html?man=${picked}&sub=night`;
-    };
-    document.getElementById('buyMonth').onclick = () => {
-      location.href = `/chat.html?man=viper&sub=night`;
-    };
+    (function(){
+      // Preselect the current guy if ?man= present; keep night sub
+      const qs = new URLSearchParams(location.search);
+      const man = (qs.get('man') || 'blade').toLowerCase();
+      const reason = qs.get('reason');
+      const back = document.getElementById('back-link');
+      back.href = `/chat.html?man=${encodeURIComponent(man)}&sub=night`;
+      const radio = document.querySelector(`input[name="man"][value="${man}"]`);
+      if (radio) radio.checked = true;
+      if (reason){
+        const map = {
+          trial_over: "Your free trial ended. Payments are not live yet—go play freely.",
+          manual: "Payments are coming soon."
+        };
+        document.getElementById('why').textContent = map[reason] || "Payments are coming soon.";
+      }
+    })();
   </script>
 </body>
 </html>

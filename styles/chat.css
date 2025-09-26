@@ -1,143 +1,87 @@
-/* Blossom & Blade — chat.css (starter pack)
-   Layout, backgrounds, z-index sanity, caption hiding, bubble styles.
-   Owner: Kasey. Keep simple, no frameworks. */
+/* Blossom & Blade — chat.css (v2: lighter backgrounds, z-order safe) */
 
-/* ----- Reset-ish ----- */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   color: #e7eaf3;
-  background: #0b0f14 no-repeat center/cover fixed;
+  background: #090d12 no-repeat center/cover fixed; /* image set by JS */
 }
 
-/* ----- Page scaffold ----- */
+/* Subtle page veil (lighter than before so rooms pop) */
 .page {
   min-height: 100%;
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 24px;
   padding: 28px clamp(16px, 4vw, 48px);
-  background: linear-gradient(180deg, rgba(4,7,10,0.65), rgba(4,7,10,0.65));
+  background: linear-gradient(180deg, rgba(5,8,12,0.28), rgba(5,8,12,0.28)); /* was ~0.65 */
 }
 
-/* Left: portrait card */
+/* Left portrait card */
 .card {
-  background: rgba(14,19,26,0.6);
+  background: rgba(14,19,26,0.45);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 18px;
   overflow: hidden;
   position: relative;
-  z-index: 3; /* under chat bubbles (10), above bg (0) */
+  z-index: 3;
 }
-
 .card .media {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4/5;
-  object-fit: cover;
-  background: #0a0f14;
+  display:block; width:100%; aspect-ratio:4/5; object-fit:cover; background:#0a0f14;
 }
 
-/* Hide captions/alt placeholders aggressively */
-figure { margin: 0; }
+/* Hide any stray captions hard */
+figure { margin:0; }
 figcaption { display:none !important; height:0 !important; overflow:hidden !important; }
 
-/* Title row */
-.header {
-  display:flex; align-items:center; justify-content:space-between;
-  margin: 4px 0 16px;
-}
-.logo {
-  font-size: clamp(26px, 3vw, 34px);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; margin:4px 0 16px; }
+.logo { font-size: clamp(26px, 3vw, 34px); font-weight:800; letter-spacing:.02em; }
 .badges { display:flex; gap:10px; }
-.badge {
-  font-size: 12px; line-height: 1;
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: #1a2431;
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #ffb4c8;
-}
+.badge { font-size:12px; line-height:1; padding:8px 10px; border-radius:999px; background:#1a2431; border:1px solid rgba(255,255,255,.12); color:#ffb4c8; }
 .badge.red { color:#ffe1e6; background:#461b24; border-color:#863848; }
 
-/* Right: chat panel */
+/* Chat panel */
 .chat {
   position: relative;
-  background: rgba(14,19,26,0.55);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(14,19,26,0.42);
+  backdrop-filter: blur(3px);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 18px;
   display: grid;
   grid-template-rows: 1fr auto;
   overflow: hidden;
-  z-index: 5; /* above portrait & overlays */
+  z-index: 5;
 }
 
 /* Scroll area */
-.messages {
-  padding: 18px 18px 6px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
+.messages { padding:18px 18px 6px; overflow-y:auto; scroll-behavior:smooth; }
 
-/* Bubbles */
-.row { display:flex; gap:10px; margin: 10px 0; }
-.row.user { justify-content: flex-end; }
+/* Bubbles: keep above everything */
+.row { display:flex; gap:10px; margin:10px 0; }
+.row.user { justify-content:flex-end; }
 .bubble {
   max-width: 70ch;
   padding: 10px 14px;
   border-radius: 14px;
   line-height: 1.35;
   position: relative;
-  z-index: 10; /* keep bubbles above everything */
+  z-index: 10;
 }
-.user .bubble {
-  background: #ff3f86;
-  color: #1a0f16;
-}
-.assistant .bubble {
-  background: #101826;
-  border: 1px solid rgba(255,255,255,0.08);
-}
+.user .bubble { background:#ff3f86; color:#1a0f16; }
+.assistant .bubble { background:#0f1826; border:1px solid rgba(255,255,255,0.08); }
 
 /* Composer */
-.composer {
-  display:flex; gap:10px; padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  background: linear-gradient(180deg, rgba(11,16,22,0.5), rgba(11,16,22,0.7));
-}
-input[type="text"]{
-  flex:1; padding: 12px 14px;
-  background:#0c131c; color:#e7eaf3;
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  outline: none;
-}
-button.send{
-  padding: 12px 18px;
-  border-radius: 12px;
-  background:#ff3f86; color:#1a0f16;
-  border: none; font-weight: 700; cursor: pointer;
-}
-button.send:disabled { opacity: 0.55; cursor: not-allowed; }
+.composer { display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(11,16,22,0.35), rgba(11,16,22,0.5)); }
+input[type="text"]{ flex:1; padding:12px 14px; background:#0c131c; color:#e7eaf3; border:1px solid rgba(255,255,255,0.12); border-radius:12px; outline:none; }
+button.send{ padding:12px 18px; border-radius:12px; background:#ff3f86; color:#1a0f16; border:none; font-weight:700; cursor:pointer; }
+button.send:disabled{ opacity:.55; cursor:not-allowed; }
 
-/* Small FX layer (sparks, etc.) — kept UNDER bubbles */
-.fx-overlay {
-  position:absolute; inset:0;
-  pointer-events:none;
-  z-index: 4; /* NEVER above .bubble (which is 10) */
-}
+/* FX layer sits under bubbles */
+.fx-overlay { position:absolute; inset:0; pointer-events:none; z-index:4; }
 
-/* Helper: subtle empty-state */
-.empty {
-  opacity: 0.6; font-size: 14px; padding: 10px;
-}
+.empty { opacity:.6; font-size:14px; padding:10px; }
 
-/* Mobile */
-@media (max-width: 980px){
-  .page { grid-template-columns: 1fr; }
-}
+@media (max-width: 980px){ .page { grid-template-columns: 1fr; } }

@@ -1,4 +1,8 @@
-/* Blossom & Blade — chat.css (v2: lighter backgrounds, z-order safe) */
+/* Blossom & Blade — chat.css (v3)
+   - Brighter background "pop"
+   - Hard kill for captions
+   - z-index so bubbles never get covered
+*/
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -6,22 +10,22 @@ body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   color: #e7eaf3;
-  background: #090d12 no-repeat center/cover fixed; /* image set by JS */
+  background: #070a0f no-repeat center/cover fixed; /* actual image set via JS */
 }
 
-/* Subtle page veil (lighter than before so rooms pop) */
+/* Lighter page veil so rooms glow through clearly */
 .page {
   min-height: 100%;
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 24px;
   padding: 28px clamp(16px, 4vw, 48px);
-  background: linear-gradient(180deg, rgba(5,8,12,0.28), rgba(5,8,12,0.28)); /* was ~0.65 */
+  background: linear-gradient(180deg, rgba(6,10,14,0.12), rgba(6,10,14,0.12)); /* was 0.28+ */
 }
 
 /* Left portrait card */
 .card {
-  background: rgba(14,19,26,0.45);
+  background: rgba(14,19,26,0.38);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 18px;
   overflow: hidden;
@@ -32,9 +36,10 @@ body {
   display:block; width:100%; aspect-ratio:4/5; object-fit:cover; background:#0a0f14;
 }
 
-/* Hide any stray captions hard */
+/* Absolute nuke for captions/labels under the portrait */
 figure { margin:0; }
 figcaption { display:none !important; height:0 !important; overflow:hidden !important; }
+.card :is(.caption, .image-caption, .alt, .label, .credit) { display:none !important; height:0 !important; overflow:hidden !important; }
 
 /* Header */
 .header { display:flex; align-items:center; justify-content:space-between; margin:4px 0 16px; }
@@ -46,20 +51,20 @@ figcaption { display:none !important; height:0 !important; overflow:hidden !impo
 /* Chat panel */
 .chat {
   position: relative;
-  background: rgba(14,19,26,0.42);
-  backdrop-filter: blur(3px);
+  background: rgba(14,19,26,0.32);        /* lighter for more room pop */
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 18px;
   display: grid;
   grid-template-rows: 1fr auto;
   overflow: hidden;
   z-index: 5;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
 }
 
 /* Scroll area */
 .messages { padding:18px 18px 6px; overflow-y:auto; scroll-behavior:smooth; }
 
-/* Bubbles: keep above everything */
+/* Bubbles: always on top */
 .row { display:flex; gap:10px; margin:10px 0; }
 .row.user { justify-content:flex-end; }
 .bubble {
@@ -68,15 +73,28 @@ figcaption { display:none !important; height:0 !important; overflow:hidden !impo
   border-radius: 14px;
   line-height: 1.35;
   position: relative;
-  z-index: 10;
+  z-index: 10; /* critical */
 }
 .user .bubble { background:#ff3f86; color:#1a0f16; }
 .assistant .bubble { background:#0f1826; border:1px solid rgba(255,255,255,0.08); }
 
 /* Composer */
-.composer { display:flex; gap:10px; padding:12px; border-top:1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(11,16,22,0.35), rgba(11,16,22,0.5)); }
-input[type="text"]{ flex:1; padding:12px 14px; background:#0c131c; color:#e7eaf3; border:1px solid rgba(255,255,255,0.12); border-radius:12px; outline:none; }
-button.send{ padding:12px 18px; border-radius:12px; background:#ff3f86; color:#1a0f16; border:none; font-weight:700; cursor:pointer; }
+.composer {
+  display:flex; gap:10px; padding:12px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(11,16,22,0.2), rgba(11,16,22,0.35));
+}
+.composer input[type="text"], .composer textarea{
+  flex:1; padding:12px 14px;
+  background:#0c131c; color:#e7eaf3;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px; outline:none;
+}
+button.send, .composer button[type="submit"]{
+  padding:12px 18px; border-radius:12px;
+  background:#ff3f86; color:#1a0f16;
+  border:none; font-weight:700; cursor:pointer;
+}
 button.send:disabled{ opacity:.55; cursor:not-allowed; }
 
 /* FX layer sits under bubbles */

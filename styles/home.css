@@ -1,66 +1,49 @@
-/* Home grid & notice (mobile-first) */
+/* Blossom & Blade — home.css (bb6)
+   Clean choose grid + top/bottom info bars. No trial overlays, no gating.
+*/
+*{box-sizing:border-box}
+:root{
+  --ink:#e7eaf3; --bg:#070a0f; --panel:#101826; --line:rgba(255,255,255,.08);
+  --pink:#ff3f86; --glow:#ff3f86;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+.sitehead{padding:18px 0}
+.sitehead h1{margin:0;font-size:clamp(26px,4vw,36px)}
 
-:root {
-  --bg: #0b0c10;
-  --panel: #12131a;
-  --text: #e8eff7;
-  --muted: #a9b2c0;
-  --ink: #0f1117;
-  --ring: #262732;
-  --accent: #ff5a7a;
-}
+.infobar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:rgba(16,24,38,.55);backdrop-filter:saturate(140%) blur(2px);
+  color:#dfe7ff}
+.infobar .wrap{padding:12px 18px}
+.infobar.top{margin-bottom:12px}
+.infobar.bottom{margin-top:18px;color:#ffdbe7}
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:12px 0 24px}
+@media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
-.site-top { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding: .9rem 1rem .4rem; }
-.brand { margin:0; font-size: clamp(1.4rem, 2.2vw, 2.4rem); letter-spacing:.4px; }
-.age-pill { font-size:.85rem; padding:.2rem .6rem; border-radius:999px; background:#1c1d25; color:#cfd3d9; border:1px solid var(--ring); }
+.card{
+  position:relative; overflow:hidden; border-radius:18px;
+  background:rgba(16,24,38,.7); border:1px solid var(--line);
+  box-shadow:0 12px 36px rgba(0,0,0,.35);
+}
+.card figure{margin:0}
+.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;filter:saturate(1.06) contrast(1.03)}
+.card .meta{padding:14px}
+.card h3{margin:0;font-size:22px;letter-spacing:.2px}
 
-.notice-bar {
-  margin: .35rem 1rem 0;
-  background: #101116;
-  border: 1px solid var(--ring);
-  padding: .65rem .8rem;
-  border-radius: 12px;
-  color: var(--muted);
-  display: flex; align-items: center; gap:.6rem; flex-wrap:wrap;
-  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+.card .cta{
+  position:absolute; left:14px; right:14px; bottom:14px;
+  display:flex; gap:10px; align-items:center; justify-content:flex-start;
 }
-.notice-bar .badge {
-  background:#19221f; color:#cfe9d6; border:1px solid #274334;
-  border-radius:999px; padding:.22rem .5rem; font-size:.8rem; font-weight:700;
+.btn{
+  appearance:none; border:none; cursor:pointer;
+  border-radius:12px; padding:10px 14px; font-weight:800;
+  background:var(--pink); color:#170d14;
 }
-
-.cards {
-  display:grid; gap: 1rem;
-  padding: 1rem;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-@media (min-width: 780px){
-  .cards { grid-template-columns: repeat(3, 1fr); max-width: 1200px; margin: 0 auto; }
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--ring);
-  border-radius: 16px;
-  padding: .75rem;
-  display: grid; gap: .6rem;
-  box-shadow: 0 12px 30px rgba(0,0,0,.25);
-}
-.card img {
-  width: 100%; height: clamp(220px, 36vw, 360px);
-  object-fit: cover; border-radius: 12px; display:block;
-}
-.card h2 { margin:.1rem 0; font-weight:700; font-size:1.15rem; }
-
-.enter {
-  justify-self: end;
-  text-decoration: none;
-  background: var(--accent); color: #fff;
-  padding: .6rem 1rem; border-radius: 999px; font-weight: 800;
-  box-shadow: 0 10px 28px rgba(255,90,122,.35);
-}
-.enter:active { transform: translateY(1px); }
+.btn.ghost{background:transparent;color:#d6ddff;border:1px solid var(--line)}
+.badge{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.42);border:1px solid var(--line);font-size:12px}
+.shadow-glow{box-shadow:0 0 0 0 rgba(255,63,134,.0); transition:box-shadow .25s ease}
+.card:hover .shadow-glow{box-shadow:0 0 0 6px color-mix(in oklab, var(--glow) 40%, transparent)}

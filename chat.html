@@ -4,9 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Blossom &amp; Blade — Chat</title>
-
-  <!-- Cache-bust to ensure the new styles load -->
-  <link rel="stylesheet" href="/styles/chat.css?v=bb4">
+  <link rel="stylesheet" href="/styles/chat.css?v=bb4lock">
 </head>
 <body>
   <header class="header" role="banner">
@@ -18,20 +16,18 @@
   </header>
 
   <main class="page">
-    <!-- Portrait card -->
-    <aside class="card" id="portrait-card">
+    <!-- Portrait stays still; src set by JS to /images/characters/{man}/{man}-chat.webp -->
+    <aside class="card">
       <figure>
-        <img id="portrait" class="media" src="" alt="portrait" />
-        <!-- Any caption gets hidden by CSS/JS; leaving empty to be safe -->
+        <img id="portrait" class="media" src="" alt="" />
         <figcaption></figcaption>
       </figure>
     </aside>
 
-    <!-- Chat panel -->
-    <section class="chat" id="chat-panel" aria-live="polite">
+    <!-- Chat panel; only this pane scrolls -->
+    <section class="chat" aria-live="polite">
       <div class="fx-overlay" aria-hidden="true"></div>
-      <div class="messages" id="messages"></div>
-
+      <div class="messages"></div>
       <form class="composer" id="composer">
         <input id="composer-input" type="text" placeholder="Say something..." autocomplete="off" />
         <button id="send-btn" class="send" type="submit">Send</button>
@@ -39,28 +35,6 @@
     </section>
   </main>
 
-  <!-- Tiny inline: set portrait by ?man=; adjust filenames if yours differ -->
-  <script>
-    (function () {
-      const q = new URLSearchParams(location.search);
-      const man = (q.get('man') || 'blade').toLowerCase();
-      const portraits = {
-        blade: '/images/blade.jpg',
-        viper: '/images/viper.jpg',
-        dylan: '/images/dylan.jpg',
-        alexander: '/images/alexander.jpg',
-        grayson: '/images/grayson.jpg',
-        silas: '/images/silas.jpg'
-      };
-      const img = document.getElementById('portrait');
-      if (img) {
-        img.src = portraits[man] || portraits.blade;
-        img.alt = man[0].toUpperCase() + man.slice(1);
-      }
-    })();
-  </script>
-
-  <!-- Defer + version bump guarantees the new JS runs after DOM is ready -->
-  <script src="/scripts/chat.js?v=bb4" defer></script>
+  <script src="/scripts/chat.js?v=bb4lock" defer></script>
 </body>
 </html>

@@ -23,7 +23,8 @@ const cleanUser = normalizeSlang(gate.redactedText || userText);
 
     // TODO: call your adult provider here (Epoch/Segpay/CCBill won't host LLM; you'd use an AI vendor that permits adult).
     // If not configured, fall back to a tasteful line.
-    const reply = "I’ll match your pace. Tell me how you want me to talk to you—slow, teasing, or bold—and I’ll follow your lead.";
+   const reply = "Hey, I’m here. Tell me the vibe you want tonight—sweet, playful, or spicy—and I’ll make it fit you.";
+
     return new Response(JSON.stringify({ reply }), { headers:{ "Content-Type":"application/json" }});
   } catch (e) {
     return new Response(JSON.stringify({ reply:"I’m listening. Your comfort first." }), { headers:{ "Content-Type":"application/json" }});

@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Checkout — Monthly • Blossom &amp; Blade</title>
 <style>
-  :root{
-    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
-  }
+  :root{ --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8; --accent:#b86adf; --ok:#2fb872; --bad:#e47777; }
   *{box-sizing:border-box}
   body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
        color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
@@ -23,7 +20,7 @@
         border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .plan{display:flex;align-items:center;gap:14px;margin:6px 0 16px 0}
   .pill{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
-  .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .ok{display:none;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
   .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
   .checks{display:grid;gap:10px;margin:14px 0}
   .checks label{display:flex;gap:10px;align-items:flex-start}
@@ -43,26 +40,27 @@
     </header>
 
     <h1>Checkout — Monthly</h1>
-    <p class="muted">All 6 men, full access for 30 days. Cancel anytime.</p>
+    <p class="muted">All 6 men, full access for 30 days. Choose if you want auto-renew.</p>
 
     <div class="card">
       <div class="plan">
         <span class="pill">Plan</span>
-        <div><strong>Monthly</strong> • 30 days • <span id="price" class="muted">price shown by provider</span></div>
+        <div><strong>Monthly</strong> • 30 days • <span class="muted">price shown by provider</span></div>
       </div>
 
       <div class="checks">
         <label><input id="ackRefund" type="checkbox"> <span><strong>Refund window:</strong> I understand refunds are available within <strong>24 hours</strong> of purchase only.</span></label>
-        <label><input id="ackFantasy" type="checkbox"> <span><strong>Fantasy-only:</strong> I understand all chat is consensual roleplay and <em>fiction</em> only. Themes may include consensual edge-play (e.g., knife play) but <strong>no real-world harm</strong> is involved or encouraged.</span></label>
-        <label><input id="ackRules" type="checkbox"> <span>I agree to the <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a> and <a href="/terms.html" target="_blank" rel="noopener">Terms</a>.</span></label>
+        <label><input id="ackFantasy" type="checkbox"> <span><strong>Fantasy-only:</strong> consensual roleplay text; no real-world harm or coordination.</span></label>
+        <!-- NEW: recurring choice -->
+        <label><input id="recurring" type="checkbox" checked> <span><strong>Auto-renew every 30 days (cancel anytime).</strong> Uncheck to buy one month only (no auto-billing).</span></label>
       </div>
 
-      <div id="ok" class="ok" style="display:none;">Thanks — you’re all set. Tap Continue to pay.</div>
-      <div id="warn" class="warn">Please check all three boxes to continue.</div>
+      <div id="ok" class="ok">Thanks — you’re set. Tap Continue to pay.</div>
+      <div id="warn" class="warn">Please check all required boxes to continue.</div>
 
       <div class="foot">
         <button id="btnPay" class="btn primary" disabled>Continue to payment</button>
-        <a class="btn ghost" href="/index.html">Back</a>
+        <a class="btn ghost" href="/pay.html">Back</a>
       </div>
     </div>
   </div>
@@ -73,35 +71,27 @@
 
   const refund = document.getElementById('ackRefund');
   const fantasy = document.getElementById('ackFantasy');
-  const rules = document.getElementById('ackRules');
+  const recurring = document.getElementById('recurring');
   const btn = document.getElementById('btnPay');
   const ok = document.getElementById('ok');
   const warn = document.getElementById('warn');
 
   function update(){
-    const ready = refund.checked && fantasy.checked && rules.checked;
+    const ready = refund.checked && fantasy.checked;
     btn.disabled = !ready;
     warn.style.display = ready ? 'none' : 'block';
     ok.style.display = ready ? 'inline-flex' : 'none';
   }
-  refund.addEventListener('change', update);
-  fantasy.addEventListener('change', update);
-  rules.addEventListener('change', update);
-
-  ['ackRefund','ackFantasy','ackRules'].forEach(id=>{
-    const el = document.getElementById(id);
-    const key = 'bb.'+id;
-    if(localStorage.getItem(key)==='true'){ el.checked = true; }
-    el.addEventListener('change', ()=> localStorage.setItem(key, el.checked?'true':'false'));
-  });
+  [refund,fantasy,recurring].forEach(el=> el.addEventListener('change', update));
   update();
 
   btn.onclick = () => {
     if (btn.disabled) return;
-    const next = new URL('/billing.html', location.origin);
-    next.searchParams.set('plan','month');
-    if (man) next.searchParams.set('man',man);
-    location.href = next.toString();
+    const u = new URL('/billing.html', location.origin);
+    u.searchParams.set('plan','monthly');
+    u.searchParams.set('recur', recurring.checked ? 'yes' : 'no');
+    if (man) u.searchParams.set('man', man);
+    location.href = u.toString();
   };
 </script>
 </body>

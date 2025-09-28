@@ -54,6 +54,13 @@
         <div>
           <div class="price">Monthly — 30 days • all 6 men</div>
           <div class="note">Best value. Cancel anytime.</div>
+          <!-- NEW: recurring toggle -->
+          <div class="row" style="margin-top:8px">
+            <input id="chkRecurring" type="checkbox" checked>
+            <label for="chkRecurring"><strong>Auto-renew every 30 days</strong>
+              <div class="note">Uncheck to buy a one-month pass (no auto-billing).</div>
+            </label>
+          </div>
         </div>
       </label>
 
@@ -118,11 +125,13 @@
 <script>
 (function(){
   const qs = new URLSearchParams(location.search);
-  const planParam = (qs.get('plan') || 'monthly').toLowerCase(); // 'monthly' (default) or 'day'
-  const lastMan = qs.get('man') || localStorage.getItem('bb.lastMan') || '';
+  const planParam = (qs.get('plan') || 'monthly').toLowerCase();
+  const lastMan   = qs.get('man') || localStorage.getItem('bb.lastMan') || '';
 
   const planMonthly = document.getElementById('planMonthly');
   const planDay     = document.getElementById('planDay');
+  const chkRecurring= document.getElementById('chkRecurring');
+
   const dayPick     = document.getElementById('dayPick');
   const dayMan      = document.getElementById('dayMan');
   const pickWarn    = document.getElementById('pickWarn');
@@ -133,7 +142,6 @@
   const warn        = document.getElementById('warn');
   const previewLink = document.getElementById('previewLink');
 
-  // Preselect from URL / saved
   if (planParam === 'day') planDay.checked = true;
   if (lastMan) dayMan.value = lastMan;
 
@@ -150,43 +158,41 @@
     pickWarn.style.display = (isDay && !dayMan.value) ? 'block' : 'none';
   }
 
-  [planMonthly, planDay, chkFantasy, chkRefund, dayMan].forEach(el=>{
+  [planMonthly, planDay, chkFantasy, chkRefund, dayMan, chkRecurring].forEach(el=>{
     if (el) el.addEventListener('change', sync);
   });
   sync();
 
-  // Proceed to billing (temporary bridge). Carry plan + (if Day) man.
   checkoutBtn.addEventListener('click', (e)=>{
     e.preventDefault();
     if (checkoutBtn.disabled) return;
 
     const isDay = planDay.checked;
+    const recur = (!isDay && chkRecurring.checked) ? 'yes' : 'no';
+
     const u = new URL('/billing.html', location.origin);
     u.searchParams.set('plan', isDay ? 'day' : 'monthly');
+    u.searchParams.set('recur', recur);
+
     if (isDay) {
       if (!dayMan.value){ sync(); return; }
       u.searchParams.set('man', dayMan.value);
       localStorage.setItem('bb.lastMan', dayMan.value);
     } else if (lastMan) {
-      // Optional: include last man with monthly (harmless)
       u.searchParams.set('man', lastMan);
     }
-    // Convenience stamps
+
     localStorage.setItem('bb.acceptRefund24h','true');
     localStorage.setItem('bb.consentFantasy','true');
 
     location.href = u.toString();
   });
 
-  // Preview link: include last man if we have one
   if (lastMan){
     const p = new URL(previewLink.getAttribute('href'), location.origin);
     p.searchParams.set('man', lastMan);
     previewLink.setAttribute('href', p.toString());
   }
-
-  // Optional guard: require age gate first
-  // try{ if(localStorage.getItem('bb.ageVerified')!=='true'){ location.replace('/age.html?next=pay'); } }catch(e){}
 })();
 </script>
 </body>

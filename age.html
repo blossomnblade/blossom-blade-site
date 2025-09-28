@@ -3,37 +3,37 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>18+ Verification • Blossom &amp; Blade</title>
+  <title>18+ Verification • Blossom & Blade</title>
   <style>
     :root{
       --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-      --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+      --accent:#b86adf; --ok:#2fb872; --bad:#e47777; --link:#c7caff;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
-      color:var(--ink);
-      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial
+      color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial
     }
     .wrap{max-width:880px;margin:48px auto;padding:0 16px}
     header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
     .ribbon{font-size:12px;color:#ffe;opacity:.8}
     h1{margin:8px 0 6px;font-size:28px}
+    .muted{color:var(--muted)}
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
-      border:1px solid var(--ring); border-radius:16px; padding:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35)
+      border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)
     }
-    .row{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+    .row{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
     .row input{width:20px;height:20px;margin-top:2px}
-    .muted{color:var(--muted)}
+    .row label{line-height:1.4}
     .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
     button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
     .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
     .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
     .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
-    .warn{display:none; background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+    .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+    a{color:var(--link)}
   </style>
 </head>
 <body>
@@ -46,30 +46,60 @@
     <h1>Adults only</h1>
     <p class="muted">Please confirm to proceed. We’ll save a receipt (date &amp; time) locally so you only do this once on this device.</p>
 
-    <div class="card">
+    <div class="card" role="group" aria-labelledby="gateTitle">
       <div class="row">
-        <input id="chk18" type="checkbox">
+        <input id="chk18" type="checkbox" />
         <label for="chk18"><strong>I am 18 or older.</strong></label>
       </div>
+
       <div class="row">
-        <input id="chkRules" type="checkbox">
-        <label for="chkRules"><strong>I accept the Community Standards.</strong>
+        <input id="chkRules" type="checkbox" />
+        <label for="chkRules">
+          <strong>I accept the Community Standards.</strong>
           <div class="muted" style="margin-top:6px">
-            No minors/“school boy or girl”/“barely legal”; no incest/step-family; no non-consent/coercion or intoxication without capacity;
-            no bestiality/necrophilia/trafficking/extreme bodily fluids/blood/knife “play”; no hate slurs or targeted harassment.
+            No minors; no “school boy/girl/barely legal”; no incest/step-family; no non-consent/coercion or intoxication without capacity;
+            no bestiality/necrophilia/trafficking/extreme bodily fluids; no hate slurs or targeted harassment. Full details: 
+            <a href="policies.html#standards">policies</a>.
+          </div>
+        </label>
+      </div>
+
+      <div class="row">
+        <input id="chkRefund" type="checkbox" />
+        <label for="chkRefund">
+          <strong>I accept the 24-hour refund policy.</strong>
+          <div class="muted" style="margin-top:6px">
+            Refund requests must be submitted within 24 hours of purchase. After 24 hours, payments are non-refundable.
+            See <a href="policies.html#refunds">refund policy</a>.
+          </div>
+        </label>
+      </div>
+
+      <div class="row">
+        <input id="chkFantasy" type="checkbox" />
+        <label for="chkFantasy">
+          <strong>I understand this is fantasy-only roleplay.</strong>
+          <div class="muted" style="margin-top:6px">
+            Scenes are text chat fiction only. No real-world harm, self-harm, or instructions for violence. 
+            Consensual knife <em>roleplay</em> (as fiction) may appear with some characters. If that’s not for you, please choose other characters
+            or stop any scene. More info: <a href="policies.html#consent">consent &amp; safety</a>.
           </div>
         </label>
       </div>
 
       <div id="ok" class="ok" style="display:none;">Verified — you’re good to continue.</div>
-      <div id="warn" class="warn">Please check both boxes to continue.</div>
+      <div id="warn" class="warn">Please check all boxes to continue.</div>
 
       <div class="btns">
         <button id="btnContinue" class="primary" disabled>Continue</button>
         <button id="btnReceipt" class="ghost">View saved receipt</button>
         <button id="btnReset" class="ghost">Reset &amp; verify again</button>
-        <button id="btnNo" class="ghost" aria-label="I am under 18">I am under 18</button>
       </div>
+
+      <p class="muted" style="margin:10px 2px 0">
+        By clicking <strong>Continue</strong> you attest you meet these requirements. 
+        <a href="age-no.html" style="margin-left:.5rem;text-decoration:underline">I’m under 18 — take me back</a>
+      </p>
     </div>
   </div>
 
@@ -78,45 +108,40 @@
     const man  = qs.get('man')  || 'blade';
     const next = qs.get('next') || 'chat'; // 'chat' or 'pay'
 
-    const chk18 = document.getElementById('chk18');
-    const chkRules = document.getElementById('chkRules');
-    const btn = document.getElementById('btnContinue');
-    const btnNo = document.getElementById('btnNo');
-    const ok = document.getElementById('ok');
-    const warn = document.getElementById('warn');
+    const $ = id => document.getElementById(id);
+    const chk18     = $('chk18');
+    const chkRules  = $('chkRules');
+    const chkRefund = $('chkRefund');
+    const chkFantasy= $('chkFantasy');
+    const btn = $('btnContinue');
+    const ok  = $('ok');
+    const warn= $('warn');
 
     function update(){
-      const ready = chk18.checked && chkRules.checked;
+      const ready = chk18.checked && chkRules.checked && chkRefund.checked && chkFantasy.checked;
       btn.disabled = !ready;
       warn.style.display = ready ? 'none' : 'block';
     }
-    chk18.addEventListener('change', update);
-    chkRules.addEventListener('change', update);
+    [chk18, chkRules, chkRefund, chkFantasy].forEach(el => el.addEventListener('change', update));
 
-    // If already verified on this device, show success but still require button click
+    // If already verified on this device, show success (still require button click)
     if (localStorage.getItem('bb.ageVerified') === 'true') ok.style.display = 'inline-flex';
 
-    document.getElementById('btnReceipt').onclick = () => {
+    $('btnReceipt').onclick = () => {
       const r = localStorage.getItem('bb.ageReceipt');
       alert(r ? `Saved:\n${r}` : 'No receipt saved on this device.');
     };
-    document.getElementById('btnReset').onclick = () => {
-      localStorage.removeItem('bb.ageVerified');
-      localStorage.removeItem('bb.ageReceipt');
-      ok.style.display = 'none';
-      chk18.checked = false; chkRules.checked = false; update();
+    $('btnReset').onclick = () => {
+      ['bb.ageVerified','bb.ageReceipt','bb.acceptedRefund24h','bb.acceptedFantasyConsent'].forEach(k => localStorage.removeItem(k));
+      ok.style.display = 'none'; [chk18, chkRules, chkRefund, chkFantasy].forEach(c => c.checked = false); update();
     };
 
-    // Under-18 path -> separate page
-    btnNo.onclick = () => {
-      location.href = 'age-no.html';
-    };
-
-    // Continue to chat or pay
-    btn.onclick = () => {
-      if (!(chk18.checked && chkRules.checked)) { update(); return; }
+    $('btnContinue').onclick = () => {
+      if (!(chk18.checked && chkRules.checked && chkRefund.checked && chkFantasy.checked)) { update(); return; }
       localStorage.setItem('bb.ageVerified','true');
       localStorage.setItem('bb.ageReceipt', new Date().toString());
+      localStorage.setItem('bb.acceptedRefund24h','true');
+      localStorage.setItem('bb.acceptedFantasyConsent','true');
       ok.style.display = 'inline-flex';
 
       const dest = next === 'pay'

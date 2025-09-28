@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Choose a Plan • Blossom &amp; Blade</title>
 <style>
   :root{
@@ -12,26 +12,29 @@
   *{box-sizing:border-box}
   body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
        color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
-  a{color:#9fd3ff;text-decoration:none}
+  a{color:#bdbfff;text-decoration:none}
   a:hover{text-decoration:underline}
   .wrap{max-width:980px;margin:48px auto;padding:0 16px}
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
   .ribbon{font-size:12px;color:#ffe;opacity:.8}
   h1{margin:8px 0 6px;font-size:28px}
   .muted{color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:16px}
   .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
         border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .price{font-size:28px;font-weight:800;margin:8px 0}
-  ul{margin:10px 0 16px 20px}
-  li{margin:6px 0}
-  .btn{display:inline-block;border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;text-align:center}
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .plan{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--ring);border-radius:14px;background:#0f1221}
+  .plan input{margin-top:4px;min-width:18px;min-height:18px}
+  .price{font-weight:800;margin:4px 0 2px}
+  .note{font-size:13px;color:var(--muted)}
+  .row{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+  .row input{width:20px;height:20px;margin-top:2px}
+  select{padding:8px 10px;border-radius:10px;background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
   .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
   .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-  .note{font-size:13px;color:var(--muted);margin-top:8px}
-  .center{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .badge{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
+  .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .ok{display:none;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
 </style>
 </head>
 <body>
@@ -42,66 +45,149 @@
     </header>
 
     <h1>Choose a plan</h1>
-    <p class="muted">Subscribing takes under a minute. You can always try the free 20-minute preview first.</p>
+    <p class="muted">Monthly can proceed immediately. Day Pass requires picking a man (prevents refund mix-ups).</p>
 
-    <div class="grid">
-      <!-- Day Pass -->
-      <div class="card">
-        <h3>Day Pass</h3>
-        <div class="price">24 hours • 1 man</div>
-        <ul>
-          <li>Keep your current man for a full day</li>
-          <li>Switch to Monthly anytime</li>
-          <li>Refunds within 24 hours</li>
-        </ul>
-        <div class="cta">
-          <a id="btnDay" class="btn primary" href="#">Get Day Pass</a>
-          <a id="btnDayTrial" class="btn ghost" href="#">Preview first</a>
+    <!-- Plan selector -->
+    <div class="plans" role="radiogroup" aria-label="Subscription plan">
+      <label class="plan">
+        <input type="radio" name="plan" value="monthly" id="planMonthly" checked>
+        <div>
+          <div class="price">Monthly — 30 days • all 6 men</div>
+          <div class="note">Best value. Cancel anytime.</div>
         </div>
-        <div class="note">Price is shown on the payment screen.</div>
-      </div>
+      </label>
 
-      <!-- Monthly -->
-      <div class="card">
-        <h3>Monthly</h3>
-        <div class="price">30 days • all 6 men</div>
-        <ul>
-          <li>Full access to all characters</li>
-          <li>Cancel anytime</li>
-          <li>Refunds within 24 hours</li>
-        </ul>
-        <div class="cta">
-          <a id="btnMonth" class="btn primary" href="#">Get Monthly</a>
-          <a id="btnMonthTrial" class="btn ghost" href="#">Preview first</a>
+      <label class="plan">
+        <input type="radio" name="plan" value="day" id="planDay">
+        <div>
+          <div class="price">Day Pass — 24 hours • 1 man</div>
+          <div class="note">Pick your man to continue.</div>
         </div>
-        <div class="note">Best value. Price is shown on the payment screen.</div>
-      </div>
+      </label>
     </div>
 
-    <p class="note center" style="margin-top:18px">
-      <span class="badge">Fantasy-only</span> Consensual roleplay only; no real-world harm. See our
-      <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a>.
-    </p>
+    <!-- Day Pass: pick a man (only visible when Day Pass selected) -->
+    <div id="dayPick" class="card" style="display:none; margin-top:14px">
+      <div class="row">
+        <label for="dayMan"><strong>Pick your man:</strong></label>
+        <select id="dayMan" required>
+          <option value="" selected>Choose one…</option>
+          <option value="blade">Blade</option>
+          <option value="viper">Viper</option>
+          <option value="dylan">Dylan</option>
+          <option value="alexander">Alexander</option>
+          <option value="grayson">Grayson</option>
+          <option value="silas">Silas</option>
+        </select>
+      </div>
+      <div id="pickWarn" class="warn">Pick a man to continue with Day Pass.</div>
+    </div>
+
+    <!-- Consents (required before continuing) -->
+    <div class="card" style="margin-top:14px">
+      <div class="row">
+        <input id="chkFantasy" type="checkbox" aria-describedby="fantasyHelp">
+        <label for="chkFantasy"><strong>Fantasy-only text chat.</strong>
+          <div id="fantasyHelp" class="note">
+            No real-world harm, threats, or coordination. Consensual fantasy themes in text are allowed (including consensual knife roleplay).
+            If consent is unclear, we stop. See <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
+          </div>
+        </label>
+      </div>
+
+      <div class="row">
+        <input id="chkRefund" type="checkbox" aria-describedby="refundHelp">
+        <label for="chkRefund"><strong>24-hour refund policy.</strong>
+          <div id="refundHelp" class="note">
+            Refund requests are accepted within <strong>24 hours</strong> of purchase. After 24 hours, payments are non-refundable.
+          </div>
+        </label>
+      </div>
+
+      <div id="ok" class="ok">Thanks — you’re set. Continue to payment.</div>
+      <div id="warn" class="warn">Please check both boxes to continue.</div>
+
+      <div class="btns">
+        <button id="checkoutBtn" class="primary" disabled>Proceed to payment</button>
+        <a class="ghost" href="/index.html">Back</a>
+        <a class="ghost" id="previewLink" href="/age.html?next=chat">Preview (20-minute)</a>
+      </div>
+    </div>
   </div>
 
 <script>
-  // Carry the chosen man through links
+(function(){
   const qs = new URLSearchParams(location.search);
-  const man = qs.get('man') || '';
+  const planParam = (qs.get('plan') || 'monthly').toLowerCase(); // 'monthly' (default) or 'day'
+  const lastMan = qs.get('man') || localStorage.getItem('bb.lastMan') || '';
 
-  function withMan(url){
-    const u = new URL(url, location.origin);
-    if (man) u.searchParams.set('man', man);
-    return u.toString();
+  const planMonthly = document.getElementById('planMonthly');
+  const planDay     = document.getElementById('planDay');
+  const dayPick     = document.getElementById('dayPick');
+  const dayMan      = document.getElementById('dayMan');
+  const pickWarn    = document.getElementById('pickWarn');
+  const chkFantasy  = document.getElementById('chkFantasy');
+  const chkRefund   = document.getElementById('chkRefund');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  const ok          = document.getElementById('ok');
+  const warn        = document.getElementById('warn');
+  const previewLink = document.getElementById('previewLink');
+
+  // Preselect from URL / saved
+  if (planParam === 'day') planDay.checked = true;
+  if (lastMan) dayMan.value = lastMan;
+
+  function sync(){
+    const isDay = planDay.checked;
+    dayPick.style.display = isDay ? 'block' : 'none';
+
+    const consents = chkFantasy.checked && chkRefund.checked;
+    const dayOk = !isDay || !!dayMan.value;
+
+    checkoutBtn.disabled = !(consents && dayOk);
+    warn.style.display = consents ? 'none' : 'block';
+    ok.style.display   = (consents && dayOk) ? 'inline-flex' : 'none';
+    pickWarn.style.display = (isDay && !dayMan.value) ? 'block' : 'none';
   }
 
-  // Go to checkout pages
-  document.getElementById('btnDay').href   = withMan('/checkout-day.html');
-  document.getElementById('btnMonth').href = withMan('/checkout-month.html');
+  [planMonthly, planDay, chkFantasy, chkRefund, dayMan].forEach(el=>{
+    if (el) el.addEventListener('change', sync);
+  });
+  sync();
 
-  // Or let them preview first (routes through age gate if needed)
-  document.getElementById('btnDayTrial').href   = withMan('/age.html?next=chat');
-  document.getElementById('btnMonthTrial').href = withMan('/age.html?next=chat');
+  // Proceed to billing (temporary bridge). Carry plan + (if Day) man.
+  checkoutBtn.addEventListener('click', (e)=>{
+    e.preventDefault();
+    if (checkoutBtn.disabled) return;
+
+    const isDay = planDay.checked;
+    const u = new URL('/billing.html', location.origin);
+    u.searchParams.set('plan', isDay ? 'day' : 'monthly');
+    if (isDay) {
+      if (!dayMan.value){ sync(); return; }
+      u.searchParams.set('man', dayMan.value);
+      localStorage.setItem('bb.lastMan', dayMan.value);
+    } else if (lastMan) {
+      // Optional: include last man with monthly (harmless)
+      u.searchParams.set('man', lastMan);
+    }
+    // Convenience stamps
+    localStorage.setItem('bb.acceptRefund24h','true');
+    localStorage.setItem('bb.consentFantasy','true');
+
+    location.href = u.toString();
+  });
+
+  // Preview link: include last man if we have one
+  if (lastMan){
+    const p = new URL(previewLink.getAttribute('href'), location.origin);
+    p.searchParams.set('man', lastMan);
+    previewLink.setAttribute('href', p.toString());
+  }
+
+  // Optional guard: require age gate first
+  // try{ if(localStorage.getItem('bb.ageVerified')!=='true'){ location.replace('/age.html?next=pay'); } }catch(e){}
+})();
 </script>
 </body>
 </html>

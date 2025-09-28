@@ -3,85 +3,138 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Unlock — Blossom & Blade</title>
-  <link rel="stylesheet" href="/styles/home.css?v=bb5">
+  <title>Pay • Blossom &amp; Blade</title>
+  <meta name="description" content="Confirm policies and proceed to secure checkout."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
-    :root { --ink:#e7eaf3; --panel:#0f1621; --pink:#ff3f86; --line:rgba(255,255,255,.08); }
-    body{margin:0;background:#070a0f;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
-    .wrap{max-width:980px;margin:32px auto;padding:0 16px;}
-    h1{font-size:clamp(24px,4vw,32px);margin:0 0 12px;}
-    .note{opacity:.8;margin:0 0 24px;}
-    .card{background:rgba(15,22,33,.72);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0;}
-    .row{display:flex;gap:18px;flex-wrap:wrap;}
-    .col{flex:1 1 320px}
-    .price{font-weight:800}
-    .btn{display:inline-block;padding:12px 18px;border-radius:12px;background:var(--pink);color:#160c14;font-weight:800;border:none;cursor:not-allowed;opacity:.6}
-    fieldset{border:0;margin:0;padding:0}
-    label{display:block;margin:8px 0;cursor:pointer}
-    .toplinks{display:flex;gap:14px;margin-top:18px}
-    a.link{color:#b9d9ff;text-decoration:none;border-bottom:1px dashed #b9d9ff;}
-    .muted{opacity:.65}
+    :root{
+      --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+      --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+      color:var(--ink);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial;
+    }
+    .wrap{max-width:880px;margin:48px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .ribbon{font-size:12px;color:#ffe;opacity:.8}
+    h1{margin:8px 0 6px;font-size:28px}
+    .muted{color:var(--muted)}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+      border:1px solid var(--ring); border-radius:16px; padding:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35); margin-top:12px;
+    }
+    .row{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+    .row input{width:20px;height:20px;margin-top:2px}
+    .summary{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 2px}
+    .pill{background:#0f1221;border:1px solid var(--ring);padding:6px 10px;border-radius:999px;font-weight:600}
+    .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+    button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+    .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+    .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+    .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+    a{color:#bdbfff;text-decoration:none}
+    a:hover{text-decoration:underline}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Unlock the conversation</h1>
-    <p class="note">Payments are being wired up. Nothing here will charge you yet. 👀</p>
+    <header>
+      <strong>Blossom &amp; Blade</strong>
+      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    </header>
 
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <h3>Day Pass — <span class="price">$7.99 / 24h</span></h3>
-          <p class="muted">Pick one and play for a day.</p>
-          <fieldset id="pick-one">
-            <label><input type="radio" name="man" value="blade"> Blade</label>
-            <label><input type="radio" name="man" value="dylan"> Dylan</label>
-            <label><input type="radio" name="man" value="viper"> Viper</label>
-            <label><input type="radio" name="man" value="alexander"> Alexander</label>
-            <label><input type="radio" name="man" value="silas"> Silas</label>
-            <label><input type="radio" name="man" value="grayson"> Grayson</label>
-          </fieldset>
-          <p><button class="btn" disabled title="Coming soon">Unlock Day Pass</button></p>
-          <p class="muted">You’ll have 24h with your choice.</p>
-        </div>
+    <h1>Checkout</h1>
+    <p class="muted">Please confirm the policies below to continue to secure payment.</p>
+
+    <div class="card">
+      <div class="summary">
+        <div class="pill">Character: <span id="sumMan">blade</span></div>
+        <div class="pill">Plan: <span id="sumPlan">Day Pass (24h)</span></div>
       </div>
 
-      <div class="col">
-        <div class="card">
-          <h3>Monthly — All 6 <span class="price">$14.99 / mo</span></h3>
-          <p class="muted">Unlimited access to every persona for 30 days.</p>
-          <p><button class="btn" disabled title="Coming soon">Unlock All 6</button></p>
-          <p class="muted">$1 from each monthly plan goes to domestic-violence support.</p>
-        </div>
+      <hr style="border:0;border-top:1px solid var(--ring);opacity:.6;margin:14px 0">
+
+      <!-- Consent to fantasy-only -->
+      <div class="row">
+        <input id="chkFantasy" type="checkbox" aria-describedby="fantasyHelp">
+        <label for="chkFantasy"><strong>I understand this is fantasy-only text chat.</strong>
+          <div id="fantasyHelp" class="muted" style="margin-top:6px">
+            No real-world harm, threats, or coordination. Consensual fantasy themes in text are allowed.
+            If consent is unclear, we stop. See <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
+          </div>
+        </label>
+      </div>
+
+      <!-- Refund policy -->
+      <div class="row">
+        <input id="chkRefund" type="checkbox" aria-describedby="refundHelp">
+        <label for="chkRefund"><strong>I accept the 24-hour refund policy.</strong>
+          <div id="refundHelp" class="muted" style="margin-top:6px">
+            You may request a refund within <strong>24 hours</strong> of purchase. After 24 hours, chats are not refundable.
+            Details in <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
+          </div>
+        </label>
+      </div>
+
+      <div id="warn" class="warn">Please check both boxes to continue.</div>
+
+      <div class="btns">
+        <button id="btnProceed" class="primary" disabled>Proceed to payment</button>
+        <button id="btnBack" class="ghost" type="button">Back</button>
       </div>
     </div>
-
-    <div class="toplinks">
-      <a id="back-link" class="link" href="/chat.html">⬅ Back to chat — try them all</a>
-      <a class="link" href="/index.html">Home</a>
-    </div>
-
-    <p class="muted" id="why"></p>
   </div>
 
   <script>
-    (function(){
-      // Preselect the current guy if ?man= present; keep night sub
-      const qs = new URLSearchParams(location.search);
-      const man = (qs.get('man') || 'blade').toLowerCase();
-      const reason = qs.get('reason');
-      const back = document.getElementById('back-link');
-      back.href = `/chat.html?man=${encodeURIComponent(man)}&sub=night`;
-      const radio = document.querySelector(`input[name="man"][value="${man}"]`);
-      if (radio) radio.checked = true;
-      if (reason){
-        const map = {
-          trial_over: "Your free trial ended. Payments are not live yet—go play freely.",
-          manual: "Payments are coming soon."
-        };
-        document.getElementById('why').textContent = map[reason] || "Payments are coming soon.";
-      }
-    })();
+    // --- Read selection from query string ---
+    const qs   = new URLSearchParams(location.search);
+    const man  = (qs.get('man')  || 'blade').toLowerCase();
+    const plan = (qs.get('plan') || 'day').toLowerCase(); // 'day' or 'month'
+
+    // Show summary
+    document.getElementById('sumMan').textContent = man;
+    document.getElementById('sumPlan').textContent =
+      plan === 'month' ? 'Monthly (all 6)' : 'Day Pass (24h)';
+
+    // Controls
+    const chkFantasy = document.getElementById('chkFantasy');
+    const chkRefund  = document.getElementById('chkRefund');
+    const btnProceed = document.getElementById('btnProceed');
+    const btnBack    = document.getElementById('btnBack');
+    const warn       = document.getElementById('warn');
+
+    function updateReady(){
+      const ready = chkFantasy.checked && chkRefund.checked;
+      btnProceed.disabled = !ready;
+      warn.style.display = ready ? 'none' : 'block';
+    }
+    chkFantasy.addEventListener('change', updateReady);
+    chkRefund .addEventListener('change', updateReady);
+
+    btnBack.onclick = () => history.length > 1 ? history.back() : location.href = `age.html?next=pay&man=${encodeURIComponent(man)}`;
+
+    // Go to your existing checkout pages
+    btnProceed.onclick = () => {
+      if (btnProceed.disabled) { updateReady(); return; }
+
+      // Optional: remember consents locally (helps with support questions)
+      const stamp = new Date().toISOString();
+      localStorage.setItem('bb.consentFantasy', stamp);
+      localStorage.setItem('bb.acceptRefund24h', stamp);
+
+      const dest = plan === 'month' ? 'checkout-month.html' : 'checkout-day.html';
+      location.href = `${dest}?man=${encodeURIComponent(man)}`;
+    };
+
+    // If you want to require age gate first, bounce users who didn’t verify:
+    // if (localStorage.getItem('bb.ageVerified') !== 'true') {
+    //   location.href = `age.html?next=pay&man=${encodeURIComponent(man)}`;
+    // }
   </script>
 </body>
 </html>

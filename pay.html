@@ -1,45 +1,38 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Pay • Blossom &amp; Blade</title>
-  <meta name="description" content="Confirm policies and proceed to secure checkout."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <style>
-    :root{
-      --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-      --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
-      color:var(--ink);
-      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial;
-    }
-    .wrap{max-width:880px;margin:48px auto;padding:0 16px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .ribbon{font-size:12px;color:#ffe;opacity:.8}
-    h1{margin:8px 0 6px;font-size:28px}
-    .muted{color:var(--muted)}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
-      border:1px solid var(--ring); border-radius:16px; padding:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35); margin-top:12px;
-    }
-    .row{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
-    .row input{width:20px;height:20px;margin-top:2px}
-    .summary{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 2px}
-    .pill{background:#0f1221;border:1px solid var(--ring);padding:6px 10px;border-radius:999px;font-weight:600}
-    .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-    button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
-    .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
-    .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
-    .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
-    a{color:#bdbfff;text-decoration:none}
-    a:hover{text-decoration:underline}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Choose a Plan • Blossom &amp; Blade</title>
+<style>
+  :root{
+    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
+  a{color:#9fd3ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:980px;margin:48px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .ribbon{font-size:12px;color:#ffe;opacity:.8}
+  h1{margin:8px 0 6px;font-size:28px}
+  .muted{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .price{font-size:28px;font-weight:800;margin:8px 0}
+  ul{margin:10px 0 16px 20px}
+  li{margin:6px 0}
+  .btn{display:inline-block;border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;text-align:center}
+  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+  .center{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .badge{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -48,93 +41,67 @@
       <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
     </header>
 
-    <h1>Checkout</h1>
-    <p class="muted">Please confirm the policies below to continue to secure payment.</p>
+    <h1>Choose a plan</h1>
+    <p class="muted">Subscribing takes under a minute. You can always try the free 20-minute preview first.</p>
 
-    <div class="card">
-      <div class="summary">
-        <div class="pill">Character: <span id="sumMan">blade</span></div>
-        <div class="pill">Plan: <span id="sumPlan">Day Pass (24h)</span></div>
+    <div class="grid">
+      <!-- Day Pass -->
+      <div class="card">
+        <h3>Day Pass</h3>
+        <div class="price">24 hours • 1 man</div>
+        <ul>
+          <li>Keep your current man for a full day</li>
+          <li>Switch to Monthly anytime</li>
+          <li>Refunds within 24 hours</li>
+        </ul>
+        <div class="cta">
+          <a id="btnDay" class="btn primary" href="#">Get Day Pass</a>
+          <a id="btnDayTrial" class="btn ghost" href="#">Preview first</a>
+        </div>
+        <div class="note">Price is shown on the payment screen.</div>
       </div>
 
-      <hr style="border:0;border-top:1px solid var(--ring);opacity:.6;margin:14px 0">
-
-      <!-- Consent to fantasy-only -->
-      <div class="row">
-        <input id="chkFantasy" type="checkbox" aria-describedby="fantasyHelp">
-        <label for="chkFantasy"><strong>I understand this is fantasy-only text chat.</strong>
-          <div id="fantasyHelp" class="muted" style="margin-top:6px">
-            No real-world harm, threats, or coordination. Consensual fantasy themes in text are allowed.
-            If consent is unclear, we stop. See <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
-          </div>
-        </label>
-      </div>
-
-      <!-- Refund policy -->
-      <div class="row">
-        <input id="chkRefund" type="checkbox" aria-describedby="refundHelp">
-        <label for="chkRefund"><strong>I accept the 24-hour refund policy.</strong>
-          <div id="refundHelp" class="muted" style="margin-top:6px">
-            You may request a refund within <strong>24 hours</strong> of purchase. After 24 hours, chats are not refundable.
-            Details in <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
-          </div>
-        </label>
-      </div>
-
-      <div id="warn" class="warn">Please check both boxes to continue.</div>
-
-      <div class="btns">
-        <button id="btnProceed" class="primary" disabled>Proceed to payment</button>
-        <button id="btnBack" class="ghost" type="button">Back</button>
+      <!-- Monthly -->
+      <div class="card">
+        <h3>Monthly</h3>
+        <div class="price">30 days • all 6 men</div>
+        <ul>
+          <li>Full access to all characters</li>
+          <li>Cancel anytime</li>
+          <li>Refunds within 24 hours</li>
+        </ul>
+        <div class="cta">
+          <a id="btnMonth" class="btn primary" href="#">Get Monthly</a>
+          <a id="btnMonthTrial" class="btn ghost" href="#">Preview first</a>
+        </div>
+        <div class="note">Best value. Price is shown on the payment screen.</div>
       </div>
     </div>
+
+    <p class="note center" style="margin-top:18px">
+      <span class="badge">Fantasy-only</span> Consensual roleplay only; no real-world harm. See our
+      <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a>.
+    </p>
   </div>
 
-  <script>
-    // --- Read selection from query string ---
-    const qs   = new URLSearchParams(location.search);
-    const man  = (qs.get('man')  || 'blade').toLowerCase();
-    const plan = (qs.get('plan') || 'day').toLowerCase(); // 'day' or 'month'
+<script>
+  // Carry the chosen man through links
+  const qs = new URLSearchParams(location.search);
+  const man = qs.get('man') || '';
 
-    // Show summary
-    document.getElementById('sumMan').textContent = man;
-    document.getElementById('sumPlan').textContent =
-      plan === 'month' ? 'Monthly (all 6)' : 'Day Pass (24h)';
+  function withMan(url){
+    const u = new URL(url, location.origin);
+    if (man) u.searchParams.set('man', man);
+    return u.toString();
+  }
 
-    // Controls
-    const chkFantasy = document.getElementById('chkFantasy');
-    const chkRefund  = document.getElementById('chkRefund');
-    const btnProceed = document.getElementById('btnProceed');
-    const btnBack    = document.getElementById('btnBack');
-    const warn       = document.getElementById('warn');
+  // Go to checkout pages
+  document.getElementById('btnDay').href   = withMan('/checkout-day.html');
+  document.getElementById('btnMonth').href = withMan('/checkout-month.html');
 
-    function updateReady(){
-      const ready = chkFantasy.checked && chkRefund.checked;
-      btnProceed.disabled = !ready;
-      warn.style.display = ready ? 'none' : 'block';
-    }
-    chkFantasy.addEventListener('change', updateReady);
-    chkRefund .addEventListener('change', updateReady);
-
-    btnBack.onclick = () => history.length > 1 ? history.back() : location.href = `age.html?next=pay&man=${encodeURIComponent(man)}`;
-
-    // Go to your existing checkout pages
-    btnProceed.onclick = () => {
-      if (btnProceed.disabled) { updateReady(); return; }
-
-      // Optional: remember consents locally (helps with support questions)
-      const stamp = new Date().toISOString();
-      localStorage.setItem('bb.consentFantasy', stamp);
-      localStorage.setItem('bb.acceptRefund24h', stamp);
-
-      const dest = plan === 'month' ? 'checkout-month.html' : 'checkout-day.html';
-      location.href = `${dest}?man=${encodeURIComponent(man)}`;
-    };
-
-    // If you want to require age gate first, bounce users who didn’t verify:
-    // if (localStorage.getItem('bb.ageVerified') !== 'true') {
-    //   location.href = `age.html?next=pay&man=${encodeURIComponent(man)}`;
-    // }
-  </script>
+  // Or let them preview first (routes through age gate if needed)
+  document.getElementById('btnDayTrial').href   = withMan('/age.html?next=chat');
+  document.getElementById('btnMonthTrial').href = withMan('/age.html?next=chat');
+</script>
 </body>
 </html>

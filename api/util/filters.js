@@ -1,31 +1,94 @@
-// /api/util/filters.js
-import { BANNED_PATTERNS, NORMALIZE_MAP } from "../_data/lexicon.js";
+// api/util/filters.js
+// Shared input safety + normalization for both chat endpoints.
 
-// Returns { ok: boolean, reason?: string, redactedText: string }
-export function gateText(userText) {
-  const text = String(userText || "");
+let LEX = {};
+try {
+  // Be tolerant to different export styles from /api/_data/lexicon.js
+  const mod = await import("../_data/lexicon.js");
+  LEX = mod.default || mod.lexicon || mod.LEXICON || {};
+} catch (e) {
+  LEX = {};
+}
 
-  for (const rx of BANNED_PATTERNS) {
-    if (rx.test(text)) {
+// ---------- Banned / allowed patterns ----------
+// Keep "consensual knife play" allowed. Block the rest that you listed.
+const RULES = [
+  { id: "minors", re: /(minor(s)?|barely\s*legal|school\s*(boy|girl))/i, reason: "minors/“barely legal”/school boy-girl" },
+  { id: "incest", re: /(incest|step[\s-]*family)/i, reason: "incest/step-family" },
+  { id: "nonconsent", re: /(non[\s-]*consent|coercion)/i, reason: "non-consent or coercion" },
+  { id: "capacity", re: /intoxication\s+without\s+capacity/i, reason: "intoxication without capacity" },
+  { id: "bestiality", re: /bestiality|zoophilia/i, reason: "bestiality" },
+  { id: "necrophilia", re: /necrophilia/i, reason: "necrophilia" },
+  { id: "trafficking", re: /trafficking/i, reason: "trafficking" },
+  { id: "fluids", re: /(extreme\s+bodily\s*fluids|scat)/i, reason: "extreme bodily fluids / scat" },
+  { id: "hate", re: /(hate\s+slurs?|racial\s+slurs?)/i, reason: "hate slurs or targeted harassment" },
+];
+
+// Phrases we explicitly allow (still blocked if paired with non-consent etc.)
+const ALLOW = [/knife\s*play/i];
+
+function hasAllow(text) {
+  return ALLOW.some((r) => r.test(text));
+}
+
+export function gateText(text = "") {
+  const t = String(text);
+
+  // If any banned rule matches, block (unless it’s an allow-only thing and no conflicting rule)
+  for (const rule of RULES) {
+    if (rule.re.test(t)) {
+      // If the only match someone hits is "knife play", don't block (we don't list it as banned).
+      // For other matches, block immediately.
       return {
         ok: false,
-        reason:
-          "That topic isn’t allowed here (minors, incest/step-family, non-consent/no capacity, bestiality, necrophilia, trafficking, scat, or blood). Please steer to safe, consensual fantasy.",
-        redactedText: ""
+        reason: `Blocked topic: ${rule.reason}`,
+        redactedText: t.replace(rule.re, "▇▇▇"),
       };
     }
   }
-  return { ok: true, redactedText: text };
+
+  // Explicit allow isn’t needed to pass, but it’s here in case you add
+  // patterns later that overlap with “knife play”.
+  return { ok: true, redactedText: t };
 }
 
-// Normalize casual slang to a canonical token (helps embeddings/memory)
-export function normalizeSlang(text) {
-  let out = " " + String(text || "") + " ";
-  for (const [from, to] of Object.entries(NORMALIZE_MAP)) {
-    const rx = new RegExp(`\\b${escapeReg(from)}\\b`, "gi");
-    out = out.replace(rx, ` ${to} `);
+// ---------- Normalization (wordbank) ----------
+// We normalize a few things so memory stays consistent (nicknames, yes/no forms,
+// days, holidays, etc.). Add/extend mappings in /api/_data/lexicon.js
+function buildMap() {
+  // LEX.normalizations is expected like: { "yes ma'am": "yes maam", "lass": "lass", ... }
+  const m = (LEX.normalizations && typeof LEX.normalizations === "object") ? LEX.normalizations : {};
+  return m;
+}
+
+const NORM_MAP = buildMap();
+
+export function normalizeSlang(text = "") {
+  let out = " " + String(text) + " ";
+
+  // Replace phrases first (longest keys first)
+  const keys = Object.keys(NORM_MAP).sort((a, b) => b.length - a.length);
+  for (const k of keys) {
+    const v = NORM_MAP[k];
+    const re = new RegExp(`\\b${escapeReg(k)}\\b`, "gi");
+    out = out.replace(re, (m) => preserveCase(v, m));
   }
-  return out.trim().replace(/\s+/g, " ");
+
+  // Squash excess spaces
+  out = out.replace(/\s{2,}/g, " ").trim();
+  return out;
 }
 
-function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+// ---------- helpers ----------
+function escapeReg(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function preserveCase(replacement, matched) {
+  // Simple case preservation: if original is Title Case, title-case the replacement.
+  if (/^[A-Z][a-z]+(?:\s[A-Z][a-z]+)*$/.test(matched)) {
+    return replacement.replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  if (matched === matched.toUpperCase()) return replacement.toUpperCase();
+  if (matched === matched.toLowerCase()) return replacement.toLowerCase();
+  return replacement;
+}

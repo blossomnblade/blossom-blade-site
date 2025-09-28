@@ -1,104 +1,108 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Monthly Checkout (demo) • Blossom n Blade</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Checkout — Monthly • Blossom &amp; Blade</title>
 <style>
-  :root{ --bg:#0e0a0d; --panel:#171017; --ink:#efe6ee; --muted:#bba9b6; --plum:#4B1F3C; --wine:#6E0F2E; --line:#2a1a25 }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0; color:var(--ink); font:600 16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
-    background:linear-gradient(0deg, rgba(14,10,13,.88), rgba(14,10,13,.88)),
-               url("/images/gothic-bg.jpg") center/cover no-repeat fixed;
+  :root{
+    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
   }
-  header{padding:14px 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#1a121a,#120a11)}
-  .wrap{max-width:760px; margin:28px auto; padding:0 14px}
-  .card{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#1a121a,#120a11);
-        box-shadow:0 12px 30px rgba(0,0,0,.45)}
-  .hd{padding:16px; border-bottom:1px solid #241624; display:flex; align-items:center; gap:12px}
-  .dot{width:22px;height:22px;border-radius:50%; background:conic-gradient(from 220deg,var(--wine),var(--plum))}
-  h1{margin:0; font-size:18px}
-  .bd{padding:18px}
-  .muted{color:var(--muted); font-size:13px}
-  .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
-  .btn{border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:800; color:white;
-       background:linear-gradient(90deg,var(--plum),var(--wine))}
-  .btn.ghost{background:#2a1a25}
-  .ok{padding:8px 10px; border-radius:10px; background:#142114; color:#d8ffd8; border:1px solid #234123; display:none; margin-bottom:10px}
-  .warn{padding:8px 10px; border-radius:10px; background:#2a1a25; color:#f6d7ef; border:1px dashed #3a203a; display:none; margin-top:10px}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
+  a{color:#9fd3ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:880px;margin:48px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .ribbon{font-size:12px;color:#ffe;opacity:.8}
+  h1{margin:8px 0 6px;font-size:28px}
+  .muted{color:var(--muted)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .plan{display:flex;align-items:center;gap:14px;margin:6px 0 16px 0}
+  .pill{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
+  .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .checks{display:grid;gap:10px;margin:14px 0}
+  .checks label{display:flex;gap:10px;align-items:flex-start}
+  .checks input{margin-top:3px;min-width:18px;min-height:18px}
+  .foot{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header>Monthly checkout (demo). Adults only.</header>
+  <div class="wrap">
+    <header>
+      <strong>Blossom &amp; Blade</strong>
+      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    </header>
 
-<div class="wrap">
-  <div class="card">
-    <div class="hd"><div class="dot" aria-hidden="true"></div><h1>Monthly — $10.99</h1></div>
-    <div class="bd">
-      <div id="ageok" class="ok">Age verified — good to go.</div>
-      <p class="muted">
-        Demo placeholder so you can keep testing. Click <b>Complete purchase (demo)</b> to simulate success,
-        grant a monthly pass, and drop into chat.
-      </p>
-      <ul class="muted">
-        <li>All guys unlocked</li>
-        <li>PG-13 by default</li>
-        <li>Includes <b>3 coin packs free</b> (demo credits) — coins unlock erotic chat (words only)</li>
-      </ul>
-      <div class="actions">
-        <button id="complete" class="btn">Complete purchase (demo)</button>
-        <a id="back" class="btn ghost" href="/pay.html">Back to plans</a>
+    <h1>Checkout — Monthly</h1>
+    <p class="muted">All 6 men, full access for 30 days. Cancel anytime.</p>
+
+    <div class="card">
+      <div class="plan">
+        <span class="pill">Plan</span>
+        <div><strong>Monthly</strong> • 30 days • <span id="price" class="muted">price shown by provider</span></div>
       </div>
-      <div id="warn" class="warn">Your browser blocked local storage. If you bounce to age-check again, hard refresh (Ctrl/Cmd + F5).</div>
+
+      <div class="checks">
+        <label><input id="ackRefund" type="checkbox"> <span><strong>Refund window:</strong> I understand refunds are available within <strong>24 hours</strong> of purchase only.</span></label>
+        <label><input id="ackFantasy" type="checkbox"> <span><strong>Fantasy-only:</strong> I understand all chat is consensual roleplay and <em>fiction</em> only. Themes may include consensual edge-play (e.g., knife play) but <strong>no real-world harm</strong> is involved or encouraged.</span></label>
+        <label><input id="ackRules" type="checkbox"> <span>I agree to the <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a> and <a href="/terms.html" target="_blank" rel="noopener">Terms</a>.</span></label>
+      </div>
+
+      <div id="ok" class="ok" style="display:none;">Thanks — you’re all set. Tap Continue to pay.</div>
+      <div id="warn" class="warn">Please check all three boxes to continue.</div>
+
+      <div class="foot">
+        <button id="btnPay" class="btn primary" disabled>Continue to payment</button>
+        <a class="btn ghost" href="/index.html">Back</a>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
-const qs = new URLSearchParams(location.search);
-const man = (qs.get("man")||"").toLowerCase();
+  const qs = new URLSearchParams(location.search);
+  const man = qs.get('man') || '';
 
-function storageWorks(){
-  try{ localStorage.setItem("__bbprobe","1"); const ok=localStorage.getItem("__bbprobe")==="1"; localStorage.removeItem("__bbprobe"); return ok; }
-  catch(e){ return false; }
-}
+  const refund = document.getElementById('ackRefund');
+  const fantasy = document.getElementById('ackFantasy');
+  const rules = document.getElementById('ackRules');
+  const btn = document.getElementById('btnPay');
+  const ok = document.getElementById('ok');
+  const warn = document.getElementById('warn');
 
-// age gate (same keys used elsewhere)
-const KEY_MAIN = "bb.ageVerifiedUntil";
-const KEY_FLAG = "bb.ageVerified";
-const until = Number(localStorage.getItem(KEY_MAIN) || 0);
-const flag  = localStorage.getItem(KEY_FLAG) === "1";
-if (!((until && until > Date.now()) || flag)){
-  const next = location.pathname + location.search + location.hash;
-  location.replace(`/age.html?man=${encodeURIComponent(man)}&plan=month&next=${encodeURIComponent(next)}`);
-}
-if (until && until > Date.now()) document.getElementById("ageok").style.display = "block";
-if (!storageWorks()) document.getElementById("warn").style.display = "block";
+  function update(){
+    const ready = refund.checked && fantasy.checked && rules.checked;
+    btn.disabled = !ready;
+    warn.style.display = ready ? 'none' : 'block';
+    ok.style.display = ready ? 'inline-flex' : 'none';
+  }
+  refund.addEventListener('change', update);
+  fantasy.addEventListener('change', update);
+  rules.addEventListener('change', update);
 
-// demo success: grant 30-day pass, seed coins, clear preview locks, go to chat
-document.getElementById("complete").addEventListener("click", ()=>{
-  try{
-    const monthUntil = Date.now() + 30*24*60*60*1000;
-    localStorage.setItem("bb.pass:month", String(monthUntil));
-    localStorage.setItem("bb.pass:active", "month");
+  ['ackRefund','ackFantasy','ackRules'].forEach(id=>{
+    const el = document.getElementById(id);
+    const key = 'bb.'+id;
+    if(localStorage.getItem(key)==='true'){ el.checked = true; }
+    el.addEventListener('change', ()=> localStorage.setItem(key, el.checked?'true':'false'));
+  });
+  update();
 
-    // seed demo “coins” — 3 packs * 10 replies each
-    const cur = parseInt(localStorage.getItem("bb.hotCredits")||"0",10);
-    localStorage.setItem("bb.hotCredits", String(cur + 30));
-
-    // clear any preview/loop locks
-    const keys = [];
-    for (let i=0;i<localStorage.length;i++){ keys.push(localStorage.key(i)); }
-    keys.forEach(k=>{ if (/^bb\.(preview|trial|loops?)/i.test(k)) localStorage.removeItem(k); });
-  }catch(e){}
-
-  const target = man ? `/chat.html?man=${encodeURIComponent(man)}` : "/index.html";
-  location.replace(target);
-});
-
-// keep guy on “back” link
-document.getElementById("back").href = man ? `/pay.html?man=${encodeURIComponent(man)}` : "/pay.html";
+  btn.onclick = () => {
+    if (btn.disabled) return;
+    const next = new URL('/billing.html', location.origin);
+    next.searchParams.set('plan','month');
+    if (man) next.searchParams.set('man',man);
+    location.href = next.toString();
+  };
 </script>
 </body>
 </html>

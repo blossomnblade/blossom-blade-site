@@ -3,6 +3,7 @@
 // Returns:   { reply }
 
 export const config = { runtime: "edge" };
+import { gateText, normalizeSlang } from "./util/filters.js";
 
 /* ================= Persona packs & global rules ================== */
 

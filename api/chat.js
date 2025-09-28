@@ -265,8 +265,19 @@ export default async function handler(req) {
       consented = true,
       signals = {}
     } = body || {};
+// ⭐ Safety gate + normalization
+const gate = gateText(userText || "");
+if (!gate.ok) {
+  // Edge/Web Response style:
+  return new Response(JSON.stringify({ error: gate.reason }), {
+    status: 400,
+    headers: { "content-type": "application/json" }
+  });
+}
+const cleanUser = normalizeSlang(gate.redactedText || userText);
 
-    const text = String(userText || "").trim();
+   const text = String(cleanUser || "").trim();
+
 
     // Hard-ban content guard
     if (HARD_BANS.some(rx => rx.test(text))) {

@@ -1,25 +1,85 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Billing & Refunds — Blossom & Blade</title>
-  <style>
-    body{background:#0c0c10;color:#e8e8f2;font:16px/1.6 system-ui,Segoe UI,Roboto,Inter,sans-serif;margin:0}
-    .wrap{max-width:900px;margin:40px auto;padding:0 16px}
-    h1{font-size:28px;margin:0 0 10px}
-    h2{margin:28px 0 8px;font-size:20px}
-    a{color:#9ad; text-decoration:none} a:hover{color:#cfe}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Billing • Blossom &amp; Blade</title>
+<style>
+  :root{
+    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
+  a{color:#9fd3ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:720px;margin:48px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .ribbon{font-size:12px;color:#ffe;opacity:.8}
+  h1{margin:8px 0 6px;font-size:28px}
+  .muted{color:var(--muted)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .row{display:flex;gap:14px;align-items:center;margin:10px 0}
+  .pill{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Billing & Refunds</h1>
-    <p>Subscriptions (when enabled) will clearly show price, billing frequency, and how to cancel. You’ll receive an email receipt after purchase.</p>
-    <h2>Refunds</h2>
-    <p>Requests are reviewed case-by-case. Contact <a href="mailto:billing@example.com">billing@example.com</a>.</p>
-    <h2>Cancel</h2>
-    <p>Cancellation will stop future renewals; access continues until the end of the paid period.</p>
+    <header>
+      <strong>Blossom &amp; Blade</strong>
+      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    </header>
+
+    <h1>Billing</h1>
+    <p class="muted">You’re almost done. Review below and continue to payment.</p>
+
+    <div class="card" id="summary">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="cta">
+      <button id="btnPay" class="btn primary">Proceed to payment</button>
+      <a id="btnBack" class="btn ghost" href="/pay.html">Change plan</a>
+    </div>
+
+    <p class="note">This page is a temporary bridge for testing. When we connect your payment provider, this will redirect straight to their secure checkout.</p>
   </div>
+
+<script>
+  const qs = new URLSearchParams(location.search);
+  const plan = (qs.get('plan') || '').toLowerCase(); // 'day' or 'month'
+  const man  = qs.get('man') || '';
+
+  // Build a quick summary
+  const planName = plan === 'day' ? 'Day Pass (24h • 1 man)' :
+                   plan === 'month' ? 'Monthly (30 days • all 6)' : 'Unknown';
+  const summary = document.getElementById('summary');
+  summary.innerHTML = `
+    <div class="row"><span class="pill">Plan</span> <strong>${planName}</strong></div>
+    <div class="row"><span class="pill">Character</span> ${man ? `<strong>${man}</strong>` : '<span class="muted">Not specified</span>'}</div>
+    <div class="row"><span class="pill">Refund window</span> 24 hours from purchase</div>
+  `;
+
+  // TEMP: simulate provider checkout by sending to success pages already in your repo
+  document.getElementById('btnPay').onclick = () => {
+    const success = plan === 'day' ? '/success-day.html' :
+                    plan === 'month' ? '/success-month.html' : '/index.html';
+    const u = new URL(success, location.origin);
+    if (man) u.searchParams.set('man', man);
+    location.href = u.toString();
+  };
+
+  // Keep man param when going back to choose a plan
+  const back = new URL('/pay.html', location.origin);
+  if (man) back.searchParams.set('man', man);
+  document.getElementById('btnBack').href = back.toString();
+</script>
 </body>
 </html>

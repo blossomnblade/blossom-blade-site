@@ -1,199 +1,117 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Choose a Plan • Blossom &amp; Blade</title>
-<style>
-  :root{
-    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
-       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
-  a{color:#bdbfff;text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:980px;margin:48px auto;padding:0 16px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-  .ribbon{font-size:12px;color:#ffe;opacity:.8}
-  h1{margin:8px 0 6px;font-size:28px}
-  .muted{color:var(--muted)}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
-        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-  .plan{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--ring);border-radius:14px;background:#0f1221}
-  .plan input{margin-top:4px;min-width:18px;min-height:18px}
-  .price{font-weight:800;margin:4px 0 2px}
-  .note{font-size:13px;color:var(--muted)}
-  .row{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
-  .row input{width:20px;height:20px;margin-top:2px}
-  select{padding:8px 10px;border-radius:10px;background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
-  .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-  button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
-  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
-  .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
-  .ok{display:none;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Subscribe • Blossom & Blade</title>
+  <link rel="stylesheet" href="/styles/home.css?v=bb7bg">
+  <style>
+    :root{--ring:#2a3244;--ink:#e9ecf4}
+    body{color:var(--ink)}
+    .wrap{max-width:900px;margin:36px auto;padding:0 16px}
+    .tabs{display:flex;gap:10px;margin:8px 0 16px}
+    .tab{border:1px solid var(--ring);padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:800;background:#0f1221}
+    .tab.active{outline:2px solid #6ac2df}
+    .panel{border:1px solid var(--ring);border-radius:16px;padding:20px;margin:8px 0;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.04))}
+    .row{display:flex;gap:10px;align-items:center;margin:10px 0}
+    select,button{padding:10px 12px;border-radius:10px;border:1px solid var(--ring);background:#0f1221;color:var(--ink)}
+    button.primary{border-radius:999px;font-weight:900}
+    .muted{opacity:.8}
+  </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <strong>Blossom &amp; Blade</strong>
-      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h1>Subscribe</h1>
+      <a class="btn-sub" href="/index.html" style="text-decoration:none;border:1px solid var(--ring);padding:8px 12px;border-radius:999px">Back</a>
     </header>
 
-    <h1>Choose a plan</h1>
-    <p class="muted">Monthly can proceed immediately. Day Pass requires picking a man (prevents refund mix-ups).</p>
-
-    <!-- Plan selector -->
-    <div class="plans" role="radiogroup" aria-label="Subscription plan">
-      <label class="plan">
-        <input type="radio" name="plan" value="monthly" id="planMonthly" checked>
-        <div>
-          <div class="price">Monthly — 30 days • all 6 men</div>
-          <div class="note">Best value. Cancel anytime.</div>
-          <!-- NEW: recurring toggle -->
-          <div class="row" style="margin-top:8px">
-            <input id="chkRecurring" type="checkbox" checked>
-            <label for="chkRecurring"><strong>Auto-renew every 30 days</strong>
-              <div class="note">Uncheck to buy a one-month pass (no auto-billing).</div>
-            </label>
-          </div>
-        </div>
-      </label>
-
-      <label class="plan">
-        <input type="radio" name="plan" value="day" id="planDay">
-        <div>
-          <div class="price">Day Pass — 24 hours • 1 man</div>
-          <div class="note">Pick your man to continue.</div>
-        </div>
-      </label>
+    <div class="tabs" role="tablist" aria-label="Choose plan">
+      <button id="tabMonthly" class="tab" aria-selected="true">Monthly (all 6)</button>
+      <button id="tabDay" class="tab" aria-selected="false">Day Pass (one, 24h)</button>
     </div>
 
-    <!-- Day Pass: pick a man (only visible when Day Pass selected) -->
-    <div id="dayPick" class="card" style="display:none; margin-top:14px">
+    <!-- Monthly -->
+    <section id="panelMonthly" class="panel" role="tabpanel" aria-labelledby="tabMonthly">
+      <p><strong>Monthly access</strong> to all 6 men. Cancel anytime in your email receipt.</p>
       <div class="row">
-        <label for="dayMan"><strong>Pick your man:</strong></label>
-        <select id="dayMan" required>
-          <option value="" selected>Choose one…</option>
+        <label class="row" style="gap:8px;cursor:pointer">
+          <input type="checkbox" id="chkRecurring">
+          <span>Make it <strong>recurring</strong> (auto-renew monthly)</span>
+        </label>
+      </div>
+      <div class="row muted" style="margin-top:4px">
+        Memory is kept across months while your subscription is active.
+      </div>
+      <div class="row">
+        <button id="btnGoMonthly" class="primary">Continue — Monthly</button>
+      </div>
+    </section>
+
+    <!-- Day -->
+    <section id="panelDay" class="panel" role="tabpanel" aria-labelledby="tabDay" hidden>
+      <p><strong>Day Pass</strong> — choose one man for 24 hours. No auto-renew.</p>
+      <div class="row">
+        <label for="selMan"><strong>Pick a man:</strong></label>
+        <select id="selMan">
+          <option value="">— Select —</option>
           <option value="blade">Blade</option>
-          <option value="viper">Viper</option>
-          <option value="dylan">Dylan</option>
-          <option value="alexander">Alexander</option>
-          <option value="grayson">Grayson</option>
-          <option value="silas">Silas</option>
+          <option value="rockstar">Rockstar</option>
+          <option value="cowboy">Cowboy</option>
+          <option value="gentleman">Gentleman</option>
+          <option value="garage">Garage</option>
+          <option value="woods">Woods</option>
         </select>
       </div>
-      <div id="pickWarn" class="warn">Pick a man to continue with Day Pass.</div>
-    </div>
-
-    <!-- Consents (required before continuing) -->
-    <div class="card" style="margin-top:14px">
       <div class="row">
-        <input id="chkFantasy" type="checkbox" aria-describedby="fantasyHelp">
-        <label for="chkFantasy"><strong>Fantasy-only text chat.</strong>
-          <div id="fantasyHelp" class="note">
-            No real-world harm, threats, or coordination. Consensual fantasy themes in text are allowed (including consensual knife roleplay).
-            If consent is unclear, we stop. See <a href="/policies.html" target="_blank" rel="noopener">Policies</a>.
-          </div>
-        </label>
+        <button id="btnGoDay" class="primary" disabled>Continue — Day Pass</button>
       </div>
-
-      <div class="row">
-        <input id="chkRefund" type="checkbox" aria-describedby="refundHelp">
-        <label for="chkRefund"><strong>24-hour refund policy.</strong>
-          <div id="refundHelp" class="note">
-            Refund requests are accepted within <strong>24 hours</strong> of purchase. After 24 hours, payments are non-refundable.
-          </div>
-        </label>
-      </div>
-
-      <div id="ok" class="ok">Thanks — you’re set. Continue to payment.</div>
-      <div id="warn" class="warn">Please check both boxes to continue.</div>
-
-      <div class="btns">
-        <button id="checkoutBtn" class="primary" disabled>Proceed to payment</button>
-        <a class="ghost" href="/index.html">Back</a>
-        <a class="ghost" id="previewLink" href="/age.html?next=chat">Preview (20-minute)</a>
-      </div>
-    </div>
+      <div class="muted" style="margin-top:-6px">We require a selection to prevent refund mix-ups.</div>
+    </section>
   </div>
 
 <script>
-(function(){
+  // tab wiring
+  const tabMonthly = document.getElementById('tabMonthly');
+  const tabDay     = document.getElementById('tabDay');
+  const panelMonthly = document.getElementById('panelMonthly');
+  const panelDay     = document.getElementById('panelDay');
+
+  function setTab(which){
+    const isMonthly = which === 'monthly';
+    tabMonthly.classList.toggle('active', isMonthly);
+    tabDay.classList.toggle('active', !isMonthly);
+    tabMonthly.setAttribute('aria-selected', isMonthly ? 'true':'false');
+    tabDay.setAttribute('aria-selected', !isMonthly ? 'true':'false');
+    panelMonthly.hidden = !isMonthly;
+    panelDay.hidden = isMonthly;
+  }
+
+  tabMonthly.onclick = () => setTab('monthly');
+  tabDay.onclick = () => setTab('day');
+
+  // start tab from URL (plan=monthly/day)
   const qs = new URLSearchParams(location.search);
-  const planParam = (qs.get('plan') || 'monthly').toLowerCase();
-  const lastMan   = qs.get('man') || localStorage.getItem('bb.lastMan') || '';
+  setTab(qs.get('plan') === 'day' ? 'day' : 'monthly');
 
-  const planMonthly = document.getElementById('planMonthly');
-  const planDay     = document.getElementById('planDay');
-  const chkRecurring= document.getElementById('chkRecurring');
+  // Day pass controls
+  const selMan = document.getElementById('selMan');
+  const btnGoDay = document.getElementById('btnGoDay');
+  selMan.onchange = () => { btnGoDay.disabled = !selMan.value; };
+  btnGoDay.onclick = () => {
+    if (!selMan.value) return;
+    // Go to your existing checkout page
+    location.href = `/checkout-day.html?man=${encodeURIComponent(selMan.value)}`;
+  };
 
-  const dayPick     = document.getElementById('dayPick');
-  const dayMan      = document.getElementById('dayMan');
-  const pickWarn    = document.getElementById('pickWarn');
-  const chkFantasy  = document.getElementById('chkFantasy');
-  const chkRefund   = document.getElementById('chkRefund');
-  const checkoutBtn = document.getElementById('checkoutBtn');
-  const ok          = document.getElementById('ok');
-  const warn        = document.getElementById('warn');
-  const previewLink = document.getElementById('previewLink');
-
-  if (planParam === 'day') planDay.checked = true;
-  if (lastMan) dayMan.value = lastMan;
-
-  function sync(){
-    const isDay = planDay.checked;
-    dayPick.style.display = isDay ? 'block' : 'none';
-
-    const consents = chkFantasy.checked && chkRefund.checked;
-    const dayOk = !isDay || !!dayMan.value;
-
-    checkoutBtn.disabled = !(consents && dayOk);
-    warn.style.display = consents ? 'none' : 'block';
-    ok.style.display   = (consents && dayOk) ? 'inline-flex' : 'none';
-    pickWarn.style.display = (isDay && !dayMan.value) ? 'block' : 'none';
-  }
-
-  [planMonthly, planDay, chkFantasy, chkRefund, dayMan, chkRecurring].forEach(el=>{
-    if (el) el.addEventListener('change', sync);
-  });
-  sync();
-
-  checkoutBtn.addEventListener('click', (e)=>{
-    e.preventDefault();
-    if (checkoutBtn.disabled) return;
-
-    const isDay = planDay.checked;
-    const recur = (!isDay && chkRecurring.checked) ? 'yes' : 'no';
-
-    const u = new URL('/billing.html', location.origin);
-    u.searchParams.set('plan', isDay ? 'day' : 'monthly');
-    u.searchParams.set('recur', recur);
-
-    if (isDay) {
-      if (!dayMan.value){ sync(); return; }
-      u.searchParams.set('man', dayMan.value);
-      localStorage.setItem('bb.lastMan', dayMan.value);
-    } else if (lastMan) {
-      u.searchParams.set('man', lastMan);
-    }
-
-    localStorage.setItem('bb.acceptRefund24h','true');
-    localStorage.setItem('bb.consentFantasy','true');
-
-    location.href = u.toString();
-  });
-
-  if (lastMan){
-    const p = new URL(previewLink.getAttribute('href'), location.origin);
-    p.searchParams.set('man', lastMan);
-    previewLink.setAttribute('href', p.toString());
-  }
-})();
+  // Monthly controls
+  const chkRecurring = document.getElementById('chkRecurring');
+  const btnGoMonthly = document.getElementById('btnGoMonthly');
+  btnGoMonthly.onclick = () => {
+    const recurring = chkRecurring.checked ? 'true' : 'false';
+    // Go to your existing checkout page
+    location.href = `/checkout-month.html?recurring=${recurring}`;
+  };
 </script>
 </body>
 </html>

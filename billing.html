@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Billing • Blossom &amp; Blade</title>
 <style>
-  :root{
-    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
-  }
+  :root{ --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8; --accent:#b86adf; --ok:#2fb872; --bad:#e47777; }
   *{box-sizing:border-box}
   body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
        color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
@@ -40,43 +37,45 @@
     <h1>Billing</h1>
     <p class="muted">You’re almost done. Review below and continue to payment.</p>
 
-    <div class="card" id="summary">
-      <!-- filled by JS -->
-    </div>
+    <div class="card" id="summary"></div>
 
     <div class="cta">
       <button id="btnPay" class="btn primary">Proceed to payment</button>
       <a id="btnBack" class="btn ghost" href="/pay.html">Change plan</a>
     </div>
 
-    <p class="note">This page is a temporary bridge for testing. When we connect your payment provider, this will redirect straight to their secure checkout.</p>
+    <p class="note">TEMP bridge: routes to success pages now. When the processor is connected, this will redirect to their secure checkout.</p>
   </div>
 
 <script>
   const qs = new URLSearchParams(location.search);
-  const plan = (qs.get('plan') || '').toLowerCase(); // 'day' or 'month'
+  const plan = (qs.get('plan') || '').toLowerCase(); // 'day' or 'monthly'
   const man  = qs.get('man') || '';
+  const recur= (qs.get('recur') || 'no').toLowerCase(); // 'yes' or 'no'
 
-  // Build a quick summary
   const planName = plan === 'day' ? 'Day Pass (24h • 1 man)' :
-                   plan === 'month' ? 'Monthly (30 days • all 6)' : 'Unknown';
-  const summary = document.getElementById('summary');
-  summary.innerHTML = `
+                   plan === 'monthly' ? 'Monthly (30 days • all 6)' : 'Unknown';
+  const billing  = plan === 'monthly' ? (recur === 'yes' ? 'Recurring' : 'One-time (30 days)') : 'One-time';
+
+  document.getElementById('summary').innerHTML = `
     <div class="row"><span class="pill">Plan</span> <strong>${planName}</strong></div>
+    <div class="row"><span class="pill">Billing</span> <strong>${billing}</strong></div>
     <div class="row"><span class="pill">Character</span> ${man ? `<strong>${man}</strong>` : '<span class="muted">Not specified</span>'}</div>
     <div class="row"><span class="pill">Refund window</span> 24 hours from purchase</div>
   `;
 
-  // TEMP: simulate provider checkout by sending to success pages already in your repo
   document.getElementById('btnPay').onclick = () => {
-    const success = plan === 'day' ? '/success-day.html' :
-                    plan === 'month' ? '/success-month.html' : '/index.html';
+    // TEMP success pages — carry plan/man/recur so we can inspect in the URL
+    let success = '/index.html';
+    if (plan === 'day')    success = '/success-day.html';
+    if (plan === 'monthly') success = '/success-month.html';
     const u = new URL(success, location.origin);
     if (man) u.searchParams.set('man', man);
+    u.searchParams.set('plan', plan);
+    u.searchParams.set('recur', recur);
     location.href = u.toString();
   };
 
-  // Keep man param when going back to choose a plan
   const back = new URL('/pay.html', location.origin);
   if (man) back.searchParams.set('man', man);
   document.getElementById('btnBack').href = back.toString();

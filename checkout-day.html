@@ -1,58 +1,112 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Day Pass — Checkout (Demo)</title>
-  <style>
-    :root{--bg:#0f0f14;--panel:#1c1b22;--ink:#e9e7f2;--muted:#b9b5cc;--accent:#b84fb8;}
-    body{margin:0;background:var(--bg) url('/images/gothic-bg.jpg') center/cover fixed no-repeat;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-    .wrap{max-width:920px;margin:60px auto;padding:0 16px}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 40px rgba(0,0,0,.45);backdrop-filter:blur(6px);border-radius:18px;padding:24px}
-    h1{margin:0 0 8px 0;font-size:26px}
-    .ok{display:inline-block;background:#164a2e;color:#bdf7cf;border:1px solid #2a8250;padding:6px 10px;border-radius:10px;font-size:14px;margin:12px 0}
-    ul{line-height:1.7;color:var(--muted)}
-    .row{display:flex;gap:16px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:999px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
-    .btn.secondary{background:#343245;color:#e3def7}
-    .note{color:var(--muted);font-size:13px;margin-top:12px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Checkout — Day Pass • Blossom &amp; Blade</title>
+<style>
+  :root{
+    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
+  a{color:#9fd3ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:880px;margin:48px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .ribbon{font-size:12px;color:#ffe;opacity:.8}
+  h1{margin:8px 0 6px;font-size:28px}
+  .muted{color:var(--muted)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .plan{display:flex;align-items:center;gap:14px;margin:6px 0 16px 0}
+  .pill{display:inline-block;background:#0f1221;border:1px solid var(--ring);border-radius:999px;padding:6px 10px;font-weight:700}
+  .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .warn{display:none;background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+  .checks{display:grid;gap:10px;margin:14px 0}
+  .checks label{display:flex;gap:10px;align-items:flex-start}
+  .checks input{margin-top:3px;min-width:18px;min-height:18px}
+  .foot{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
+</style>
 </head>
 <body>
   <div class="wrap">
+    <header>
+      <strong>Blossom &amp; Blade</strong>
+      <div class="ribbon">$1 of every subscription goes to a Domestic Violence charity.</div>
+    </header>
+
+    <h1>Checkout — Day Pass</h1>
+    <p class="muted">24 hours of access to one man. You can always upgrade later.</p>
+
     <div class="card">
-      <h1>Day Pass — $5.99</h1>
-      <div id="ageStatus" class="ok">Age verified — good to go.</div>
-      <p class="note">This page is a demo so you can finish the flow. “Complete purchase (demo)” will pretend success and drop you in the correct room.</p>
-      <ul>
-        <li>Unlocks one guy of your choice for the day</li>
-        <li>PG-13 by default; coins can unlock <em>advanced</em> chat (words only)</li>
-      </ul>
-      <div class="row">
-        <button id="complete" class="btn">Complete purchase (demo)</button>
-        <a href="/pay.html" class="btn secondary">Back to plans</a>
+      <div class="plan">
+        <span class="pill">Plan</span>
+        <div><strong>Day Pass</strong> • 24 hours • <span id="price" class="muted">price shown by provider</span></div>
       </div>
-      <div class="note" id="who"></div>
+
+      <div class="checks">
+        <label><input id="ackRefund" type="checkbox"> <span><strong>Refund window:</strong> I understand refunds are available within <strong>24 hours</strong> of purchase only.</span></label>
+        <label><input id="ackFantasy" type="checkbox"> <span><strong>Fantasy-only:</strong> I understand all chat is consensual roleplay and <em>fiction</em> only. Themes may include consensual edge-play (e.g., knife play) but <strong>no real-world harm</strong> is involved or encouraged.</span></label>
+        <label><input id="ackRules" type="checkbox"> <span>I agree to the <a href="/standards.html" target="_blank" rel="noopener">Community Standards</a> and <a href="/terms.html" target="_blank" rel="noopener">Terms</a>.</span></label>
+      </div>
+
+      <div id="ok" class="ok" style="display:none;">Thanks — you’re all set. Tap Continue to pay.</div>
+      <div id="warn" class="warn">Please check all three boxes to continue.</div>
+
+      <div class="foot">
+        <button id="btnPay" class="btn primary" disabled>Continue to payment</button>
+        <a class="btn ghost" href="/index.html">Back</a>
+      </div>
     </div>
   </div>
 
-  <script>
-    // Read chosen man from URL or fallback to the last one the user picked
-    const qs = new URLSearchParams(location.search);
-    let man = (qs.get('man') || localStorage.getItem('lastMan') || 'blade').toLowerCase();
-    // Keep it around for later pages too
-    localStorage.setItem('lastMan', man);
+<script>
+  // read query params so we carry the character selection through (if present)
+  const qs = new URLSearchParams(location.search);
+  const man = qs.get('man') || '';
 
-    // tiny UI hint
-    const names = {blade:'Blade Kincaid', grayson:'Grayson Kincaid', dylan:'Dylan Vale', silas:'Silas Lennox', alexander:'Alexander Jackson', jesse:'Jesse Granger'};
-    document.getElementById('who').textContent = `Purchasing access for: ${names[man] || 'Blade Kincaid'}.`;
+  const refund = document.getElementById('ackRefund');
+  const fantasy = document.getElementById('ackFantasy');
+  const rules = document.getElementById('ackRules');
+  const btn = document.getElementById('btnPay');
+  const ok = document.getElementById('ok');
+  const warn = document.getElementById('warn');
 
-    // DEMO purchase: mark day pass, return to chat WITH the correct ?man=
-    document.getElementById('complete').addEventListener('click', () => {
-      localStorage.setItem('sub', 'day');            // simple flag the chat can read
-      const url = `/chat.html?man=${encodeURIComponent(man)}&sub=day`;
-      location.href = url;
-    });
-  </script>
+  function update(){
+    const ready = refund.checked && fantasy.checked && rules.checked;
+    btn.disabled = !ready;
+    warn.style.display = ready ? 'none' : 'block';
+    ok.style.display = ready ? 'inline-flex' : 'none';
+  }
+  refund.addEventListener('change', update);
+  fantasy.addEventListener('change', update);
+  rules.addEventListener('change', update);
+
+  // Remember acknowledgements on this device (convenience only)
+  ['ackRefund','ackFantasy','ackRules'].forEach(id=>{
+    const el = document.getElementById(id);
+    const key = 'bb.'+id;
+    if(localStorage.getItem(key)==='true'){ el.checked = true; }
+    el.addEventListener('change', ()=> localStorage.setItem(key, el.checked?'true':'false'));
+  });
+  update();
+
+  // Continue to billing (provider page or our billing bridge)
+  btn.onclick = () => {
+    if (btn.disabled) return;
+    // send along which plan and (optionally) which man
+    const next = new URL('/billing.html', location.origin);
+    next.searchParams.set('plan','day');
+    if (man) next.searchParams.set('man',man);
+    location.href = next.toString();
+  };
+</script>
 </body>
 </html>

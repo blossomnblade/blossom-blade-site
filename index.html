@@ -5,106 +5,124 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Blossom & Blade — Choose</title>
   <link rel="stylesheet" href="/styles/home.css?v=bb7bg">
+  <style>
+    /* minimal safeguards in case home.css is mid-edit */
+    .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+    .sitehead{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .infobar{background:rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+    .infobar .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;padding:20px 0}
+    .card{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0e0f14}
+    .card a{display:block;color:#eef0f7;text-decoration:none}
+    .card .bg{aspect-ratio:4/5;background-size:cover;background-position:center;filter:contrast(1.05) saturate(1.05)}
+    .card h3{margin:10px 12px 12px;font-size:18px}
+    .card figcaption{position:absolute;left:-9999px;height:0;overflow:hidden} /* hide captions if any */
+    #subscribe-now{
+      margin-left:12px;display:inline-block;padding:10px 16px;border-radius:999px;font-weight:800;
+      background:linear-gradient(90deg,#b86adf,#6ac2df);color:#12081a;text-decoration:none
+    }
+    footer.infobar .wrap{justify-content:space-between}
+  </style>
 </head>
 <body>
-  <header class="sitehead">
+  <header class="sitehead wrap">
     <h1>Blossom &amp; Blade</h1>
+    <div style="font-size:12px;opacity:.85">$1 of every subscription goes to a Domestic Violence charity.</div>
   </header>
 
   <!-- Top info bar -->
   <div class="infobar top">
-    <div class="wrap"><a id="subscribe-now" href="/age.html?next=pay"
-   style="margin-left:12px;display:inline-block;padding:10px 16px;border-radius:999px;
-          font-weight:800;background:linear-gradient(90deg,#b86adf,#6ac2df);
-          color:#12081a;text-decoration:none;">
-  Subscribe
-</a>
-
-      <strong>Free 20-minute trial:</strong> test any man. When you’re ready — <em>Day Pass</em> (pick one, 24h) or <em>Monthly</em> (all 6).
+    <div class="wrap">
+      <div><strong>Free 20-minute trial:</strong> test any man. When you’re ready — <em>Day Pass</em> (pick one, 24h) or <em>Monthly</em> (all 6).</div>
+      <!-- New: direct subscribe button (goes through age gate to paywall; defaults to Monthly) -->
+      <a id="subscribe-now" href="/age.html?next=pay&plan=monthly">Subscribe</a>
     </div>
   </div>
 
-  <main class="wrap">
-    <section class="grid" aria-label="Choose a man">
-      <!-- Blade -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=blade&sub=night">
-          <figure><img src="/images/characters/blade/blade-card-on.webp" alt="Blade"></figure>
-          <div class="meta"><h3>Blade</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+  <!-- Face cards (links route via age check, then into chat) -->
+  <main class="wrap" style="padding:14px 0 28px">
+    <section class="grid" aria-label="Choose your man">
+      <figure class="card">
+        <a class="pick" data-man="blade" href="/age.html?next=chat&man=blade">
+          <div class="bg" style="background-image:url('/images/blade-woods.jpg')"></div>
+          <h3>Blade</h3>
+          <figcaption>Blade portrait</figcaption>
         </a>
-      </article>
+      </figure>
 
-      <!-- Dylan -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=dylan&sub=night">
-          <figure><img src="/images/characters/dylan/dylan-card-on.webp" alt="Dylan"></figure>
-          <div class="meta"><h3>Dylan</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+      <figure class="card">
+        <a class="pick" data-man="viper" href="/age.html?next=chat&man=viper">
+          <div class="bg" style="background-image:url('/images/viper-bg.jpg')"></div>
+          <h3>Viper</h3>
+          <figcaption>Viper portrait</figcaption>
         </a>
-      </article>
+      </figure>
 
-      <!-- Viper -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=viper&sub=night">
-          <figure><img src="/images/characters/viper/viper-card-on.webp" alt="Viper"></figure>
-          <div class="meta"><h3>Viper</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+      <figure class="card">
+        <a class="pick" data-man="dylan" href="/age.html?next=chat&man=dylan">
+          <div class="bg" style="background-image:url('/images/dylan-garage.jpg')"></div>
+          <h3>Dylan</h3>
+          <figcaption>Dylan portrait</figcaption>
         </a>
-      </article>
+      </figure>
 
-      <!-- Alexander -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=alexander&sub=night">
-          <figure><img src="/images/characters/alexander/alexander-card-on.webp" alt="Alexander"></figure>
-          <div class="meta"><h3>Alexander</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+      <figure class="card">
+        <a class="pick" data-man="alexander" href="/age.html?next=chat&man=alexander">
+          <div class="bg" style="background-image:url('/images/gothic-bg.jpg')"></div>
+          <h3>Alexander</h3>
+          <figcaption>Alexander portrait</figcaption>
         </a>
-      </article>
+      </figure>
 
-      <!-- Silas -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=silas&sub=night">
-          <figure><img src="/images/characters/silas/silas-card-on.webp" alt="Silas"></figure>
-          <div class="meta"><h3>Silas</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+      <figure class="card">
+        <a class="pick" data-man="grayson" href="/age.html?next=chat&man=grayson">
+          <div class="bg" style="background-image:url('/images/grayson-bg.jpg')"></div>
+          <h3>Grayson</h3>
+          <figcaption>Grayson portrait</figcaption>
         </a>
-      </article>
+      </figure>
 
-      <!-- Grayson -->
-      <article class="card shadow-glow">
-        <a class="block" href="/chat.html?man=grayson&sub=night">
-          <figure><img src="/images/characters/grayson/grayson-card-on.webp" alt="Grayson"></figure>
-          <div class="meta"><h3>Grayson</h3></div>
-          <div class="cta">
-            <span class="btn">Chat now</span>
-            <span class="badge">Preview first • no sign-up</span>
-          </div>
+      <figure class="card">
+        <a class="pick" data-man="silas" href="/age.html?next=chat&man=silas">
+          <div class="bg" style="background-image:url('/images/bg_silas_stage.jpg')"></div>
+          <h3>Silas</h3>
+          <figcaption>Silas portrait</figcaption>
         </a>
-      </article>
+      </figure>
     </section>
   </main>
 
   <!-- Bottom info bar -->
-  <div class="infobar bottom">
+  <footer class="infobar">
     <div class="wrap">
-      $1 from every monthly subscription goes to domestic-violence support. Thank you for backing safe, consensual fantasy.
+      <div>Adults-only fantasy roleplay. Read our <a href="/policies.html">Policies</a>.</div>
+      <div><a href="/pay.html">Go to paywall</a></div>
     </div>
-  </div>
+  </footer>
+
+  <!-- Tiny helper: remember last picked man; carry it into Subscribe link -->
+  <script>
+    (function(){
+      // Save last selection when clicking a card
+      document.querySelectorAll('a.pick').forEach(a=>{
+        a.addEventListener('click', ()=>{
+          const man = a.getAttribute('data-man') || '';
+          if (man) localStorage.setItem('bb.lastMan', man);
+        });
+      });
+
+      // Inject ?man=… into the Subscribe link if we know it
+      const sub = document.getElementById('subscribe-now');
+      if (sub){
+        const qs = new URLSearchParams(location.search);
+        const man = qs.get('man') || localStorage.getItem('bb.lastMan') || '';
+        if (man){
+          const u = new URL(sub.getAttribute('href'), location.origin);
+          u.searchParams.set('man', man);
+          sub.setAttribute('href', u.toString());
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

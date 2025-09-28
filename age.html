@@ -1,33 +1,40 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>18+ Verification • Blossom &amp; Blade</title>
-<style>
-  :root{
-    --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
-    --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
-       color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial}
-  .wrap{max-width:880px;margin:48px auto;padding:0 16px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-  .ribbon{font-size:12px;color:#ffe;opacity:.8}
-  h1{margin:8px 0 6px;font-size:28px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
-        border:1px solid var(--ring); border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .row{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
-  .row input{width:20px;height:20px;margin-top:2px}
-  .muted{color:var(--muted)}
-  .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-  button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
-  .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
-  .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
-  .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
-  .warn{display:none; background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>18+ Verification • Blossom &amp; Blade</title>
+  <style>
+    :root{
+      --bg:#0e0f14; --panel:#171923; --ring:#262b3a; --ink:#eef0f7; --muted:#a7a9b8;
+      --accent:#b86adf; --ok:#2fb872; --bad:#e47777;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:radial-gradient(1200px 600px at 50% -240px, rgba(255,255,255,.05), transparent 60%), var(--bg);
+      color:var(--ink);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial
+    }
+    .wrap{max-width:880px;margin:48px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .ribbon{font-size:12px;color:#ffe;opacity:.8}
+    h1{margin:8px 0 6px;font-size:28px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), #131624;
+      border:1px solid var(--ring); border-radius:16px; padding:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35)
+    }
+    .row{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+    .row input{width:20px;height:20px;margin-top:2px}
+    .muted{color:var(--muted)}
+    .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+    button{border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer}
+    .primary{background:linear-gradient(90deg, var(--accent), #6ac2df); color:#12081a}
+    .ghost{background:#0f1221;color:#dfe3f2;border:1px solid var(--ring)}
+    .ok{display:inline-flex;gap:8px;align-items:center;background:#153222;border:1px solid #295b3a;color:#c7f6d9;padding:8px 12px;border-radius:10px;margin:12px 0}
+    .warn{display:none; background:#3a1616;border:1px solid #6d3232;color:#ffd7d7;padding:8px 12px;border-radius:10px;margin:12px 0}
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -57,68 +64,66 @@
       <div id="ok" class="ok" style="display:none;">Verified — you’re good to continue.</div>
       <div id="warn" class="warn">Please check both boxes to continue.</div>
 
-     <div class="btns">
-  <button id="btnContinue" class="primary" disabled>Continue</button>
-  <button id="btnReceipt" class="ghost">View saved receipt</button>
-  <button id="btnReset" class="ghost">Reset &amp; verify again</button>
-  <button id="btnNo" class="ghost" aria-label="I am under 18">I am under 18</button>
-</div>
-
+      <div class="btns">
+        <button id="btnContinue" class="primary" disabled>Continue</button>
+        <button id="btnReceipt" class="ghost">View saved receipt</button>
+        <button id="btnReset" class="ghost">Reset &amp; verify again</button>
+        <button id="btnNo" class="ghost" aria-label="I am under 18">I am under 18</button>
+      </div>
     </div>
   </div>
 
-<script>
-  const qs = new URLSearchParams(location.search);
-  const man  = qs.get('man')  || 'blade';
-  const next = qs.get('next') || 'chat'; // 'chat' or 'pay'
+  <script>
+    const qs = new URLSearchParams(location.search);
+    const man  = qs.get('man')  || 'blade';
+    const next = qs.get('next') || 'chat'; // 'chat' or 'pay'
 
-  const chk18 = document.getElementById('chk18');
-  const chkRules = document.getElementById('chkRules');
-  const btn = document.getElementById('btnContinue');
-  const ok = document.getElementById('ok');
-  const warn = document.getElementById('warn');
-const btnNo = document.getElementById('btnNo');
-btnNo.onclick = () => {
-  alert("Sorry — this site is only for adults 18+. If you're under 18, please leave now.");
-  location.href = 'https://www.google.com';
-};
+    const chk18 = document.getElementById('chk18');
+    const chkRules = document.getElementById('chkRules');
+    const btn = document.getElementById('btnContinue');
+    const btnNo = document.getElementById('btnNo');
+    const ok = document.getElementById('ok');
+    const warn = document.getElementById('warn');
 
-  function update(){
-    const ready = chk18.checked && chkRules.checked;
-    btn.disabled = !ready;
-    warn.style.display = ready ? 'none' : 'block';
-  }
-  chk18.addEventListener('change', update);
-  chkRules.addEventListener('change', update);
+    function update(){
+      const ready = chk18.checked && chkRules.checked;
+      btn.disabled = !ready;
+      warn.style.display = ready ? 'none' : 'block';
+    }
+    chk18.addEventListener('change', update);
+    chkRules.addEventListener('change', update);
 
-  // If already verified on this device, show success but still require button click
-  if (localStorage.getItem('bb.ageVerified') === 'true') ok.style.display = 'inline-flex';
+    // If already verified on this device, show success but still require button click
+    if (localStorage.getItem('bb.ageVerified') === 'true') ok.style.display = 'inline-flex';
 
-  document.getElementById('btnReceipt').onclick = () => {
-    const r = localStorage.getItem('bb.ageReceipt');
-    alert(r ? `Saved:\n${r}` : 'No receipt saved on this device.');
-  };
-  document.getElementById('btnReset').onclick = () => {
-    localStorage.removeItem('bb.ageVerified');
-    localStorage.removeItem('bb.ageReceipt');
-    ok.style.display = 'none';
-    chk18.checked = false; chkRules.checked = false; update();
-  };
+    document.getElementById('btnReceipt').onclick = () => {
+      const r = localStorage.getItem('bb.ageReceipt');
+      alert(r ? `Saved:\n${r}` : 'No receipt saved on this device.');
+    };
+    document.getElementById('btnReset').onclick = () => {
+      localStorage.removeItem('bb.ageVerified');
+      localStorage.removeItem('bb.ageReceipt');
+      ok.style.display = 'none';
+      chk18.checked = false; chkRules.checked = false; update();
+    };
 
-  document.getElementById('btnNo').onclick = () => {
-  alert('Sorry — this site is only for adults 18+. If you\'re under 18, please leave now.');
-  location.href = 'https://www.google.com';
-};
-btn.onclick = () => {
-    if (!(chk18.checked && chkRules.checked)) { update(); return; }
-    localStorage.setItem('bb.ageVerified','true');
-    localStorage.setItem('bb.ageReceipt', new Date().toString());
-    ok.style.display = 'inline-flex';
+    // Under-18 path -> separate page
+    btnNo.onclick = () => {
+      location.href = 'age-no.html';
+    };
 
-    const dest = next === 'pay' ? `pay.html?man=${encodeURIComponent(man)}` :
-                                  `chat.html?man=${encodeURIComponent(man)}`;
-    location.href = dest;
-  };
-</script>
+    // Continue to chat or pay
+    btn.onclick = () => {
+      if (!(chk18.checked && chkRules.checked)) { update(); return; }
+      localStorage.setItem('bb.ageVerified','true');
+      localStorage.setItem('bb.ageReceipt', new Date().toString());
+      ok.style.display = 'inline-flex';
+
+      const dest = next === 'pay'
+        ? `pay.html?man=${encodeURIComponent(man)}`
+        : `chat.html?man=${encodeURIComponent(man)}`;
+      location.href = dest;
+    };
+  </script>
 </body>
 </html>

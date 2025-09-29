@@ -256,16 +256,13 @@ export default async function handler(req) {
 
   try {
     const body = await req.json();
-    const {
-      man = DEFAULT_MAN,
-      userText = "",
-      history = [],
-      mode = "soft",
-      memory = {},
-      pov = "",
-      consented = true,
-      signals = {}
-    } = body || {};
+  const {
+  man = DEFAULT_MAN, history = [], mode = "soft",
+  memory = {}, consented = true, signals = {}
+} = body || {};
+
+let pov = (body && typeof body.pov === "string") ? body.pov : "";
+  
 // ⭐ Safety gate + normalization
 const gate = gateText(userText || "");
 if (!gate.ok) {

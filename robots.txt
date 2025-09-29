@@ -1,0 +1,9 @@
+User-agent: *
+# keep bots from indexing the chat and API endpoints
+Disallow: /chat.html
+Disallow: /adult-chat.html
+Disallow: /api/
+# allow everything else
+Allow: /
+# optional: cut down on crawl load
+Crawl-delay: 10

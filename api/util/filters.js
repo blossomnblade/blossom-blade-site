@@ -4,7 +4,11 @@
 let LEX = {};
 try {
   // Be tolerant to different export styles from /api/_data/lexicon.js
-  const mod = await import("../_data/lexicon.js");
+  // /api/util/filters.js  (very top)
+import { LEX } from "../_data/lexicon.js";
+// /api/util/filters.js  (very top)
+import { LEX } from "../_data/lexicon.js";
+
   LEX = mod.default || mod.lexicon || mod.LEXICON || {};
 } catch (e) {
   LEX = {};

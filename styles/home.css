@@ -76,3 +76,37 @@ body::before{
 .shadow-glow{box-shadow:0 0 0 0 rgba(255,63,134,.0); transition:box-shadow .25s ease}
 .card:hover .shadow-glow,
 .card:hover{box-shadow:0 0 0 6px color-mix(in oklab, var(--glow) 40%, transparent)}
+/* === 3-across desktop grid, responsive === */
+#men, .men, .cards, .gallery, .grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 32px;
+  align-items: stretch;
+}
+
+/* cards fill their cells nicely */
+#men .card, .men .card, .cards .card, .gallery .card, .grid .card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* image sizing inside cards (works with your existing .card img rules) */
+#men .card img, .men .card img, .cards .card img, .gallery .card img, .grid .card img {
+  width: 100%;
+  height: 320px;          /* tweak if you want taller/shorter */
+  object-fit: cover;
+}
+
+/* breakpoints */
+@media (max-width: 1024px) {
+  #men, .men, .cards, .gallery, .grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  #men, .men, .cards, .gallery, .grid {
+    grid-template-columns: 1fr;
+  }
+}

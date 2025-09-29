@@ -262,6 +262,8 @@ export default async function handler(req) {
 } = body || {};
 
 let pov = (body && typeof body.pov === "string") ? body.pov : "";
+
+
   
 // ⭐ Safety gate + normalization
 const gate = gateText(userText || "");

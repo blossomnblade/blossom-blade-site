@@ -1,78 +1,61 @@
-// api/magic/send.js
-const crypto = require("crypto");
+// /api/magic/send.js
+// Builds a sign-in link for the given email and returns it as JSON.
+// No email sending yet—this is a safe stub you can test in the browser/console.
 
-function base64url(buf) {
-  return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+export const config = { runtime: "edge" };
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
 }
 
-function signToken(payloadObj, secret) {
-  const payload = base64url(JSON.stringify(payloadObj));
-  const sig = base64url(crypto.createHmac("sha256", secret).update(payload).digest());
-  return `${payload}.${sig}`;
+function validEmail(e = "") {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e).toLowerCase());
 }
 
-function makeOrigin(req) {
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  return `${proto}://${host}`;
+async function hmac(input, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(input));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=+$/g, "");
 }
 
-module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).json({ ok: false, error: "Use POST" });
-    return;
-  }
+export default async function handler(req) {
+  if (req.method !== "POST") return json({ error: "Use POST" }, 405);
 
+  let body = {};
   try {
-    const { email, next } = req.body || {};
-    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      res.status(400).json({ ok: false, error: "Valid email required" });
-      return;
-    }
-
-    const secret = process.env.SESSION_SECRET;
-    if (!secret) {
-      res.status(500).json({ ok: false, error: "SESSION_SECRET not set" });
-      return;
-    }
-
-    const lower = String(email).trim().toLowerCase();
-
-    // Token good for 15 minutes
-    const exp = Date.now() + 15 * 60 * 1000;
-    const token = signToken({ email: lower, exp }, secret);
-
-    const origin = makeOrigin(req);
-    const nextPath = next || "/chat.html";
-    const link = `${origin}/api/magic/verify?token=${encodeURIComponent(token)}&next=${encodeURIComponent(nextPath)}`;
-
-    // If you later add an email service, send the link here.
-    // For now — development fallback — we just return the link.
-    // If you do configure Resend, uncomment the fetch below and set RESEND_API_KEY and FROM_EMAIL env vars.
-
-    /*
-    if (process.env.RESEND_API_KEY && process.env.FROM_EMAIL) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          from: process.env.FROM_EMAIL, // e.g. "Blossom & Blade <login@blossomblade.com>"
-          to: [lower],
-          subject: "Your Blossom & Blade sign-in link",
-          html: `<p>Tap to sign in:</p><p><a href="${link}">Sign in to Blossom &amp; Blade</a></p><p>This link expires in 15 minutes.</p>`
-        })
-      });
-      return res.status(200).json({ ok: true, sent: true });
-    }
-    */
-
-    // Dev/test mode: show the link so you can click it.
-    res.status(200).json({ ok: true, sent: false, link });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false, error: "Unexpected error" });
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON" }, 400);
   }
-};
+
+  const email = (body.email || "").trim();
+  const returnTo = (body.returnTo || "/chat.html").trim(); // where to send them after verify
+  if (!validEmail(email)) return json({ error: "Invalid email" }, 400);
+
+  const host = req.headers.get("host") || "www.blossomnblade.com";
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const baseUrl = `${proto}://${host}`;
+
+  // Token: { email, exp } + HMAC signature (no DB needed)
+  const ttlMinutes = 20;
+  const exp = Date.now() + ttlMinutes * 60 * 1000;
+  const payload = btoa(JSON.stringify({ email, exp }));
+  const secret = (process.env.MAGIC_SECRET || process.env.AI_KEY || "dev-secret") + "|v1";
+  const sig = await hmac(payload, secret);
+  const token = `${payload}.${sig}`;
+
+  const link = `${baseUrl}/api/magic/verify?token=${encodeURIComponent(token)}&returnTo=${encodeURIComponent(returnTo)}`;
+
+  // For now, just RETURN the link so you can copy/paste it.
+  // Later we’ll send it via SendGrid/Mailersend/Postmark.
+  return json({ ok: true, email, link, expires_in_minutes: ttlMinutes });
+}

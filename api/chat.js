@@ -4,6 +4,7 @@
 
 export const config = { runtime: "edge" };
 import { gateText, normalizeSlang } from "./util/filters.js";
+import { resolvePersona } from "./_data/personas.js";
 
 /* ================= Persona packs & global rules ================== */
 
@@ -277,6 +278,43 @@ if (!gate.ok) {
 const cleanUser = normalizeSlang(gate.redactedText || userText);
 
    const text = String(cleanUser || "").trim();
+/* --- persona flavor + profile collection (add right after cleanUser) --- */
+const persona = resolvePersona(man);
+
+// use any memory the client sent (so we only ask once)
+const mem = (body && body.memory) || {};
+const needs = {
+  name:     !mem.name,
+  ageOk:    !mem.age_ok,       // set true once she confirms 18+
+  hair:     !mem.hair_color,
+  favorite: !mem.favorite,     // any favorite: color, drink, song, etc.
+};
+
+// Small “flavor” paragraph for the system prompt
+const flavor = [
+  `Voice & origin: ${persona.from}. Style: ${persona.voice}.`,
+  `Accent guidance: ${persona.accent}`,
+  `Casual swearing is fine; affectionate profanity is allowed.`,
+  (persona.slangHints && persona.slangHints.length)
+    ? `Light slang you may use sparingly: ${persona.slangHints.join(", ")}.`
+    : ""
+].filter(Boolean).join(" ");
+
+// Only nudge for profile if something is missing (do it naturally)
+let profileRule = "";
+if (needs.name || needs.ageOk || needs.hair || needs.favorite) {
+  profileRule = [
+    `Early-flow goal (first 3–4 messages, naturally, not all at once):`,
+    needs.name    ? `• Learn her name; echo it warmly.` : ``,
+    needs.ageOk   ? `• Confirm she is 18+; if not, end the chat safely.` : ``,
+    needs.hair    ? `• Learn hair color; react (e.g., “Red suits you—mind if I call you Red?”).` : ``,
+    needs.favorite? `• Learn one favorite (color, drink, song, book—anything she offers).` : ``,
+    `Ask only one tiny question at a time; weave details in later as affectionate nicknames.`
+  ].filter(Boolean).join("\n");
+}
+
+// Append to whatever system/pov text you already use
+pov = `${pov || ""}\n${flavor}\n${profileRule}`.trim();
 
 
     // Hard-ban content guard

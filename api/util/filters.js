@@ -1,8 +1,9 @@
 // api/util/filters.js — top
 // Shared input safety + normalization for both chat endpoints.
 
-import LEX_MOD from "../_data/lexicon.js";
-const LEX = (LEX_MOD?.default) || (LEX_MOD?.lexicon) || (LEX_MOD?.LEXICON) || {};
+import * as LEX_MOD from "../_data/lexicon.js";
+const LEX = LEX_MOD.default || LEX_MOD.lexicon || LEX_MOD.LEXICON || {};
+
 
 
 

@@ -1,14 +1,9 @@
 // api/util/filters.js — top
 // Shared input safety + normalization for both chat endpoints.
 
-import * as LEX_MOD from "../_data/lexicon.js";
+import LEX_MOD from "../_data/lexicon.js";
+const LEX = (LEX_MOD?.default) || (LEX_MOD?.lexicon) || (LEX_MOD?.LEXICON) || {};
 
-
-// Be tolerant to different export shapes but avoid dynamic import / top-level await.
-const LEX = (LEX_MOD?.default) ||
-            (LEX_MOD?.lexicon) ||
-            (LEX_MOD?.LEXICON) ||
-            LEX_MOD || {};
 
 
 // ---------- Banned / allowed patterns ----------

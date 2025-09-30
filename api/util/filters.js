@@ -1,11 +1,9 @@
-// api/util/filters.js — top
+// /api/util/filters.js – top
 // Shared input safety + normalization for both chat endpoints.
 
 import * as LEX_MOD from "../_data/lexicon.js";
-const LEX = LEX_MOD.default || LEX_MOD.lexicon || LEX_MOD.LEXICON || {};
+const LEX = (LEX_MOD.default) || (LEX_MOD.lexicon) || (LEX_MOD.LEXICON) || {};
 
-
-// ---------- Banned / allowed patterns ----------
 // Keep "consensual knife play" allowed. Block the rest that you listed.
 const RULES = [
   { id: "minors", re: /(minor(s)?|barely\s*legal|school\s*(boy|girl))/i, reason: "minors/“barely legal”/school boy-girl" },

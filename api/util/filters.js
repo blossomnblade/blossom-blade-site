@@ -5,8 +5,6 @@ import * as LEX_MOD from "../_data/lexicon.js";
 const LEX = LEX_MOD.default || LEX_MOD.lexicon || LEX_MOD.LEXICON || {};
 
 
-
-
 // ---------- Banned / allowed patterns ----------
 // Keep "consensual knife play" allowed. Block the rest that you listed.
 const RULES = [

@@ -8,3 +8,4 @@ Allow: /
 # optional: cut down on crawl load
 Crawl-delay: 10
 # deploy-bump: 2025-09-30
+# bump: trigger fresh deploy
